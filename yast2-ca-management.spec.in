@@ -26,7 +26,7 @@ Summary:	CA Management
 %dir @moduledir@/YaST
 %dir /var/lib/CAM/
 %dir /var/lib/CAM/.cas
-/var/lib/CAM/openssl.cnf.tmpl
+%config /var/lib/CAM/openssl.cnf.tmpl
 @yncludedir@/ca-management/*
 @clientdir@/ca-mgm.ycp
 @clientdir@/ca_mgm.ycp
