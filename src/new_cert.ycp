@@ -437,9 +437,9 @@
 	    text = text + "CRL Distribution Point:   " + CaMgm::adv_distribution_point
 		+ (CaMgm::adv_cri_distribution_point ? _(" (critical)\n" ) : "\n") ;
 	}
-	if (size (CaMgm::adv_challange_password) > 0)
+	if (size (CaMgm::adv_challenge_password) > 0)
 	{	
-	    text = text + "Challage Password:        " + CaMgm::adv_challange_password + "\n";
+	    text = text + "Challage Password:        " + CaMgm::adv_challenge_password + "\n";
 	}
 
 	if (size (CaMgm::adv_issuer_alt_name_list) > 0
