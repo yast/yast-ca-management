@@ -30,7 +30,94 @@
     import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
-    include "ca-management/new_cert.ycp";    
+    include "ca-management/new_cert.ycp";
+
+    define list<string> certificateID = [];
+
+    /**
+     * showLongCertDescription - description of a certificate in textform
+     * @param CA name , certification name
+     */
+    define string showLongCertDescription (string CAname,
+					   string Certname) ``{
+
+	string ret = (string) YaPI::CaManagement::ReadCertificate ($["caName":CAname,
+								     "certificate":Certname,
+								     "type":"plain"]);
+	
+	y2milestone("ReadCertificate(%1,%2): %3", CAname, Certname, ret);
+	
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+        }
+	else
+	{
+	    UI::OpenDialog (`opt(`decorated ),
+			    `HBox( `VSpacing(16),
+				   `VBox (
+					  `HSpacing (100),
+					  // popup window header
+					  `Heading (_("Description")),
+					  `VSpacing (0.5),
+					  `RichText (ret),
+					  `VSpacing (1.5),
+					  // push button label
+					  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+					  )
+				   )
+			    );
+
+	    UI::SetFocus (`id(`ok));
+	    UI::UserInput ();
+	    UI::CloseDialog ();	    
+	}	
+    }
+    
+
+    /**
+     * getCertDescription - description of a certificate
+     * @param CA name, certification name
+     * @return a string with the certification description  
+     */      
+    define string getCertDescription (string CAname,
+				      string Certname) ``{
+	string text = _("<br><h3>Description</h3>");
+
+	map ret = (map) YaPI::CaManagement::ReadCertificate ($["caName":CAname,
+							       "certificate":Certname,
+							       "type":"parsed"]);
+	y2milestone("ReadCertificate(%1,%2): %3", CAname, Certname, ret);	    
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+            return _("<br>Certificate not found");
+        }
+
+	text = text + "<pre>";
+	text = text + "Fingerprint:        " + ret["FINGERPRINT"]:"";
+	map dn = ret["DN_HASH"]:$[];
+	if (size (dn) > 0)
+	{
+	    text = text + "<br>Common Name:        " + ((list)dn["CN"]:[])[0]:"";
+	    text = text + "<br>Organization:       " + ((list)dn["O"]:[])[0]:"";
+	    text = text + "<br>Location:           " + ((list)dn["L"]:[])[0]:"";	    
+	    text = text + "<br>State:              " + ((list)dn["ST"]:[])[0]:"";
+	    text = text + "<br>Country:            " + ((list)dn["C"]:[])[0]:"";
+	    text = text + "<br>EMAIL:              " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
+	}
+	text = text + "<br>Is CA:              " + ret["IS_CA"]:"";
+	text = text + "<br>Key Size:           " + ret["KEYSIZE"]:"";
+	text = text + "<br>Serialnumber:       " + ret["SERIAL"]:"";
+	text = text + "<br>Version:            " + ret["VERSION"]:"";	
+	text = text + "<br>Valid from:         " + ret["NOTBEFORE"]:"";
+	text = text + "<br>Valid to:           " + ret["NOTAFTER"]:"";
+	text = text + "<br>algo. of pub. Key : " + ret["PUBKEY_ALGORITHM"]:"";
+	text = text + "<br>algo. of signature: " + ret["SIGNATURE_ALGORITHM"]:"";			
+	text = text + "</pre>";	
+	return text;
+    }
+    
 
     /**
      * Creates certikficate items
@@ -60,6 +147,7 @@
 					 element["localityName"]:"",
 					 element["stateOrProvinceName"]:"",
 					 element["country"]:"" ) );
+	    certificateID = add (certificateID, element["certificate"]:"");
 	    i = i + 1;
 	});
         return result;
@@ -141,11 +229,26 @@
             UI::ChangeWidget (`id (`delete), `Enabled, anyitems);
             UI::ChangeWidget (`id (`revoke), `Enabled, anyitems);
             UI::ChangeWidget (`id (`view), `Enabled, anyitems);
-            UI::ChangeWidget (`id (`export), `Enabled, anyitems);	    
+            UI::ChangeWidget (`id (`export), `Enabled, anyitems);
+
+	    if (anyitems)
+	    {
+		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+		    CaMgm::currentCertificate = (string) certificateID[id]:"";
+		    UI::ChangeWidget( `id(`textinfo), `Value, getCertDescription (CaMgm::currentCA,
+										  CaMgm::currentCertificate));
+	    }	    
 
             ui = (symbol) UI::UserInput ();
 
-
+	    if (ui == `view)
+	    {
+		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+		CaMgm::currentCertificate = (string) certificateID[id]:"";
+		showLongCertDescription (CaMgm::currentCA,
+					 CaMgm::currentCertificate);		
+	    }	    	
+	    
 	    if (ui == `delete)
 	    {
 		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
