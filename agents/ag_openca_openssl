@@ -9,7 +9,7 @@ use OpenCA::OpenSSL;
 
 my $openssl = undef;
 my $CAM_ROOT = "/var/lib/YaST2/CAM/";
-
+my $privkeyalg = "des3";
 
 sub check_initialized ()
 {
@@ -39,6 +39,7 @@ sub OtherCommand () {
                             STDERR=>$config->{"stderr"},
                             DEBUG=>1
                            );
+        $privkeyalg = $config->{'privkeyalg'};
     }
     
     return 1;
@@ -78,6 +79,9 @@ sub Execute {
 
     if($path eq ".genKey") {
         $hash = shift;
+        if(not defined $hash->{'ALGORITHM'}) {
+            $hash->{'ALGORITHM'} = $privkeyalg;
+        }
         $openssl->genKey( %{$hash} );
         if($openssl->errno() != 0) {
             return $class->SetError(summary => "OpenCA::OpenSSL::genKey failed! (".
