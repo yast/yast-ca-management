@@ -70,7 +70,8 @@ define symbol MainSequence() ``{
 				`next       	: `abort,
 				`createRoot 	: "new_certCA",
 				`enter      	: "ca_main",
-				`import		: "startup"
+				`import		: "startup",
+				`delete		: "startup"
                             ],
         "new_certCA"        : $[
 				`next       	: "startup",
