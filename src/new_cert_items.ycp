@@ -154,7 +154,6 @@
 													    ),
 												     `VSpacing(1.5),
 												     `HBox (`HWeight (3,`Table (`id (`id_adv_issuer_alt_name),
-																`opt (`notify, `immediate),
 																`header (
 																	 // To translators: table headers
 																	 _("Kind"),
@@ -341,7 +340,6 @@
 												     `HBox(
 													   `VSpacing(5),
 													   `HWeight (3, `Table (`id (`id_adv_subject_alt_name),
-																`opt (`notify, `immediate),
 																`header (
 																	 // To translators: table headers
 																	 _("Kind"),
