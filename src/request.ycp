@@ -114,16 +114,31 @@
     
     /**
      * Signing new Request sequence
+     * @param kind (`signClient,`signServer,`signCA)
      * @return sequence result
      */
-    define symbol signRequestSequence() ``{
+    define symbol signRequestSequence (any kind) ``{
 
-	map aliases = $[
-	   "req_init"   	: ``(signRequestInit ()),
-	   "req_sign1"  	: ``(signRequest1 ()),
-	   "req_sign2"   	: ``(signRequest2 ()),
-	   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),	   
-	   ];
+	map aliases = $[ `signClient:
+			 $["req_init"   	: ``(signRequestInit ("Client Request")),
+			   "req_sign1"  	: ``(signRequest1 ("Client Request")),
+			   "req_sign2"   	: ``(signRequest2 ("Client Request")),
+			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),	   
+			   ],
+			 `signServer:
+			 $["req_init"   	: ``(signRequestInit ("Server Request")),
+			   "req_sign1"  	: ``(signRequest1 ("Server Request")),
+			   "req_sign2"   	: ``(signRequest2 ("Server Request")),
+			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),	   
+			   ],
+			 `signCA:
+  			 $["req_init"   	: ``(signRequestInit ("CA Request")),
+			   "req_sign1"  	: ``(signRequest1 ("CA Request")),
+			   "req_sign2"   	: ``(signRequest2 ("CA Request")),
+			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),	   
+			   ]
+	];
+			 
 	
 	map requestSequence = $[
 	"ws_start"	    : "req_init",
@@ -152,7 +167,7 @@
 
 	Wizard::CreateDialog();
 	Wizard::SetDesktopIcon("ca-management");
-	symbol ret = WizardSequencer(aliases, requestSequence);
+	symbol ret = WizardSequencer(aliases[kind]:$[], requestSequence);
 	
 	UI::CloseDialog();
 
@@ -201,45 +216,6 @@
 	}	
     }
     
-
-    /**
-     * getRequestDescription - description of a request
-     * @param map of description
-     * @return a string with the request description  
-     */      
-    define string getRequestDescription (map requestMap) ``{
-	string text = _("\n<b>Description</b>");
-        if (requestMap == nil)
-        {
-            showErrorCaManagement ();
-            return _("\nRequest not found");
-        }
-	text = text + "<br>";
-	text = text + "<pre>";
-	map dn = requestMap["DN_HASH"]:$[];
-	if (size (dn) > 0)
-	{
-	    text = text + "\nCommon Name:        " + ((list)dn["CN"]:[])[0]:"";
-	    if (size (requestMap["date"]:"") > 0)
-	    {
-		text = text + "\ngeneration Time:    " + requestMap["date"]:"";	
-	    }
-	    text = text + "\nOrganization:       " + ((list)dn["O"]:[])[0]:"";
-	    text = text + "\nLocation:           " + ((list)dn["L"]:[])[0]:"";	    
-	    text = text + "\nState:              " + ((list)dn["ST"]:[])[0]:"";
-	    text = text + "\nCountry:            " + ((list)dn["C"]:[])[0]:"";
-	    text = text + "\nEMAIL:              " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
-	}
-	text = text + "\nIs CA:              " + requestMap["IS_CA"]:"";
-	text = text + "\nKey Size:           " + requestMap["KEYSIZE"]:"";
-	text = text + "\nVersion:            " + requestMap["VERSION"]:"";	
-	text = text + "\nalgo. of pub. Key : " + requestMap["PUBKEY_ALGORITHM"]:"";
-	text = text + "\nalgo. of signature: " + requestMap["SIGNATURE_ALGORITHM"]:"";			
-	text = text + "</pre>";	
-	return text;
-    }
-    
-
     /**
      * Creates request items
      *
@@ -323,7 +299,12 @@
 						  _("Request"),
 						  [
 						   `item(`id(`view), _("View") ),
-						   `item(`id(`sign), _("Sign") ),
+						   `menu( _("Sign"),
+							  [
+							   `item(`id(`signClient), _("as Client Request") ),
+							   `item(`id(`signServer), _("as Server Request") ),
+							   `item(`id(`signCA), _("as CA Request") )
+							   ]),
 						   `item(`id(`delete), _("Delete") ),
 						   `item(`id(`exportFile), _("Export to File") )
 						   ]
@@ -356,7 +337,7 @@
 	    term itemTerm =  (term) UI::QueryWidget(`id(`table), `Item(id));
 	    ret = add (ret, "date", select (itemTerm, 8, ""));
 	    
-	    UI::ChangeWidget( `id(`textinfo), `Value, getRequestDescription (ret));
+	    UI::ChangeWidget( `id(`textinfo), `Value, getRequestDescription (ret, false));
 	}	    
     }
 
@@ -407,9 +388,11 @@
 		ui = `again;
 	    }
 	}
-	if (ui == `sign)
+	if (ui == `signServer
+	    || ui == `signClient
+	    || ui == `signCA)
 	{
-	    signRequestSequence ();
+	    signRequestSequence (ui);
 	    ui = `again;		
 	}
 	if (ui == `exportFile)

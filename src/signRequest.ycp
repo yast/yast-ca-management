@@ -32,16 +32,55 @@
     include "ca-management/util.ycp";
     include "ca-management/new_cert_read_write.ycp";
 
+    // Description of the current Request
+    map currentRequestMap = $[];
+    
+    /**
+     * getRequestDescription - description of a request
+     * @param map of description, onlySubject
+     * @return a string with the request description  
+     */      
+    define string getRequestDescription (map requestMap, boolean onlySubject) ``{
+	string text = _("\n<b>Description</b>");
+        if (requestMap == nil)
+        {
+            showErrorCaManagement ();
+            return _("\nRequest not found");
+        }
+	text = text + "<br>";
+	text = text + "<pre>";
+	map dn = requestMap["DN_HASH"]:$[];
+	if (size (dn) > 0)
+	{
+	    text = text + "\nCommon Name:        " + ((list)dn["CN"]:[])[0]:"";
+	    if (size (requestMap["date"]:"") > 0)
+	    {
+		text = text + "\ngeneration Time:    " + requestMap["date"]:"";	
+	    }
+	    text = text + "\nOrganization:       " + ((list)dn["O"]:[])[0]:"";
+	    text = text + "\nLocation:           " + ((list)dn["L"]:[])[0]:"";	    
+	    text = text + "\nState:              " + ((list)dn["ST"]:[])[0]:"";
+	    text = text + "\nCountry:            " + ((list)dn["C"]:[])[0]:"";
+	    text = text + "\nEMAIL:              " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
+	}
+	if (!onlySubject)
+	{
+	    text = text + "\nIs CA:              " + requestMap["IS_CA"]:"";
+	    text = text + "\nKey Size:           " + requestMap["KEYSIZE"]:"";
+	    text = text + "\nVersion:            " + requestMap["VERSION"]:"";	
+	    text = text + "\nalgo. of pub. Key : " + requestMap["PUBKEY_ALGORITHM"]:"";
+	    text = text + "\nalgo. of signature: " + requestMap["SIGNATURE_ALGORITHM"]:"";
+	}
+	text = text + "</pre>";	
+	return text;
+    }
 
     /**
      * Creates Request Extention items
      * @return a list items formated for a UI Multiselectionbox
      */
     define list<term> createExtentionItem () ``{
-	map ret = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
-							   "request":CaMgm::currentRequest,
-							   "type":"parsed"]);
-	map<string,list> opensslExtentions = ret["OPENSSL_EXTENSIONS"]:$[];
+	map<string,list> opensslExtentions = currentRequestMap["OPENSSL_EXTENSIONS"]:$[];
         list<term> result = [];
 
 	foreach (string key, map value, CaMgm::requestExtentionValue, ``{
@@ -512,14 +551,15 @@
     
    /**
      * Values initializing for creating a Request
+     * @param kind ("Client Request","Server Request","CA Request")
      * @return `next,`abort
      */
-    define symbol signRequestInit () ``{
-	map ret = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
+    define symbol signRequestInit (string kind) ``{
+	currentRequestMap = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
 							   "request":CaMgm::currentRequest,
 							   "type":"extended"]);
-	y2milestone("ReadRequest(%1,%2): %3", CaMgm::currentCA, CaMgm::currentRequest, ret);
-        if (ret == nil)
+	y2milestone("ReadRequest(%1,%2): %3", CaMgm::currentCA, CaMgm::currentRequest, currentRequestMap);
+        if (currentRequestMap == nil)
         {
             showErrorCaManagement ();
             return `abort;
@@ -532,32 +572,51 @@
 	CaMgm::validPeriod = 30;
 
 	// IS CA ?
-	if (ret["IS_CA"]:"" == "1")
+	if (currentRequestMap["IS_CA"]:"" == "1")
 	{
-	    //Request is a CA
-	    new_cert_init("Sub CA");
-	    CaMgm::requestKind = "ca";
+	    if (kind != "CA Request")
+	    {
+		string message = sformat(_("This is a CA Request. Do you really want to sign it as a %1?"),
+					 kind );
+		if (!Popup::YesNo (message))
+		{
+		    return `abort;
+		}
+	    }
 	}
 	else
 	{
-	    //Ask user for the kind of certificate
-	    if (Popup::YesNo(_("Is this request used as server certificate ?")))
+	    if (kind == "CA Request")
 	    {
-		new_cert_init("Server Certificate");
-		CaMgm::requestKind = "server";		
+		string message = _("This is NOT a CA Request. Do you really want to sign it as a CA Request?");
+		if (!Popup::YesNo (message))
+		{
+		    return `abort;
+		}
 	    }
-	    else
-	    {
-		new_cert_init("Client Certificate");
-		CaMgm::requestKind = "client";				
-	    }
+	}
+	    
+	if (kind == "CA Request")
+	{
+	    new_cert_init("Sub CA");
+	    CaMgm::requestKind = "ca";
+	}
+	else if (kind == "Server Request")
+	{
+	    new_cert_init("Server Certificate");
+	    CaMgm::requestKind = "server";		
+	}
+	else if (kind == "Client Request")
+	{
+	    new_cert_init("Client Certificate");
+	    CaMgm::requestKind = "client";				
 	}
 
 	// Subject
-	CaMgm::requestSubject = ret["DN"]:"";
+	CaMgm::requestSubject = currentRequestMap["DN"]:"";
 
 	// Filling up reqeust extentions
-	map<string,map> opensslExtentions = ret["OPENSSL_EXTENSIONS"]:$[];
+	map<string,map> opensslExtentions = currentRequestMap["OPENSSL_EXTENSIONS"]:$[];
 	foreach (string key, map value, opensslExtentions, {
 	    if (contains (CaMgm::validRequestExtention,key))
 	    {
@@ -578,9 +637,10 @@
     
     /**
      * Signing a request ( 1. step )
+     * @param kind ("Client Request","Server Request","CA Request")     
      * @return `next, 'abort
      */
-    define symbol signRequest1 () ``{
+    define symbol signRequest1 (string kind) ``{
 
 	string helptext	= "";
         // help text 1/3
@@ -592,14 +652,13 @@
 	helptext = helptext + _("<p>If you reject these extentions the default values will be taken instead.</p>");
 
         term contents = `VBox (
-			       `Left(`Label(_("Subject:"))),
-			       `Left(`RichText(CaMgm::requestSubject)),
+			       `Left(`RichText(getRequestDescription (currentRequestMap, true))),
 			       `IntField( `id(`period), _("Valid Period (days):"),  1, 10000, CaMgm::validPeriod),
 			       `MultiSelectionBox( `id(`extentions), _("Requested Extentions which you can particular accept:"),
 						   createExtentionItem ())
 			       );
 
-        Wizard::SetContents ( _("Sign Request (step 1/2)"), contents, helptext, true, true);
+        Wizard::SetContents ( sformat(_("Sign Request as a %1 (step 1/2)"), kind), contents, helptext, true, true);
 	Wizard::RestoreNextButton();
 	Wizard::DisableBackButton();
 	UI::SetFocus(`id(`period));
@@ -624,9 +683,10 @@
 
     /**
      * Signing request ( 2. step )
+     * @param kind ("Client Request","Server Request","CA Request")     
      * @return `next, 'back, 'cancel, `advancedOptions
      */
-    define symbol signRequest2 () ``{
+    define symbol signRequest2 (string kind) ``{
 
 	integer i = 0;
 	boolean nextLine = false;
@@ -1017,7 +1077,7 @@
 	contents = add (contents, `Right(`PushButton (`id (`edit), `opt (`key_F4), _("&Edit Request"))));
 
                                 // To translators: dialog label
-        Wizard::SetContents ( _("Sign Request (step 2/2)"), contents, helptext, true, true);
+        Wizard::SetContents ( sformat(_("Sign Request as a %1 (step 2/2)"), kind), contents, helptext, true, true);
 	Wizard::SetNextButton(`next, _("Sign Request") );
 
         symbol ui = nil;
