@@ -48,7 +48,7 @@
     
     /**
      * Creating new CA/Certificate ( 1. step )
-     * @return `next, 'back, 'cancel
+     * @return `next, 'back, 'cancel, 'again
      */
     define symbol new_cert1 () ``{
 
@@ -81,13 +81,13 @@
         emails = add (emails, `HWeight (1, buttons));
 
         term contents = `VBox ();
-        contents = add (contents, `TextEntry( `id (`id_commonName), _("Common Name"), CaMgm::commonName ));
+        contents = add (contents, `TextEntry( `id (`id_commonName), _("&Common Name"), CaMgm::commonName ));
         contents = add (contents, emails);
-        contents = add (contents, `TextEntry( `id (`id_organisation), _("Organsisation"), CaMgm::organisation ));
-        contents = add (contents, `TextEntry( `id (`id_organisationUnit), _("Organsisation Unit"), CaMgm::organisationUnit ));
-        contents = add (contents, `TextEntry( `id (`id_locality), _("Locality"), CaMgm::locality ));
-        contents = add (contents, `TextEntry( `id (`id_state), _("State"), CaMgm::state ));
-        contents = add (contents, `Left (`ComboBox( `id (`id_country), _("Country"),
+        contents = add (contents, `TextEntry( `id (`id_organisation), _("O&rgansisation"), CaMgm::organisation ));
+        contents = add (contents, `TextEntry( `id (`id_organisationUnit), _("Or&gansisation Unit"), CaMgm::organisationUnit ));
+        contents = add (contents, `TextEntry( `id (`id_locality), _("Loca&lity"), CaMgm::locality ));
+        contents = add (contents, `TextEntry( `id (`id_state), _("&State"), CaMgm::state ));
+        contents = add (contents, `Left (`ComboBox( `id (`id_country), _("C&ountry"),
 					     [
 					      `item(`id(`countryDE), "DE", CaMgm::country == "DE" ),
 					      `item(`id(`countryEN), "EN", CaMgm::country == "EN" )
@@ -106,14 +106,16 @@
 
             ui = (symbol) UI::UserInput ();
 
-            if (ui == `next)
+            if (ui == `next ||
+		ui == `addEmail ||
+		ui == `deleteEmail)
             {
 		CaMgm::commonName = (string) UI::QueryWidget(`id(`id_commonName), `Value);
 		CaMgm::organisation = (string) UI::QueryWidget(`id(`id_organisation), `Value);
 		CaMgm::organisationUnit = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
 		CaMgm::locality = (string) UI::QueryWidget(`id(`id_locality), `Value);
 		CaMgm::state = (string) UI::QueryWidget(`id(`id_state), `Value);
-		if (UI::QueryWidget(`id(`id_countery), `Value) == `countryDE)
+		if (UI::QueryWidget(`id(`id_country), `Value) == `countryDE)
 		{
 		    CaMgm::country = "DE";
 		}
@@ -121,33 +123,31 @@
 		{
 		    CaMgm::country = "EN";
 		}
-	    }
-
-            if (ui == `addEmail)
-            {
-		string selection = (string) UI::QueryWidget(`id(`id_emailname), `Value);
-		if (size(selection) > 0)
+		
+		if (ui == `addEmail)
 		{
-		    if (check_mail_address(selection))
+		    string selection = (string) UI::QueryWidget(`id(`id_emailname), `Value);
+		    if (size(selection) > 0)
 		    {
-			CaMgm::emailList = add (CaMgm::emailList, selection);
+			if (check_mail_address(selection))
+			{
+			    CaMgm::emailList = add (CaMgm::emailList, selection);
+			}
+			else
+			{
+			    Popup::Error(_("Wrong EMAIL format."));
+			}
 		    }
-		    else
-		    {
-			Popup::Error(_("Wrong EMAIL format."));
-		    }
-		}
-		ui = `again;
-	    }	    
-            if (ui == `deleteEmail)
-            {
-                integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-                if (is(id, integer))
-                {
+		    ui = `again;
+		}	    
+		if (ui == `deleteEmail)
+		{
+		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
 		    CaMgm::emailList = remove (CaMgm::emailList, id);		    
-                }
-		ui = `again;		
-            }
+
+		    ui = `again;		
+		}		
+	    }
         }
         until (contains ([`back, `again, `next, `abort], ui));
 
@@ -157,7 +157,7 @@
 
     /**
      * Creating new CA/Certificate ( 2. step )
-     * @return `next, 'back, 'cancel
+     * @return `next, 'back, 'cancel, `advancedOptions
      */
     define symbol new_cert2 () ``{
 
@@ -167,15 +167,16 @@
         helptext = helptext + _("<p>Help Text 2.");
 
         term contents = `VBox ();
-        contents = add (contents, `TextEntry( `id (`id_password), _("Password"), CaMgm::password));
-        contents = add (contents, `TextEntry( `id (`id_verifyPassword), _("Verify Password"), CaMgm::verifyPassword));	
-        contents = add (contents, `TextEntry( `id (`id_caPassword), _("CA Password"), CaMgm::CAPassword));
-	contents = add (contents, `IntField( `id (`id_keyLength), _("Key Length (bit):"), 1, 10000, CaMgm::keyLength));
-	contents = add (contents, `IntField( `id (`id_validPeriod), _("Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
+        contents = add (contents, `Password( `id (`id_password), _("&Password"), CaMgm::password));
+        contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password"), CaMgm::verifyPassword));	
+        contents = add (contents, `Password( `id (`id_caPassword), _("&CA Password"), CaMgm::CAPassword));
+	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 1, 10000, CaMgm::keyLength));
+	contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
         contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
 
                                 // To translators: dialog label
         Wizard::SetContents (_("Create new Certification (step 2/3)"), contents, helptext, true, true);
+	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());	
 
         symbol ui = nil;
 
@@ -183,7 +184,8 @@
         {
             ui = (symbol) UI::UserInput ();
 
-            if (ui == `next)
+            if (ui == `next ||
+		ui == `advancedOptions)
             {
 		CaMgm::password = (string) UI::QueryWidget(`id(`id_password), `Value);
 		CaMgm::verifyPassword = (string) UI::QueryWidget(`id(`id_verifyPassword), `Value);
@@ -196,14 +198,81 @@
 		    Popup::Error(_("Passwords are different."));
 		    ui = `again;
 		}
+
+		if (ui == `advancedOptions)
+		{
+
+		}	    		
 	    }
-
-            if (ui == `advancedOptions)
-            {
-
-	    }	    
         }
         until (contains ([`back, `next, `abort, `advancedOptions ], ui));
+
+        return ui;
+    }
+
+    /**
+     * Creating new CA/Certificate ( 3. step )
+     * @return `next, 'back, 'cancel
+     */
+    define symbol new_cert3 () ``{
+
+        // help text 1/4
+        string helptext = _("<p>This frame gives an overview about all setting for the certificate which will be created.</p>");
+        // help text 2/4
+        helptext = helptext + _("<p>Klick <b>finish</b> to create the certificate.</p>");
+
+	string text = _("<br><h3>Summary</h3>");
+	text = text + "<pre>";
+	text = text +  _("Common Name:       ")  + CaMgm::commonName + "\n";
+	text = text +  _("Organisation:      ")  + CaMgm::organisation + "\n";
+	text = text +  _("Organisation Unit: ")  + CaMgm::organisationUnit + "\n";
+	text = text +  _("Locality:          ")  + CaMgm::locality + "\n";
+	text = text +  _("EMAIL(s):          ");
+
+	integer i = 0;
+	foreach (string element, CaMgm::emailList, ``{
+	    if (i==0)
+	    {
+		text = text + element + "\n";
+	    }
+	    else
+	    {
+		text = text + "                   " + element + "\n";		
+	    }
+	    i = i + 1;
+	});
+	if (i==0)
+	{
+	    text = text + "\n";		
+	}
+
+	text = text + _("Locality:          ") + CaMgm::locality + "\n";
+	text = text + _("State:             ") + CaMgm::state + "\n";
+	text = text + _("Country:           ") + CaMgm::country + "\n";
+	text = text + _("Key Length:        ") + CaMgm::keyLength + " bit\n";
+	text = text + _("Valid Period:      ") + CaMgm::validPeriod + _(" days\n");
+	text = text + "</pre>";
+
+        term contents = `VBox ();
+        contents = add (contents, `RichText(text));
+
+                                // To translators: dialog label
+        Wizard::SetContents (_("Create new Certification (step 3/3)"), contents, helptext, true, true);
+	UI::ChangeWidget (`id (`next), `Label, Label::CreateButton());	
+
+        symbol ui = nil;
+
+        repeat
+        {
+            ui = (symbol) UI::UserInput ();
+
+            if (ui == `next)
+            {
+		//creating new certificate
+
+	    }
+        }
+        until (contains ([`back, `next, `abort], ui));
 
         return ui;
     }

@@ -103,10 +103,7 @@
             if (contains ([`createRoot, `enter], ui))
             {
                 integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-                if (is(id, integer))
-                {
-                    CaMgm::currentCA =  (string) UI::QueryWidget(`id(`table), `Item(id));
-                }
+		CaMgm::currentCA =  (string) UI::QueryWidget(`id(`table), `Item(id));
             }
         }
         until (contains ([`createRoot, `enter,`next], ui));

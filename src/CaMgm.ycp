@@ -45,34 +45,5 @@ global integer keyLength = 1024;
 global integer validPeriod = 365;
 
 
-
-
-
-// ------------------------------------------------------------
-
-// ----------------------------------------
-
-// plain text
-global string error_msg = "";
-// rich text
-global string error_details = "";
-
-/**
- * Adds an error to error_msg
- * @param s message, ending with a newline
- */
-global define void addError (string s) ``{
-    error_msg = error_msg + s;
-}
-
-/**
- * Adds an error to error_details
- * @param s message, ending with a newline
- */
-global define void addErrorDetail (string s) ``{
-    error_details = error_details + sformat ("<pre>%1</pre>", s);
-}
-
-
 /* EOF */
 }
