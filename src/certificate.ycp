@@ -46,6 +46,7 @@
 								     "type":"plain"]);
 	
 	y2milestone("ReadCertificate(%1,%2): %3", CAname, Certname, ret);
+	ret = "<pre>" + ret + "</pre>";
 	
         if (ret == nil)
         {
