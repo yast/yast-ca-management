@@ -6,6 +6,7 @@ myinclude_DATA =		\
 	popup.ycp		\
 	startup.ycp		\
 	new_cert.ycp		\
+	util.ycp		\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	\

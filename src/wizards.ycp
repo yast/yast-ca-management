@@ -16,7 +16,8 @@
 
     include "ca-management/popup.ycp";
     include "ca-management/startup.ycp";
-    include "ca-management/new_cert.ycp";        
+    include "ca-management/new_cert.ycp";
+    include "ca-management/util.ycp";            
 
 /**
  * Main workflow of the CA management configuration

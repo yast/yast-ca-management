@@ -28,8 +28,9 @@
     import "Label";
     import "Popup";
     import "CaManagement";
-
-
+    
+    include "ca-management/util.ycp";
+    
     /**
      * Creates EMAIL items
      * @return a list EMAIL items formated for a UI table
@@ -126,7 +127,14 @@
 		string selection = (string) UI::QueryWidget(`id(`id_emailname), `Value);
 		if (size(selection) > 0)
 		{
-		    CaMgm::emailList = add (CaMgm::emailList, selection);
+		    if (check_mail_address(selection))
+		    {
+			CaMgm::emailList = add (CaMgm::emailList, selection);
+		    }
+		    else
+		    {
+			Popup::Error(_("Wrong EMAIL format."));
+		    }
 		}
 		ui = `again;
 	    }	    
