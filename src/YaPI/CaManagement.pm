@@ -5878,7 +5878,6 @@ sub DeleteCA {
     if(exists $data->{force} && defined $data->{force} && $data->{force} == 1) {
         # force delete
         $doDelete = 1;
-print STDERR "FORCE\n";
     } else {
 
         my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/index.txt");
@@ -5886,7 +5885,6 @@ print STDERR "FORCE\n";
             # no certificate signed with this CA or broken infrastucture
             # delete is OK
             $doDelete = 1;
-print STDERR "not cert\n";
         }
 
         my $OSSLexpDate = $self->ReadCA({ caName => "$caName",
@@ -5902,7 +5900,6 @@ print STDERR "not cert\n";
             # CA is expired
             # delete is ok
             $doDelete = 1;
-print STDERR "CA expired\n";
         }
     }
 
@@ -5919,7 +5916,7 @@ print STDERR "CA expired\n";
     } else {
         return $self->SetError( summary => __("Deleting the CA is not allowed."),
                                 description => "The CA must be expired or no certificate was signed with this CA",
-                                code    => "DELETE_FAILED");
+                                code    => "CA_STILL_IN_USE");
     }
 }
 
