@@ -84,16 +84,12 @@
 
 	symbol ret = `dummy;
 
-	while (ret != `cancel && ret != `abort && ret != `next && ret != `back)
+	while (ret != `back )
 	{
 	    ret = (symbol) UI::UserInput ();
 
 	    // "Default" button
 	    if (ret == `default)
-	    {
-
-	    }
-	    else if (ret == `next)
 	    {
 
 	    }
@@ -118,11 +114,7 @@
 		UI::UserInput ();
 		UI::CloseDialog ();
 	    }
-	    else if (ret == `abort || ret == `cancel)
-	    {
-	    }
-
-	    if (ret == `tree)
+	    else 
 	    {
 		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
 		y2milestone ("Selected: %1", selected);
