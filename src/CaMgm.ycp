@@ -53,7 +53,6 @@ global integer	adv_pathlenValue = 1;
 global boolean	adv_cri_distribution_point = false;
 global string	adv_distribution_point = "";
 
-global boolean	adv_cri_challange_password = false;
 global string	adv_challange_password = "";
 
 global boolean 	adv_cri_issuer_alt_name = false;
@@ -71,10 +70,10 @@ global boolean	adv_keyAgreement = false;
 global boolean	adv_keyCertSign = false;
 global boolean	adv_decipherOnly = false;
 
-global boolean	adv_cri_NsComment = false;
-global string	adv_NsComment = "";
+global boolean	adv_cri_nsComment = false;
+global string	adv_nsComment = "";
 
-global boolean	adv_cri_NsCertType = false;
+global boolean	adv_cri_nsCertType = false;
 global boolean	adv_client = false;
 global boolean	adv_server = false;
 global boolean	adv_sslCA = false;
@@ -91,7 +90,6 @@ global boolean 	adv_cri_subject_alt_name = false;
 global boolean 	adv_copy_subject_alt_name = false;
 global list<map> adv_subject_alt_name_list = [];
 
-global boolean 	adv_cri_unstructured_name = false;
 global string	adv_unstructured_name = "";
 
 global boolean	exp_cri_SubjectKeyIdentifier = false;
@@ -108,8 +106,8 @@ global string	exp_netscape_nsRevocationUrl = "";
 global boolean	exp_cri_netscape_nsCaRevocationUrl = false;
 global string	exp_netscape_nsCaRevocationUrl = "";
 
-global boolean	exp_cri_netscape_nsRenewallUrl = false;
-global string	exp_netscape_nsRenewallUrl = "";
+global boolean	exp_cri_netscape_nsRenewalUrl = false;
+global string	exp_netscape_nsRenewalUrl = "";
 
 global boolean 	exp_cri_netscape_nsCaPolicyUrl = false;
 global string	exp_netscape_nsCaPolicyUrl = "";
