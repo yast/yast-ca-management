@@ -49,6 +49,7 @@
 	   "req_init"   	: ``(signRequestInit ()),
 	   "req_sign1"  	: ``(signRequest1 ()),
 	   "req_sign2"   	: ``(signRequest2 ()),
+	   "req_advanced"   	: ``(new_cert_advanced (false)),	   
 	   ];
 	
 	map requestSequence = $[
@@ -67,13 +68,13 @@
                             `next       	: "req_sign2",
 			    `again 		: "req_sign1",
 			    `back		: "req_sign1",
-//			    `advancedOptions 	: "new_cert_advanced",
+			    `edit	 	: "req_advanced",
 	                    ],
 
-//        "new_cert_advanced"  : $[
-//			    `abort		: `abort,
-//			    `back		: "new_cert3"
-//	                    ],	
+        "req_advanced"  : $[
+			    `abort		: `abort,
+			    `back		: "req_sign2"
+	                    ],	
     ];
 
 	Wizard::CreateDialog();

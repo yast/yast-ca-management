@@ -946,6 +946,7 @@
 
         term contents = `VBox ();
         contents = add (contents, `RichText(text));
+	contents = add (contents, `Right(`PushButton (`id (`edit), `opt (`key_F4), _("&Edit Request"))));
 
                                 // To translators: dialog label
         Wizard::SetContents ( _("Sign Request (step 2/2)"), contents, helptext, true, true);
@@ -967,8 +968,8 @@
 //		}
 	    }
         }
-        until (contains ([`back, `next, `abort], ui));
-
+        until (contains ([`back, `next, `abort, `edit], ui));
+	
         return ui;
     }
 
