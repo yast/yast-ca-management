@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Aug 10 11:03:22 CEST 2004 - schubi@suse.de
+
+- Bugfix in sign request ( missing description)
+
+-------------------------------------------------------------------
 Mon Aug  9 15:52:36 CEST 2004 - schubi@suse.de
 
 - Added signing requests and handling crl defaults

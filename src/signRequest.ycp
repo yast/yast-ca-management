@@ -80,9 +80,12 @@
      * @return a list items formated for a UI Multiselectionbox
      */
     define list<term> createExtentionItem () ``{
-	map<string,list> opensslExtentions = currentRequestMap["OPENSSL_EXTENSIONS"]:$[];
-        list<term> result = [];
+	map requestMap = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
+								  "request":CaMgm::currentRequest,
+								  "type":"parsed"]);
 
+	map<string,list> opensslExtentions = requestMap["OPENSSL_EXTENSIONS"]:$[];
+        list<term> result = [];
 	foreach (string key, map value, CaMgm::requestExtentionValue, ``{
 	    if (key != "certificatePolicies")
 	    {
