@@ -1,0 +1,24 @@
+/**
+ * $Id$
+ * Summary:
+ *   SCR Agent for parsing certificates
+ * Authors:
+ *   Michael Calmer <mc@suse.de>
+ * Access:
+ *   Read
+ * See:
+ *   
+ *
+ *
+ * Example:
+ *   Read (.openca.X509.getParsed, string file)
+ *   Read (.openca.X509.getTXT, string file)
+ */
+.openca.X509
+`ag_openca_X509 (
+  `X509 ($[
+    "path":   "/usr/bin/openssl",
+    "tmpdir": "/tmp",
+    "stderr": ">> /var/log/YaST2/ca.log",
+  ])
+)
