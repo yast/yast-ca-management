@@ -73,7 +73,7 @@ sub checkValueWithConfig {
 
     # check the policy
     if( (defined $policy) && ($policy eq "supplied") && 
-        (not defined $param->{$name} || $param->{$name} eq "")) {
+        (! defined $param->{$name} || $param->{$name} eq "")) {
         return $self->SetError( summary => "Value '$name' must be set",
                                code    => "PARAM_CHECK_FAILED");
     }
