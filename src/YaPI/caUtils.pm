@@ -159,13 +159,13 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "request") {
             if (! defined $data->{$key} ||
-                $data->{$key} !~ /^[[:xdigit:]]+$/) {
+                $data->{$key} !~ /^[[:xdigit:]]+[\d-]*$/) {
                 return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "certificate") {
             if (! defined $data->{$key} ||
-                $data->{$key} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
+                $data->{$key} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
                 return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
