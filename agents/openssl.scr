@@ -1,0 +1,25 @@
+/**
+ * $Id$
+ * Summary:
+ *   SCR Agent for executing openssl commands
+ * Authors:
+ *   Michael Calmer <mc@suse.de>
+ * Access:
+ *   execute
+ * See:
+ *   
+ *
+ *
+ * Example:
+ *   Execute (.openssl.genKey, map options)
+ */
+.openssl
+`ag_openssl (
+  `OPENSSL ($[
+    "bin"       : "/usr/bin/openssl",
+    "tmpdir"    : "/tmp",
+    "stderr"    : ">> /var/log/YaST2/ca.log",
+    "debug"     : "1",
+    "privkeyalg": "des3",
+  ])
+)
