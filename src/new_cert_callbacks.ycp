@@ -132,24 +132,47 @@
 	y2milestone("Calling add_advanced_issuer_alt_name");
 	
 	UI::OpenDialog (`opt(`decorated ),
-			`HBox( `VSpacing(16),
+			`HBox( `VSpacing(10),
 			       `VBox (
-				      `HSpacing (60), 
-				      // popup window header
-				      `Heading (_("Help")),
-				      `VSpacing (0.5),
-				      `VSpacing (1.5),
+				      `HSpacing(10),
+				      `RadioButtonGroup(`id(`rb), 
+							`HBox(
+							      `RadioButton(`id("EMAIL"), `opt(`notify), "EMAIL", true),
+							      `RadioButton(`id("URI"), `opt(`notify), "URI"),
+							      `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
+							      `RadioButton(`id("IP"), `opt(`notify), "IP"),
+							      `RadioButton(`id("RID"), `opt(`notify), "RID")
+							      )
+							),
+				      `TextEntry(`id(`name), "Name:"),
 				      // push button label
-				      `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
-				      )
+				      `HBox(`PushButton (`id(`candel), `opt(`default, `key_F9), Label::CancelButton()),
+					    `HStretch(),
+					    `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+					    ),
+				      `HSpacing(10)
+				      ),
+			       `VSpacing(10)
 			       )
 			);
 
 	UI::SetFocus (`id(`ok));
-	UI::UserInput ();
-	UI::CloseDialog ();
-
+	while (true)
+	{
+	    any ret = UI::UserInput();
+	    if (ret == `ok)
+	    {
+//		integer current = (integer) UI::QueryWidget(`id(`rb), `CurrentButton);
+//		current = (current + 1) % 4;
+//		UI::ChangeWidget(`id(`rb), `CurrentButton, current);
+		break;
+	    }
+	    else if (ret == `cancel)
+	    {
+	    }
+	}
 	
+	UI::CloseDialog ();
     }
     define void delete_advanced_issuer_alt_name() ``{
 	y2milestone("Calling delete_advanced_issuer_alt_name");
