@@ -1,0 +1,18 @@
+/**
+ * $Id$
+ * Summary:
+ *   SCR Agent with some utility functions 
+ * Authors:
+ *   Michael Calmer <mc@suse.de>
+ * Access:
+ *   Read
+ * See:
+ *   
+ *
+ *
+ * Example:
+ *   Read (.caTools.caList)
+ */
+.caTools
+`ag_ca_tools (
+)

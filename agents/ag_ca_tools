@@ -1,0 +1,199 @@
+#! /usr/bin/perl
+
+package ag_ca_tools;
+use YaST::SCRAgent;
+use ycp;
+our @ISA = ("YaST::SCRAgent");
+
+my $CAM_ROOT = "/var/lib/YaST2/CAM/";
+my $TEMPLATE = "$CAM_ROOT/openssl.cnf.tmpl";
+
+# -------------- error handling -------------------
+my %__error = ();
+
+sub SetError {
+    my $class = shift;
+    %__error = @_;
+    if( !$__error{package} && !$__error{file} && !$__error{line})
+    {
+        @__error{'package','file','line'} = caller();
+    }
+    if ( defined $__error{summary} ) 
+    {
+        y2error($__error{code}." ".$__error{summary});
+    } else {
+        y2error($__error{code});
+    }
+    return undef;
+}
+
+sub Error {
+    return \%__error;
+}
+
+# -------------------------------------------------
+
+
+sub Read {
+    my $class = shift;
+    my ($path, $hash) = @_;
+    
+    if($path eq ".caList") {
+        my @av_ca = ();
+        if (opendir(CAMDIR, "$CAM_ROOT")) {
+            foreach my $d (readdir(CAMDIR)) {
+                if ($d !~ /^\./) {
+                    if (-d "$CAM_ROOT/$d" && -e "$CAM_ROOT/$d/openssl.cnf") {
+                        push @av_ca, $d;
+                    }
+                }
+            }
+            closedir(CAMDIR);
+        } else {
+            return $class->SetError( code    => "Opendir_Failed",
+                                     summary => "Can not read directory '$CAM_ROOT' '$!'");
+        }
+        return \@av_ca;
+    }
+    return 1;
+}
+
+sub Write {
+    my $class = shift;
+    my $path = shift;
+
+    if($path eq ".caInfrastructure") {
+        my $caName = shift;
+
+        if( not defined $class->createCaInf($caName)) {
+            return 0;
+        }
+    }
+    
+    return 1;
+}
+
+sub Execute {
+    return 1;
+}
+
+
+sub createCaInf {
+    my $class  = shift;
+    my $caName = shift;
+    
+    if( !defined $caName || ($caName eq "") || ($caName =~ /\./)) {
+        return $class->SetError( 'summary' => 'missing parameter caName' ,
+                                 'code'    => 'PARAM_CHECK_FAILED');
+    }
+    
+    if (!-d $CAM_ROOT) {
+        return $class->SetError( summary => "'$CAM_ROOT' does not exist!",
+                                 code    => 'FS_ERROR') ;
+    }
+
+    if ( -d "$CAM_ROOT/$caName" ) {
+        return $class->SetError( summary => "'$CAM_ROOT/$caName' still exist",
+                                 code    => 'DIR_ALREADY_EXIST');
+    }
+    
+    if (!mkdir("$CAM_ROOT/$caName", 0700)) {
+        return $class->SetError( summary => "Can not create '$CAM_ROOT/$caName' '$!'",
+                                 code    => 'CREATE_DIR_FAILED') ;
+    }
+
+    if( !open(IN, "< $TEMPLATE")) {
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not open '$TEMPLATE' '$!'",
+                                 code    => "OPEN_FAILED");
+        
+    }
+    if(!open(OUT, ">  $CAM_ROOT/$caName/openssl.cnf.tmpl") ) { 
+        rmdir("$CAM_ROOT/$caName");
+        close IN;
+        return $class->SetError(summary => "Can not open '$CAM_ROOT/$caName/openssl.cnf.tmpl' '$!'",
+                                code    => "OPEN_FAILED");
+    }
+    while(my $l = <IN>) {
+        chomp $l;
+        $l .= "$caName" if($l =~ /^dir=/);
+        print OUT "$l\n";
+    }
+    close IN;
+    close OUT;
+
+    if (!mkdir("$CAM_ROOT/$caName/certs", 0700) ) {
+        unlink("$CAM_ROOT/$caName/openssl.cnf.tmpl");
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not create certificate directory '$CAM_ROOT/$caName/certs' '$!'",
+                                 code    => "MKDIR_FAILED");
+    }
+    if (!mkdir("$CAM_ROOT/$caName/crl", 0700) ) {
+        unlink("$CAM_ROOT/$caName/openssl.cnf.tmpl");
+        rmdir("$CAM_ROOT/$caName/certs");
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not create CRL directory '$CAM_ROOT/$caName/crl' '$!'",
+                                 code    => "MKDIR_FAILED");
+    }
+    if (!mkdir("$CAM_ROOT/$caName/newcerts", 0700) ) {
+        unlink("$CAM_ROOT/$caName/openssl.cnf.tmpl");
+        rmdir("$CAM_ROOT/$caName/crl");
+        rmdir("$CAM_ROOT/$caName/certs");
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not create directory for new certificates '$CAM_ROOT/$caName/newcerts' '$!'",
+                                 code    => "MKDIR_FAILED");
+}
+    if (!mkdir("$CAM_ROOT/$caName/req", 0700) ) {
+        unlink("$CAM_ROOT/$caName/openssl.cnf.tmpl");
+        rmdir("$CAM_ROOT/$caName/newcerts");
+        rmdir("$CAM_ROOT/$caName/crl");
+        rmdir("$CAM_ROOT/$caName/certs");
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not create request directory '$CAM_ROOT/$caName/req' '$!'",
+                                 code    => "MKDIR_FAILED");
+    }
+    if (!mkdir("$CAM_ROOT/$caName/keys", 0700) ) {
+        unlink("$CAM_ROOT/$caName/openssl.cnf.tmpl");
+        rmdir("$CAM_ROOT/$caName/req");
+        rmdir("$CAM_ROOT/$caName/newcerts");
+        rmdir("$CAM_ROOT/$caName/crl");
+        rmdir("$CAM_ROOT/$caName/certs");
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not create key directory '$CAM_ROOT/$caName/keys' '$!'",
+                                 code    => "MKDIR_FAILED");
+    }
+
+
+    if (!open(SR, "> $CAM_ROOT/$caName/serial") ) {
+        unlink("$CAM_ROOT/$caName/openssl.cnf.tmpl");
+        rmdir("$CAM_ROOT/$caName/keys");
+        rmdir("$CAM_ROOT/$caName/req");
+        rmdir("$CAM_ROOT/$caName/newcerts");
+        rmdir("$CAM_ROOT/$caName/crl");
+        rmdir("$CAM_ROOT/$caName/certs");
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not create serial file '$CAM_ROOT/$caName/serial' '$!'",
+                                 code    => "OPEN_FAILED");
+    }
+    print SR "00";
+    close SR;
+
+    if (!open(DB, "> $CAM_ROOT/$caName/index.txt") ) {
+        unlink("$CAM_ROOT/$caName/openssl.cnf.tmpl");
+        unlink("$CAM_ROOT/$caName/serial");
+        rmdir("$CAM_ROOT/$caName/keys");
+        rmdir("$CAM_ROOT/$caName/req");
+        rmdir("$CAM_ROOT/$caName/newcerts");
+        rmdir("$CAM_ROOT/$caName/crl");
+        rmdir("$CAM_ROOT/$caName/certs");
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not create database '$CAM_ROOT/$caName/index.txt' '$!'",
+                                 code    => "OPEN_FAILED");
+    }
+    close DB;
+
+    return 1;
+}
+
+package main;
+ag_ca_tools->Run;
