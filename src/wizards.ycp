@@ -28,11 +28,11 @@ define symbol MainSequence() ``{
 
     map aliases = $[
         "startup"        	: ``(Startup()),
-        "new_certCAinit"   	: ``(new_cert_init ("ca")),
+        "new_certCAinit"   	: ``(new_cert_init ("Root CA")),
         "new_certSaveDef"  	: ``(new_cert_save_default ()),		
-        "new_certCA1"   	: ``(new_cert1 ("ca")),
-        "new_certCA2"   	: ``(new_cert2 ("ca")),
-        "new_certCA3"   	: ``(new_cert3 ("ca")),
+        "new_certCA1"   	: ``(new_cert1 ("Root CA")),
+        "new_certCA2"   	: ``(new_cert2 ("Root CA")),
+        "new_certCA3"   	: ``(new_cert3 ("Root CA")),
         "new_cert_advanced"   	: ``(new_cert_advanced ()),
         ];
 
