@@ -21,9 +21,6 @@
     include "ca-management/new_cert_advanced.ycp";
     include "ca-management/ca.ycp";
     include "ca-management/dialog-ca.ycp";
-    include "ca-management/default.ycp";        
-
-    
     
 /**
  * Creating new Root CA sequence

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Tue Aug 10 14:03:11 CEST 2004 - schubi@suse.de
+
+- Removed wrong include files
+
+-------------------------------------------------------------------
 Tue Aug 10 11:03:22 CEST 2004 - schubi@suse.de
 
 - Bugfix in sign request ( missing description)

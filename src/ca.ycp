@@ -22,7 +22,8 @@
 {
     textdomain "ca-management";
     
-    include "ca-management/default.ycp";
+    include "ca-management/crlDefault.ycp";
+    include "ca-management/certDefault.ycp";    
     
     define  map defaultSequence = $[
         "ws_start"	    : "new_default1",
