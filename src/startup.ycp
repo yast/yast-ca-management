@@ -70,9 +70,11 @@
         term buttons = `VBox ();
                                 // To translators: pushbutton label
         buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`enter), `opt (`key_F4), _("&Enter CA")))));
+        buttons = add (buttons, `VStretch());
                                 // To translators: pushbutton label
         buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`createRoot), `opt (`key_F3), _("&Create Root CA")))));
-        buttons = add (buttons, `VStretch());
+                                // To translators: pushbutton label	
+        buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`import), _("&Import CA")))));	
 
         term contents = `HBox ();
         contents = add (contents, `HWeight (9,`Table (`id (`table), `opt (`notify, `immediate),
@@ -100,7 +102,7 @@
             UI::SetFocus (`id (`table));
 
             ui = (symbol) UI::UserInput ();
-            if (contains ([`enter], ui))
+            if (contains ([`enter,`import], ui))
             {
                 string id = (string) UI::QueryWidget (`id (`table), `CurrentItem);
 		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
@@ -121,10 +123,14 @@
 		    {
 			ui = `again;
 		    }
+		}
+		if (ui == `import)
+		{
+		    importCAFromDisk();  
 		}		
             }
         }
-        until (contains ([`createRoot, `enter,`next], ui));
+        until (contains ([`createRoot, `enter, `next, `import], ui));
 
         return ui;
     }
