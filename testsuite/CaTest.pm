@@ -33,20 +33,21 @@ sub run {
 #    test_AddRequest();
 #    test_issueCertificate();
 #    test_AddCertificate();
-    test_AddCertificate2();
-#    test_ReadCertificateList();
+#    test_AddCertificate2();
+    test_ReadCertificateList();
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
 
 #    test_AddCRL();
 #    test_ReadCRL();
-#    test_ExportCA();
-#    test_ExportCertificate();
-#    test_ExportCRL();
+    test_ExportCA();
+    test_ExportCertificate();
+    test_ExportCRL();
 #    test_Verify();
 
 #    test_AddSubCA();
 #    test_ExportCAToLDAP();
+#    test_ExportCRLToLDAP();
 #    test_UpdateDB();
 #    test_CreateManyCerts();
 #    test_ListManyCerts('215152321042820');
@@ -413,11 +414,21 @@ sub test_ExportCA {
             my $err = YaPI::CaManagement->Error();
             printError($err);
         } else {
-            if(! open(OUT, "> /tmp/mc/certs/$ef")) {
+            if(! open(OUT, "> /tmp/mc/certs/CA_$ef")) {
                 print STDERR "OPEN_FAILED\n";
             }
             print OUT $res;
             close OUT;
+            print STDERR "OK\n";
+        }
+        $data->{'destinationFile'} = "/tmp/mc/certs/DF_CA_$ef";
+        $res = YaPI::CaManagement->ExportCA($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = YaPI::CaManagement->Error();
+            printError($err);
+        } else {
+            print STDERR "OK\n";
         }
     }
 }
@@ -448,6 +459,16 @@ sub test_ExportCertificate {
             }
             print OUT $res;
             close OUT;
+            print STDERR "OK\n";
+        }
+        $data->{'destinationFile'} = "/tmp/mc/certs/DF_CRT_$ef";
+        $res = YaPI::CaManagement->ExportCertificate($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = YaPI::CaManagement->Error();
+            printError($err);
+        } else {
+            print STDERR "OK\n";
         }
     }
 }
@@ -472,7 +493,18 @@ sub test_ExportCRL {
             }
             print OUT $res;
             close OUT;
-        }        
+            print STDERR "OK\n";
+        }
+        $data->{'destinationFile'} = "/tmp/mc/certs/DF_CRL_$ef";
+        $res = YaPI::CaManagement->ExportCRL($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = YaPI::CaManagement->Error();
+            printError($err);
+        } else {
+            print STDERR "OK\n";
+        }
+
     }
 }
 
@@ -574,6 +606,27 @@ sub test_ExportCAToLDAP {
         print STDERR "OK\n";
     }
 
+}
+
+sub test_ExportCRLToLDAP {
+    my $data = {
+                caName => $exampleCA,
+                ldapHostname => 'tait.suse.de',
+                ldapPort => 389,
+                destinationDN => "ou=PKI,dc=suse,dc=de",
+                BindDN => "uid=cyrus,dc=suse,dc=de",
+                password => "system"
+               };
+    print STDERR "trying to call YaPI::CaManagement->ExportCRLToLDAP with caName = '$exampleCA'\n";
+
+    my $res = YaPI::CaManagement->ExportCRLToLDAP($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK\n";
+    }
 }
 
 sub test_UpdateDB {
