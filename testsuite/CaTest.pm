@@ -25,7 +25,7 @@ sub run {
 #    test_Version();
 #    test_Capabilities();
 #    test_AddRootCA();
-    test_ReadCAList();
+#    test_ReadCAList();
 #    test_AddRootCA2();
 #    test_ReadCertificateDefaults();
 #    test_ReadCertificateDefaults2();
@@ -34,15 +34,15 @@ sub run {
 #    test_issueCertificate();
 #    test_AddCertificate();
 #    test_AddCertificate2();
-    test_ReadCertificateList();
+#    test_ReadCertificateList();
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
 
 #    test_AddCRL();
 #    test_ReadCRL();
-    test_ExportCA();
-    test_ExportCertificate();
-    test_ExportCRL();
+#    test_ExportCA();
+#    test_ExportCertificate();
+#    test_ExportCRL();
 #    test_Verify();
 
 #    test_AddSubCA();
@@ -52,7 +52,8 @@ sub run {
 #    test_CreateManyCerts();
 #    test_ListManyCerts('215152321042820');
 #    test_WriteCertificateDefaults();
-    
+#    test_ReadLDAPExportDefaults();
+    test_InitLDAPcaManagement();
     return 1;
 }
 
@@ -799,6 +800,32 @@ sub test_AddCertificate2 {
     } else {
         print STDERR "OK: '$res'\n";
     }
+}
+
+sub test_ReadLDAPExportDefaults {
+
+    my $res = YaPI::CaManagement->ReadLDAPExportDefaults({ type => "ca" });
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+
+}
+
+sub test_InitLDAPcaManagement {
+
+    my $res = YaPI::CaManagement->InitLDAPcaManagement({ ldapPasswd => "system" });
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK \n";
+    }
+    
 }
 
 1;
