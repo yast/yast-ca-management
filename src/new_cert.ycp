@@ -306,29 +306,62 @@
 
     /**
      * Creating new CA/Certificate ( 2. step )
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request")          
      * @return `next, 'back, 'cancel, `advancedOptions
      */
     define symbol new_cert2 (string kind) ``{
 
-        // help text 1/4
-        string helptext = _("<p>The private key of the certificate needs a <B>Password</B> with a minimum length of five characters. For verification reasons, reenter it in the next field.</p>");
+	string helptext = "Help text not found; please fix";
+	
+	if (kind == "Root CA"
+	    || kind == "Sub CA")
+	{
+	    // help text 1/4
+	    helptext = _("<p>The private key of the CA needs a <B>Password</B> with a minimum length of five characters. For verification reasons, reenter it in the next field.</p>");
 
-        // help text 2/4
-        helptext = helptext + _("<p>Each certificate has its own <b>Key Length</b>. Some applications that use certificates need special key lengths.</p>");
+	    // help text 2/4
+	    helptext = helptext + _("<p>Each CA has its own <b>Key Length</b>. Some applications that use certificates need special key lengths.</p>");
 
-        // help text 3/4
-        helptext = helptext + _("<p>The certificate is valid for only specific period (<b>Valid Period</b>). Enter the time frame in days.</p>");
+	    // help text 3/4
+	    helptext = helptext + _("<p>The CA is valid for only specific period (<b>Valid Period</b>). Enter the time frame in days.</p>");
 
-        // help text 4/4
-        helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
+	    // help text 4/4
+	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
+	}
+	else if (kind == "Client Certificate"
+		 || kind == "Server Certificate")
+	{
+	    // help text 1/4
+	    helptext = _("<p>The private key of the certificate needs a <B>Password</B> with a minimum length of five characters. For verification reasons, reenter it in the next field.</p>");
 
+	    // help text 2/4
+	    helptext = helptext + _("<p>Each certificate has its own <b>Key Length</b>. Some applications that use certificates need special key lengths.</p>");
+
+	    // help text 3/4
+	    helptext = helptext + _("<p>The certificate is valid for only specific period (<b>Valid Period</b>). Enter the time frame in days.</p>");
+
+	    // help text 4/4
+	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
+	}
+	else if (kind == "Client Request"
+		 || kind == "Server Request")
+	{
+	    // help text 1/3
+	    helptext = _("<p>The private key of the request needs a <B>Password</B> with a minimum length of five characters. For verification reasons, reenter it in the next field.</p>");
+
+	    // help text 2/3
+	    helptext = helptext + _("<p>Each request has its own <b>Key Length</b>. Some applications that use certificates need special key lengths.</p>");
+
+	    // help text 3/3
+	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
+	}	
 
         term contents = `VBox ();
         contents = add (contents, `Password( `id (`id_password), _("&Password:"), CaMgm::password));
         contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password:"), CaMgm::verifyPassword));
 	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 100, 9999, CaMgm::keyLength));
 	if (kind != "Client Request"
-	    &&kind != "Server Request")
+	    && kind != "Server Request")
 	{
 	    contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
 	}
@@ -387,11 +420,32 @@
 
 	integer i = 0;
 	boolean nextLine = false;
-	
-        // help text 1/2
-        string helptext = _("<p>This frame gives an overview of all settings for the certificate that will be created.</p>");
-        // help text 2/2
-        helptext = helptext + _("<p>Click <b>Create</b> to generate the certificate.</p>");
+	string helptext = "Not defined; please fix";
+
+	if (kind == "Root CA"
+	    || kind == "Sub CA")
+	{
+	    // help text 1/2
+	    helptext = _("<p>This frame gives an overview of all settings for the CA that will be created.</p>");
+	    // help text 2/2
+	    helptext = helptext + _("<p>Click <b>Create</b> to generate the CA.</p>");
+	}
+	else if (kind == "Client Certificate"
+		 || kind == "Server Certificate")
+	{
+	    // help text 1/2
+	    helptext = _("<p>This frame gives an overview of all settings for the certificate that will be created.</p>");
+	    // help text 2/2
+	    helptext = helptext + _("<p>Click <b>Create</b> to generate the certificate.</p>");
+	}
+	else if (kind == "Client Request"
+		 || kind == "Server Request")
+	{
+	    // help text 1/2
+	    helptext = _("<p>This frame gives an overview of all settings for the request that will be created.</p>");
+	    // help text 2/2
+	    helptext = helptext + _("<p>Click <b>Create</b> to generate the request.</p>");	    
+	}
 
 	string text = _("\n<b>Summary</b>");
 	text = text + "<br><pre>";
@@ -411,12 +465,12 @@
 	}
 	if (size (CaMgm::organisationUnit) > 0)
 	{	
-	    text = text +  _("Organizational Unit:        ")  + CaMgm::organisationUnit + "\n";
+	    text = text +  _("Organizational Unit:      ")  + CaMgm::organisationUnit + "\n";
 	}
 
 	if (size (CaMgm::emailList) > 0)
 	{
-	    text = text +  _("E-Mail Addresses:                 ");
+	    text = text +  _("E-Mail Addresses:         ");
 
 	    i = 0;
 	    foreach (map element, CaMgm::emailList, ``{

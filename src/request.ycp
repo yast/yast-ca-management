@@ -196,6 +196,10 @@
 	if (size (dn) > 0)
 	{
 	    text = text + "\nCommon Name:        " + ((list)dn["CN"]:[])[0]:"";
+	    if (size (requestMap["date"]:"") > 0)
+	    {
+		text = text + "\ngeneration Time:    " + requestMap["date"]:"";	
+	    }
 	    text = text + "\nOrganization:       " + ((list)dn["O"]:[])[0]:"";
 	    text = text + "\nLocation:           " + ((list)dn["L"]:[])[0]:"";	    
 	    text = text + "\nState:              " + ((list)dn["ST"]:[])[0]:"";
@@ -241,7 +245,8 @@
 					 element["organizationalUnitName"]:"",
 					 element["localityName"]:"",
 					 element["stateOrProvinceName"]:"",
-					 element["country"]:"" ) );
+					 element["country"]:"",
+					 element["date"]:"") );
 	    requestID = add (requestID, element["request"]:"");
 	    i = i + 1;
 	});
@@ -269,7 +274,7 @@
 						       _("Common Name"),
 						       _("E-Mail Address"), _("Organization"),
 						       _("Organizational Unit"), _("Locality"),
-						       _("State"), _("Country")),
+						       _("State"), _("Country"), _("Generate Time")),
 					      certTermList),
 				      `HSpacing (1)
 				      ),			       
@@ -320,7 +325,11 @@
 	    map ret = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
 							       "request":CaMgm::currentRequest,
 							       "type":"parsed"]);
-	    y2milestone("ReadRequest(%1,%2): %3", CaMgm::currentCA, CaMgm::currentRequest, ret);	    
+	    y2milestone("ReadRequest(%1,%2): %3", CaMgm::currentCA, CaMgm::currentRequest, ret);
+
+	    // Add generation time to map
+	    term itemTerm =  (term) UI::QueryWidget(`id(`table), `Item(id));
+	    ret = add (ret, "date", select (itemTerm, 8, ""));
 	    
 	    UI::ChangeWidget( `id(`textinfo), `Value, getRequestDescription (ret));
 	}	    
