@@ -30,12 +30,12 @@ sub run {
 #    test_ReadCA();
 #    test_AddRequest();
 #    test_issueCertificate();
-#    test_AddCertificate();
-#    test_ReadCertificateList();
+    test_AddCertificate();
+    test_ReadCertificateList();
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
-#    test_AddCRL();
-#    test_ReadCRL();
+    test_AddCRL();
+    test_ReadCRL();
 #    test_ExportCA();
 #    test_ExportCertificate();
     test_Verify();
@@ -49,12 +49,13 @@ sub printError {
         print STDERR "$k = ".$err->{$k}."\n";
     }
     print STDERR "\n";
+    exit 1;
 }
 
 sub test_Interface {
-    my $interface = CaManagement->Interface();
+    my $interface = CaManagement::Interface();
     if( not defined $interface ) {
-        my $msg = CaManagement->Error();
+        my $msg = CaManagement::Error();
         print STDERR "ERROR Interface: \n";
         printError($err);
     } else {
@@ -65,9 +66,9 @@ sub test_Interface {
 }
 
 sub test_ReadCAList {
-    my $caList = CaManagement->ReadCAList();
+    my $caList = CaManagement::ReadCAList();
     if( not defined $caList ) {
-        my $msg = CaManagement->Error();
+        my $msg = CaManagement::Error();
         print STDERR "ERROR ReadCaList: \n";
         printError($err);
     } else {
@@ -93,12 +94,12 @@ sub test_AddRootCA {
                 'organizationName'      => 'My GmbH',
                 'crlDistributionPoints' => 'URI:http://my.linux.tux/',
                };
-    print STDERR "trying to call YaST::caManagement->AddRootCA with caName = '$caName'\n";
+    print STDERR "trying to call YaST::caManagement::AddRootCA with caName = '$caName'\n";
 
-    my $res = CaManagement->AddRootCA($data);
+    my $res = CaManagement::AddRootCA($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
         print STDERR "OK\n";
@@ -120,12 +121,12 @@ sub test_AddRootCA2 {
                 'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
                 'nsComment'             => "\"trulla die waldfee\""
                };
-    print STDERR "trying to call YaST::caManagement->AddRootCA with caName = '$caName'\n";
+    print STDERR "trying to call YaST::caManagement::AddRootCA with caName = '$caName'\n";
     
-    my $res = CaManagement->AddRootCA($data);
+    my $res = CaManagement::AddRootCA($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
         print STDERR "OK\n";
@@ -139,13 +140,13 @@ sub test_ReadCertificateDefaults {
                     'caName'    => $exampleCA,
                     'certType'  => $certType
                    };
-        print STDERR "trying to call YaST::caManagement->ReadCertificateDefaults($certType)\n";
+        print STDERR "trying to call YaST::caManagement::ReadCertificateDefaults($certType)\n";
         print STDERR "with caName = '$exampleCA'\n";
         
-        my $res = CaManagement->ReadCertificateDefaults($data);
+        my $res = CaManagement::ReadCertificateDefaults($data);
         if( not defined $res ) {
             print STDERR "Fehler\n";
-            my $err = CaManagement->Error();
+            my $err = CaManagement::Error();
             printError($err);
         } else {
             print STDERR Data::Dumper->Dump([$res])."\n";
@@ -158,13 +159,13 @@ sub test_ReadCertificateDefaults2 {
     my $data = {
                 'certType'  => 'ca'
                };
-    print STDERR "trying to call YaST::caManagement->ReadCertificateDefaults(ca)\n";
+    print STDERR "trying to call YaST::caManagement::ReadCertificateDefaults(ca)\n";
     print STDERR "=> Root CA defaults\n";
 
-    my $res = CaManagement->ReadCertificateDefaults($data);
+    my $res = CaManagement::ReadCertificateDefaults($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
         print STDERR Data::Dumper->Dump([$res])."\n";
@@ -178,13 +179,13 @@ sub test_ReadCA {
                     'caName' => $exampleCA,
                     'type'   => $type
                    };
-        print STDERR "trying to call YaST::caManagement->ReadCA($type)\n";
+        print STDERR "trying to call YaST::caManagement::ReadCA($type)\n";
         print STDERR "with caName = '$exampleCA'\n";
         
-        my $res = CaManagement->ReadCA($data);
+        my $res = CaManagement::ReadCA($data);
         if( not defined $res ) {
             print STDERR "Fehler\n";
-            my $err = CaManagement->Error();
+            my $err = CaManagement::Error();
             printError($err);
         } else {
             print STDERR Data::Dumper->Dump([$res])."\n";
@@ -207,12 +208,12 @@ sub test_AddRequest {
                 'organizationName'      => 'My Linux/OU=hallo',
                 'nsComment'             => "\"heide witzka, herr Kapitän\""
                };
-    print STDERR "trying to call YaST::caManagement->AddRequest with caName = '$exampleCA'\n";
+    print STDERR "trying to call YaST::caManagement::AddRequest with caName = '$exampleCA'\n";
     
-    my $res = CaManagement->AddRequest($data);
+    my $res = CaManagement::AddRequest($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
         $exampleReq = $res;
@@ -230,12 +231,12 @@ sub test_issueCertificate {
                 'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
                 'nsComment'             => "\"Heide Witzka, Herr Kapitän\"",
                };
-    print STDERR "trying to call YaST::caManagement->IssueCertificate with caName = '$exampleCA'\n";
+    print STDERR "trying to call YaST::caManagement::IssueCertificate with caName = '$exampleCA'\n";
     
-    my $res = CaManagement->IssueCertificate($data);
+    my $res = CaManagement::IssueCertificate($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
         print STDERR "OK: '$res'\n";
@@ -250,7 +251,7 @@ sub test_AddCertificate {
                 'certType'              => 'client',
                 'keyPasswd'             => 'system',
                 'caPasswd'              => 'system',
-                'commonName'            => 'My Request4',
+                'commonName'            => 'My Request6',
                 'emailAddress'          => 'my@linux.tux',
                 'keyLength'             => '2048',
                 'days'                  => '365',
@@ -263,12 +264,12 @@ sub test_AddCertificate {
                 'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
                 'nsComment'             => "\"Heide Witzka, Herr Kapitän\"",
                };
-    print STDERR "trying to call YaST::caManagement->AddCertificate with caName = '$exampleCA'\n";
+    print STDERR "trying to call YaST::caManagement::AddCertificate with caName = '$exampleCA'\n";
     
-    my $res = CaManagement->AddCertificate($data);
+    my $res = CaManagement::AddCertificate($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
         print STDERR "OK: '$res'\n";
@@ -282,16 +283,16 @@ sub test_ReadCertificateList {
                 caPasswd => "system"
                };
 
-    print STDERR "trying to call YaST::caManagement->ReadCertificateList()\n";
+    print STDERR "trying to call YaST::caManagement::ReadCertificateList()\n";
     print STDERR "with caName = '$exampleCA'\n";
     
-    my $res = CaManagement->ReadCertificateList($data);
+    my $res = CaManagement::ReadCertificateList($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
-        $exampleCert = $res->[1]->{'certificate'};
+        $exampleCert = $res->[0]->{'certificate'};
         print STDERR Data::Dumper->Dump([$res])."\n";
     }
 }
@@ -304,13 +305,13 @@ sub test_ReadCertificate {
                     'type'   => $type,
                     'certificate' => $exampleCert
                    };
-        print STDERR "trying to call YaST::caManagement->ReadCertificate($type)\n";
+        print STDERR "trying to call YaST::caManagement::ReadCertificate($type)\n";
         print STDERR "with caName = '$exampleCA' and certificate = '$exampleCert'\n";
         
-        my $res = CaManagement->ReadCertificate($data);
+        my $res = CaManagement::ReadCertificate($data);
         if( not defined $res ) {
             print STDERR "Fehler\n";
-            my $err = CaManagement->Error();
+            my $err = CaManagement::Error();
             printError($err);
         } else {
             print STDERR Data::Dumper->Dump([$res])."\n";
@@ -325,13 +326,13 @@ sub test_RevokeCertificate {
                 'caPasswd'    => 'system',
                 'certificate' => $exampleCert
                };
-    print STDERR "trying to call YaST::caManagement->RevokeCertificate()\n";
+    print STDERR "trying to call YaST::caManagement::RevokeCertificate()\n";
     print STDERR "with caName = '$exampleCA' and certificate = '$exampleCert'\n";
     
-    my $res = CaManagement->RevokeCertificate($data);
+    my $res = CaManagement::RevokeCertificate($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
         print STDERR "Revoke successful\n";
@@ -344,13 +345,13 @@ sub test_AddCRL {
                 'caPasswd'    => 'system',
                 'days'        => 8
                };
-    print STDERR "trying to call YaST::caManagement->AddCRL()\n";
+    print STDERR "trying to call YaST::caManagement::AddCRL()\n";
     print STDERR "with caName = '$exampleCA'\n";
     
-    my $res = CaManagement->AddCRL($data);
+    my $res = CaManagement::AddCRL($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
         print STDERR "AddCRL successful\n";
@@ -364,13 +365,13 @@ sub test_ReadCRL {
                     'caName' => $exampleCA,
                     'type'   => $type,
                    };
-        print STDERR "trying to call YaST::caManagement->ReadCRL($type)\n";
+        print STDERR "trying to call YaST::caManagement::ReadCRL($type)\n";
         print STDERR "with caName = '$exampleCA' \n";
         
-        my $res = CaManagement->ReadCRL($data);
+        my $res = CaManagement::ReadCRL($data);
         if( not defined $res ) {
             print STDERR "Fehler\n";
-            my $err = CaManagement->Error();
+            my $err = CaManagement::Error();
             printError($err);
         } else {
             print STDERR Data::Dumper->Dump([$res])."\n";
@@ -388,13 +389,13 @@ sub test_ExportCA {
         if($ef =~ /^PKCS12/) {
             $data->{'P12Password'} = "tralla";
         }
-        print STDERR "trying to call YaST::caManagement->ExportCA($ef)\n";
+        print STDERR "trying to call YaST::caManagement::ExportCA($ef)\n";
         print STDERR "with caName = '$exampleCA' \n";
     
-        my $res = CaManagement->ExportCA($data);
+        my $res = CaManagement::ExportCA($data);
         if( not defined $res ) {
             print STDERR "Fehler\n";
-            my $err = CaManagement->Error();
+            my $err = CaManagement::Error();
             printError($err);
         } else {
             if(! open(OUT, "> /tmp/mc/certs/$ef")) {
@@ -418,13 +419,13 @@ sub test_ExportCertificate {
         if($ef =~ /^PKCS12/) {
             $data->{'P12Password'} = "tralla";
         }
-        print STDERR "trying to call YaST::caManagement->ExportCertificate($ef)\n";
+        print STDERR "trying to call YaST::caManagement::ExportCertificate($ef)\n";
         print STDERR "with caName = '$exampleCA' \n";
     
-        my $res = CaManagement->ExportCertificate($data);
+        my $res = CaManagement::ExportCertificate($data);
         if( not defined $res ) {
             print STDERR "Fehler\n";
-            my $err = CaManagement->Error();
+            my $err = CaManagement::Error();
             printError($err);
         } else {
             if(! open(OUT, "> /tmp/mc/certs/CRT_$ef")) {
@@ -443,13 +444,13 @@ sub test_Verify {
                 caPasswd => "system"
                };
     
-    print STDERR "trying to call YaST::caManagement->ReadCertificateList()\n";
+    print STDERR "trying to call YaST::caManagement::ReadCertificateList()\n";
     print STDERR "with caName = '$exampleCA'\n";
     
-    my $res = CaManagement->ReadCertificateList($data);
+    my $res = CaManagement::ReadCertificateList($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
-        my $err = CaManagement->Error();
+        my $err = CaManagement::Error();
         printError($err);
     } else {
 
@@ -459,11 +460,11 @@ sub test_Verify {
                      certificate => $cert->{'certificate'} 
                     };
 
-            print STDERR "trying to call YaST::caManagement->Verify(".$cert->{'certificate'}.")\n";
+            print STDERR "trying to call YaST::caManagement::Verify(".$cert->{'certificate'}.")\n";
 
-            my $Vret = CaManagement->Verify($data);
+            my $Vret = CaManagement::Verify($data);
             if(not defined $Vret) {
-                printError(CaManagement->Error());
+                printError(CaManagement::Error());
             } else {
                 print STDERR "$Vret\n";
             }
