@@ -115,16 +115,47 @@
 	});
 
 	UI::ChangeWidget(`id(`id_adv_issuer_alt_name), `Items, itemList);
-	UI::ChangeWidget(`id(`id_adv_cri_issuer_alt_name), `Value, CaMgm::adv_cri_issuer_alt_name);		
+	UI::ChangeWidget(`id(`id_adv_cri_issuer_alt_name), `Value, CaMgm::adv_cri_issuer_alt_name);
+	UI::ChangeWidget(`id(`id_adv_copy_issuer_alt_name), `Value, CaMgm::adv_copy_issuer_alt_name);			
     }
     define string set_advanced_issuer_alt_name() ``{
 	y2milestone("calling set_advanced_issuer_alt_name");
 	string error = "";
 
-	CaMgm::adv_cri_issuer_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_issuer_alt_name), `Value);	
+	CaMgm::adv_cri_issuer_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_issuer_alt_name), `Value);
+	CaMgm::adv_copy_issuer_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_copy_issuer_alt_name), `Value);		
 	// The table widget will be filled in the add or delete callback
 	
 	return error;
+    }
+    define void add_advanced_issuer_alt_name() ``{
+	y2milestone("Calling add_advanced_issuer_alt_name");
+	
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `VSpacing(16),
+			       `VBox (
+				      `HSpacing (60), 
+				      // popup window header
+				      `Heading (_("Help")),
+				      `VSpacing (0.5),
+				      `VSpacing (1.5),
+				      // push button label
+				      `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+				      )
+			       )
+			);
+
+	UI::SetFocus (`id(`ok));
+	UI::UserInput ();
+	UI::CloseDialog ();
+
+	
+    }
+    define void delete_advanced_issuer_alt_name() ``{
+	y2milestone("Calling delete_advanced_issuer_alt_name");
+    }
+    define void modify_advanced_issuer_alt_name() ``{
+	y2milestone("Calling modify_advanced_issuer_alt_name");
     }
     
 
@@ -237,17 +268,28 @@
 	});
 
 	UI::ChangeWidget(`id(`id_adv_subject_alt_name), `Items, itemList);
-	UI::ChangeWidget(`id(`id_adv_cri_subject_alt_name), `Value, CaMgm::adv_cri_subject_alt_name);		
+	UI::ChangeWidget(`id(`id_adv_cri_subject_alt_name), `Value, CaMgm::adv_cri_subject_alt_name);
+	UI::ChangeWidget(`id(`id_adv_copy_subject_alt_name), `Value, CaMgm::adv_copy_subject_alt_name);			
     }
     define string set_advanced_subject_alt_name() ``{
 	y2milestone("calling set_advanced_subject_alt_name");
 	string error = "";
 
-	CaMgm::adv_cri_subject_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_subject_alt_name), `Value);	
+	CaMgm::adv_cri_subject_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_subject_alt_name), `Value);
+	CaMgm::adv_copy_subject_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_copy_subject_alt_name), `Value);		
 	// The table widget will be filled in the add or delete callback
 	
 	return error;
-    }	
+    }
+    define void add_advanced_subject_alt_name() ``{
+	y2milestone("Calling add_advanced_subject_alt_name");
+    }
+    define void delete_advanced_subject_alt_name() ``{
+	y2milestone("Calling delete_advanced_subject_alt_name");
+    }
+    define void modify_advanced_subject_alt_name() ``{
+	y2milestone("Calling modify_advanced_subject_alt_name");
+    }
 
     
     define void get_advanced_unstructured_name() ``{
