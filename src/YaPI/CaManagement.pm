@@ -155,6 +155,9 @@ $bool = DeleteRequest($valueMap)
 
   Delete a Request.
 
+$bool = ImportCA($valueMap)
+
+  Import a CA certificate and creates a infrastructure
 
 =head1 COMMON PARAMETER
 
@@ -5003,7 +5006,7 @@ EXAMPLE:
 
  foreach my $type ("parsed", "plain") {
      my $data = {
-                 'datatype' => "certificate",
+                 'datatype' => "CERTIFICATE",
                  'inFile' => '/path/to/a/certificate.pem',
                  'inForm' => "PEM"
                  'type'   => $type,
@@ -5023,7 +5026,7 @@ BEGIN { $TYPEINFO{ReadFile} = ["function", "any", ["map", "string", "any"] ]; }
 sub ReadFile {
     my $self = shift;
     my $data = shift;
-    my $ret = undef;
+    my $ret  = undef;
 
     if(! defined $data->{inFile} || $data->{inFile} eq "") {
         return $self->SetError(summary => "Missing parameter 'inFile'",
@@ -5572,6 +5575,174 @@ sub DeleteRequest {
     }
     return 1;    
 }
+
+
+=item *
+C<$bool = ImportCA($valueMap)>
+
+Import a CA certificate and private key and creates a 
+infrastructure.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required - A name for this CA)
+
+* caCertificate (required - path to certificate file in PEM format)
+
+* caKey (required - path to private key in PEM format)
+
+* caPasswd (required, if the private key is unencrypted)
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+ my $data = {
+             caName        => 'My_CA',
+             caCertificate => /path/to/cacert.pem,
+             caKey         => /path/to/cacert.key
+            };
+
+    my $res = YaPI::CaManagement->ImportCA($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "OK\n";
+    }
+
+=cut
+
+BEGIN { $TYPEINFO{ImportCA} = ["function", "boolean", ["map", "string", "any"] ]; }
+sub ImportCA {
+    my $self   = shift;
+    my $data   = shift;
+    
+    my $caName = "";
+    
+    if (!defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+                                    # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{'caName'};
+
+    if (!defined $data->{caCertificate} || $data->{caCertificate} eq "") {
+        return $self->SetError(summary => __("Invalid value for parameter 'caCertificate'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    my $hash = {
+                'datatype' => "CERTIFICATE",
+                'inFile' => $data->{caCertificate},
+                'inForm' => "PEM",
+                'type'   => 'parsed',
+               };
+    my $res = $self->ReadFile($hash);
+    if (! defined $res) {
+        return $self->SetError(summary => __("CA certificate not available in").
+                               " '$data->{caCertificate}'",
+                               code => "FILE_DOES_NOT_EXIST");
+        return undef;
+    }
+    
+    if (!defined $res->{"IS_CA"} ||
+        $res->{"IS_CA"} != 1) {
+                                           # parameter check failed
+        return $self->SetError( summary => __("According to 'basicConstraints', this is not a CA."),
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    
+    if (!defined $data->{caKey} || $data->{caKey} eq "") {
+        return $self->SetError(summary => __("Invalid value for parameter 'caKey'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    
+    my $size = SCR->Read(".target.size", $data->{caKey});
+    if ($size <= 0) {
+        return $self->SetError(summary => __("CA key not available in")." '$data->{caKey}'",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+    
+    my $pem = SCR->Read(".target.string", $data->{caKey});
+    if (!defined $pem) {
+        return $self->SetError(summary => __("CA key not available in")." '$data->{caKey}'",
+                               code => "SCR_READ_FAILED");
+    }
+
+    my $beginKey = "-----BEGIN[\\w\\s]+KEY[-]{5}";
+    my $endKey   = "-----END[\\w\\s]+KEY[-]{5}";
+    my ( $pemKey ) = ( $pem =~ /($beginKey[\S\s\n]+$endKey)/ );
+    
+    if(! defined $pemKey || $pemKey eq "") {
+        return $self->SetError(summary => "Invalid Key data.",
+                               code => "PARSING_ERROR");
+    }
+
+    if($pemKey !~ /ENCRYPTED/si) {
+        if(! defined $data->{caPasswd} || $data->{caPasswd} eq "") {
+            return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
+                                   code    => "PARAM_CHECK_FAILED");
+        }
+    }
+    
+    # END OF CHECKS
+
+    if (not SCR->Write(".caTools.caInfrastructure", $caName)) {
+        return $self->SetError(%{SCR->Error(".caTools")});
+    }
+
+    my $ret = SCR->Execute(".target.bash", "cp $data->{caCertificate} $CAM_ROOT/$caName/cacert.pem");
+    if (! defined $ret || $ret != 0) {
+        YaST::caUtils->cleanCaInfrastructure($caName);
+        return $self->SetError( summary => "Can not copy CA certificate",
+                                code => "COPY_FAILED");
+    }
+
+    if($pemKey =~ /ENCRYPTED/si) {
+        $ret = SCR->Execute(".target.bash", "cp $data->{caKey} $CAM_ROOT/$caName/cacert.key");
+        if (! defined $ret || $ret != 0) {
+            YaST::caUtils->cleanCaInfrastructure($caName);
+            return $self->SetError( summary => "Can not copy CA Key",
+                                    code => "COPY_FAILED");
+        }
+    } else {
+        my $hash = {
+                    DATATYPE  => "KEY",
+                    INFORM    => "PEM",
+                    INFILE    => $data->{caKey},
+                    OUTFORM   => "PEM",
+                    OUTPASSWD => $data->{'caPasswd'},
+                    OUTFILE   => "$CAM_ROOT/$caName/cacert.key",
+                   };
+
+        $ret = SCR->Execute(".openssl.dataConvert", $caName, $hash);
+        if (! defined $ret) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+    }
+
+    $ret = SCR->Execute(".target.bash", "cp $CAM_ROOT/$caName/cacert.pem $CAM_ROOT/.cas/$caName.pem");
+    if (! defined $ret || $ret != 0) {
+        YaST::caUtils->cleanCaInfrastructure($caName);
+        return $self->SetError( summary => "Can not copy CA certificate",
+                                code => "COPY_FAILED");
+    }
+    $ret = SCR->Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
+    if (! defined $ret || $ret != 0) {
+        YaST::caUtils->cleanCaInfrastructure($caName);
+        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
+                                code => "C_REHASH_FAILED");
+    }    
+
+    return 1;
+}
+
 
 
 1;
