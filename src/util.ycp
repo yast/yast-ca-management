@@ -719,7 +719,7 @@
 		    {
 			ret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CAname,
 										"certificate" : certificate,
-										"keyPassword" : UI::QueryWidget (`id(`keyPassword), `Value),
+										"keyPasswd" : UI::QueryWidget (`id(`keyPassword), `Value),
 										"exportFormat" : kind,
 										"destinationFile" : filename,
 										"P12Password" : UI::QueryWidget (`id(`PK12password), `Value)
