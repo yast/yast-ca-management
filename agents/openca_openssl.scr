@@ -18,6 +18,6 @@
   `OpenSSL ($[
     "path":   "/usr/bin/openssl",
     "tmpdir": "/tmp",
-    "stderr": "/dev/null",
+    "stderr": ">> /var/log/YaST2/ca.log",
   ])
 )
