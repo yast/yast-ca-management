@@ -151,6 +151,10 @@ $request = ImportRequest($valueMap)
 
   Import a request in a CA repository.
 
+$bool = DeleteRequest($valueMap)
+
+  Delete a Request.
+
 
 =head1 COMMON PARAMETER
 
@@ -5450,6 +5454,113 @@ sub ImportRequest {
     }
     return $md5;
 }
+
+
+=item *
+C<$bool = DeleteRequest($valueMap)>
+
+Delete a Request. This function removes also
+the private key if one is available.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* request (required)
+
+* caPasswd (required)
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+ my $data = {
+             caName        => 'My_CA',
+             request       => $requestName,
+             caPasswd      => 'system'
+            };
+
+    my $res = YaPI::CaManagement->DeleteRequest($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "OK\n";
+    }
+
+=cut
+
+BEGIN { $TYPEINFO{DeleteRequest} = ["function", "boolean", ["map", "string", "any"] ]; }
+sub DeleteRequest {
+    my $self = shift;
+    my $data = shift;
+    my $caName  = "";
+    my $request = "";
+
+    my $req = "";
+
+    if (!defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+                                    # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{'caName'};
+    
+    if (!defined $data->{'request'} ||
+        $data->{'request'} !~ /^[[:xdigit:]]+$/) {
+        # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'request'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $request = $data->{'request'};
+    
+    $request =~ /^([[:xdigit:]]+)$/;
+    if(defined $1 && $1 ne "" ) {
+        $req = $1;
+    }
+    
+    my $check = SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'},
+                                                          CACERT => 1});
+    if(not defined $check) {
+        return $self->SetError(%{SCR->Error(".caTools")});
+    }
+
+    if( not SCR->Write(".caTools.delCAM", $caName, { MD5 => $req })) {
+        my $desc = "Can not remove the request from the database.\n";
+        my $err .= SCR->Error(".caTools");
+        if(defined $err && defined $err->{summary}) {
+            $desc .= $err->{summary}."\n";
+        }
+        if(defined $err && defined $err->{description}) {
+            $desc .= $err->{description}."\n";
+        }
+        return $self->SetError(summary => __("Removing the request failed."),
+                               description => $desc,
+                               code => "SCR_WRITE_FAILED");
+    }
+
+    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/$req.key") >= 0) {
+        if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/$req.key")) {
+            y2error("Removing key failed. '$CAM_ROOT/$caName/keys/$req.key'");
+        }
+    }
+    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/$req.req") >= 0) {
+        if(!SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/$req.req")) {
+            return $self->SetError(summary => __("Removing the request failed."),
+                                   code => "SCR_EXECUTE_FAILED");
+        }
+    }
+    return 1;    
+}
+
 
 1;
 
