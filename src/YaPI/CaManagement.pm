@@ -3,6 +3,14 @@
 #
 # $Id$
 ###############################################################
+package YaPI::CaManagement;
+
+BEGIN {
+    push @INC, '/usr/share/YaST2/modules/';
+}
+
+our $VERSION="1.1.0";
+
 
 =head1 NAME
 
@@ -11,6 +19,10 @@ YaPI::CaManagement
 =head1 PREFACE
 
 This package is the public Yast2 API to the CA management.
+
+=head1 VERSION
+
+1.1.0
 
 =head1 SYNOPSIS
 
@@ -126,6 +138,14 @@ $bool = ImportCommonServerCertificate($valueMap)
 $bool = ReadFile($valueMap)
 
   Returns a certificate or CRL as plain text or parsed map.
+
+$certList = ReadRequestList($valueMap)
+
+  Returns a list of maps with all requests of the defined CA.
+
+$cert = ReadRequest($valueMap)
+
+  Returns a request as plain text or parsed map.
 
 
 =head1 COMMON PARAMETER
@@ -329,14 +349,6 @@ crlDistributionPoints URI:<URL>[,URI:<URL>,...]
 
 =cut
 
-package YaPI::CaManagement;
-
-BEGIN {
-    push @INC, '/usr/share/YaST2/modules/';
-}
-
-our $VERSION="1.0.1";
-
 use strict;
 use vars qw(@ISA);
 
@@ -362,7 +374,8 @@ YaST::YCP::Import ("Ldap");
 
 our %TYPEINFO;
 our @CAPABILITIES = (
-                     'SLES9'
+                     'SLES9',
+                     'REQUEST'
                     );
 
 my $CAM_ROOT = "/var/lib/CAM";
