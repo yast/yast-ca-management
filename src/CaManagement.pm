@@ -10,15 +10,48 @@ use ycp;
 use URI::Escape;
 use X500::DN;
 use MIME::Base64;
-use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now)
-;
+use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now);
+
 YaST::YCP::Import ("SCR");
 
 #@YaST::Logic::ISA = qw( YaST );
 
 our %TYPEINFO;
+our @CAPABILITIES = (
+                     'SLES9'
+                    );
+
 
 my $CAM_ROOT = "/var/lib/YaST2/CAM";
+
+BEGIN { $TYPEINFO{Interface} = ["function", "any"]; }
+sub Interface {
+    my @ret = ();
+    foreach my $funcName (sort keys %TYPEINFO) {
+        my @dummy = @{$TYPEINFO{$funcName}};
+        my $hash = {};
+
+        $hash->{'functionName'} = $funcName;
+        $hash->{'return'}       = $dummy[1];
+        splice(@dummy, 0, 2);
+        $hash->{'argument'} = \@dummy;
+        push @ret, $hash;
+    }
+    return \@ret;
+}
+
+BEGIN { $TYPEINFO{Version} = ["function", "string"]; }
+sub Version {
+    return $VERSION;
+}
+
+BEGIN { $TYPEINFO{Supports} = ["function", "boolean", "string"]; }
+sub Supports {
+    my $self = shift;
+    my $cap  = shift;
+
+    return $self->isOneOfList($cap, @CAPABILITIES);
+}
 
 BEGIN { $TYPEINFO{ReadCAList} = ["function", "any"]; }
 sub ReadCAList {
@@ -628,15 +661,16 @@ sub ReadCertificateList {
                                code    => "PARAM_CHECK_FAILED");
     }
     my $caName = $data->{'caName'};
-    if (not defined $data->{'caPasswd'} ||
+    if (defined $data->{'caPasswd'} &&
         length($data->{'caPasswd'}) < 4) {
         return $self->SetError(summary => "Wrong value for parameter 'caPasswd'.",
                                code    => "PARAM_CHECK_FAILED");
     }
-
-    my $ret = $self->UpdateDB($data);
-    if ( not defined $ret ) {
-        return undef;
+    if( defined $data->{'caPasswd'} ) {    # needed only for UpdateDB
+        my $ret = $self->UpdateDB($data);
+        if ( not defined $ret ) {
+            return undef;
+        }
     }
 
     $ret = SCR::Read(".caTools.certificateList", $data->{'caName'});
