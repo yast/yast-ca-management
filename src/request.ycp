@@ -268,8 +268,8 @@
 	    
 	if (ui == `view)
 	{
-	    showLongCertDescription (CaMgm::currentCA,
-				     CaMgm::currentRequest);		
+	    showLongRequestDescription (CaMgm::currentCA,
+					CaMgm::currentRequest);		
 	}	    	
 	    
 	if (ui == `delete)
@@ -293,14 +293,19 @@
 		ui = `again;
 	    }
 	}
-	if (ui == `revoke)
+	if (ui == `sign)
 	{
 //	    revokeRequest();
 	    ui = `again;		
 	}
 	if (ui == `exportFile)
 	{
-//	    exportRequestToFile (CaMgm::currentCA, CaMgm::currentRequest);
+	    Popup::Error(_("currently not supported"));
+	}
+	if (ui == `import)
+	{
+	    importRequestFromDisk (CaMgm::currentCA);
+	    ui = `again;	    
 	}
 
 	return (symbol)ui;
