@@ -102,7 +102,7 @@
 	y2milestone("ReadCRL(%1): %2", CAname, ret);
 	SCR::Write (.target.ycp, "/tmp/stefan13", ret)	;
 
-	string text = text + _("<h4>Certificate Revocation List (CRL):</h4>");
+	string text = _("<h4>Certificate Revocation List (CRL):</h4>");
 	text = text + "<pre>";
 	text = text + "<br>Version: " + ret["VERSION"]:"";
 	text = text + "<br>Signature Algorithmus: " + ret["ALGORITHM"]:"";
@@ -140,8 +140,8 @@
 	buttons = add (buttons,  `HStretch());
 	buttons = add (buttons,  `MenuButton( _("Export"),
 					      [
-					       `item(`id(`exportFile), _("Export as &File") ),
-					       `item(`id(`createSubCA), _("Export to &LDAP"))
+					       `item(`id(`exportFile), _("to &File") ),
+					       `item(`id(`exportLDAP), _("to &LDAP"))
 					       ]
 					      ));
 	
@@ -160,8 +160,16 @@
 	    {
 		ui = createCRL (CaMgm::currentCA);
 	    }
+	    if (ui == `exportLDAP)
+	    {
+		exportToLDAP ("CRL");
+	    }
+	    if (ui == `exportFile)
+	    {
+//		exportToFile ("CRL"); // FIXME
+	    }	    
         }
-        until (contains ([`back, `abort, `exportFile, `createSubCA, `again], ui));
+        until (contains ([`back, `abort, `createSubCA, `again], ui));
 
         return ui;
     }

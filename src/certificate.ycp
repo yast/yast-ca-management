@@ -150,7 +150,7 @@
 	    {
 		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
 		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
-		    string current_name = (string) select(table_item, 1, "");
+		    string CaMgm::currentCertificate = (string) select(table_item, 2, "");
  		    list<map> dummy_map = [];
 
 		    //finding entry in list
@@ -161,7 +161,7 @@
 //			}
 //		    });
 		    
-//		    CaMgm::emailList = dummy_map;
+//		     CaMgm::currentCertificate= dummy_map;
 
 		    ui = `again;
 	    }

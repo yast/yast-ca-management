@@ -148,4 +148,103 @@
 	
 	return password;
     }
+
+    /**
+     * Dialog for exporting CA/Certificate/CRL to LDAP
+     *   
+     * @param "CA" "CRL" "CERT"
+     * @return true ( success )
+     */
+    define boolean exportToLDAP(string kind)``{
+
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      // popup window header
+				      `Heading (_("Export To LDAP")),
+				      `VSpacing (1),
+				      `TextEntry( `id (`hostname), _("&Hostname:")),
+				      `TextEntry( `id (`port), _("&Port:")),
+				      `TextEntry( `id (`dn), _("&DN:")),
+				      `TextEntry( `id (`binddn), _("&Bind DN:")),
+				      `Password(  `id (`password), _("P&assword:")),
+				      `VSpacing (1),					  
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),
+				      `VSpacing (1)					  
+				      ),
+			       `HSpacing (2)
+			       )
+			);
+
+	UI::SetFocus (`id(`hostname));
+	symbol ui = nil;
+	repeat
+ 	{
+	    ui = (symbol) UI::UserInput ();
+	    
+	    string password = (string) UI::QueryWidget(`id(`password), `Value);
+	    string hostname = (string) UI::QueryWidget(`id(`hostname), `Value);
+	    string port = (string) UI::QueryWidget(`id(`port), `Value);
+	    string dn = (string) UI::QueryWidget(`id(`dn), `Value);
+	    string binddn = (string) UI::QueryWidget(`id(`binddn), `Value);	    
+	    
+	    if (ui == `cancel)
+	    {
+		password = nil;
+	    }
+	    else
+	    {
+		// export to LDAP
+		boolean ret = nil;
+		if (kind == "CA")
+		{
+//		    ret = (boolean) CaManagement::ExportCAToLDAP ($["caName": CaMgm::currentCA,
+//								    "ldapHostname" : hostname,
+//								    "ldapPort" : port,
+//								    "destinationDN" : dn,
+//								    "BindDN" : binddn,
+//								    "password" : password
+//								  ]);
+		    ret = true; // FIXME		    
+		}
+		if (kind == "CRL")
+		{
+//		    ret = (boolean) CaManagement::ExportCRLToLDAP ($["caName": CaMgm::currentCA,
+//								     "ldapHostname" : hostname,
+//								     "ldapPort" : port,
+//								     "destinationDN" : dn,
+//								     "BindDN" : binddn,
+//								     "password" : password
+//								   ]);
+		    ret = true; // FIXME
+		}
+		if (kind == "CERT")
+		{
+//		    ret = (boolean) CaManagement::ExportCertificateToLDAP ($["caName": CaMgm::currentCA,
+//									     "certificate" : 
+//									     "ldapHostname" : hostname,
+//									     "ldapPort" : port,
+//									     "destinationDN" : dn,
+//									     "BindDN" : binddn,
+//									     "password" : password
+//									   ]);
+		    ret = true; // FIXME		    
+		}				
+		if (ret == nil
+		    || ret == false)
+		{
+		    showErrorCaManagement ();
+		    ret = false;
+		}
+	    }
+	}
+	until (contains ([`ok, `cancel], ui));
+	UI::CloseDialog ();
+    }
+    
 }
