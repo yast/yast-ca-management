@@ -127,7 +127,7 @@
 	if ( ((list<string>) splitstring (CaMgm::prop_server_commonName, "."))[0]:"" == "linux")
 	{
 	    ret = add (ret, "warning" ,
-		       _("Is the default host name <b>linux</b> really unique? The certificate is only valid if the host name is correct."));
+		       _("<p>Is the default host name <b>linux</b> really unique? The certificate is only valid if the host name is correct.</p>"));
 	}
     }
     else if (func == "AskUser")

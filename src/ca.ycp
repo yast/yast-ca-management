@@ -21,6 +21,11 @@
 
 {
     textdomain "ca-management";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "YaPI::CaManagement";
     
     include "ca-management/crlDefault.ycp";
     include "ca-management/certDefault.ycp";    
@@ -140,7 +145,7 @@
      * @return a string with the CA description
      */
     define string getDescriptionCA (string CAname) ``{
-	string text = _("\n<b> Description for ") + CAname + "</b>\n";
+	string text = sformat(_("<p><b> Description for %1 </b></p>"), CAname);
 
 	map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CAname, "type":"parsed"]);
         if (ret == nil)
@@ -153,8 +158,7 @@
 	map dn = ret["DN_HASH"]:$[];
 	if (size (dn) > 0)
 	{
-	    text = text + "<br>";
-	    text = text + _("<pre></pre>\n<b>Issued for:</b>");
+	    text = text + _("<p><b>Issued for:</b></p>");
 	    text = text + "<pre>";
 	    text = text + "\nCommon Name:  " + ((list)dn["CN"]:[])[0]:"";
 	    text = text + "\nOrganization: " + ((list)dn["O"]:[])[0]:"";
@@ -168,8 +172,7 @@
 	map issuer = ret["ISSUER_HASH"]:$[];
 	if (size (issuer) > 0)
 	{
-	    text = text + "<br>";
-	    text = text + _("\n<b>Issued by:</b>");
+	    text = text + _("<p><b>Issued by:</b></p>");
 	    text = text + "<pre>";	    
 	    text = text + "\nCommon Name:  " + ((list)issuer["CN"]:[])[0]:"";
 	    text = text + "\nOrganization: " + ((list)issuer["O"]:[])[0]:"";
@@ -180,7 +183,7 @@
 	    text = text + "</pre>";	    
 	}
 
-	text = text + "<br>" + _("\nValid from: ") + ret["NOTBEFORE"]:"";
+	text = text +  _("\nValid from: ") + ret["NOTBEFORE"]:"";
 	text = text + "<br>" + _("\nValid to: ") + ret["NOTAFTER"]:"";
 	text = text + "<br>" + "Fingerprint: " + ret["FINGERPRINT"]:"";
 

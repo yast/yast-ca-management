@@ -113,7 +113,7 @@
         // help text 2/2
         helptext = helptext + _("<p>Click <b>Save</b> to finish the input.</p>");
 
-	string text = _("\n<b>Summary</b>");
+	string text = _("<p><b>Summary</b></p>");
 	text = text + "<pre>";
 
 	text = text + "Basic Constaints:         " + CaMgm::adv_ca
