@@ -4,7 +4,6 @@ package ag_ca_tools;
 use strict;
 use YaST::SCRAgent;
 use ycp;
-use MIME::Base64;
 our @ISA = ("YaST::SCRAgent");
 
 my $CAM_ROOT = "/var/lib/YaST2/CAM/";
@@ -57,32 +56,33 @@ sub Read {
                                                       code => "PARAM_CHECK_FAILED");
         my @ret = ();
 
+        my $indextxt = $class->parseIndexTXT($caName);
         if (opendir(CERTDIR, "$CAM_ROOT/$caName/newcerts/")) {
             foreach my $d (readdir(CERTDIR)) {
                 if ($d !~ /^\./ && -e "$CAM_ROOT/$caName/newcerts/$d") {
-                    $d =~ /^([[:xdigit:]]+):([A-Za-z0-9\/=+]+)\.pem$/;
+                    $d =~ /^([[:xdigit:]]+):([[:xdigit:]]+)\.pem$/;
                     if(!defined $1 || !defined $2) {
                         y2warning("unknown filename $d");
                         next;
                     }
                     my $serial = $1;
-                    my $b64 = $2;
+                    my $md5 = $2;
+                    my $subject = "";
                     my $certLine = {};
                     $certLine->{'serial'} = $serial;
-                    $certLine->{'certificate'} = "$serial:$b64";
-                    my $subject = decode_base64($b64);
+                    $certLine->{'certificate'} = "$serial:$md5";
 
-#                    my @rdns = split(/\//, $subject);
-
-#                    for(my $x = 0; $x < scalar @rdns ; $x++) {
-#                        if($rdns[$x] =~ /\\$/) {
-#                            # split was wrong
-#                            my $dummy = $rdns[$x];
-#                            $dummy =~ s/\\$/\//;
-#                            $dummy .= splice(@rdns, $x +1 , 1);
-#                            $rdns[$x] = $dummy;
-#                        }
-#                    }
+                    foreach my $d (@$indextxt) {
+                        if($d->[3] eq "$serial") {
+                            $subject = $d->[5];
+                            $certLine->{'status'} = $d->[0];
+                            last;
+                        }
+                    }
+                    if($subject eq "") {
+                        return $class->SetError(summary => "Can not find certificate subject.",
+                                                code => "PARSE_ERROR");
+                    }
                     my @rdns = ();
                     while( $subject =~ /(.*?[^\\])(\/|$)/g ) {
                         my $dummy = $1;
@@ -109,11 +109,11 @@ sub Read {
                             $certLine->{'emailAddress'} = $1;
                         }
                     }
-                    my $stat = $class->status($caName, $certLine->{'certificate'});
-                    if(not defined $stat) {
-                        return undef;
-                    }
-                    $certLine->{'status'} = $stat;
+#                    my $stat = $class->status($caName, $certLine->{'certificate'});
+#                    if(not defined $stat) {
+#                        return undef;
+#                    }
+#                    $certLine->{'status'} = $stat;
                     push @ret, $certLine;
                 }
             }
@@ -195,11 +195,58 @@ sub Write {
     my $path = shift;
 
     if($path eq ".caInfrastructure") {
-        my $caName = shift;
+        my $caName = shift || return $class->SetError(summary => "Missing value caName",
+                                                      code => "PARAM_CHECK_FAILED");
 
         if( not defined $class->createCaInf($caName)) {
             return 0;
         }
+    } elsif($path eq ".addCAM") {
+        my $caName = shift || return $class->SetError(summary => "Missing value caName",
+                                                      code => "PARAM_CHECK_FAILED");
+        my $hash   = shift || return $class->SetError(summary => "Missing parameter.",
+                                                    code => "PARAM_CHECK_FAILED");
+        my $md5 = $hash->{MD5} || return $class->SetError(summary => "Missing parameter 'MD5'.",
+                                                          code => "PARAM_CHECK_FAILED");
+        my $dn  = $hash->{DN} || return $class->SetError(summary => "Missing parameter 'DN'.",
+                                                         code => "PARAM_CHECK_FAILED");
+
+        # FIXME: look in cam.txt if md5 already exist
+        if(!open(DB, ">> $CAM_ROOT/$caName/cam.txt")) {
+            return $class->SetError(summary => "Can not open cam.txt.",
+                                    description => "$!",
+                                    code => "OPEN_FAILED");
+            }
+        print DB "$md5 $dn\n";
+        close DB;
+    } elsif($path eq ".delCAM") {
+        my $caName = shift || return $class->SetError(summary => "Missing value caName",
+                                                      code => "PARAM_CHECK_FAILED");
+        my $hash   = shift || return $class->SetError(summary => "Missing parameter.",
+                                                    code => "PARAM_CHECK_FAILED");
+        my $md5 = $hash->{MD5} || return $class->SetError(summary => "Missing parameter 'MD5'.",
+                                                          code => "PARAM_CHECK_FAILED");
+
+        if(!open(DB, "< /$CAM_ROOT/$caName/cam.txt")) {
+            return $class->SetError(summary => "Can not open cam.txt.",
+                                    description => "$!",
+                                    code => "OPEN_FAILED");
+        }
+        my @cam = <DB>;
+        close DB;
+        my @new_cam = ();
+        foreach my $l (@cam) {
+            if($l !~ /^$md5/) {
+                push @new_cam, $l;
+            }
+        }
+        if(!open(DB2, "> /$CAM_ROOT/$caName/cam.txt")) {
+            return $class->SetError(summary => "Can not open cam.txt.",
+                                    description => "$!",
+                                    code => "OPEN_FAILED");
+        }
+        print DB2 @new_cam;
+        close DB2;
     } else {
         return $class->SetError(summary => "Wrong path '$path' ",
                                 code => "SCR_WRONG_PATH");
@@ -322,6 +369,21 @@ sub createCaInf {
     }
     close DB;
 
+    if (!open(DB2, "> $CAM_ROOT/$caName/cam.txt") ) {
+        unlink("$CAM_ROOT/$caName/index.txt");
+        unlink("$CAM_ROOT/$caName/openssl.cnf.tmpl");
+        unlink("$CAM_ROOT/$caName/serial");
+        rmdir("$CAM_ROOT/$caName/keys");
+        rmdir("$CAM_ROOT/$caName/req");
+        rmdir("$CAM_ROOT/$caName/newcerts");
+        rmdir("$CAM_ROOT/$caName/crl");
+        rmdir("$CAM_ROOT/$caName/certs");
+        rmdir("$CAM_ROOT/$caName");
+        return $class->SetError( summary => "Can not create database '$CAM_ROOT/$caName/cam.txt' '$!'",
+                                 code    => "OPEN_FAILED");
+    }
+    close DB2;
+    
     return 1;
 }
 
@@ -362,6 +424,54 @@ sub status {
     return $class->SetError(summary => "Error at Read status",
                             description => $err,
                             code => "SCR_READ_FAILED");
+}
+
+sub parseIndexTXT {
+    my $class   = shift || return undef;
+    my $caName  = shift || return $class->SetError(summary =>"Missing Parameter 'caName'",
+                                                   code => "PARAM_CHECK_FAILED");
+
+    my @indextxt = ();
+
+    if(!open(IDX, "< $CAM_ROOT/$caName/index.txt")) {
+        return $class->SetError(summary => "Cannot open Database file '$CAM_ROOT/$caName/index.txt'.",
+                                description => "$!",
+                                code => "OPEN_FAILED");
+    }
+    my @lines = <IDX>;
+    close IDX;
+    
+    foreach my $l (@lines) {
+        $l =~ /^(\w)\s([\d\w]+)\s([\w\d,]*)\s([[:xdigit:]]+)\s(\w+)\s(.*)$/;
+        my @idxrow = ();
+        push @idxrow, $1, $2, $3, $4, $5, $6;
+        push @indextxt, \@idxrow;
+    }
+    return \@indextxt;
+}
+
+sub parseCAMDB {
+    my $class   = shift || return undef;
+    my $caName  = shift || return $class->SetError(summary =>"Missing Parameter 'caName'",
+                                                   code => "PARAM_CHECK_FAILED");
+
+    my @camdb = ();
+
+    if(!open(DB, "< $CAM_ROOT/$caName/cam.txt")) {
+        return $class->SetError(summary => "Cannot open Database file '$CAM_ROOT/$caName/cam.txt'.",
+                                description => "$!",
+                                code => "OPEN_FAILED");
+    }
+    my @lines = <DB>;
+    close DB;
+    
+    foreach my $l (@lines) {
+        $l =~ /^([[:xdigit:]]+)\s(.*)$/;
+        my @row = ();
+        push @row, $1, $2;
+        push @camdb, \@row;
+    }
+    return \@camdb;
 }
 
 

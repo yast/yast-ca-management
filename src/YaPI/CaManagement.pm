@@ -305,7 +305,8 @@ use YaST::caUtils;
 use ycp;
 use URI::Escape;
 use X500::DN;
-use MIME::Base64;
+#use MIME::Base64;
+use Digest::MD5 qw(md5_hex);
 use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now);
 
 use YaPI;
@@ -990,7 +991,8 @@ sub AddRequest {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
     
-    $request = encode_base64($requestString, "");
+    #$request = encode_base64($requestString, "");
+    $request = md5_hex($requestString);
 
     # test if this File already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/".$request.".key") != -1) {
@@ -1081,6 +1083,14 @@ sub AddRequest {
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
         return $self->SetError(%{SCR->Error(".openssl")});
+    }
+
+    $ret = SCR->Write(".caTools.addCAM", $caName, { MD5 => $request, DN => $requestString});
+    if( not $ret) {
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/".$request.".req");
+        return $self->SetError(%{SCR->Error(".caTools")});
     }
 
     SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
@@ -1442,6 +1452,7 @@ sub AddCertificate {
     my $certificate = $self->IssueCertificate($data);
     if (not defined $certificate) {
         my $caName = $data->{'caName'};
+        SCR->Write(".caTools.delCAM", $caName, {MD5 => $request});
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/".$request.".req");
         return undef;
@@ -1689,7 +1700,7 @@ sub ReadCertificate {
     $type = $data->{"type"};
     
     if (! defined $data->{"certificate"} || 
-        $data->{'certificate'} !~ /^[:A-Za-z0-9\/=+]+$/) {
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
         return $self->SetError(summary => "Wrong value for parameter 'certificate'",
                                code => "PARAM_CHECK_FAILED");
     }
@@ -2277,7 +2288,7 @@ EXAMPLE:
  foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
      my $data = {
                  'caName'       => 'My_CA',
-                 'certificate'  => §certName,
+                 'certificate'  => $certName,
                  'exportFormat' => $ef,
                  'keyPasswd'    => "system",
                 };
@@ -2318,12 +2329,12 @@ sub ExportCertificate {
     $caName = $data->{"caName"};
 
     if (! defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[:A-Za-z0-9\/=+]+$/) {
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
         return $self->SetError(summary => "Wrong value for parameter 'certificate'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
-    $certificate =~ /^[[:xdigit:]]+:([A-Za-z0-9\/=+]+)$/;
+    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+)$/;
     if (not defined $1) {
         return $self->SetError(summary => "Can not parse certificate name",
                                code => "PARSING_ERROR");
@@ -2686,7 +2697,7 @@ sub Verify {
     $caName = $data->{"caName"};
 
     if (!defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[:A-Za-z0-9\/=+]+$/) {
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
         return $self->SetError(summary => "Wrong value for parameter 'certificate'.",
                                code    => "PARAM_CHECK_FAILED");
     }
@@ -2869,6 +2880,7 @@ sub AddSubCA {
     my $certificate = $self->IssueCertificate($data);
     if (not defined $certificate) {
         my $caName = $data->{'caName'};
+        SCR->Write(".caTools.delCAM", $caName, {MD5 => $request});
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/".$request.".req");
         return undef;
