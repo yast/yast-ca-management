@@ -5977,6 +5977,10 @@ sub ReadCRLDefaults {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
 
+    if(defined $data->{caName}) {
+        $caName = $data->{caName};
+    }
+
     $ret = {
             'authorityKeyIdentifier' => undef,
             'issuerAltName'         => undef,
