@@ -28,10 +28,8 @@ define symbol MainSequence() ``{
     map aliases = $[
         "startup"        : ``(Startup()),
         "new_cert1"   	 : ``(new_cert1 ()),
-        "new_cert2"   	 : ``(new_cert2 ()),	
-//        "ca_main"        : ``(CAMain ()),
-//        "ca_certificate" : ``(CACertificate ()),
-//        "ca_crl"         : ``(CACrl ()),
+        "new_cert2"   	 : ``(new_cert2 ()),
+        "new_cert3"   	 : ``(new_cert3 ()),		
         ];
 
     map sequence = $[
@@ -48,22 +46,15 @@ define symbol MainSequence() ``{
 			    `back	: "startup"			    
                             ],
         "new_cert2"       : $[
-                            `next       : `abort,
+                            `next       : "new_cert3",
 			    `abort	: "startup",
 			    `back	: "startup"
-	                    ],		
-//        "ca_main"       : $[
-//                            `certificate: "ca_certificate",
-//                            `crl        : "ca_crl",
-//                            `back       : "startup",
-//                            ],
-//        "ca_certificate": $[
-//                            `back    : "ca_main",
-//                            ],
-//        
-//        "ca_crl"        : $[
-//                            `back    : "ca_main",
-//                            ],
+	                    ],
+        "new_cert3"       : $[
+                            `next       : "startup",
+			    `abort	: "startup",
+			    `back	: "new_cert2"			    
+                            ],
         ];
 
     Wizard::CreateDialog();
