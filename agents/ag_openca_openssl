@@ -8,16 +8,16 @@ our @ISA = ("YaST::SCRAgent");
 use OpenCA::OpenSSL;
 
 my $openssl = undef;
-
-my $tmpdir = undef;
-my $err = undef;
+my $CAM_ROOT = "/var/lib/YaST2/CAM/";
 
 
 sub check_initialized ()
 {
+    my $class = shift;
     if (not defined $openssl)
     {
-        y2error ("Agent not initialized yet");
+        $class->SetError(summary => "Agent not initialized yet",
+                         code => "SCR_INIT_ERR");
     }
     return !!$openssl;
 }
@@ -27,37 +27,37 @@ sub OtherCommand () {
     my ($symbol, $config, @rest) = @_;
     
     if ($symbol ne "OpenSSL") {
-        y2error ("The first command must be the configuration.(Seen '$_')");
+        return $class->SetError(summary=> "The first command must be the configuration.(Seen '$_')",
+                                code => "SCR_INIT_ERR");
     } else {
         $openssl = OpenCA::OpenSSL->new( SHELL => $config->{"path"} );
         if( not defined $openssl ) {
-            y2error ("Can not initialize OpenCA::OpenSSL");
+            return $class->SetError(summary => "Can not initialize OpenCA::OpenSSL",
+                                    code => "SCR_INIT_ERR");
         }
-        $tmpdir = $config->{"tmpdir"};
-        $err = $config->{"stderr"};
-        y2error("STDERR = $err");
-        $openssl->setParams(TMPDIR=>$tmpdir,
-                            STDERR=>$err,
+        $openssl->setParams(TMPDIR=>$config->{"tmpdir"},
+                            STDERR=>$config->{"stderr"},
                             DEBUG=>1
                            );
     }
     
-    return undef;
+    return 1;
 }
 
 sub setConfig {
+    my $class  = shift;
     my $caName = shift;
 
-    my $CAM_ROOT = "/var/lib/YaST2/CAM/";
-
-    check_initialized || return 0;
+    $class->check_initialized() || return 0;
     if( ! -e "$CAM_ROOT/$caName/openssl.cnf" ) {
-        y2error("config does not exist!");
+        $class->SetError(summary=>"config does not exist!",
+                         code =>"SCR_INIT_ERR");
         return 0;
     }
     $openssl->setParams(
                         CONFIG=>"$CAM_ROOT/$caName/openssl.cnf"
                        );
+    return 1;
 }
 
 sub Read { 
@@ -65,49 +65,43 @@ sub Read {
 }
 
 sub Write { 
-    #y2error("enter Write");
     return 1; 
 }
 
 sub Execute {
     my $class = shift;
     my ($path, $caName, $hash) = @_;
-    y2error("enter execute");
-    check_initialized || return 0;
+    $class->check_initialized || return undef;
     
-    setConfig($caName);
-
-#    foreach (keys %{$hash}) {
-#        y2error("=>=> $_ = $hash->{$_}");
-#    }
+    $class->setConfig($caName) || return undef;
 
     if($path eq ".genKey") {
         $openssl->genKey( %{$hash} );
         if($openssl->errno() != 0) {
-            y2error("OpenCA::OpenSSL::genKey failed! (".
-                    $openssl->errno()."/".$openssl->errval().")");
-            return undef;
+            return $class->SetError(summary => "OpenCA::OpenSSL::genKey failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
         }
         return 1;
     } elsif($path eq ".genReq") {
         $openssl->genReq( %{$hash} );
         if($openssl->errno() != 0) {
-            y2error("OpenCA::OpenSSL::genReq failed! (".
-                    $openssl->errno()."/".$openssl->errval().")");
-            return undef;
+            return $class->SetError(summary => "OpenCA::OpenSSL::genReq failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
         }
         return 1;
     } elsif($path eq ".genCert") {
         $openssl->genCert( %{$hash} );
         if($openssl->errno() != 0) {
-            y2error("OpenCA::OpenSSL::genCert failed! (".
-                    $openssl->errno()."/".$openssl->errval().")");
-            return undef;
+            return $class->SetError(summary => "OpenCA::OpenSSL::genCert failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
         }
         return 1;
     } else {
-        y2error("Wrong path '$path' ");
-        return undef;
+        return $class->SetError(summary => "Wrong path '$path' ",
+                                code => "SCR_WRONG_PATH");
     }
 }
   
