@@ -94,6 +94,15 @@ $bool = ExportCRLToLDAP($valueMap)
 
   Export a CRL to a LDAP directory
 
+$defaultsMap = ReadLDAPExportDefaults($valueMap)
+
+  Return the defaults for export CA, CRL or certificates to LDAP.
+
+$bool = InitLDAPcaManagement($valueMap)
+
+  Creates the default configuration structure in LDAP
+
+
 =head1 COMMON PARAMETER
 
 Here is a list of common parameter which are often 
@@ -3187,9 +3196,39 @@ C<$bool = ExportCAToLDAP($valueMap)>
 
 Export a CA in a LDAP Directory
 
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* ldapHostname (required)
+
+* ldapPort (default: 389)
+
+* destinationDN (required)
+
+* bindDN (required)
+
+* ldapPasswd (required)
+
+The return value is "undef" on an error and "1" on success.
 
 EXAMPLE:
 
+ my $data = {
+             caName        => 'My_CA',
+             ldapHostname  => 'myhost.example.com',
+             ldapPort      => 389,
+             destinationDN => "ou=PKI,dc=suse,dc=de",
+             BindDN        => "cn=Admin,dc=example,dc=com",
+             ldapPasswd    => "system"
+            };
+
+    my $res = YaPI::CaManagement->ExportCAToLDAP($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "OK\n";
+    }
 
 =cut
 
@@ -3241,10 +3280,10 @@ sub ExportCAToLDAP {
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if (! defined $data->{'password'} || 
-        $data->{'password'} eq "") {
+    if (! defined $data->{'ldapPasswd'} || 
+        $data->{'ldapPasswd'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'password'."),
+        return $self->SetError(summary => _("Wrong value for parameter 'ldapPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
@@ -3274,7 +3313,7 @@ sub ExportCAToLDAP {
     }
 
     if (! SCR->Execute(".ldap.bind", {"bind_dn" => $data->{'BindDN'},
-                                      "bind_pw" => $data->{'password'}}) ) {
+                                      "bind_pw" => $data->{'ldapPasswd'}}) ) {
         my $ldapERR = SCR->Read(".ldap.error");
         return $self->SetError(summary => "LDAP bind failed",
                                code => "SCR_INIT_FAILED",
@@ -3353,9 +3392,39 @@ C<$bool = ExportCRLToLDAP($valueMap)>
 
 Export a CRL in a LDAP Directory
 
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* ldapHostname (required)
+
+* ldapPort (default: 389)
+
+* destinationDN (required)
+
+* bindDN (required)
+
+* ldapPasswd (required)
+
+The return value is "undef" on an error and "1" on success.
 
 EXAMPLE:
 
+ my $data = {
+             caName        => 'My_CA',
+             ldapHostname  => 'myhost.example.com',
+             ldapPort      => 389,
+             destinationDN => "ou=PKI,dc=suse,dc=de",
+             BindDN        => "cn=Admin,dc=example,dc=com",
+             ldapPasswd    => "system"
+            };
+
+    my $res = YaPI::CaManagement->ExportCRLToLDAP($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "OK\n";
+    }
 
 =cut
 
@@ -3408,10 +3477,10 @@ sub ExportCRLToLDAP {
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if (! defined $data->{'password'} || 
-        $data->{'password'} eq "") {
+    if (! defined $data->{'ldapPasswd'} || 
+        $data->{'ldapPasswd'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'password'."),
+        return $self->SetError(summary => _("Wrong value for parameter 'ldapPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
@@ -3441,7 +3510,7 @@ sub ExportCRLToLDAP {
     }
 
     if (! SCR->Execute(".ldap.bind", {"bind_dn" => $data->{'BindDN'},
-                                      "bind_pw" => $data->{'password'}}) ) {
+                                      "bind_pw" => $data->{'ldapPasswd'}}) ) {
         my $ldapERR = SCR->Read(".ldap.error");
         return $self->SetError(summary => "LDAP bind failed",
                                code => "SCR_INIT_FAILED",
@@ -3565,17 +3634,47 @@ sub ExportCRLToLDAP {
     return 1;
 }
 
-
 =item *
 C<$defaultsMap = ReadLDAPExportDefaults($valueMap)>
 
 Return the defaults for export CA, CRL or certificates to 
-LDAP
+LDAP. If an error ocured with I<code = LDAP_CONFIG_NEEDED>,
+you have to call B<InitLDAPcaManagement()> first.
 
+In I<$valueMap> you can define the following keys: 
+
+* type (required; allowed values are: "ca", "crl", "certificates")
+
+* caName (optional)
+
+The return value is "undef" on an error.
+
+On success a map is returned with the following keys:
+
+* ldapHostname
+
+* ldapPort
+
+* BindDN
+
+* destinationDN
 
 EXAMPLE:
 
+ use Data::Dumper;
 
+ my $data = {
+             'caName' => 'My_CA',
+             'type'   => 'ca'
+            };
+
+ my $res = YaPI::CaManagement->ReadLDAPExportDefaults($data);
+ if( not defined $res ) {
+     # error
+ } else {
+     print Data::Dumper->Dump([$res])."\n";
+ }
+ 
 =cut
 
 BEGIN { $TYPEINFO{ReadLDAPExportDefaults} = ["function", 
@@ -3610,7 +3709,6 @@ sub ReadLDAPExportDefaults {
 
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
-        print STDERR Data::Dumper->Dump([$ldapMap]);
     }
     
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_server'},
@@ -3672,7 +3770,6 @@ sub ReadLDAPExportDefaults {
                                code => "LDAP_CONFIG_NEEDED");
     }
     
-    $retMap->{'caName'} = $caName;
     $retMap->{'ldapHostname'} = $ldapMap->{'ldap_server'};
     $retMap->{'ldapPort'} = 389;
     $retMap->{'BindDN'} = $ldapMap->{'bind_dn'};
@@ -3680,6 +3777,34 @@ sub ReadLDAPExportDefaults {
     return $retMap;
 }
 
+=item *
+C<$bool = InitLDAPcaManagement($valueMap)>
+
+Creates the default configuration structure in LDAP
+
+In I<$valueMap> you can define the following keys: 
+
+* ldapPasswd (required)
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+ my $data = {
+             'ldapPasswd' => 'system'
+            };
+
+ my $res = YaPI::CaManagement->InitLDAPcaManagement($data);
+ if( not defined $res ) {
+     # error
+ } else {
+     print "OK\n";
+ }
+
+=cut
+
+BEGIN { $TYPEINFO{InitLDAPcaManagement} = ["function", "boolean", 
+                                             ["map", "string", "any"] ]; }
 sub InitLDAPcaManagement {
     my $self = shift;
     my $data = shift;
@@ -3695,7 +3820,6 @@ sub InitLDAPcaManagement {
 
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
-        print STDERR Data::Dumper->Dump([$ldapMap]);
     }
     
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_server'},
