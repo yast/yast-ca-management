@@ -82,6 +82,10 @@ $bool = AddSubCA($valueMap)
 
   Create a new CA which signed by another CA
 
+$bool = ExportCAToLDAP($valueMap)
+
+  Export a CA to a LDAP directory
+
 B<common parameter in $valueMap>
 
 Here is a list of common parameter which are used in $valueMap
@@ -300,6 +304,7 @@ use MIME::Base64;
 use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now);
 
 YaST::YCP::Import ("SCR");
+YaST::YCP::Import ("Hostname");
 
 our %TYPEINFO;
 our @CAPABILITIES = (
@@ -589,6 +594,24 @@ sub ReadCertificateDefaults {
     }    
     delete $ret->{'keyLength'} if(not defined $ret->{'keyLength'});
     delete $ret->{'days'} if(not defined $ret->{'days'});
+    
+    # try to get default DN values
+    if(defined $caName && $caName ne "") {
+        my $hash = {
+                    INFILE => "$CAM_ROOT/$caName/cacert.pem",
+                    INFORM => "PEM"
+                   };
+        my $ca = SCR::Read(".openssl.getParsedCert", $caName, $hash);
+        if(not defined $ca) {
+            return SetError(%{SCR::Error(".openssl")});
+        }
+        if(defined $ca->{'DN_HASH'}) {
+            $ret->{'DN'} = $ca->{'DN_HASH'};
+            # delete CN and emailAddress; not needed as default
+            delete $ret->{'DN'}->{'CN'} if(defined $ret->{'DN'}->{'CN'});
+            delete $ret->{'DN'}->{'EMAILADDRESS'} if(defined $ret->{'DN'}->{'EMAILADDRESS'});
+        }
+    } 
     
     return $ret;
 }
@@ -2002,6 +2025,165 @@ sub AddSubCA {
     
     return 1;
 }
+
+=item *
+C<$bool = ExportCAToLDAP($valueMap)>
+
+Export a CA in a LDAP Directory
+
+
+EXAMPLE:
+
+
+=cut
+
+BEGIN { $TYPEINFO{ExportCAToLDAP} = ["function", "boolean", ["map", "string", "any"] ]; }
+sub ExportCAToLDAP {
+    my $data = shift;
+    my $caName  = "";
+    my $action = "add";
+    my $CACertificate = "";
+
+    if (not defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+        return SetError(summary => "Wrong value for parameter 'caName'.",
+                        code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{'caName'};
+    
+    if (! defined $data->{'ldapHostname'} ||
+        ! Hostname::CheckFQ($data->{'ldapHostname'}) ) {
+        return SetError(summary => "Wrong value for parameter 'ldapHostname'.",
+                        code    => "PARAM_CHECK_FAILED");
+    }
+
+    if (! defined $data->{'ldapPort'} ||
+        $data->{'ldapPort'} !~ /^\d+$/ ) {
+        return SetError(summary => "Wrong value for parameter 'ldapPort'.",
+                        code    => "PARAM_CHECK_FAILED");
+    }
+
+    if(! defined $data->{'destinationDN'} || 
+       $data->{'destinationDN'} eq "") {
+        return SetError(summary => "Wrong value for parameter 'destinationDN'.",
+                        code    => "PARAM_CHECK_FAILED");
+    }
+
+    if(! defined $data->{'BindDN'} || 
+       $data->{'BindDN'} eq "") {
+        return SetError(summary => "Wrong value for parameter 'BindDN'.",
+                        code    => "PARAM_CHECK_FAILED");
+    }
+
+    if(! defined $data->{'password'} || 
+       $data->{'password'} eq "") {
+        return SetError(summary => "Wrong value for parameter 'password'.",
+                        code    => "PARAM_CHECK_FAILED");
+    }
+
+    # test if this File already exists
+    if(SCR::Read(".target.size", "$CAM_ROOT/$caName/cacert.pem") == -1) {
+        return SetError(summary => "CA Certificate does not exist.",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+
+    my $ca = SCR::Read(".openssl.getParsedCert", $caName, 
+                       {INFILE => "$CAM_ROOT/$caName/cacert.pem",  INFORM => "PEM"});
+    if(not defined $ca) {
+        return SetError(%{SCR::Error(".openssl")});
+    }
+    my ($body) = ($ca->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
+print STDERR "BODY:$body\n";
+
+    if(! defined $body || $body eq "") {
+        return SetError(summary => "Can not parse the CA certificate",
+                        code => "PARSE_ERROR");
+    }
+
+    if(! SCR::Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
+                                "port"     => $data->{'ldapPort'}}))
+    {
+        return SetError(summary => "LDAP init failed",
+                        code => "SCR_INIT_FAILED");
+    }
+
+    if(! SCR::Execute(".ldap.bind", {"bind_dn" => $data->{'BindDN'},
+                                     "bind_pw" => $data->{'password'}}) )
+    {
+        my $ldapERR = SCR::Read(".ldap.error");
+        return SetError(summary => "LDAP bind failed",
+                        code => "SCR_INIT_FAILED",
+                        description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+    }
+
+    my $dnList = SCR::Read(".ldap.search", {
+                                            "base_dn" => $data->{'destinationDN'},
+                                            "filter" => 'objectclass=*',
+                                            "scope" => 0,
+                                            "dn_only" => 1
+                                           });
+    if(! defined $dnList) {
+        my $ldapERR = SCR::Read(".ldap.error");
+        return SetError(summary => "'destinationDN' is not available in the LDAP directory.",
+                        code => "LDAP_SEARCH_FAILED",
+                        description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+    }
+
+    $dnList = SCR::Read(".ldap.search", {
+                                         "base_dn" => "cn=$caName,".$data->{'destinationDN'},
+                                         "filter" => 'objectclass=*',
+                                         "scope" => 0,
+                                         "dn_only" => 1
+                                        });
+    if(! defined $dnList) {
+        my $ldapERR = SCR::Read(".ldap.error");
+        if($ldapERR->{'code'} == 32) {
+            # code 32 is 'no such object => we have to add a new entry
+            $action = "add";
+        } else {
+            return SetError(summary => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
+                            code => "LDAP_SEARCH_FAILED");
+        }
+    } else {
+        # entry exists => we have to modify it
+        $action = "modify";
+    }
+    
+    if($action eq "add") {
+
+        my $entry = {
+                     objectClass   => [ 'cRLDistributionPoint', 'pkiCA' ],
+                     cn            => $caName,
+                     'cACertificate;binary' => $body
+                    };
+
+        if(not SCR::Write(".ldap.add", { dn => "cn=$caName,".$data->{'destinationDN'}} , $entry)) {
+            my $ldapERR = SCR::Read(".ldap.error");
+            return SetError(summary => "Can not add CA certificate to LDAP directory.",
+                            code => "LDAP_ADD_FAILED",
+                            description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+        }
+
+    } elsif($action eq "modify") {
+
+        my $entry = {
+                     cACertificate => $body
+                    };
+        if(not SCR::Write(".ldap.modify", { dn => "cn=$caName,".$data->{'destinationDN'}} , $entry)) {
+            my $ldapERR = SCR::Read(".ldap.error");
+            return SetError(summary => "Can not modify CA certificate in LDAP directory.",
+                            code => "LDAP_MODIFY_FAILED",
+                            description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+        }
+        
+    } else {
+        #this should never happen :-)
+    }
+    
+
+
+}
+
 
 if(not defined do("YaPI.inc")) {
     die "'$!' Can not include YaPI.inc";
