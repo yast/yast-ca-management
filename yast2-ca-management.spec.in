@@ -1,8 +1,8 @@
 @HEADER-COMMENT@
-# neededforbuild yast2-devel-packages perl-gettext yast2-perl-bindings
+# neededforbuild yast2-devel-packages perl-gettext perl-gettext yast2-perl-bindings perl-OPENSSL perl-X500-DN perl-Date-Calc perl-URI dosfstools perl-Parse-RecDescent
 
 @HEADER@
-Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-OPENSSL perl-X500-DN perl-Date-Calc perl-URI
+Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-OPENSSL perl-X500-DN perl-Date-Calc perl-URI dosfstools
 
 BuildArchitectures:	noarch
 
@@ -24,18 +24,21 @@ Summary:	CA Management
 %dir @yncludedir@/ca-management
 %dir @moduledir@/YaPI
 %dir @moduledir@/YaST
-%dir /var/lib/YaST2/CAM/
-%dir /var/lib/YaST2/CAM/.cas
-/var/lib/YaST2/CAM/openssl.cnf.tmpl
+%dir /var/lib/CAM/
+%dir /var/lib/CAM/.cas
+/var/lib/CAM/openssl.cnf.tmpl
 @yncludedir@/ca-management/*
 @clientdir@/ca-mgm.ycp
 @clientdir@/ca_mgm.ycp
 @clientdir@/ca_mgm_proposal.ycp
 @clientdir@/ca_select_proposal.ycp
+@clientdir@/common-cert.ycp
+@clientdir@/common_cert.ycp
 @moduledir@/CaMgm.y*
 @moduledir@/YaPI/CaManagement.pm
 @moduledir@/YaST/caUtils.pm
 @desktopdir@/ca_mgm.desktop
+@desktopdir@/common_cert.desktop
 @scrconfdir@/*
 @agentdir@/*
 %doc @docdir@

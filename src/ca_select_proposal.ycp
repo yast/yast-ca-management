@@ -25,53 +25,82 @@
     
     include "ca-management/popup.ycp";
     include "ca-management/util.ycp";
+
+    /**
+     * Creates Country items
+     * @return a list country items formated for a UI table
+     */
+    define list<term> getPropCountryList () ``{
+        list<term> result = [];
+	map<string, string> country_map = (map<string, string>)
+	    eval(SCR::Read(.target.yast2, "country.ycp"));
+
+	map<string, string> country_index = mapmap (string k, string v,
+						  country_map, { return ($[v : k]); });
+
+	list<string> name_list = maplist ( string k, string v,
+					  country_map, { return v; });
+
+	name_list = sort (name_list);
+	    
+	foreach (string name, name_list, ``{
+	    result = add (result, `item (`id (country_index[name]:""), name ,
+					 CaMgm::prop_country == country_index[name]:"") );
+	});
+        return result;	
+    }
+    
     
     /**
      * editDefaultEntries() - changing Entries
+     * @return `next,`back,`abort     
      */
     define any editDefaultEntries () ``{
 
 	Wizard::CreateDialog();
-	Wizard::SetDesktopIcon("ca_mgm");    
+	Wizard::SetDesktopIcon("ca-management");    
 	string help_text = _("<p>
-YaST generates a <b>default CA/Certificate</b> automatically. This CA/Certificate
-will be used for communicating with the <b>Apache Server</b>.
-At this frame you can change these <b>default settings</b>.
+YaST generates a <b>default CA and certificate</b> automatically. This CA and certificate
+is used for communicating with the <b>Apache server</b>.
+Here, change these <b>default settings</b>.
 </p>
 ");	
 	define string confirmPassword = CaMgm::prop_password;
 
 	term contents = `VBox (
-			       `Heading (_("Edit Default Settings")),
-			       `VBox(
-
-				     `HBox(`TextEntry( `id (`id_CAName), _("&CA Name:"),
-						       CaMgm::prop_CAName ),
-					   `TextEntry( `id (`id_commonName), _("&Common Name:"),
-						       CaMgm::prop_ca_commonName )
-					   ),
-				     `HBox(`TextEntry( `id (`id_serverName), _("&Server Name:"),
-						       CaMgm::prop_server_commonName ),
-					   `ComboBox( `id (`id_country), _("C&ountry:"), getCountryList())
-					   ),				     
-				     `HBox(`TextEntry( `id (`id_organisation), _("O&rgansisation:"),
-						       CaMgm::prop_organisation ),
-					   `TextEntry( `id (`id_organisationUnit), _("Or&gansisation Unit:"),
-						       CaMgm::prop_organisationUnit )
-					   ),
-				     `HBox(`TextEntry( `id (`id_locality), _("Loca&lity:"),
-						       CaMgm::prop_locality ),
-					   `TextEntry( `id (`id_state), _("&State:"),
-						       CaMgm::prop_state )),
-				     `HBox(`Password(`id(`pw1), _("Password:"), CaMgm::prop_password),
-					   `Password(`id(`pw2), _("Confirm Password:"), confirmPassword)
-					   )
+			       `HBox(`HWeight (1,`TextEntry( `id (`id_CAName), _("&CA Name:"),
+							     CaMgm::prop_CAName )),
+				     `HSpacing(2), 
+				     `HWeight (1,`TextEntry( `id (`id_commonName), _("&Common Name:"),
+							     CaMgm::prop_ca_commonName ))
+				     ),
+			       `HBox(`HWeight (1,`TextEntry( `id (`id_serverName), _("&Server Name:"),
+							     CaMgm::prop_server_commonName )),
+				     `HSpacing(2), 
+				     `HWeight (1,`ComboBox( `id (`id_country), _("C&ountry:"),
+							    getPropCountryList()))
+				     ),				     
+			       `HBox(`HWeight (1,`TextEntry( `id (`id_organisation), _("O&rganization:"),
+							     CaMgm::prop_organisation )),
+				     `HSpacing(2), 
+				     `HWeight (1,`TextEntry( `id (`id_organisationUnit), _("Or&ganizational Unit:"),
+							     CaMgm::prop_organisationUnit ))
+				     ),
+			       `HBox(`HWeight (1,`TextEntry( `id (`id_locality), _("Loca&lity:"),
+							     CaMgm::prop_locality )),
+				     `HSpacing(2), 
+				     `HWeight (1,`TextEntry( `id (`id_state), _("&State:"),
+							     CaMgm::prop_state ))),
+			       `HBox(`HWeight (1,`Password(`id(`pw1), _("Password:"), CaMgm::prop_password)),
+				     `HSpacing(2), 
+				     `HWeight (1,`Password(`id(`pw2), _("Confirm Password:"), confirmPassword))
 				     )
 			       );
 
 	// Screen title for the first interactive dialog
-	Wizard::SetContentsButtons("", contents, help_text,
-				   Label::BackButton(), Label::FinishButton());
+	Wizard::SetContentsButtons (_("Edit Default Settings"),
+				    contents, help_text,
+				    Label::BackButton(), Label::NextButton());
 
 	// Get the user input.
 	//
@@ -81,25 +110,47 @@ At this frame you can change these <b>default settings</b>.
 	    {
 		ret = Wizard::UserInput();
 
-		if (ret == `next)
+		if (ret == `next
+		    ||ret == `back)
 		{
 		    confirmPassword = (string) UI::QueryWidget(`id(`pw2), `Value);
 		    if ((string) UI::QueryWidget(`id(`pw1), `Value) != confirmPassword)
 		    {
-			Popup::Error(_("New passwords are not equal."));
+			Popup::Error(_("New passwords do not match."));
 			ret = `again;
 		    }
 		    else
 		    {
-			CaMgm::prop_ca_commonName = (string) UI::QueryWidget (`id (`id_commonName), `Value);
-			CaMgm::prop_server_commonName = (string) UI::QueryWidget (`id (`id_serverName), `Value);
-			CaMgm::prop_CAName = (string) UI::QueryWidget(`id(`id_CAName), `Value);
+			if (CaMgm::prop_ca_commonName != (string) UI::QueryWidget (`id (`id_commonName), `Value))
+			{
+			    CaMgm::prop_ca_commonName = (string) UI::QueryWidget (`id (`id_commonName), `Value);
+			    CaMgm::prop_ca_commonNameChanged = true;
+			}
+			if (CaMgm::prop_server_commonName != (string) UI::QueryWidget (`id (`id_serverName), `Value))
+			{
+			    CaMgm::prop_server_commonName = (string) UI::QueryWidget (`id (`id_serverName), `Value);
+			    CaMgm::prop_server_commonNameChanged = true;
+			}
+			if (CaMgm::prop_CAName != (string) UI::QueryWidget(`id(`id_CAName), `Value))
+			{
+			    CaMgm::prop_CAName = (string) UI::QueryWidget(`id(`id_CAName), `Value);
+			    CaMgm::prop_CANameChanged = true;
+			}
+			if (CaMgm::prop_password != (string) UI::QueryWidget(`id(`pw1), `Value))
+			{
+			    CaMgm::prop_password = (string) UI::QueryWidget(`id(`pw1), `Value);
+			    CaMgm::prop_passwordChanged = true;
+			}
+			if (CaMgm::prop_country != (string) UI::QueryWidget(`id(`id_country), `Value))
+			{
+			    CaMgm::prop_country = (string) UI::QueryWidget(`id(`id_country), `Value);
+			    CaMgm::prop_countryChanged = true;
+			}
+
 			CaMgm::prop_organisation = (string) UI::QueryWidget(`id(`id_organisation), `Value);
 			CaMgm::prop_organisationUnit = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
 			CaMgm::prop_locality = (string) UI::QueryWidget(`id(`id_locality), `Value);
 			CaMgm::prop_state = (string) UI::QueryWidget(`id(`id_state), `Value);
-			CaMgm::prop_country = (string) UI::QueryWidget(`id(`id_country), `Value);
-			CaMgm::prop_password = (string) UI::QueryWidget(`id(`pw1), `Value);			    
 		    }
 		}
 	    }
@@ -117,43 +168,40 @@ At this frame you can change these <b>default settings</b>.
     * MAIN module
     * ----------------------------------------------------------------------*/
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca_mgm");    
+    Wizard::SetDesktopIcon("ca-management");    
     
-    term heading = `Heading (_("Managing CAs/Certificates"));
+    string heading = _("Managing CAs and Certificates");
 
-
-    term contents = `VBox(
-			heading,
-			`Frame ( _("Selection"),
+    term contents = `Frame ( _("Selection"),
 				 `RadioButtonGroup(`id(`rb),
 						   `VBox(
 							 `Left(`RadioButton(`id(`def), `opt( `notify),
-									    _("Creating &default CA/Certificate."))),
+									    _("Create &Default CA and Certificate"))),
 							 `HBox(`HSpacing (3),`Left(`PushButton (`id(`change),
 												`opt( `notify),
-												_("Edit default &Settings")))
+												_("Edit Default &Settings")))
 							       ),
 							 `Left(`RadioButton(`id(`none), `opt( `notify),
-									    _("Creating &no CA/Certificate."))),
+									    _("Do &Not Create CA and Certificate"))),
 							 `Left(`RadioButton(`id(`floppy), `opt( `notify),
-									    _("Import CA/Certificate from &floppy."))),
+									    _("Import CA and Certificate from &Floppy"))),
+							 `Left(`RadioButton(`id(`disk), `opt( `notify),
+									    _("Import CA and Certificate from D&isk"))),
 							 `Left(`RadioButton(`id(`expert), `opt( `notify),
-									    _("Calling CA-Management for &expert settings.")))
+									    _("Call CA Management for &Expert Settings")))
 							 )
 						   )
-				 )
-			);
-
+			     );
 
     string help_text = _("<p>
-At this frame you can select the kind of installing <b>CAs</b> and <b>certificates</b>
-while completing the installation
+In this frame, select the desired installation method for <b>CAs</b> and <b>certificates</b>
+while completing the installation.
 </p>
 ");
 
     // Screen title for the first interactive dialog
-    Wizard::SetContentsButtons("", contents, help_text,
-			       Label::BackButton(), Label::FinishButton());
+    Wizard::SetContentsButtons (heading, contents, help_text,
+				Label::BackButton(), Label::NextButton());
 
     UI::ChangeWidget (`id(`rb), `CurrentButton, CaMgm::prop_selection);
 

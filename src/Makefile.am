@@ -3,7 +3,7 @@
 SUBDIRS = YaPI
 
 myincludedir = @yncludedir@/ca-management
-camdir = /var/lib/YaST2/CAM
+camdir = /var/lib/CAM
 
 myinclude_DATA =		\
 	popup.ycp		\
@@ -18,6 +18,7 @@ myinclude_DATA =		\
 	crl.ycp			\
 	certificate.ycp		\
 	default.ycp		\
+	floppy.ycp		\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	
@@ -28,9 +29,12 @@ client_DATA = 		\
 	ca_mgm.ycp	\
 	ca_select_proposal.ycp	\
 	ca_mgm_proposal.ycp	\
-	ca-mgm.ycp
+	ca-mgm.ycp		\
+	common-cert.ycp		\
+	common_cert.ycp
 
-desktop_DATA = ca_mgm.desktop
+desktop_DATA = ca_mgm.desktop	\
+	       common_cert.desktop
 
 EXTRA_DIST =		\
 	$(module_DATA)	\
@@ -47,7 +51,7 @@ ycpchook = ca-management
 YCPCFLAGS =
 
 install-data-local:
-	install -d -m 700 $(DESTDIR)/var/lib/YaST2/CAM
-	install -d -m 700 $(DESTDIR)/var/lib/YaST2/CAM/.cas
+	install -d -m 700 $(DESTDIR)/var/lib/CAM
+	install -d -m 700 $(DESTDIR)/var/lib/CAM/.cas
 
 include $(top_srcdir)/Makefile.am.common

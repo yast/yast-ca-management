@@ -1,12 +1,18 @@
 #! /usr/bin/perl -w
 
+###############################################################
+# Copyright 2004, Novell, Inc.  All rights reserved.
+#
+# $Id$
+###############################################################
+
 package ag_ca_tools;
 use strict;
 use YaST::SCRAgent;
 use ycp;
 our @ISA = ("YaST::SCRAgent");
 
-my $CAM_ROOT = "/var/lib/YaST2/CAM/";
+my $CAM_ROOT = "/var/lib/CAM/";
 my $TEMPLATE = "$CAM_ROOT/openssl.cnf.tmpl";
 
 sub Read {

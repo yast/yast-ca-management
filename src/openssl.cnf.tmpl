@@ -6,7 +6,7 @@
 ###############################################
 [ca]
 default_ca=ca
-dir=/var/lib/YaST2/CAM/
+dir=/var/lib/CAM/
 certs=$dir/certs
 crl_dir=$dir/crl
 database=$dir/index.txt
@@ -19,7 +19,7 @@ RANDFILE=$dir/.rand
 x509_extensions=v3_ca
 default_days=3650
 default_crl_days=7
-default_md=md5
+default_md=sha1
 preserve=no
 policy=policy_server
 nameopt=default_ca
@@ -35,6 +35,7 @@ crl_extensions=v3_crl
 # required section
 [req]
 default_bits=2048
+default_md=sha1
 default_keyfile=privkey.pem
 distinguished_name=req_distinguished_name
 attributes=req_attributes
@@ -45,7 +46,7 @@ req_extensions=v3_req
 #utf8                = yes
 # used to sign a client cert
 [client_cert]
-dir=/var/lib/YaST2/CAM/
+dir=/var/lib/CAM/
 certs=$dir/certs
 crl_dir=$dir/crl
 database=$dir/index.txt
@@ -58,7 +59,7 @@ RANDFILE=$dir/.rand
 x509_extensions=v3_client
 default_days=365
 default_crl_days=7
-default_md=md5
+default_md=sha1
 preserve=no
 policy=policy_client
 nameopt=default_ca
@@ -69,7 +70,7 @@ crl_extensions=v3_crl
 #utf8                = yes
 # used to sign a server cert
 [server_cert]
-dir=/var/lib/YaST2/CAM/
+dir=/var/lib/CAM/
 certs=$dir/certs
 crl_dir=$dir/crl
 database=$dir/index.txt
@@ -82,7 +83,7 @@ RANDFILE=$dir/.rand
 x509_extensions=v3_server
 default_days=365
 default_crl_days=7
-default_md=md5
+default_md=sha1
 preserve=no
 policy=policy_server
 nameopt=default_ca

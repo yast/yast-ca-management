@@ -1,3 +1,9 @@
+###############################################################
+# Copyright 2004, Novell, Inc.  All rights reserved.
+#
+# $Id$
+###############################################################
+
 =head1 NAME
 
 YaPI::CaManagement
@@ -111,6 +117,16 @@ $bool = DeleteCertificate($valueMap)
   Delete a Certificate. This function removes also
   the request and the private key.
 
+$bool = ImportCommonServerCertificate($valueMap)
+
+  Import a server certificate plus correspondenting CA
+  and copy them to a place where other YaST modules look
+  for such a common certificate.
+
+$bool = ReadFile($valueMap)
+
+  Returns a certificate or CRL as plain text or parsed map.
+
 
 =head1 COMMON PARAMETER
 
@@ -158,6 +174,8 @@ emailAddress => <email-address>
 
 =item *
 keyLength => <integer>
+
+ ( must be greater or equal 512 )
 
 =item *
 days => <integer>
@@ -322,7 +340,7 @@ our $VERSION="1.0.1";
 use strict;
 use vars qw(@ISA);
 
-use YaST::YCP;
+use YaST::YCP qw(Boolean);
 use YaST::caUtils;
 use ycp;
 use URI::Escape;
@@ -331,17 +349,15 @@ use MIME::Base64;
 use Digest::MD5 qw(md5_hex);
 use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now);
 
-use Locale::gettext;
-use POSIX ();     # Needed for setlocale()
-
-POSIX::setlocale(LC_MESSAGES, "");
-textdomain("ca-management");
 
 use YaPI;
+textdomain("ca-management");
+
 @YaPI::CaManagement::ISA = qw( YaPI );
 
 YaST::YCP::Import ("SCR");
 YaST::YCP::Import ("Hostname");
+YaST::YCP::Import ("IP");
 YaST::YCP::Import ("Ldap");
 
 our %TYPEINFO;
@@ -349,7 +365,7 @@ our @CAPABILITIES = (
                      'SLES9'
                     );
 
-my $CAM_ROOT = "/var/lib/YaST2/CAM";
+my $CAM_ROOT = "/var/lib/CAM";
 
 =item *
 C<$caList = ReadCAList()>
@@ -397,7 +413,7 @@ I<$valueMap> supports the following Keys:
 
 * emailAddress (depending on CA policy)
 
-* keyLength (default 2048 min: 100 max: 9999)
+* keyLength (default 2048 min: 512 max: 9999)
 
 * days (default 3650)
 
@@ -489,25 +505,25 @@ sub AddRootCA {
     # checking requires
     if (!defined $data->{"caName"}) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'caName'"),
+        return $self->SetError( summary => __("Missing value 'caName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
 
     if (!defined $data->{"keyPasswd"} ) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'keyPasswd' or password is to short"),
+        return $self->SetError( summary => __("Missing value 'keyPasswd' or password is too short."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'commonName'"),
+        return $self->SetError( summary => __("Missing value 'commonName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
     if (!defined $data->{"basicConstraints"} || $data->{"basicConstraints"} !~ /CA:TRUE/i) {
                                            # parameter check failed
-        return $self->SetError( summary => _("'basicConstraints' says, this is no CA"),
+        return $self->SetError( summary => __("According to 'basicConstraints', this is not a CA."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -544,7 +560,7 @@ sub AddRootCA {
         push @dn, $data->{$DN_Part};
     }
 
-    if (not SCR->Write(".var.lib.YaST2.CAM.value.$caName.req.x509_extensions", "v3_ca")) { 
+    if (not SCR->Write(".CAM.openssl_cnf.value.$caName.req.x509_extensions", "v3_ca")) { 
         YaST::caUtils->cleanCaInfrastructure($caName);
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
@@ -556,14 +572,14 @@ sub AddRootCA {
     #             v3 ext. value               default
     #####################################################
     my %v3ext = (
-                 'basicConstraints'       => 'critical,CA:true',
-                 'nsComment'              => 'YaMC Generated Certificate',
-                 'nsCertType'             => 'sslCA, emailCA',
-                 'keyUsage'               => 'cRLSign, keyCertSign',
-                 'subjectKeyIdentifier'   => 'hash',
-                 'authorityKeyIdentifier' => 'keyid:always,issuer:always',
-                 'subjectAltName'         => 'email:copy',
-                 'issuerAltName'          => 'issuer:copy',
+                 'basicConstraints'       => undef,
+                 'nsComment'              => undef,
+                 'nsCertType'             => undef,
+                 'keyUsage'               => undef,
+                 'subjectKeyIdentifier'   => undef,
+                 'authorityKeyIdentifier' => undef,
+                 'subjectAltName'         => undef,
+                 'issuerAltName'          => undef,
                  'nsBaseUrl'              => undef,
                  'nsRevocationUrl'        => undef,
                  'nsCaRevocationUrl'      => undef,
@@ -583,7 +599,7 @@ sub AddRootCA {
         }
     }
 
-    if (not SCR->Write(".var.lib.YaST2.CAM", undef)) {
+    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
         YaST::caUtils->cleanCaInfrastructure($caName);
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
@@ -742,7 +758,7 @@ sub ReadCertificateDefaults {
         $certType = $data->{"certType"};
     } else {
                                            # parameter check failed
-        return $self->SetError(summary => _("Missing parameter 'certType'"),
+        return $self->SetError(summary => __("Missing parameter 'certType'."),
                                code => "PARAM_CHECK_FAILED");
     }
 
@@ -768,30 +784,30 @@ sub ReadCertificateDefaults {
 
     foreach my $extName ( keys %{$ret}) {
         if (defined $caName && $caName ne "") {
-            $ret->{$extName} = SCR->Read(".openssl.tmpl.value.$caName.v3_$certType.$extName");
+            $ret->{$extName} = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_$certType.$extName");
             if (not defined $ret->{$extName}) {
                 delete $ret->{$extName};
             }
         } else {
-            $ret->{$extName} = SCR->Read(".opensslroot.tmpl.value.v3_$certType.$extName");
+            $ret->{$extName} = SCR->Read(".CAM.opensslroot_tmpl.value.v3_$certType.$extName");
             if (not defined $ret->{$extName}) {
                 delete $ret->{$extName};
             }
         }
     }
     if (defined $caName && $caName ne "") {
-        $ret->{'keyLength'} = SCR->Read(".openssl.tmpl.value.$caName.req.default_bits");
+        $ret->{'keyLength'} = SCR->Read(".CAM.openssl_tmpl.value.$caName.req.default_bits");
         if ($certType ne "ca") {
-            $ret->{'days'} = SCR->Read(".openssl.tmpl.value.$caName.".$certType."_cert.default_days");
+            $ret->{'days'} = SCR->Read(".CAM.openssl_tmpl.value.$caName.".$certType."_cert.default_days");
         } else {
-            $ret->{'days'} = SCR->Read(".openssl.tmpl.value.$caName.ca.default_days");
+            $ret->{'days'} = SCR->Read(".CAM.openssl_tmpl.value.$caName.ca.default_days");
         }
     } else {
-        $ret->{'keyLength'} = SCR->Read(".opensslroot.tmpl.value.req.default_bits");
+        $ret->{'keyLength'} = SCR->Read(".CAM.opensslroot_tmpl.value.req.default_bits");
         if ($certType ne "ca") {
-            $ret->{'days'} = SCR->Read(".opensslroot.tmpl.value.".$certType."_cert.default_days");
+            $ret->{'days'} = SCR->Read(".CAM.opensslroot_tmpl.value.".$certType."_cert.default_days");
         } else {
-            $ret->{'days'} = SCR->Read(".opensslroot.tmpl.value.ca.default_days");
+            $ret->{'days'} = SCR->Read(".CAM.opensslroot_tmpl.value.ca.default_days");
         }
         
     }    
@@ -907,14 +923,14 @@ sub WriteCertificateDefaults {
     # checking requires
     if (!defined $data->{"caName"}) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'caName'"),
+        return $self->SetError( summary => __("Missing value 'caName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
     
     if(! defined $data->{"certType"}) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'certType'"),
+        return $self->SetError( summary => __("Missing value 'certType'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $certType = $data->{"certType"};
@@ -926,7 +942,7 @@ sub WriteCertificateDefaults {
                                 code => "COPY_FAILED");
     }
 
-    if (not SCR->Write(".var.lib.YaST2.CAM.value.$caName.".$certType."_cert.x509_extensions", 
+    if (not SCR->Write(".CAM.openssl_cnf.value.$caName.".$certType."_cert.x509_extensions", 
                        "v3_".$certType)) { 
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
@@ -966,39 +982,39 @@ sub WriteCertificateDefaults {
         }
     }
     
-    my $default_bits = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req.default_bits");
+    my $default_bits = SCR->Read(".CAM.openssl_cnf.value.$caName.req.default_bits");
     
     if(defined $data->{keyLength}) {
         # write new default_bits
-        if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.req.default_bits", $data->{keyLength})) {
+        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.req.default_bits", $data->{keyLength})) {
             return $self->SetError( summary => "Can not write to config file",
                                     code => "SCR_WRITE_FAILED");
         }
     } elsif(defined $default_bits) {
         # remove default_bits
-        if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.req.default_bits", undef)) {
+        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.req.default_bits", undef)) {
             return $self->SetError( summary => "Can not write to config file",
                                     code => "SCR_WRITE_FAILED");
         }
     }
     my $sect = ($certType eq "ca")? $certType : $certType."_cert";
-    my $default_days = SCR->Read(".var.lib.YaST2.CAM.value.$caName.$sect.default_days");
+    my $default_days = SCR->Read(".CAM.openssl_cnf.value.$caName.$sect.default_days");
     if(defined $data->{days}) {
         # write new default_days
         
-        if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$sect.default_days", $data->{days})) {
+        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.$sect.default_days", $data->{days})) {
             return $self->SetError( summary => "Can not write to config file",
                                     code => "SCR_WRITE_FAILED");
         }
     } elsif(defined $default_days) {
         # remove default_days
-        if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$sect.default_days", undef)) {
+        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.$sect.default_days", undef)) {
             return $self->SetError( summary => "Can not write to config file",
                                     code => "SCR_WRITE_FAILED");
         }
     }
 
-    if (not SCR->Write(".var.lib.YaST2.CAM", undef)) {
+    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
@@ -1065,7 +1081,12 @@ sub ReadCA {
     if (! defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -1073,14 +1094,14 @@ sub ReadCA {
     if (! defined $data->{"type"} || 
         !grep( ( $_ eq $data->{"type"}), ("parsed", "plain"))) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'type'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $type = $data->{"type"};
 
     my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/cacert.pem");
     if ($size <= 0) {
-        return $self->SetError(summary => _("CA Certificate not available in")." '$caName'",
+        return $self->SetError(summary => __("CA certificate not available in")." '$caName'",
                                code => "FILE_DOES_NOT_EXIST");
     }
     my $hash = {
@@ -1195,7 +1216,7 @@ sub AddRequest {
     # checking requires
     if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'caName'"),
+        return $self->SetError( summary => __("Missing value 'caName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
@@ -1203,12 +1224,12 @@ sub AddRequest {
     if (!defined $data->{"keyPasswd"} || $data->{"keyPasswd"} eq "" ||
         length($data->{"keyPasswd"}) <= 4) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'keyPasswd' or password is to short"),
+        return $self->SetError( summary => __("Missing value 'keyPasswd' or password is too short."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'commonName'"),
+        return $self->SetError( summary => __("Missing value 'commonName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -1230,12 +1251,12 @@ sub AddRequest {
 
     # test if this File already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/".$request.".key") != -1) {
-        return $self->SetError(summary => _("Duplicate DN. Request already exists."),
+        return $self->SetError(summary => __("Duplicate DN. Request already exists."),
                                description => "'$requestString' already exists.",
                                code => "FILE_ALREADY_EXIST");
     }
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") != -1) {
-        return $self->SetError(summary => _("Duplicate DN. Request already exists."),
+        return $self->SetError(summary => __("Duplicate DN. Request already exists."),
                                description => "'$requestString' already exists.",
                                code => "FILE_ALREADY_EXIST");
     }    
@@ -1261,11 +1282,6 @@ sub AddRequest {
         push @dn, $data->{$DN_Part};
     }
 
-    if (not SCR->Write(".var.lib.YaST2.CAM.value.$caName.req.req_extensions", "v3_req")) { 
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
-    }
     #####################################################
     # merge this extentions to the config file
     # some values have defaults
@@ -1273,12 +1289,12 @@ sub AddRequest {
     #             v3 ext. value               default
     #####################################################
     my %v3ext = (
-                 'basicConstraints'       => 'CA:false',
-                 'nsComment'              => 'YaMC Generated Certificate',
-                 'nsCertType'             => 'client, email, objsign',
-                 'keyUsage'               => 'nonRepudiation, digitalSignature, keyEncipherment',
-                 'subjectKeyIdentifier'   => 'hash',
-                 'subjectAltName'         => 'email:copy',
+                 'basicConstraints'       => undef,
+                 'nsComment'              => undef,
+                 'nsCertType'             => undef,
+                 'keyUsage'               => undef,
+                 'subjectKeyIdentifier'   => undef,
+                 'subjectAltName'         => undef,
                  'nsSslServerName'        => undef,
                  'extendedKeyUsage'       => undef,
                  'authorityInfoAccess'    => undef,
@@ -1292,7 +1308,31 @@ sub AddRequest {
         }
     }
 
-    if (not SCR->Write(".var.lib.YaST2.CAM", undef)) {
+    my $reqSect = SCR->Read(".CAM.openssl_cnf.all.$caName.v3_req");
+    if(! defined $reqSect) {
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError( summary => "Can not read request section",
+                                code => "SCR_READ_FAILED");
+    }
+    if(scalar( @{$reqSect->{value}} ) == 0) {
+        # request section is empty => remove req_extension
+        
+        if (not SCR->Write(".CAM.openssl_cnf.value.$caName.req.req_extensions", undef)) { 
+            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+        
+    } else {
+        
+        if (not SCR->Write(".CAM.openssl_cnf.value.$caName.req.req_extensions", "v3_req")) { 
+            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    }
+
+    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
@@ -1426,18 +1466,18 @@ sub IssueCertificate {
 
     # checking requires
     if (!defined $data->{"caName"} ) {
-        return $self->SetError( summary => _("Missing value 'caName'"),
+        return $self->SetError( summary => __("Missing value 'caName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
     if (!defined $data->{"request"} ) {
-        return $self->SetError( summary => _("Missing value 'request'"),
+        return $self->SetError( summary => __("Missing value 'request'"),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $request = $data->{"request"};
 
     if (!defined $data->{"caPasswd"} ) {
-        return $self->SetError( summary => _("Missing value 'caPasswd'"),
+        return $self->SetError( summary => __("Missing value 'caPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -1451,7 +1491,7 @@ sub IssueCertificate {
     }
     # test if the file already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") == -1) {
-        return $self->SetError(summary => _("Request does not exists."),
+        return $self->SetError(summary => __("Request does not exist."),
                                code => "FILE_DOES_NOT_EXIST");
     }
 
@@ -1500,17 +1540,11 @@ sub IssueCertificate {
         my $certStr = sprintf("%s-%s-%s %s:%s:%s", @expireCertDate);
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
                                            # parameter check failed
-        return $self->SetError( summary => _("CA expires before the certificate should expire."),
+        return $self->SetError( summary => __("CA expires before the certificate should expire."),
                                 description => "CA expires:'$caStr', Cert should expire:'$certStr'",
                                 code  => 'PARAM_CHECK_FAILED');
     }
 
-    if (not SCR->Write(".var.lib.YaST2.CAM.value.$caName.".$certType."_cert.x509_extensions", 
-                       "v3_".$certType)) { 
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
-    }
     #####################################################
     # merge this extentions to the config file
     # some values have defaults
@@ -1518,14 +1552,14 @@ sub IssueCertificate {
     #             v3 ext. value               default
     #####################################################
     my %v3ext = (
-                 'basicConstraints'       => 'CA:FALSE',
-                 'nsComment'              => 'YaMC Generated Certificate',
-                 'nsCertType'             => 'client, email, objsign',
-                 'keyUsage'               => 'nonRepudiation, digitalSignature, keyEncipherment',
-                 'subjectKeyIdentifier'   => 'hash',
-                 'authorityKeyIdentifier' => 'keyid:always,issuer:always',
-                 'subjectAltName'         => 'email:copy',
-                 'issuerAltName'          => 'issuer:copy',
+                 'basicConstraints'       => undef,
+                 'nsComment'              => undef,
+                 'nsCertType'             => undef,
+                 'keyUsage'               => undef,
+                 'subjectKeyIdentifier'   => undef,
+                 'authorityKeyIdentifier' => undef,
+                 'subjectAltName'         => undef,
+                 'issuerAltName'          => undef,
                  'nsBaseUrl'              => undef,
                  'nsRevocationUrl'        => undef,
                  'nsCaRevocationUrl'      => undef,
@@ -1545,7 +1579,33 @@ sub IssueCertificate {
         }
     }
 
-    if (not SCR->Write(".var.lib.YaST2.CAM", undef)) {
+    my $v3Sect = SCR->Read(".CAM.openssl_cnf.all.$caName.v3_".$certType);
+    if(! defined $v3Sect) {
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError( summary => "Can not read v3 section",
+                                code => "SCR_READ_FAILED");
+    }
+    if(scalar( @{$v3Sect->{value}} ) == 0) {
+        # v3 section is empty => remove x509_extension
+        
+        if (not SCR->Write(".CAM.openssl_cnf.value.$caName.".$certType."_cert.x509_extensions", 
+                           undef)) { 
+            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+        
+    } else {
+        
+        if (not SCR->Write(".CAM.openssl_cnf.value.$caName.".$certType."_cert.x509_extensions", 
+                           "v3_".$certType)) { 
+            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    }
+
+    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
@@ -1765,14 +1825,19 @@ sub ReadCertificateList {
     if (! defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Missing parameter 'caName'."),
+        return $self->SetError(summary => __("Missing parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     my $caName = $data->{'caName'};
     if (defined $data->{'caPasswd'} &&
         length($data->{'caPasswd'}) < 4) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caPasswd'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     if ( defined $data->{'caPasswd'} ) { # needed only for UpdateDB
@@ -1829,14 +1894,19 @@ sub UpdateDB {
     if (! defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Missing parameter 'caName'."),
+        return $self->SetError(summary => __("Missing parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     my $caName = $data->{'caName'};
     if (! defined $data->{'caPasswd'} ||
         length($data->{'caPasswd'}) < 4) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caPasswd'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
@@ -1929,7 +1999,12 @@ sub ReadCertificate {
     if (! defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -1937,7 +2012,7 @@ sub ReadCertificate {
     if (! defined $data->{"type"} || 
         !grep( ( $_ eq $data->{"type"}), ("parsed", "plain"))) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'type'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $type = $data->{"type"};
@@ -1945,14 +2020,14 @@ sub ReadCertificate {
     if (! defined $data->{"certificate"} || 
         $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'certificate'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
 
     my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
     if ($size <= 0) {
-        return $self->SetError(summary => _("Certificate not found."),
+        return $self->SetError(summary => __("Certificate not found."),
                                description => "Certificate '$certificate.pem' not available in '$caName'",
                                code => "FILE_DOES_NOT_EXIST");
     }
@@ -2026,26 +2101,26 @@ sub RevokeCertificate {
     # checking requires
     if (!defined $data->{"caName"}) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'caName'"),
+        return $self->SetError( summary => __("Missing value 'caName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
     
     if (!defined $data->{"caPasswd"} ) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'caPasswd'"),
+        return $self->SetError( summary => __("Missing value 'caPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     if (!defined $data->{"certificate"} ) {
                                            # parameter check failed
-        return $self->SetError( summary => _("Missing value 'certificate'"),
+        return $self->SetError( summary => __("Missing value 'certificate'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $certificate = $data->{"certificate"};
 
     my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
     if ($size <= 0) {
-        return $self->SetError(summary => _("Certificate not found."),
+        return $self->SetError(summary => __("Certificate not found."),
                                description => "Certificate '$certificate.pem' not available in '$caName'",
                                code => "FILE_DOES_NOT_EXIST");
     }
@@ -2113,17 +2188,17 @@ sub AddCRL {
 
     # checking requires
     if (!defined $data->{"caName"}) {
-        return $self->SetError( summary => _("Missing value 'caName'"),
+        return $self->SetError( summary => __("Missing value 'caName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
     
     if (!defined $data->{"caPasswd"} ) {
-        return $self->SetError( summary => _("Missing value 'caPasswd'"),
+        return $self->SetError( summary => __("Missing value 'caPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     if (!defined $data->{"days"} ) {
-        return $self->SetError( summary => _("Missing value 'days'"),
+        return $self->SetError( summary => __("Missing value 'days'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -2206,7 +2281,12 @@ sub ReadCRL {
     if (! defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -2214,14 +2294,14 @@ sub ReadCRL {
     if (! defined $data->{"type"} || 
         !grep( ($_ eq $data->{"type"}), ("parsed", "plain"))) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'type'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $type = $data->{"type"};
     
     my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem");
     if ($size <= 0) {
-        return $self->SetError(summary => _("CRL not available"),
+        return $self->SetError(summary => __("CRL not available."),
                                description => "No CRL found in '$caName'",
                                code => "FILE_DOES_NOT_EXIST");
     }
@@ -2317,7 +2397,12 @@ sub ExportCA {
     if (! defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -2344,14 +2429,14 @@ sub ExportCA {
                ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY",
                 "DER_CERT", "PKCS12", "PKCS12_CHAIN"))) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'exportFormat'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'exportFormat'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $format = $data->{"exportFormat"};
 
     if (not defined $data->{'caPasswd'}) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caPasswd'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code => "PARAM_CHECK_FAILED");
     }
     
@@ -2459,7 +2544,7 @@ sub ExportCA {
     } elsif ($format eq "PKCS12") {
         if (!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
                                            # parameter check failed
-            return $self->SetError(summary => _("Parameter 'P12Password' missing"),
+            return $self->SetError(summary => __("Parameter 'P12Password' missing."),
                                    code => "PARAM_CHECK_FAILED");
         }
 
@@ -2490,7 +2575,7 @@ sub ExportCA {
 
         if (!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
                                            # parameter check failed
-            return $self->SetError(summary => _("Parameter 'P12Password' missing"),
+            return $self->SetError(summary => __("Parameter 'P12Password' missing."),
                                    code => "PARAM_CHECK_FAILED");
         }
 
@@ -2600,7 +2685,12 @@ sub ExportCertificate {
     if (!defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -2608,7 +2698,7 @@ sub ExportCertificate {
     if (! defined $data->{'certificate'} ||
         $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'certificate'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
@@ -2642,14 +2732,14 @@ sub ExportCertificate {
                ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY",
                 "DER_CERT", "PKCS12", "PKCS12_CHAIN"))) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'exportFormat'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'exportFormat'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $format = $data->{"exportFormat"};
 
     if (not defined $data->{'keyPasswd'}) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'keyPasswd'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'keyPasswd'."),
                                code => "PARAM_CHECK_FAILED");
     }
     
@@ -2762,7 +2852,7 @@ sub ExportCertificate {
     } elsif ($format eq "PKCS12") {
         if (!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
                                            # parameter check failed
-            return $self->SetError(summary => _("Parameter 'P12Password' missing"),
+            return $self->SetError(summary => __("Parameter 'P12Password' missing."),
                                    code => "PARAM_CHECK_FAILED");
         }
 
@@ -2792,7 +2882,7 @@ sub ExportCertificate {
     } elsif ($format eq "PKCS12_CHAIN") {
         if (!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
                                            # parameter check failed
-            return $self->SetError(summary => _("Parameter 'P12Password' missing"),
+            return $self->SetError(summary => __("Parameter 'P12Password' missing."),
                                    code => "PARAM_CHECK_FAILED");
         }
 
@@ -2879,7 +2969,12 @@ sub ExportCRL {
     if (!defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -2887,7 +2982,7 @@ sub ExportCRL {
     if (!defined $data->{"exportFormat"} || 
         !grep( ( $_ eq $data->{"exportFormat"}), ("PEM", "DER"))) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'exportFormat'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'exportFormat'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $format = $data->{"exportFormat"};
@@ -2910,7 +3005,7 @@ sub ExportCRL {
     }
 
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem") == -1) {
-        return $self->SetError(summary => _("CRL does not exist"),
+        return $self->SetError(summary => __("CRL does not exist."),
                                code => "FILE_DOES_NOT_EXIST");
     }
 
@@ -2955,7 +3050,7 @@ sub ExportCRL {
         }
     } else {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'exportFormat'"),
+        return $self->SetError(summary => __("Invalid value for parameter 'exportFormat'."),
                                code => "PARAM_CHECK_FAILED");
     }
 }
@@ -3004,7 +3099,12 @@ sub Verify {
     if (!defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -3012,7 +3112,7 @@ sub Verify {
     if (!defined $data->{'certificate'} ||
         $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'certificate'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
@@ -3146,34 +3246,34 @@ sub AddSubCA {
 
     # checking requires
     if (!defined $data->{"caName"}) {
-        return $self->SetError( summary => _("Missing value 'caName'"),
+        return $self->SetError( summary => __("Missing value 'caName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
 
     if (!defined $data->{"newCaName"}) {
-        return $self->SetError( summary => _("Missing value 'newCaName'"),
+        return $self->SetError( summary => __("Missing value 'newCaName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     $newCaName = $data->{"newCaName"};
     
     if (!defined $data->{"keyPasswd"}) {
-        return $self->SetError( summary => _("Missing value 'keyPasswd'"),
+        return $self->SetError( summary => __("Missing value 'keyPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
     if (!defined $data->{'caPasswd'} ) {
-        return $self->SetError( summary => _("Missing value 'caPasswd'."),
+        return $self->SetError( summary => __("Missing value 'caPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
     if (!defined $data->{"commonName"}) {
-        return $self->SetError( summary => _("Missing value 'commonName'"),
+        return $self->SetError( summary => __("Missing value 'commonName'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
     if (!defined $data->{"basicConstraints"} || $data->{"basicConstraints"} !~ /CA:TRUE/i) {
-        return $self->SetError( summary => _("'basicConstraints' says, this is no CA"),
+        return $self->SetError( summary => __("According to 'basicConstraints', this is not a CA."),
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -3221,7 +3321,7 @@ sub AddSubCA {
                                code => "COPY_FAILED");
     }
 
-    $retCode = SCR->Execute(".target.bash", "cp $CAM_ROOT/$newCaName/cacert.pem $CAM_ROOT/.cas/$caName.pem");
+    $retCode = SCR->Execute(".target.bash", "cp $CAM_ROOT/$newCaName/cacert.pem $CAM_ROOT/.cas/$newCaName.pem");
     if (!defined $retCode || $retCode != 0) {
         #        YaST::caUtils->cleanCaInfrastructure($newCaName);
         return $self->SetError( summary => "Can not copy CA certificate",
@@ -3240,13 +3340,13 @@ sub AddSubCA {
 =item *
 C<$bool = ExportCAToLDAP($valueMap)>
 
-Export a CA in a LDAP Directory
+Export a CA in a LDAP Directory.
 
 In I<$valueMap> you can define the following keys: 
 
 * caName (required)
 
-* ldapHostname (required)
+* ldapHostname (required - hostname or IP address)
 
 * ldapPort (default: 389)
 
@@ -3256,6 +3356,16 @@ In I<$valueMap> you can define the following keys:
 
 * ldapPasswd (required)
 
+B<destinationDN> is the DN to the entry where to store 
+the CA. The following objectclasses are used:
+
+* cRLDistributionPoint
+
+* pkiCA
+
+The first attribute type of the DN must be 'cn'.
+
+
 The return value is "undef" on an error and "1" on success.
 
 EXAMPLE:
@@ -3264,7 +3374,7 @@ EXAMPLE:
              caName        => 'My_CA',
              ldapHostname  => 'myhost.example.com',
              ldapPort      => 389,
-             destinationDN => "ou=PKI,dc=suse,dc=de",
+             destinationDN => "cn=My_CA,ou=PKI,dc=suse,dc=de",
              BindDN        => "cn=Admin,dc=example,dc=com",
              ldapPasswd    => "system"
             };
@@ -3288,15 +3398,23 @@ sub ExportCAToLDAP {
     if (!defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
     
     if (! defined $data->{'ldapHostname'} ||
-        ! Hostname->CheckFQ($data->{'ldapHostname'}) ) {
+        !(IP->Check4($data->{'ldapHostname'}) || 
+          IP->Check6($data->{'ldapHostname'}) || 
+          Hostname->CheckFQ($data->{'ldapHostname'}))
+       ) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapHostname'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapHostname'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
@@ -3308,34 +3426,55 @@ sub ExportCAToLDAP {
 
     if ($data->{'ldapPort'} !~ /^\d+$/ ) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapPort'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapPort'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
+    my $object = X500::DN->ParseRFC2253($data->{'destinationDN'});
     if (! defined $data->{'destinationDN'} || 
-        $data->{'destinationDN'} eq "") {
-                                           # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'destinationDN'."),
+        $data->{'destinationDN'} eq "" ||
+        ! defined $object) {
+        # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'destinationDN'."),
                                code    => "PARAM_CHECK_FAILED");
+    }
+
+    if($data->{'destinationDN'} !~ /^cn=/) {
+        # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'destinationDN'."),
+                               description => "First attribute type must be 'cn'",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    my $container = "";
+    for(my $i = scalar($object->getRDNs())-2; $i >= 0; $i--) {
+        
+        my @a = $object->getRDN($i)->getAttributeTypes();
+        
+        if($container eq "") {
+            $container = $a[0]."=".$object->getRDN($i)->getAttributeValue($a[0]);
+        } else {
+            $container = $container.",".$a[0]."=".$object->getRDN($i)->getAttributeValue($a[0]);
+        }        
     }
 
     if (! defined $data->{'BindDN'} || 
         $data->{'BindDN'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'BindDN'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'BindDN'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
     if (! defined $data->{'ldapPasswd'} || 
         $data->{'ldapPasswd'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapPasswd'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
     # test if this File already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/cacert.pem") == -1) {
-        return $self->SetError(summary => _("CA Certificate does not exist."),
+        return $self->SetError(summary => __("CA certificate does not exist."),
                                code => "FILE_DOES_NOT_EXIST");
     }
 
@@ -3357,8 +3496,12 @@ sub ExportCAToLDAP {
 
     if(Ldap->Read()) {
         my $ldapMap = Ldap->Export();
-        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
-            $use_tls = "no"
+        if(defined $ldapMap->{ldap_tls}) {
+            if($ldapMap->{ldap_tls} == 1) {
+                $use_tls = "yes" 
+            } else {
+                $use_tls = "no";
+            }
         }
     }
 
@@ -3378,20 +3521,20 @@ sub ExportCAToLDAP {
     }
 
     my $dnList = SCR->Read(".ldap.search", {
-                                            "base_dn" => $data->{'destinationDN'},
+                                            "base_dn" => $container,
                                             "filter" => 'objectclass=*',
                                             "scope" => 0,
                                             "dn_only" => 1
                                            });
     if (! defined $dnList) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => "'destinationDN' is not available in the LDAP directory.",
+        return $self->SetError(summary => "Container '$container' is not available in the LDAP directory.",
                                code => "LDAP_SEARCH_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
 
     $dnList = SCR->Read(".ldap.search", {
-                                         "base_dn" => "cn=$caName,".$data->{'destinationDN'},
+                                         "base_dn" => $data->{'destinationDN'},
                                          "filter"  => 'objectclass=*',
                                          "scope"   => 0,
                                          "dn_only" => 1
@@ -3418,7 +3561,7 @@ sub ExportCAToLDAP {
                      'cACertificate;binary' => YaST::YCP::Byteblock(decode_base64($body))
                     };
 
-        if (not SCR->Write(".ldap.add", { dn => "cn=$caName,".$data->{'destinationDN'}} , $entry)) {
+        if (not SCR->Write(".ldap.add", { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
             return $self->SetError(summary => "Can not add CA certificate to LDAP directory.",
                                    code => "LDAP_ADD_FAILED",
@@ -3430,7 +3573,7 @@ sub ExportCAToLDAP {
         my $entry = {
                      'cACertificate;binary' => YaST::YCP::Byteblock(decode_base64($body))
                     };
-        if (not SCR->Write(".ldap.modify", { dn => "cn=$caName,".$data->{'destinationDN'}} , $entry)) {
+        if (not SCR->Write(".ldap.modify", { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
             return $self->SetError(summary => "Can not modify CA certificate in LDAP directory.",
                                    code => "LDAP_MODIFY_FAILED",
@@ -3453,7 +3596,7 @@ In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
-* ldapHostname (required)
+* ldapHostname (required - hostname or IP address)
 
 * ldapPort (default: 389)
 
@@ -3463,6 +3606,15 @@ In I<$valueMap> you can define the following keys:
 
 * ldapPasswd (required)
 
+B<destinationDN> is the DN to the entry where to store 
+the CA. The following objectclasses are used:
+
+* cRLDistributionPoint
+
+* pkiCA
+
+The first attribute type of the DN must be 'cn'.
+
 The return value is "undef" on an error and "1" on success.
 
 EXAMPLE:
@@ -3471,7 +3623,7 @@ EXAMPLE:
              caName        => 'My_CA',
              ldapHostname  => 'myhost.example.com',
              ldapPort      => 389,
-             destinationDN => "ou=PKI,dc=suse,dc=de",
+             destinationDN => "cn=My_CA,ou=PKI,dc=suse,dc=de",
              BindDN        => "cn=Admin,dc=example,dc=com",
              ldapPasswd    => "system"
             };
@@ -3496,15 +3648,23 @@ sub ExportCRLToLDAP {
     if (!defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
     
     if (! defined $data->{'ldapHostname'} ||
-        ! Hostname->CheckFQ($data->{'ldapHostname'}) ) {
+        !(IP->Check4($data->{'ldapHostname'}) || 
+          IP->Check6($data->{'ldapHostname'}) || 
+          Hostname->CheckFQ($data->{'ldapHostname'}))
+       ) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapHostname'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapHostname'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
@@ -3516,34 +3676,54 @@ sub ExportCRLToLDAP {
 
     if ($data->{'ldapPort'} !~ /^\d+$/ ) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapPort'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapPort'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
+    my $object = X500::DN->ParseRFC2253($data->{'destinationDN'});
     if (! defined $data->{'destinationDN'} || 
-        $data->{'destinationDN'} eq "") {
+        $data->{'destinationDN'} eq "" ||
+        ! defined $object) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'destinationDN'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'destinationDN'."),
                                code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'destinationDN'} !~ /^cn=/) {
+        # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'destinationDN'."),
+                               description => "First attribute type must be 'cn'",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    my $container = "";
+    for(my $i = scalar($object->getRDNs())-2; $i >= 0; $i--) {
+        
+        my @a = $object->getRDN($i)->getAttributeTypes();
+        
+        if($container eq "") {
+            $container = $a[0]."=".$object->getRDN($i)->getAttributeValue($a[0]);
+        } else {
+            $container = $container.",".$a[0]."=".$object->getRDN($i)->getAttributeValue($a[0]);
+        }
     }
 
     if (! defined $data->{'BindDN'} || 
         $data->{'BindDN'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'BindDN'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'BindDN'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
     if (! defined $data->{'ldapPasswd'} || 
         $data->{'ldapPasswd'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapPasswd'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
     # test if this File already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem") == -1) {
-        return $self->SetError(summary => _("CRL does not exist."),
+        return $self->SetError(summary => __("CRL does not exist."),
                                code => "FILE_DOES_NOT_EXIST");
     }
 
@@ -3566,7 +3746,11 @@ sub ExportCRLToLDAP {
     if(Ldap->Read()) {
         my $ldapMap = Ldap->Export();
         if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
-            $use_tls = "no"
+            if($ldapMap->{ldap_tls} == 1) {
+                $use_tls = "yes" 
+            } else {
+                $use_tls = "no";
+            }
         }
     }
 
@@ -3586,20 +3770,20 @@ sub ExportCRLToLDAP {
     }
 
     my $dnList = SCR->Read(".ldap.search", {
-                                            "base_dn" => $data->{'destinationDN'},
+                                            "base_dn" => $container,
                                             "filter" => 'objectclass=*',
                                             "scope" => 0,
                                             "dn_only" => 1
                                            });
     if (! defined $dnList) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => "'destinationDN' is not available in the LDAP directory.",
+        return $self->SetError(summary => "Container '$container' is not available in the LDAP directory.",
                                code => "LDAP_SEARCH_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
 
     $dnList = SCR->Read(".ldap.search", {
-                                         "base_dn" => "cn=$caName,".$data->{'destinationDN'},
+                                         "base_dn" => $data->{'destinationDN'},
                                          "filter" => 'objectclass=*',
                                          "scope" => 0,
                                          "dn_only" => 1
@@ -3619,14 +3803,14 @@ sub ExportCRLToLDAP {
         $action = "modify";
 
         my $attr = SCR->Read(".ldap.search", {
-                                              "base_dn" => "cn=$caName,".$data->{'destinationDN'},
+                                              "base_dn" => $data->{'destinationDN'},
                                               "filter" => 'objectclass=cRLDistributionPoint',
                                               "scope" => 0,
                                               "attrs" => [ "certificateRevocationList" ],
                                              });
 
         if (! defined $attr) {
-	    my $ldapERR = SCR->Read(".ldap.error");
+            my $ldapERR = SCR->Read(".ldap.error");
             return $self->SetError(summary => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                    code => "LDAP_SEARCH_FAILED");
         }
@@ -3645,7 +3829,7 @@ sub ExportCRLToLDAP {
                      'certificateRevocationList;binary' => YaST::YCP::Byteblock(decode_base64($body))
                     };
 
-        if (not SCR->Write(".ldap.add", { dn => "cn=$caName,".$data->{'destinationDN'}} , $entry)) {
+        if (not SCR->Write(".ldap.add", { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
             return $self->SetError(summary => "Can not add CRL certificate to LDAP directory.",
                                    code => "LDAP_ADD_FAILED",
@@ -3658,7 +3842,7 @@ sub ExportCRLToLDAP {
         my $entry = {
                      'certificateRevocationList;binary' => YaST::YCP::Byteblock(decode_base64($body))
                     };
-        if (not SCR->Write(".ldap.modify", { dn => "cn=$caName,".$data->{'destinationDN'}} , $entry)) {
+        if (not SCR->Write(".ldap.modify", { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
             return $self->SetError(summary => "Can not modify CRL certificate in LDAP directory.",
                                    code => "LDAP_MODIFY_FAILED",
@@ -3674,9 +3858,9 @@ sub ExportCRLToLDAP {
         # seems to be the first export, so
         # check for crlDistributionPoint in config template
         
-        my $crlDP_client = SCR->Read(".openssl.tmpl.value.$caName.v3_client.crlDistributionPoints");
-        my $crlDP_server = SCR->Read(".openssl.tmpl.value.$caName.v3_server.crlDistributionPoints");
-        my $crlDP_ca     = SCR->Read(".openssl.tmpl.value.$caName.v3_ca.crlDistributionPoints");
+        my $crlDP_client = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_client.crlDistributionPoints");
+        my $crlDP_server = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_server.crlDistributionPoints");
+        my $crlDP_ca     = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_ca.crlDistributionPoints");
         
         if ( (! defined $crlDP_client || $crlDP_client eq "") &&
              (! defined $crlDP_server || $crlDP_server eq "") &&
@@ -3686,11 +3870,11 @@ sub ExportCRLToLDAP {
             
             my $crlDP = "URI:";
             $crlDP   .= "ldap://".$data->{'ldapHostname'}.":".$data->{'ldapPort'}."/";
-            $crlDP   .= uri_escape("cn=$caName,".$data->{'destinationDN'});
+            $crlDP   .= uri_escape($data->{'destinationDN'});
             
-            if ( !SCR->Write(".openssl.tmpl.value.$caName.v3_client.crlDistributionPoints", $crlDP) ||
-                 !SCR->Write(".openssl.tmpl.value.$caName.v3_server.crlDistributionPoints", $crlDP) ||
-                 !SCR->Write(".openssl.tmpl.value.$caName.v3_ca.crlDistributionPoints", $crlDP)
+            if ( !SCR->Write(".CAM.openssl_tmpl.value.$caName.v3_client.crlDistributionPoints", $crlDP) ||
+                 !SCR->Write(".CAM.openssl_tmpl.value.$caName.v3_server.crlDistributionPoints", $crlDP) ||
+                 !SCR->Write(".CAM.openssl_tmpl.value.$caName.v3_ca.crlDistributionPoints", $crlDP)
                ) {
                 y2warning("Writing crlDistributionPoints to openssl.cnf.tmpl failed.");
                 # the main action was successful. So we return 1 and not "undef"
@@ -3768,17 +3952,22 @@ sub ReadLDAPExportDefaults {
 
     if (defined $data->{'caName'} ) {
         if($data->{'caName'} =~ /^[A-Za-z0-9-_]+$/) {
+            if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                                       description => "'-' as first or last character is forbidden.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
             $caName = $data->{'caName'};
         } else {
                                            # parameter check failed
-            return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+            return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
                                    code    => "PARAM_CHECK_FAILED");
         }
     }
     
     if(!defined $data->{'type'} ||
        !grep( ($_ eq $data->{'type'}), ("ca", "crl", "certificate"))) {
-        return $self->SetError(summary => _("Wrong value for parameter 'type'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                description => "'type' must be 'ca', 'crl' or 'certificate'.\n".
                                               "'type' is '".$data->{'type'}."'",
                                code    => "PARAM_CHECK_FAILED");
@@ -3787,7 +3976,7 @@ sub ReadLDAPExportDefaults {
 
     if($type eq "certificate") {
         if(!defined $data->{'commonName'} || $data->{'commonName'} eq "") {
-            return $self->SetError(summary => _("Missing parameter 'commonName'"),
+            return $self->SetError(summary => __("Missing parameter 'commonName'."),
                                    code => "PARAM_CHECK_FAILED");
         }
         $commonName = $data->{'commonName'};
@@ -3801,6 +3990,10 @@ sub ReadLDAPExportDefaults {
 
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
+
+        #use Data::Dumper;
+        #y2debug(Data::Dumper->Dump([$ldapMap]));
+
         if(defined $ldapMap->{'ldap_server'} && $ldapMap->{'ldap_server'} ne "") {
             my $dummy = $ldapMap->{'ldap_server'};
             $ldapMap->{'ldap_server'} = Ldap->GetFirstServer("$dummy");
@@ -3809,8 +4002,12 @@ sub ReadLDAPExportDefaults {
             return $self->SetError( summary => "No LDAP Server configured",
                                     code => "HOST_NOT_FOUND");
         } 
-        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
-            $use_tls = "no"
+        if(defined $ldapMap->{ldap_tls} ) {
+            if($ldapMap->{ldap_tls} == 1) {
+                $use_tls = "yes" 
+            } else {
+                $use_tls = "no";
+            }
         }
     }
 
@@ -3834,7 +4031,7 @@ sub ReadLDAPExportDefaults {
   
         if(defined $caName && $caName ne "") {
             $ldapret = SCR->Read(".ldap.search", {
-                                                  "base_dn" => $ldapMap->{'ldap_domain'},
+                                                  "base_dn" => $ldapMap->{'base_config_dn'},
                                                   "filter" => "(& (objectclass=suseCaConfiguration) (cn=$caName))",
                                                   "scope" => 2,
                                                   "not_found_ok" => 1,
@@ -3853,7 +4050,7 @@ sub ReadLDAPExportDefaults {
         
         if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
             $ldapret = SCR->Read(".ldap.search", {
-                                                  "base_dn" => $ldapMap->{'ldap_domain'},
+                                                  "base_dn" => $ldapMap->{'base_config_dn'},
                                                   "filter" => '(& (objectclass=suseCaConfiguration) (cn=defaultCA))',
                                                   "scope" => 2,
                                                   "not_found_ok" => 1
@@ -3870,10 +4067,15 @@ sub ReadLDAPExportDefaults {
         }
         
         if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
-            return $self->SetError(summary => _("No configuation available in LDAP."),
+            return $self->SetError(summary => __("No configuration available in LDAP."),
                                    code => "LDAP_CONFIG_NEEDED");
         }
-        
+       
+        # complete the destinationDN 
+        for(my $i = 0; $i < scalar(@{$retMap->{'destinationDN'}}); $i++) {
+            $retMap->{'destinationDN'}->[$i] = "cn=$caName,".$retMap->{'destinationDN'}->[$i];
+        }
+
     } else {
         # type is certificate
         
@@ -3901,7 +4103,6 @@ sub ReadLDAPExportDefaults {
             $retMap->{'destinationDN'} = $ldapret;
         }
         
-
     }
     $retMap->{'ldapHostname'} = $ldapMap->{'ldap_server'};
     $retMap->{'ldapPort'} = $ldapMap->{'ldap_port'};
@@ -3947,7 +4148,7 @@ sub InitLDAPcaManagement {
     my $ldapret = undef;
 
     if(!defined $data->{ldapPasswd} || $data->{ldapPasswd} eq "") {
-        return $self->SetError( summary => _("LDAP password required"),
+        return $self->SetError( summary => __("LDAP password required."),
                                 code => "PARAM_CHECK_FAILED");
     }
 
@@ -3964,15 +4165,11 @@ sub InitLDAPcaManagement {
             return $self->SetError( summary => "No LDAP Server configured",
                                     code => "HOST_NOT_FOUND");
         } 
-        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
-            $use_tls = "no"
-        }
     }
     
-    if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_server'},
-                                 "port"     => $ldapMap->{'ldap_port'},
-                                 "use_tls"  => $use_tls
-                                })) {
+    my $ret = Ldap->LDAPInit ();
+    if ($ret ne "") {
+        
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
@@ -3988,7 +4185,7 @@ sub InitLDAPcaManagement {
     }
 
     $ldapret = SCR->Read(".ldap.search", {
-                                          "base_dn" => $ldapMap->{'ldap_domain'},
+                                          "base_dn" => $ldapMap->{'base_config_dn'},
                                           "filter" => '(& (objectclass=suseCaConfiguration) (cn=defaultCA))',
                                           "scope" => 2,
                                           "not_found_ok" => 1
@@ -4022,16 +4219,16 @@ sub InitLDAPcaManagement {
     }
 
     if($addConfigDN) {
-        $ldapret = SCR->Write(".ldap.add", 
-                              { dn => $ldapMap->{'base_config_dn'}},
-                              { "objectClass" => [ "organizationalUnit"],
-                                "ou" => "ldapconfig"});
-        if(! $ldapret) {
-            my $ldapERR = SCR->Read(".ldap.error");
+        
+        Ldap->SetGUI(YaST::YCP::Boolean(0));
+        Ldap->SetBindPassword($data->{ldapPasswd});
+        
+        if(! Ldap->CheckBaseConfig($ldapMap->{'base_config_dn'})) {
+            Ldap->SetGUI(YaST::YCP::Boolean(1));
             return $self->SetError(summary => "Can not add base configuration entry!",
-                                   code => "LDAP_ADD_FAILED",
-                                   description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+                                   code => "LDAP_ADD_FAILED");
         }
+        Ldap->SetGUI(YaST::YCP::Boolean(1));
     }
     
     if($addDefaultConfig) {
@@ -4050,10 +4247,10 @@ sub InitLDAPcaManagement {
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
     }
-
+    
     # do the CA Base exist?
     $ldapret = SCR->Read(".ldap.search", {
-                                          "base_dn" => $ldapMap->{'ldap_domain'},
+                                          "base_dn" => $ldapMap->{'base_config_dn'},
                                           "filter" => '(& (objectclass=suseCaConfiguration) (cn=defaultCA))',
                                           "scope" => 2,
                                           "attrs" => [ 'suseDefaultBase' ]
@@ -4139,7 +4336,7 @@ In I<$valueMap> you can define the following keys:
 
 * p12Passwd (optional)
 
-* ldapHostname (required)
+* ldapHostname (required - hostname or IP address)
 
 * ldapPort (default: 389)
 
@@ -4188,7 +4385,12 @@ sub ExportCertificateToLDAP {
     if (!defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
@@ -4196,7 +4398,7 @@ sub ExportCertificateToLDAP {
     if (!defined $data->{'certificate'} ||
         $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'certificate'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{'certificate'};
@@ -4207,9 +4409,12 @@ sub ExportCertificateToLDAP {
     }
     
     if (! defined $data->{'ldapHostname'} ||
-        ! Hostname->CheckFQ($data->{'ldapHostname'}) ) {
+        !(IP->Check4($data->{'ldapHostname'}) || 
+          IP->Check6($data->{'ldapHostname'}) || 
+          Hostname->CheckFQ($data->{'ldapHostname'}))
+       ) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapHostname'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapHostname'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
@@ -4221,34 +4426,34 @@ sub ExportCertificateToLDAP {
 
     if ($data->{'ldapPort'} !~ /^\d+$/ ) {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapPort'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapPort'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
     if (! defined $data->{'destinationDN'} || 
         $data->{'destinationDN'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'destinationDN'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'destinationDN'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
     if (! defined $data->{'BindDN'} || 
         $data->{'BindDN'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'BindDN'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'BindDN'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
     if (! defined $data->{'ldapPasswd'} || 
         $data->{'ldapPasswd'} eq "") {
                                            # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'ldapPasswd'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'ldapPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
     # test if this File already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/$certificate.pem") == -1) {
-        return $self->SetError(summary => _("Certificate does not exist."),
+        return $self->SetError(summary => __("Certificate does not exist."),
                                code => "FILE_DOES_NOT_EXIST");
     }
 
@@ -4287,11 +4492,15 @@ sub ExportCertificateToLDAP {
 
     if(Ldap->Read()) {
         my $ldapMap = Ldap->Export();
-        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
-            $use_tls = "no"
+        if(defined $ldapMap->{ldap_tls}) {
+            if($ldapMap->{ldap_tls} == 1) {
+                $use_tls = "yes" 
+            } else {
+                $use_tls = "no";
+            }
         }
     }
-
+    
     if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
                                  "port"     => $data->{'ldapPort'},
                                  "use_tls"  => $use_tls })) {
@@ -4409,7 +4618,12 @@ sub DeleteCertificate {
     if (!defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                     # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
@@ -4417,7 +4631,7 @@ sub DeleteCertificate {
     if (!defined $data->{'certificate'} ||
         $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
         # parameter check failed
-        return $self->SetError(summary => _("Wrong value for parameter 'certificate'."),
+        return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{'certificate'};
@@ -4435,7 +4649,7 @@ sub DeleteCertificate {
     }
     
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/$certificate.pem") == -1) {
-        return $self->SetError(summary => _("Certificate does not exist."),
+        return $self->SetError(summary => __("Certificate does not exist."),
                                code => "FILE_DOES_NOT_EXIST");
     }
     
@@ -4453,13 +4667,13 @@ sub DeleteCertificate {
             if(defined $err && defined $err->{description}) {
                 $desc .= $err->{description}."\n";
             }
-            return $self->SetError(summary => _("Removing the certificate failed."),
+            return $self->SetError(summary => __("Removing the certificate failed."),
                                    description => $desc,
                                    code => "SCR_WRITE_FAILED");
         }
 
         if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/newcerts/$certificate.pem")) {
-            return $self->SetError(summary => _("Removing the certificate failed."),
+            return $self->SetError(summary => __("Removing the certificate failed."),
                                    description => "Can not remove '$CAM_ROOT/$caName/keys/$req.key'",
                                    code => "SCR_EXECUTE_ERROR");
         }
@@ -4475,7 +4689,7 @@ sub DeleteCertificate {
             }
         }
     } else {
-        return $self->SetError( summary => _("Only revoked or expired certificates can be deleted"),
+        return $self->SetError( summary => __("Only revoked or expired certificates can be deleted."),
                                 description => "The status of the certificate is '$st'",
                                 code => "PARAM_CHECK_FAILED");
     }
@@ -4483,4 +4697,372 @@ sub DeleteCertificate {
 }
 
 
+=item *
+C<$bool = ImportCommonServerCertificate($valueMap)>
+
+Import a server certificate plus correspondenting CA
+and copy them to a place where other YaST modules look
+for such a common certificate.
+
+The CA(s) are copied to '/etc/ssl/certs/YaST-CA.pem'.
+
+The server certificate is copied to '/etc/ssl/servercerts/servercert.pem' .
+
+The private key is copied to '/etc/ssl/servercerts/serverkey.pem' .
+The private key is unencrypted and only for B<root> readable.
+
+In I<$valueMap> you can define the following keys: 
+
+* inFile (required)
+
+* passwd (required)
+
+B<inFile> is the path to a certificate in PKCS12 format.
+
+B<passwd> is the password which is needed to decrypt the PKCS12
+certificate. A second password is not needed, because the private 
+key will be unencrypted.
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+ my $data = {
+             inFile        => '/media/floppy/YaST-Servercert.p12',
+             passwd        => 'system'
+            };
+
+    my $res = YaPI::CaManagement->ImportCommonServerCertificate($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "OK\n";
+    }
+
+=cut
+
+BEGIN { $TYPEINFO{ImportCommonServerCertificate} = [
+                                                    "function", 
+                                                    "boolean", 
+                                                    ["map", "string", "any"] 
+                                                   ]; }
+sub ImportCommonServerCertificate {
+    my $self = shift;
+    my $data = shift;
+
+    if(! defined $data->{inFile} || $data->{inFile} eq "") {
+        # parameter check
+        return $self->SetError(summary => __("Path to certificate file is needed."),
+                               description => "Parameter 'inFile' is missing",
+                               code => "PARAM_CHECK_FAILED");
+    }
+
+    my $size = SCR->Read(".target.size", $data->{inFile});
+    if ($size <= 0) {
+        return $self->SetError(summary => __("Certificate not found in")." '$data->{inFile}'",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+
+    if(!defined $data->{passwd}) {
+        # parameter check
+        return $self->SetError(summary => __("Password is required."),
+                               description => "Parameter 'passwd' is missing",
+                               code => "PARAM_CHECK_FAILED");
+    }
+
+    my $hash = {
+                DATATYPE => "CERTIFICATE",
+                INFILE   => $data->{inFile},
+                INFORM   => 'PKCS12',
+                OUTFROM  => 'PEM',
+                INPASSWD => $data->{passwd},
+                OUTPASS  => ""
+               };
+
+    my $certs = SCR->Execute(".openssl.dataConvert", "/", $hash);
+    if(! defined $certs) {
+        return $self->SetError(%{SCR->Error(".openssl")});
+    }
+
+    my @list = ();
+    my $info = undef;
+    my $crt = undef;
+    my $subject = undef;
+    my $issuer = undef;
+    my $keyID = undef;
+
+    foreach my $line (split(/\n/, $certs)) {
+        if(defined($info)) {
+            $crt .= "$line\n";
+            if($line =~ /^[-]{5}END[ ]([A-Z0-9 ]+)+[-]{5}$/) {
+                if($info eq $1) {
+                    push(@list, {
+                                 info    => $info,
+                                 data    => $crt,
+                                 keyID   => $keyID,
+                                 subject => $subject,
+                                 issuer  => $issuer
+                                });
+                }
+                $info = undef;
+                $crt = undef;
+                $keyID = undef;
+                $subject = undef;
+                $issuer = undef;
+            }
+        } else {
+            if($line =~ /^[-]{5}BEGIN[ ]([A-Z0-9 ]+)+[-]{5}$/) {
+                $info = "$1";
+                $crt = "$line\n";
+            } else {
+                if($line =~ /^\s+localKeyID:\s*([0-9a-fA-F\s]+)\s*$/) {
+                    $keyID = "$1";
+                } elsif($line =~ /^subject=(.*)\s*$/) {
+                    $subject = "$1";
+                } elsif($line =~ /^issuer=(.*)\s*$/) {
+                    $issuer = "$1";
+                }
+            }
+        }
+    }
+
+    $keyID = undef;
+    my $serverCertIssuer = undef;
+
+    my $serverCert = undef;
+    my $serverKey = undef;
+    my $srvIssuer = undef;
+    my @restCA = ();
+
+    # search for the server certificate
+    foreach my $certHash (@list) {
+        if(defined $certHash->{keyID} && $certHash->{keyID} ne "" &&
+           defined $certHash->{subject} && $certHash->{subject} ne "") 
+          {
+              $keyID = $certHash->{keyID};
+              $serverCertIssuer = $certHash->{issuer};
+              $serverCert = $certHash->{data};
+              $certHash->{data} = undef;
+              $certHash->{keyID} = undef;
+              last;
+          }
+    }
+
+    # search for the private key
+    foreach my $certHash (@list) {
+        if(defined $certHash->{keyID} && $certHash->{keyID} eq $keyID) 
+          {
+              $serverKey = $certHash->{data};
+              $certHash->{data} = undef;
+              last;
+          }
+    }
+
+    # search for the ca which issuered the server certificate 
+    foreach my $certHash (@list) {
+        if(defined $certHash->{subject} && $certHash->{subject} eq $serverCertIssuer) 
+          {
+              $srvIssuer = $certHash->{data};
+              $certHash->{data} = undef;
+              last;
+          }
+    }
+
+    # collect the rest CAs
+    foreach my $certHash (@list) {
+        if(defined $certHash->{data} && $certHash->{info} =~ /CERTIFICATE/) 
+          {
+              push @restCA, $certHash->{data};
+          }
+    }
+     
+    if(defined $serverCert && defined $serverKey) {
+
+        if(! defined SCR->Read(".target.dir", "/etc/ssl/servercerts")) {
+            if(! SCR->Execute(".target.mkdir", "/etc/ssl/servercerts")) {
+                return $self->SetError(summary => "Can not create 'servercerts' directory",
+                                       code => "SCR_EXECUTE_FAILED");
+            }
+        }
+        
+        if(! SCR->Write(".target.string", "/etc/ssl/servercerts/servercert.pem", $serverCert)) {
+            return $self->SetError(summary => "Can not write 'servercert.pem'",
+                                   code => "SCR_WRITE_FAILED");
+        }
+
+        if(-1 == SCR->Read(".target.size", "/etc/ssl/servercerts/serverkey.pem")) {
+
+            # create empty file
+            if(! SCR->Write(".target.string", "/etc/ssl/servercerts/serverkey.pem", "")) {
+                return $self->SetError(summary => "Can not write 'serverkey.pem'",
+                                       code => "SCR_WRITE_FAILED");
+            }
+            
+            # set the right mode
+            if(0 != SCR->Execute(".target.bash", "chmod 0600 /etc/ssl/servercerts/serverkey.pem")) {
+                return $self->SetError(summary => "Can not change the permissions for 'serverkey.pem'",
+                                       code => "SCR_EXECUTE_FAILED");
+            }
+        }
+
+        if(! SCR->Write(".target.string", "/etc/ssl/servercerts/serverkey.pem", $serverKey)) {
+            return $self->SetError(summary => "Can not write 'serverkey.pem'",
+                                   code => "SCR_WRITE_FAILED");
+        }
+
+        if(defined $srvIssuer) {
+            if(! SCR->Write(".target.string", "/etc/ssl/certs/YaST-CA.pem", $srvIssuer)) {
+                return $self->SetError(summary => "Can not write 'YaST-CA.pem'",
+                                       code => "SCR_WRITE_FAILED");
+            }
+        }
+        
+        my $i = 1;
+        foreach my $ca (@restCA) {
+            if(! SCR->Write(".target.string", "/etc/ssl/certs/YaST-CA-$i.pem", $ca)) {
+                return $self->SetError(summary => "Can not write 'YaST-CA-$i.pem'",
+                                       code => "SCR_WRITE_FAILED");
+            }
+            $i++;
+        }
+        
+        # call c_rehash for /etc/ssl/certs/
+        my $ret = SCR->Execute(".target.bash", "c_rehash /etc/ssl/certs/");
+        if (! defined $ret || $ret != 0) {
+            return $self->SetError( summary => "Can not create hash vaules in '/etc/ssl/certs/'",
+                                    description => "'c_rehash /etc/ssl/certs/' failed",
+                                    code => "C_REHASH_FAILED");
+        }
+    } else {
+        return $self->SetError(summary => __("Invalid certificate file."),
+                               description => "Can not find a server certificate or the private key.",
+                               code => "PARSING_ERROR");
+    }    
+    return 1;
+}
+
+
+
+=item *
+C<$bool = ReadFile($valueMap)>
+
+Returns a certificate or CRL as plain text or parsed map.
+
+In I<$valueMap> you can define the following keys:
+
+* inFile (required)
+
+* type (required; can be "plain" or "parsed")
+
+* datatype (can be "CERTIFICATE" or "CRL")
+
+* inForm (required; "PEM", "DER")
+
+The return value is "undef" on an error.
+
+On success and type = "plain" the plain text view of the CA is returned.
+
+If the type = "parsed" a complex structure with the single values is returned.
+
+EXAMPLE:
+
+ use Data::Dumper;
+
+ foreach my $type ("parsed", "plain") {
+     my $data = {
+                 'datatype' => "certificate",
+                 'inFile' => '/path/to/a/certificate.pem',
+                 'inForm' => "PEM"
+                 'type'   => $type,
+                };
+
+     my $res = YaPI::CaManagement->ReadFile($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         print Data::Dumper->Dump([$res])."\n";
+     }
+ }
+
+=cut
+
+BEGIN { $TYPEINFO{ReadFile} = ["function", "any", ["map", "string", "any"] ]; }
+sub ReadFile {
+    my $self = shift;
+    my $data = shift;
+    my $ret = undef;
+
+    if(! defined $data->{inFile} || $data->{inFile} eq "") {
+        return $self->SetError(summary => "Missing parameter 'inFile'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    my $size = SCR->Read(".target.size", $data->{inFile});
+    if ($size <= 0) {
+        return $self->SetError(summary => __("File not found."),
+                               description => "File '".$data->{inFile}."' does not exist.",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+
+    if(! defined $data->{type} || $data->{type} eq "") {
+        return $self->SetError(summary => "Missing parameter 'type'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    if(! grep( ($_ eq $data->{type}), ("parsed", "plain"))) {
+        return $self->SetError(summary => "Unknown value '".$data->{type}."' in 'type'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+
+    if(! defined $data->{datatype} || $data->{datatype} eq "") {
+        return $self->SetError(summary => "Missing parameter 'datatype'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    if(! grep( ($_ eq $data->{datatype}), ("CERTIFICATE", "CRL"))) {
+        return $self->SetError(summary => "Unknown value '".$data->{datatype}."' in 'datatype'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+
+    if(! defined $data->{inForm} || $data->{inForm} eq "") {
+        return $self->SetError(summary => "Missing parameter 'inForm'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    if(! grep( ($_ eq $data->{inForm}), ("PEM", "DER"))) {
+        return $self->SetError(summary => "Unknown value '".$data->{inForm}."' in 'inForm'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+
+    my $hash = {
+                INFILE => $data->{inFile},
+                INFORM => $data->{inForm}
+               };
+
+    if($data->{datatype} eq "CERTIFICATE") {
+        
+        if ($data->{type} eq "parsed") {
+            $ret = SCR->Read(".openssl.getParsedCert", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
+        } else {
+            $ret = SCR->Read(".openssl.getTXTCert", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
+        }
+    } elsif($data->{datatype} eq "CRL") {
+        if ($data->{type} eq "parsed") {
+            $ret = SCR->Read(".openssl.getParsedCRL", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
+        } else {
+            $ret = SCR->Read(".openssl.getTXTCRL", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
+        }
+    }
+    return $ret;
+}
+
 1;
+

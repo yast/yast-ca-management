@@ -15,6 +15,7 @@
     import "Hostname";
     import "YaPI::CaManagement";
 
+    include "ca-management/popup.ycp";
 
     /**
      * Creates Country items
@@ -22,12 +23,20 @@
      */
     define list<term> getCountryList () ``{
         list<term> result = [];
-	map<string, string> country_names = (map<string, string>)
+	map<string, string> country_map = (map<string, string>)
 	    eval(SCR::Read(.target.yast2, "country.ycp"));
 
-	foreach (string id, string name , country_names, ``{
-	    result = add (result, `item (`id (id), name ,
-					 CaMgm::country == id) );
+	map<string, string> country_index = mapmap (string k, string v,
+						  country_map, { return ($[v : k]); });
+
+	list<string> name_list = maplist ( string k, string v,
+					  country_map, { return v; });
+
+	name_list = sort (name_list);
+	    
+	foreach (string name, name_list, ``{
+	    result = add (result, `item (`id (country_index[name]:""), name ,
+					 CaMgm::country == country_index[name]:"") );
 	});
         return result;
     }
@@ -193,9 +202,9 @@
 								    "caName":CAname,
 								    "commonName":commonName,
 								    "emailAddress":email]);
-	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("&Password:")));
+	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("Certificate &Password:")));
 	    passwordTerm = add (passwordTerm, `HBox(
-						    `Password(  `id (`p12Passwd), _("&new Password:")),
+						    `Password(  `id (`p12Passwd), _("&New Password:")),
 						    `Password( `id (`verifyPassword), "&verify Password:")
 						    )
 				);
@@ -222,7 +231,9 @@
 					      `VSpacing (1),
 					      // popup window header
 					      `Heading (_("LDAP Initialization")),
-					      `Label(_("LDAP has to initialize for the CA-Management.\nPlease give the concerning LDAP password.")),
+					      `Label(_("LDAP must initialize for the CA management.
+Enter the required LDAP password.
+")),
 					      `VSpacing (1),
 					      `Password(  `id (`password), _("P&assword:")),
  					      `VSpacing (1),					  
@@ -262,7 +273,7 @@
 			}
 			else
 			{
-			    Popup::Error(_("Cannot initialize LDAP for CA-Management."));
+			    showErrorCaManagement ();			    
 			}
 		    }
 		}
@@ -273,7 +284,7 @@
 
 	if (default == nil)
 	{
-	    Popup::Error(_("Cannot read default settings from LDAP."));
+	    showErrorCaManagement ();			    	    
 	}	
 	else
 	{
@@ -290,9 +301,9 @@
 			       `VBox (
 				      `VSpacing (1),
 				      // popup window header
-				      `Heading (_("Export To LDAP")),
+				      `Heading (_("Export to LDAP")),
 				      `VSpacing (1),
-				      `TextEntry( `id (`hostname), _("&Hostname:"), hostname),
+				      `TextEntry( `id (`hostname), _("&Host Name:"), hostname),
 				      `TextEntry( `id (`port), _("&Port:"), port),
 				      `HBox (`HWeight (1, `ComboBox( `id (`dn), `opt(`editable), _("&DN:"), dn))),
 				      `TextEntry( `id (`binddn), _("&Bind DN:"), binddn),
@@ -359,7 +370,7 @@
 			// p12Passwd is required is keyPasswd has been given
 			if (UI::QueryWidget (`id(`p12Passwd), `Value) != UI::QueryWidget (`id(`verifyPassword), `Value))
 			{
-			    Popup::Error(_("New passwords are not equal."));
+			    Popup::Error(_("New passwords do not match."));
 			    ui = `again;
 			}
 			else
@@ -426,17 +437,17 @@
 					       `RadioButtonGroup(`id(`rb), 
 								 `VBox(
 								       `Left(`RadioButton(`id(`PEM_CERT), `opt(`notify),
-											  _("o&nly the certificate in PEM format"), true)),
+											  _("O&nly the Certificate in PEM Format"), true)),
 								       `Left(`RadioButton(`id(`PEM_CERT_KEY), `opt(`notify),
-											  _("ce&rtificate and the key unencrypted in PEM format" ))),
+											  _("Ce&rtificate and the Key Unencrypted in PEM Format"))),
 								       `Left(`RadioButton(`id(`PEM_CERT_ENCKEY), `opt(`notify),
-											  _("c&ertificate and the key encrypted in PEM format" ))),
+											  _("C&ertificate and the Key Encrypted in PEM Format"))),
 								       `Left(`RadioButton(`id(`DER_CERT), `opt(`notify),
-											  _("&certificate in DER format" ))),
+											  _("&Certificate in DER Format"))),
 								       `Left(`RadioButton(`id(`PKCS12), `opt(`notify),
-											  _("cer&tificate and the key in PKCS12 format" ))),
+											  _("Cer&tificate and the Key in PKCS12 Format"))),
 								       `Left(`RadioButton(`id(`PKCS12_CHAIN), `opt(`notify),
-											  _("&like PKCS12 + include the CA chain" )))
+											  _("&Like PKCS12 and Include the CA Chain")))
 								       )
 								 )
 					       ),
@@ -445,7 +456,7 @@
 					    `Password( `id (`verifyPassword), "&verify Password:")
 					    ),				      
 				      `HBox ( 
-					     `HWeight(1, `TextEntry( `id (`filename), _("&Filename:"))),
+					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
 					     `VBox(
 						   `Label(""),
 						   `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
@@ -504,7 +515,7 @@
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( "/tmp", filterString, "Export to ..." );
+		string name = UI::AskForSaveFileName( ".", filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -519,14 +530,14 @@
 		     &&
 		     UI::QueryWidget (`id(`PK12password), `Value) != UI::QueryWidget (`id(`verifyPassword), `Value))
 		{
-		    Popup::Error(_("New passwords are not equal."));
+		    Popup::Error(_("New passwords do not match."));
 		    ui = `again;
 		}
 		
 		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
 		if (size (filename) == 0)
 		{
-		    Popup::Error(_("Filename required"));
+		    Popup::Error(_("File name required."));
 		    ui = `again;
 		}
 
@@ -589,14 +600,14 @@
 					       `RadioButtonGroup(`id(`rb), 
 								 `VBox(
 								       `Left(`RadioButton(`id(`PEM), `opt(`notify),
-											  _("&PEM format"), true)),
+											  _("&PEM Format"), true)),
 								       `Left(`RadioButton(`id(`DER), `opt(`notify),
-											  _("&DER format" )))
+											  _("&DER Format")))
 								       )
 								 )
 					       ),
 				      `HBox ( 
-					     `HWeight(1, `TextEntry( `id (`filename), _("&Filename:"))),
+					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
 					     `VBox(
 						   `Label(""),
 						   `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
@@ -633,7 +644,7 @@
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( "/tmp", filterString, "Export to ..." );
+		string name = UI::AskForSaveFileName( ".", filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -647,7 +658,7 @@
 		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
 		if (size (filename) == 0)
 		{
-		    Popup::Error(_("Filename required"));
+		    Popup::Error(_("File name required."));
 		    ui = `again;
 		}
 		else
@@ -681,7 +692,7 @@
 
     /**
      * Dialog for exporting Certificate to file
-     * @param CAname
+     * @param CAname, certificate
      * @return true ( success )
      */
     define void exportCertificateToFile (string CAname, string certificate) ``{
@@ -696,27 +707,27 @@
 					       `RadioButtonGroup(`id(`rb), 
 								 `VBox(
 								       `Left(`RadioButton(`id(`PEM_CERT), `opt(`notify),
-											  _("&only the certificate in PEM format"), true)),
+											  _("&Only the Certificate in PEM Format"), true)),
 								       `Left(`RadioButton(`id(`PEM_CERT_KEY), `opt(`notify),
-											  _("ce&rtificate and the key unencrypted in PEM format" ))),
+											  _("Ce&rtificate and the Key Unencrypted in PEM Format"))),
 								       `Left(`RadioButton(`id(`PEM_CERT_ENCKEY), `opt(`notify),
-											  _("c&ertificate and the key encrypted in PEM format" ))),
+											  _("C&ertificate and the Key Encrypted in PEM Format"))),
 								       `Left(`RadioButton(`id(`DER_CERT), `opt(`notify),
-											  _("&certificate in DER format" ))),
+											  _("&Certificate in DER Format"))),
 								       `Left(`RadioButton(`id(`PKCS12), `opt(`notify),
-											  _("cer&tificate and the key in PKCS12 format" ))),
+											  _("Cer&tificate and the Key in PKCS12 Format"))),
 								       `Left(`RadioButton(`id(`PKCS12_CHAIN), `opt(`notify),
-											  _("&like PKCS12 + include the CA chain" )))
+											  _("&Like PKCS12 and Include the CA Chain")))
 								       )
 								 )
 					       ),
-				      `Password( `id (`keyPassword), "&Password:"),
+				      `Password( `id (`keyPassword), "Certificate &Password:"),
 				      `HBox(
 					    `Password( `id (`PK12password), "&new Password:"),
 					    `Password( `id (`verifyPassword), "&verify Password:")
 					    ),
 				      `HBox ( 
-					     `HWeight(1, `TextEntry( `id (`filename), _("&Filename:"))),
+					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
 					     `VBox(
 						   `Label(""),
 						   `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
@@ -776,7 +787,7 @@
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( "/tmp", filterString, "Export to ..." );
+		string name = UI::AskForSaveFileName( ".", filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -792,14 +803,14 @@
 		     &&
 		     UI::QueryWidget (`id(`PK12password), `Value) != UI::QueryWidget (`id(`verifyPassword), `Value))
 		{
-		    Popup::Error(_("New passwords are not equal."));
+		    Popup::Error(_("New passwords do not match."));
 		    ui = `again;
 		}
 
 		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
 		if (size (filename) == 0)
 		{
-		    Popup::Error(_("Filename required"));
+		    Popup::Error(_("File name required."));
 		    ui = `again;
 		}
 
@@ -846,7 +857,215 @@
 	}
 	until (contains ([`ok, `cancel], ui));
 	UI::CloseDialog ();
-    }            
+    }
 
+
+    /**
+     * importCertificateFromDisk() - Importing certificate to floppy
+     * @return success
+     */
+    define boolean importCertificateFromDisk () ``{
+	string password = "";
+	boolean success = false;
+
+	term contents =  `VBox (
+				`VSpacing (1),
+				`HBox ( 
+				       `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
+				       `VBox(
+					     `Label(""),
+					     `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
+					     )
+				       ),				      
+				`VSpacing (1),
+				`Password( `id (`password), "&Password:"),
+				`VSpacing (1)
+				);
+
+	// help text 1/3
+	string help_text = _("<p><b><big>Importing Common Server Certificate (PKCS12 + CA Chain Format)
+ from Disk:</big></b> Select one file name and press <b>Next</b> to continue.</p>
+");
+        // help text 2/3
+	help_text = help_text +
+	    _("Import a server certificate and correspondenting CA and copy them to a place where other YaST modules look for such a common certificate.");
+	
+	// help text 3/3
+	help_text = help_text + _("<p><b>Password:</b><br>
+Certificate password</p>
+");	
+	
+	Wizard::CreateDialog();
+	Wizard::SetDesktopIcon("ca-management");
+	Wizard::SetContents( _("Importing Common Certificate from Disk"), contents,
+			     help_text,
+			     true, true);
+
+	Wizard::RestoreBackButton ();
+	Wizard::RestoreAbortButton ();
+
+	any ret = `again;
+	while (ret == `again)
+	{
+	    success = false;
+	    ret = UI::UserInput ();
+	    
+	    if (ret == `browse)
+	    {
+		string name = UI::AskForExistingFile( ".", "*.p12", "Export to ..." );
+		if ( name != nil )
+		{
+		    UI::ChangeWidget(`id(`filename), `Value, name);
+		}
+		ret = `again;		
+	    }
+	    
+	    if (ret == `next)
+	    {
+		// reading certificate from disk
+		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
+		if (size (filename) == 0)
+		{
+		    Popup::Error(_("File name required."));
+		    ret = `again;
+		}
+		else
+		{
+		    password = (string) UI::QueryWidget (`id(`password), `Value);
+	    
+		    UI::BusyCursor();
+		    UI::OpenDialog(`VBox(`Label(_("Importing certificate..."))));
+		    
+		    boolean yapiret = (boolean) YaPI::CaManagement::ImportCommonServerCertificate ($["passwd" : password,
+												     "inFile" : filename]);
+		    y2milestone ("ImportCommonServerCertificate(%1) return %2",
+				 filename, 
+				 yapiret);
+		    if (yapiret == nil
+			|| !yapiret)
+		    {
+			showErrorCaManagement ();
+			ret = `again;
+		    }
+		    else
+		    {
+			Popup::Message(_("Certificate has been imported."));
+			success = true;
+		    }		    
+		    UI::CloseDialog ();		    
+		}
+	    }
+	}
+	
+	return success;
+    }
+
+
+    /**
+     * exportCommonServerCertificate() - Exporting common server certificate to the local
+     *                                   machine
+     * @param CA Name, certificate, common name of the certificate
+     * @return success
+     */
+    define boolean exportCommonServerCertificate (string CAname, string certificate, string commonName) ``{
+	
+	boolean success = false;
+	
+	// evaluate if the common name of the server certificate is the hostname
+	map retmap = (map) SCR::Execute (.target.bash_output,
+					"/bin/hostname --long",
+					$[] );
+	y2milestone("Hostname :%1", retmap);
+	if (commonName != strip(retmap["stdout"]:""))
+	{
+	    string errorString = sformat ( _("The common name of the certificate (%1) is not the name of 
+the server (%2).
+This certificate might be not practical as a common server certificate.
+"),
+					   commonName,
+					   strip(retmap["stdout"]:""));
+	    Popup::Warning (errorString);
+	}
+					   
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      // popup window header
+				      `Heading (_("Exporting as Common Server Certificate")),
+				      `VSpacing (1),
+				      `Password( `id (`keyPassword), "Certificate &Password:"),
+				      `VSpacing (1),
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),
+				      `VSpacing (1)					  
+				      ),
+			       `HSpacing (2)
+			       )
+			);
+
+	symbol ui = nil;
+	repeat
+ 	{
+	    ui = (symbol) UI::UserInput ();
+	    string password = (string) UI::QueryWidget (`id(`keyPassword), `Value);
+	    if (ui == `ok)
+	    {
+		// export to common certificate
+		UI::BusyCursor();
+		UI::OpenDialog(`VBox(`Label(_("Exporting certificate..."))));
+		string filename = (string) SCR::Read (.target.tmpdir) + "/commonCertificate";
+		    
+		string ret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CAname,
+									       "certificate" : certificate,
+									       "keyPasswd" : password,
+									       "exportFormat" : "PKCS12_CHAIN",
+									       "destinationFile" : filename,
+									       "P12Password" : password
+									     ]);
+
+		y2milestone ("ExportCertificate(%1) return %2", $["caName": CAname,
+								  "certificate" : certificate,
+								  "destinationFile" : filename,
+								  "P12Password" : password
+			     ], ret);
+		if (ret == nil
+		    || ret != "1")
+		{
+		    showErrorCaManagement ();
+		    ui = `again;
+		}
+		else
+		{
+		    boolean yapiret = (boolean) YaPI::CaManagement::ImportCommonServerCertificate ($["passwd" : password,
+												     "inFile" : filename]);
+		    y2milestone ("ImportCommonServerCertificate(%1) return %2",
+				 filename, 
+				 yapiret);
+		    if (yapiret == nil
+			|| !yapiret)
+		    {
+			showErrorCaManagement ();
+			ui = `again;
+		    }
+		    else
+		    {
+			Popup::Message(_("Certificate has been written as common server certificate."));
+			success = true;
+		    }		    
+		}
+		UI::CloseDialog ();		    
+	    }
+	} 
+	until (contains ([`ok, `cancel], ui));
+	UI::CloseDialog ();		    	
+	
+	return success;
+    }
+    
+// EOF
 }
 

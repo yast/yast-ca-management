@@ -25,6 +25,7 @@ import "Summary";
  * selected default type
  */
 global string currentDefault = "Sub CA";
+global boolean initializeDefault = true;
 
 
 /**
@@ -44,19 +45,25 @@ global string currentCertificate = "";
 global map passwdMap = $[];
 
 /**
- * Default settings
+ * settings for proposal
  */
+global boolean  prop_settingsWritten = false;
+global boolean 	prop_ca_commonNameChanged = false;
 global string 	prop_ca_commonName = "";
+global boolean 	prop_server_commonNameChanged = false; 
 global string 	prop_server_commonName = "";
+global boolean 	prop_CANameChanged = false;
 global string 	prop_CAName = "";
+global boolean  prop_countryChanged = false;
 global string 	prop_country = "GB";
+global boolean  prop_passwordChanged = false;
 global string 	prop_password = "";
 global string 	prop_email = "";
 global string 	prop_organisation = "";
 global string 	prop_organisationUnit = "";
 global string 	prop_locality = "";
 global string 	prop_state = "";
-global symbol   prop_selection = `def; // `none, `floppy `expert
+global symbol   prop_selection = `def; // `none, `floppy `expert `disk
 
 /**
  * variables for new CA/Certificate

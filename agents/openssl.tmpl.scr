@@ -1,7 +1,14 @@
-.openssl.tmpl
+/**
+ * $Id$
+ * Summary:
+ *   SCR Agent for editing openssl.cnf.tmpl in CAM repository
+ * Authors:
+ *   Michael Calmer <mc@suse.de>
+ */
+.CAM.openssl_tmpl
 `ag_ini(
     `IniAgent(
-        [ "/var/lib/YaST2/CAM/*/openssl.cnf.tmpl" ],
+        [ "/var/lib/CAM/*/openssl.cnf.tmpl" ],
         $[
             "options" : [ "no_nested_sections", 
                           "line_can_continue"
@@ -27,8 +34,8 @@
                 ],
             ],
             "rewrite": [
-                        ["/var/lib/YaST2/CAM/(.*)/openssl\.cnf\.tmpl",
-                         "/var/lib/YaST2/CAM/%s/openssl.cnf.tmpl"]
+                        ["/var/lib/CAM/(.*)/openssl\.cnf\.tmpl",
+                         "/var/lib/CAM/%s/openssl.cnf.tmpl"]
                        ],
        ]
     )

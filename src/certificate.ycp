@@ -31,6 +31,7 @@
 
     include "ca-management/util.ycp";
     include "ca-management/new_cert.ycp";
+    include "ca-management/floppy.ycp";    
 
     define list<string> certificateID = [];
 
@@ -159,43 +160,37 @@
 
     /**
      * getCertDescription - description of a certificate
-     * @param CA name, certification name
+     * @param map of description
      * @return a string with the certification description  
      */      
-    define string getCertDescription (string CAname,
-				      string Certname) ``{
-	string text = _("<br><h3>Description</h3>");
-
-	map ret = (map) YaPI::CaManagement::ReadCertificate ($["caName":CAname,
-							       "certificate":Certname,
-							       "type":"parsed"]);
-	y2milestone("ReadCertificate(%1,%2): %3", CAname, Certname, ret);	    
-        if (ret == nil)
+    define string getCertDescription (map certMap) ``{
+	string text = _("\n<b>Description</b>");
+        if (certMap == nil)
         {
             showErrorCaManagement ();
-            return _("<br>Certificate not found");
+            return _("\nCertificate not found");
         }
-
+	text = text + "<br>";
 	text = text + "<pre>";
-	text = text + "Fingerprint:        " + ret["FINGERPRINT"]:"";
-	map dn = ret["DN_HASH"]:$[];
+	text = text + "Fingerprint:        " + certMap["FINGERPRINT"]:"";
+	map dn = certMap["DN_HASH"]:$[];
 	if (size (dn) > 0)
 	{
-	    text = text + "<br>Common Name:        " + ((list)dn["CN"]:[])[0]:"";
-	    text = text + "<br>Organization:       " + ((list)dn["O"]:[])[0]:"";
-	    text = text + "<br>Location:           " + ((list)dn["L"]:[])[0]:"";	    
-	    text = text + "<br>State:              " + ((list)dn["ST"]:[])[0]:"";
-	    text = text + "<br>Country:            " + ((list)dn["C"]:[])[0]:"";
-	    text = text + "<br>EMAIL:              " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
+	    text = text + "\nCommon Name:        " + ((list)dn["CN"]:[])[0]:"";
+	    text = text + "\nOrganization:       " + ((list)dn["O"]:[])[0]:"";
+	    text = text + "\nLocation:           " + ((list)dn["L"]:[])[0]:"";	    
+	    text = text + "\nState:              " + ((list)dn["ST"]:[])[0]:"";
+	    text = text + "\nCountry:            " + ((list)dn["C"]:[])[0]:"";
+	    text = text + "\nEMAIL:              " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
 	}
-	text = text + "<br>Is CA:              " + ret["IS_CA"]:"";
-	text = text + "<br>Key Size:           " + ret["KEYSIZE"]:"";
-	text = text + "<br>Serialnumber:       " + ret["SERIAL"]:"";
-	text = text + "<br>Version:            " + ret["VERSION"]:"";	
-	text = text + "<br>Valid from:         " + ret["NOTBEFORE"]:"";
-	text = text + "<br>Valid to:           " + ret["NOTAFTER"]:"";
-	text = text + "<br>algo. of pub. Key : " + ret["PUBKEY_ALGORITHM"]:"";
-	text = text + "<br>algo. of signature: " + ret["SIGNATURE_ALGORITHM"]:"";			
+	text = text + "\nIs CA:              " + certMap["IS_CA"]:"";
+	text = text + "\nKey Size:           " + certMap["KEYSIZE"]:"";
+	text = text + "\nSerialnumber:       " + certMap["SERIAL"]:"";
+	text = text + "\nVersion:            " + certMap["VERSION"]:"";	
+	text = text + "\nValid from:         " + certMap["NOTBEFORE"]:"";
+	text = text + "\nValid to:           " + certMap["NOTAFTER"]:"";
+	text = text + "\nalgo. of pub. Key : " + certMap["PUBKEY_ALGORITHM"]:"";
+	text = text + "\nalgo. of signature: " + certMap["SIGNATURE_ALGORITHM"]:"";			
 	text = text + "</pre>";	
 	return text;
     }
@@ -258,17 +253,17 @@
 	}
 	
         // help text 1/6
-        string helptext = _("<p>First you see a ListView with all available Certificates in this CA. The columns are the DN of the Certificates incl. the email address and the state of the Certificate (valid/revoked/...).</p>");
+        string helptext = _("<p>First, see a list view with all available certificates from this CA. The columns are the DN of the certificates including the e-mail address and the state of the certificate (such as valid or revoked).</p>");
         // help text 2/6 
-        helptext = helptext + _("<p>You can select on of the Certificate and execute some actions</p>");
+        helptext = helptext + _("<p>Select one of the certificates and execute some actions.</p>");
         // help text 3/6 
-	helptext = helptext + _("<p><b>View</b> opens a window with a text representation of the complete Certificate.</p>");
+	helptext = helptext + _("<p><b>View</b> opens a window with a text representation of the complete certificate.</p>");
         // help text 4/6
-        helptext = helptext + _("<p>Furthermore you can <b>Revoke</b>, <b>Delete</b> or <b>Export</b> a certificate.</p>");
+        helptext = helptext + _("<p>Furthermore, you can <b>Revoke</b>, <b>Delete</b>, or <b>Export</b> a certificate.</p>");
         // help text 5/6
-        helptext = helptext + _("<p>With <b>Add</b> you can generate a new server or client certificate.</p>");
+        helptext = helptext + _("<p>With <b>Add</b>, generate a new server or client certificate.</p>");
         // help text 6/6
-        helptext = helptext + _("<p>In the textentry below you can see the most important Values of the selected certificate.</p>");
+        helptext = helptext + _("<p>In the area below, see the most important values of the selected certificate.</p>");
 
         term buttons = `HBox ();
 	// To translators: pushbutton label
@@ -286,7 +281,9 @@
 					    _("Export"),
                                               [
                                                `item(`id(`exportFile), _("Export to File") ),
-                                               `item(`id(`exportLDAP), _("Export to LDAP") )
+                                               `item(`id(`exportLDAP), _("Export to LDAP") ),
+                                               `item(`id(`exportFloppy), _("Export to Floppy") ),
+                                               `item(`id(`exportCommon), _("Export as Common Server Certificate") )		       
                                                ]
                                               ));
         term contents = `VBox ();
@@ -295,8 +292,8 @@
 						`header (
 							 // To translators: table headers
 							 _("Status"), _("Common Name"),
-							 _("EMAIL Address"), _("Organisation"),
-							 _("Organisational Unit"), _("Locality"),
+							 _("E-Mail Address"), _("Organization"),
+							 _("Organizational Unit"), _("Locality"),
 							 _("State"), _("Country")),
 						certTermList)
 			);
@@ -304,8 +301,9 @@
 	contents = add (contents, `RichText(`id(`textinfo),""));
 	contents = add (contents, buttons);
 
-        Wizard::SetContents (  _("Certificates of CA: ") + CaMgm::currentCA, contents, helptext, true, false);
-
+        Wizard::SetContents (  _("Certificates of CA: ") + CaMgm::currentCA, contents, helptext, true, true);
+	UI::SetFocus(`id(`table));
+	
         symbol ui = nil;
 
         repeat
@@ -316,34 +314,37 @@
             UI::ChangeWidget (`id (`view), `Enabled, anyitems);
             UI::ChangeWidget (`id (`export), `Enabled, anyitems);
 
+	    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+	    CaMgm::currentCertificate = (string) certificateID[id]:"";
+
 	    if (anyitems)
 	    {
-		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		    CaMgm::currentCertificate = (string) certificateID[id]:"";
-		    UI::ChangeWidget( `id(`textinfo), `Value, getCertDescription (CaMgm::currentCA,
-										  CaMgm::currentCertificate));
+		map ret = (map) YaPI::CaManagement::ReadCertificate ($["caName":CaMgm::currentCA,
+								       "certificate":CaMgm::currentCertificate,
+								       "type":"parsed"]);
+		y2milestone("ReadCertificate(%1,%2): %3", CaMgm::currentCA, CaMgm::currentCertificate, ret);	    
+		
+		UI::ChangeWidget( `id(`textinfo), `Value, getCertDescription (ret));
 		    
-		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
-		    boolean valid = ((string) select(table_item, 1, "") == "Valid");
-		    UI::ChangeWidget (`id (`delete), `Enabled, !valid);
-		    UI::ChangeWidget (`id (`revoke), `Enabled, valid);			
+		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+		boolean valid = ((string) select(table_item, 1, "") == "Valid");
+		UI::ChangeWidget (`id (`delete), `Enabled, !valid);
+		UI::ChangeWidget (`id (`revoke), `Enabled, valid);
+		// do not export certificates which are a CA or revoked certificate
+		UI::ChangeWidget (`id (`export), `Enabled, valid && ret["IS_CA"]:"" != "1" );
 	    }	    
 
             ui = (symbol) UI::UserInput ();
 
 	    if (ui == `view)
 	    {
-		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		CaMgm::currentCertificate = (string) certificateID[id]:"";
 		showLongCertDescription (CaMgm::currentCA,
 					 CaMgm::currentCertificate);		
 	    }	    	
 	    
 	    if (ui == `delete)
 	    {
-		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		CaMgm::currentCertificate = (string) certificateID[id]:"";		    
-		if (Popup::ContinueCancelHeadline (_("Delete"), _("Deleting current certificate ?")))
+		if (Popup::ContinueCancelHeadline (_("Delete"), _("Delete current certificate?")))
 		{
 		    boolean ret = nil;
 		    ret = (boolean) YaPI::CaManagement::DeleteCertificate ($["caName":CaMgm::currentCA,
@@ -364,21 +365,19 @@
 	    }
 	    if (ui == `revoke)
 	    {
-		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		CaMgm::currentCertificate = (string) certificateID[id]:"";		    		
 		revokeCertificate();
 		ui = `again;		
 	    }
 	    if (ui == `exportFile)
 	    {
-		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		CaMgm::currentCertificate = (string) certificateID[id]:"";
 		exportCertificateToFile (CaMgm::currentCA, CaMgm::currentCertificate);
 	    }
+	    if (ui == `exportFloppy)
+	    {
+		exportCertificateToFloppy (CaMgm::currentCA, CaMgm::currentCertificate);
+	    }	    
 	    if (ui == `exportLDAP)
 	    {	    
-		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		CaMgm::currentCertificate = (string) certificateID[id]:"";		
 	    	term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
 		exportToLDAP ("CERT",
 			      CaMgm::currentCA,
@@ -386,8 +385,15 @@
 			      (string) select(table_item, 3, ""), //EMAIL
 			      CaMgm::currentCertificate);
 	    }
+	    if (ui == `exportCommon)
+	    {
+		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));		
+		exportCommonServerCertificate (CaMgm::currentCA,
+					       CaMgm::currentCertificate,
+					       (string) select(table_item, 2, ""));
+	    }
         }
-        until (contains ([`back, `again, `abort, `addServer, `addClient], ui));
+        until (contains ([`back, `again, `abort, `addServer, `addClient, `next], ui));
 
         return ui;
     }	

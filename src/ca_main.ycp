@@ -50,10 +50,10 @@
      */
     define symbol CAMain () ``{
 
-        // help text 1/4
-        string helptext = _("<p>Please select on CA and press <b>Enter CA </b>.</p>");
-        // help text 2/4
-        helptext = helptext + _("<p><b>Create Root CA</b> generate a new CA");
+        // help text 1/2
+        string helptext = _("<p>Select a CA and press <b>Enter CA</b>.</p>");
+        // help text 2/2
+        helptext = helptext + _("<p><b>Create Root CA</b> generates a new CA.");
 
         list<term> termList = getCAList ();
 

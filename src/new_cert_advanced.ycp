@@ -41,11 +41,11 @@
      */
     define symbol new_cert_advanced (boolean nextbutton) ``{
 	term button = `HBox(
+			    `PushButton(`id(`help), `opt(`key_F1), Label::HelpButton()),
+			    `HStretch(),			    
 			    `PushButton(`id(`abort), `opt(`key_F9), Label::AbortButton()),
 			    `HStretch(),
-			    `PushButton(`id(`back), `opt(`key_F8), Label::BackButton()),
-			    `HStretch(),
-			    `PushButton(`id(`help), `opt(`key_F1), Label::HelpButton()),
+			    `PushButton(`id(`back), `opt(`key_F8), Label::OKButton()),
 			    `Empty()
 			    );
 
@@ -63,7 +63,7 @@
 	}
 	
 	UI::OpenDialog (`opt(`defaultsize),
-		       `VBox (`Left (`Image(`suseheader, "SuSE")),
+			`VBox (`VSpacing(3),
 			      `HSpacing(85),
 			      `HWeight (70,
 					`VBox(
