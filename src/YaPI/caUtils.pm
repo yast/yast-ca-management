@@ -493,7 +493,7 @@ sub SetError {
     if ( defined $__error{summary} ) {
         y2error($__error{code}."[".$__error{line}.":".$__error{file}."] ".$__error{summary});
     } else {
-        y2error($__error{code});
+        y2error($__error{code}."[".$__error{line}.":".$__error{file}."] ");
     }
     return undef;
 }
