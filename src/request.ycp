@@ -20,6 +20,12 @@
 
 
 {
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    
     textdomain "ca-management";
     
     include "ca-management/signRequest.ycp";
@@ -286,7 +292,7 @@
 				      ),
 			       `HBox (
 				      `HSpacing (1),
-				      `PushButton (`id (`import) , _("Import")),
+				      `PushButton (`id (`import) , _("&Import")),
 				      `HSpacing (1),
 				      `MenuButton( _("Add"),
 						   [

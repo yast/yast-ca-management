@@ -2,7 +2,7 @@
  * File:        include/ca-management/util.ycp
  * Package:     Configuration of CAs
  * Summary:     Util definitions
- * Authors:     Stefan Schubert
+ * Authors:     Stefan Schubert (schubi@suse.de)
  *
  * $Id$
  */
@@ -11,7 +11,10 @@
 
     textdomain "ca-management";
 
+    import "CaMgm";    
     import "Label";
+    import "Popup";
+    import "Wizard";        
     import "Hostname";
     import "YaPI::CaManagement";
 
@@ -245,7 +248,7 @@
 	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("Certificate &Password:")));
 	    passwordTerm = add (passwordTerm, `HBox(
 						    `Password(  `id (`p12Passwd), _("&New Password:")),
-						    `Password( `id (`verifyPassword), "&verify Password:")
+						    `Password( `id (`verifyPassword), _("&verify Password:"))
 						    )
 				);
 	}
@@ -492,8 +495,8 @@ Enter the required LDAP password.
 								 )
 					       ),
 				      `HBox(
-					    `Password( `id (`PK12password), "&new Password:"),
-					    `Password( `id (`verifyPassword), "&verify Password:")
+					    `Password( `id (`PK12password), _("&new Password:")),
+					    `Password( `id (`verifyPassword), _("&verify Password:"))
 					    ),				      
 				      `HBox ( 
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
@@ -761,10 +764,10 @@ Enter the required LDAP password.
 								       )
 								 )
 					       ),
-				      `Password( `id (`keyPassword), "Certificate &Password:"),
+				      `Password( `id (`keyPassword), _("Certificate &Password:")),
 				      `HBox(
-					    `Password( `id (`PK12password), "&new Password:"),
-					    `Password( `id (`verifyPassword), "&verify Password:")
+					    `Password( `id (`PK12password), _("&new Password:")),
+					    `Password( `id (`verifyPassword), _("&verify Password:"))
 					    ),
 				      `HBox ( 
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
@@ -918,7 +921,7 @@ Enter the required LDAP password.
 					     )
 				       ),				      
 				`VSpacing (1),
-				`Password( `id (`password), "&Password:"),
+				`Password( `id (`password), _("&Password:")),
 				`VSpacing (1)
 				);
 
@@ -1034,7 +1037,7 @@ This certificate might be not practical as a common server certificate.
 				      // popup window header
 				      `Heading (_("Exporting as Common Server Certificate")),
 				      `VSpacing (1),
-				      `Password( `id (`keyPassword), "Certificate &Password:"),
+				      `Password( `id (`keyPassword), _("Certificate &Password:")),
 				      `VSpacing (1),
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
@@ -1238,7 +1241,7 @@ This certificate might be not practical as a common server certificate.
 						      )
 					     ),
 				      `HBox ( 
-					     `HWeight(2, `TextEntry( `id (`pathKey), _("Path of Key:"))),
+					     `HWeight(2, `TextEntry( `id (`pathKey), _("&Path of Key:"))),
 					     `HWeight(1,`VBox(
 							      `Label(""),
 							      `PushButton (`id(`browseKey), `opt( `notify), Label::BrowseButton())

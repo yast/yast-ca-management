@@ -104,7 +104,7 @@
         // help text 4/5
         helptext = helptext + _("<p><b>E-Mail Addresses</b> are valid e-mail addresses of the user or server administrator.</p>");
         // help text 5/5
-        helptext = helptext + _("<p><b>Organization</b>, <b>Organizational Unit</b>, <b>Locality</b>, and <b>State</p> are often optional.</p>");
+        helptext = helptext + _("<p><b>Organization</b>, <b>Organizational Unit</b>, <b>Locality</b>, and <b>State</b> are often optional.</p>");
 
 
         list<term> emailTermList = getEMAILList ();
@@ -112,7 +112,7 @@
         term buttons = `VBox ();
 	// To translators: pushbutton label
 	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`deleteEmail), `opt (`key_F5), Label::DeleteButton()))));
-	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`defaultEmail) , _("Default")))));	
+	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`defaultEmail) , _("D&efault")))));	
         buttons = add (buttons, `VStretch());
 	// To translators: pushbutton label
         buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`addEmail), `opt (`key_F3), Label::AddButton()))));
@@ -454,7 +454,7 @@
 	    helptext = helptext + _("<p>Click <b>Create</b> to generate the request.</p>");	    
 	}
 
-	string text = _("\n<b>Summary</b>");
+	string text = _("<p><b>Summary</b></p>");
 	text = text + "<br><pre>";
 	if ( (kind == "Root CA"
 	      || kind == "Sub CA"

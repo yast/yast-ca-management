@@ -41,13 +41,12 @@
      * @return a string with the request description  
      */      
     define string getRequestDescription (map requestMap, boolean onlySubject) ``{
-	string text = _("\n<b>Description</b>");
+	string text = _("<p><b>Description</b></p>");
         if (requestMap == nil)
         {
             showErrorCaManagement ();
             return _("\nRequest not found");
         }
-	text = text + "<br>";
 	text = text + "<pre>";
 	map dn = requestMap["DN_HASH"]:$[];
 	if (size (dn) > 0)
@@ -656,7 +655,7 @@
 
         term contents = `VBox (
 			       `Left(`RichText(getRequestDescription (currentRequestMap, true))),
-			       `IntField( `id(`period), _("Valid Period (days):"),  1, 10000, CaMgm::validPeriod),
+			       `IntField( `id(`period), _("&Valid Period (days):"),  1, 10000, CaMgm::validPeriod),
 			       `MultiSelectionBox( `id(`extentions), _("Requested Extentions which you can particular accept:"),
 						   createExtentionItem ())
 			       );
@@ -699,12 +698,12 @@
         // help text 2/2
         helptext = helptext + _("<p>Click <b>Sign Request</b> to go on.</p>");
 
-	string text = _("\n<b>Summary</b>");
+	string text = _("<p><b>Summary</b></p>");
 	text = text + "<br><pre>";
 	text = text + "Subject:                  "  + CaMgm::requestSubject;
 	text = text + "Valid Period:             " + CaMgm::validPeriod + _(" days\n");
-	text = text + "Basic Constaints:         " + CaMgm::adv_ca
-	    + (CaMgm::adv_cri_ca ? _(" (critical)\n") : "\n") ;
+	text = text + "<p>Basic Constaints:         " + CaMgm::adv_ca
+	    + (CaMgm::adv_cri_ca ? _(" (critical)</p>") : "</p>") ;
 	if (CaMgm::adv_pathlen)
 	{
 	    text = text +  "                          "  + _("Path Length ") + CaMgm::adv_pathlenValue + "\n"; 
