@@ -15,7 +15,7 @@
  * <h3>CA Management</h3>
  */
 
-textdomain "ca_mgm";
+textdomain "ca-management";
 
 /* The main () */
 y2milestone ("----------------------------------------");

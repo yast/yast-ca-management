@@ -21,7 +21,7 @@
 
 
 {
-    textdomain "ca_mgm";
+    textdomain "ca-management";
 
     import "CaMgm";
     import "Wizard";
@@ -31,9 +31,9 @@
     define string advanced_help = _("<P>This frame shows further attributes and OpenSSL X509v3 extensions which can be set. If you are not familiar with these extentions please have a look to the file /usr/share/doc/packages/openssl-doc/openssl.txt ( packagen openssl-doc )</P>" );
 
     define string expert_help = advanced_help + _("<P>Please take care that wrong entries can make the certificate unuseable.</P>");
-    
+
     global list itemList = [
-       `item(`id(`advanced), _("Advanced Settings"), true,  
+       `item(`id(`advanced), _("Advanced Settings"), true,
 	     [
 	      `item(`id(`advanced_basic_constaints),"Basic Constaints"),
 	      `item(`id(`advanced_CRL_distribution_point),"CRL Distribution Point"),
@@ -44,11 +44,11 @@
 		    [
 		     `item(`id(`advanced_netscape_nsComment),"NsComment"),
 		     `item(`id(`advanced_netscape_nsCertType),"NsCertType"),
-		     `item(`id(`advanced_netscape_nsSslServerName),"nsSslServerName"),  
+		     `item(`id(`advanced_netscape_nsSslServerName),"nsSslServerName"),
 		     ]
 		    ),
 	      `item(`id(`advanced_subject_alt_name),"Subject Alt Name"),
-	      `item(`id(`advanced_unstructured_name),"Unstructured Name"), 	      
+	      `item(`id(`advanced_unstructured_name),"Unstructured Name"),
 	      ]
 	     ),
        `item(`id(`expert), _("Expert Settings"), true,
@@ -60,11 +60,11 @@
 		     `item(`id(`expert_netscape_nsRevocationUrl),"nsRevocationUrl"),
 		     `item(`id(`expert_netscape_nsCaRevocationUrl),"nsCaRevocationUrl"),
 		     `item(`id(`expert_netscape_nsRenewallUrl),"nsRenewallUrl"),
-		     `item(`id(`expert_netscape_nsCaPolicyUrl),"nsCaPolicyUrl") 
+		     `item(`id(`expert_netscape_nsCaPolicyUrl),"nsCaPolicyUrl")
 		     ]
 		    ),
 	      `item(`id(`expert_authorityInfoAccess),"authorityInfoAccess"),
-	      `item(`id(`expert_extendedKeyUsage),"extendedKeyUsage"),    
+	      `item(`id(`expert_extendedKeyUsage),"extendedKeyUsage"),
 	      ]
 	     )];
 
@@ -72,7 +72,7 @@
 								  "widget"	: `RichText(`id(`id_advanced), advanced_help),
 								  "default"     : false,
 								  ],
-			    
+
 			    `advanced_basic_constaints : 	$["name" 	: "Basic Constaints",
 								  "widget"	: `Frame("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_ca), _("critical"))),
 													   `VSpacing(1.5),
@@ -89,7 +89,7 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `advanced_CRL_distribution_point : 	$["name" 	: "CRL Distribution Point",
 								  "widget"	: `Frame("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_distribution_point), _("critical"))),
 												    `VSpacing(1.5),
@@ -100,7 +100,7 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `advanced_challange_password : 	$["name" : "Challange Password",
 								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_challange_password), _("critical"))),
 												     `VSpacing(1.5),
@@ -111,7 +111,7 @@
 											  ),
 								  "default"    	: true,
 								  ],
-			                                     
+
 			    `advanced_issuer_alt_name : 	$["name" : "Issuer Alt Name",
 								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_issuer_alt_name), _("critical"))),
 												     `VSpacing(1.5),
@@ -122,7 +122,7 @@
 																	 _("Kind"),
 																	 _("Name")
 																	 )
-																)	
+																)
 														      ),
 													    `HWeight (1,`VBox(
 															      `HBox ( `HWeight (1,
@@ -132,7 +132,7 @@
 															      `HBox ( `HWeight (1,
 																		`PushButton (`id (`modify),
 																			     `opt (`key_F3),
-																			     Label::EditButton()))), 
+																			     Label::EditButton()))),
 															      `HBox ( `HWeight (1,
 																		`PushButton (`id (`delete),
 																			     `opt (`key_F5),
@@ -146,7 +146,7 @@
 											  ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `advanced_key_usage : 		$["name" 	: "Key Usage",
 								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_key_usage), _("critical"))),
 												     `VSpacing(1.5),
@@ -168,12 +168,12 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `advanced_netscape_settings : 	$["name" 	: "Netscape Settings",
 								  "widget"	: `Empty(),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `advanced_netscape_nsComment : 	$["name" 	: "NsComment",
 								  "widget"	: `Frame ("",`VBox (`Left (`CheckBox(`id(`id_adv_cri_NsComment), _("critical"))),
 												    `VSpacing(1.5),
@@ -211,12 +211,12 @@
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_adv_nsSslServerName),
 														"nsSslServerName"),
-												     `VSpacing(1.5)	
+												     `VSpacing(1.5)
 												     )
 											  ),
 								  "default"    	: true,
 								  ],
-								  
+
 			    `advanced_subject_alt_name : 	$["name" 	: "Subject Alt Name",
 								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_adv_cri_subject_alt_name), _("critical"))),
 												     `VSpacing(1.5),
@@ -239,7 +239,7 @@
 															      `HBox ( `HWeight (1,
 																		`PushButton (`id (`modify),
 																			     `opt (`key_F3),
-																			     Label::EditButton()))), 
+																			     Label::EditButton()))),
 															      `HBox ( `HWeight (1,
 																		`PushButton (`id (`delete),
 																			     `opt (`key_F5),
@@ -264,12 +264,12 @@
 											 ),
 								  "default"    	: true,
 								  ],
-								  
+
 			    `expert : 				$["name" 	: _("Expert Settings"),
 								  "widget"	: `RichText(`id(`id_expert), expert_help),
 								  "default"     : false,
 								  ],
-			    
+
 			    `expert_key_identifier : 		$["name" 	: "Key Identifier",
 								  "widget"	: `VBox ( `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_SubjectKeyIdentifier), _("critical"))),
 													     `TextEntry(`id(`id_exp_SubjectKeyIdentifier),
@@ -291,7 +291,7 @@
 								  "widget"	: `Empty(),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `expert_netscape_nsBaseUrl : 	$["name" 	: "nsBaseUrl",
 								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsBaseUrl), _("critical"))),
 												     `VSpacing(1.5),
@@ -302,7 +302,7 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `expert_netscape_nsRevocationUrl : 	$["name" 	: "nsRevocationUrl",
 								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRevocationUrl), _("critical"))),
 												     `VSpacing(1.5),
@@ -313,7 +313,7 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `expert_netscape_nsCaRevocationUrl :$["name" 	: "nsCaRevocationUrl",
 								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsCaRevocationUrl), _("critical"))),
 												     `VSpacing(1.5),
@@ -324,7 +324,7 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `expert_netscape_nsRenewallUrl : 	$["name" 	: "nsRenewallUrl",
 								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRenewallUrl), _("critical"))),
 												     `VSpacing(1.5),
@@ -335,7 +335,7 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `expert_netscape_nsCaPolicyUrl : 	$["name" 	: "nsCaPolicyUrl",
 								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsCaPolicyUrl), _("critical"))),
 												     `VSpacing(1.5),
@@ -346,7 +346,7 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `expert_authorityInfoAccess : 	$["name" 	: "authorityInfoAccess",
 								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_authorityInfoAccess), _("critical"))),
 												     `VSpacing(1.5),
@@ -357,7 +357,7 @@
 											 ),
 								  "default"    	: true,
 								  ],
-			    
+
 			    `expert_extendedKeyUsage : 		$["name" 	: "extendedKeyUsage",
 								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_extendedKeyUsage), _("critical"))),
 												     `VSpacing(1.5),
@@ -369,5 +369,5 @@
 								  "default"    	: true,
 								  ]
     ];
-					     
+
 }
