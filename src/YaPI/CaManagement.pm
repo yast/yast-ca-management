@@ -22,6 +22,10 @@ $certValueMap = ReadCertificateDefaults($valueMap)
 
   returns a map with defaults for the requested certificate type
 
+$bool = WriteCertificateDefaults($valueMap)
+
+  write the default values for the available certificate types
+
 $ca = ReadCA($valueMap)
 
   returns a CA certificate as plain text or parsed map
@@ -458,14 +462,13 @@ sub AddRootCA {
     }
 
     # checking requires
-    if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
+    if (!defined $data->{"caName"}) {
         return $self->SetError( summary => "Missing value 'caName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
 
-    if (!defined $data->{"keyPasswd"} || $data->{"keyPasswd"} eq "" ||
-        length($data->{"keyPasswd"}) <= 4) {
+    if (!defined $data->{"keyPasswd"} ) {
         return $self->SetError( summary => "Missing value 'keyPasswd' or password is to short",
                                 code    => "CHECK_PARAM_FAILED");
     }
@@ -493,7 +496,7 @@ sub AddRootCA {
 
     my $retCode = SCR->Execute(".target.bash",
                                "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if (not defined $retCode || $retCode != 0) {
+    if (! defined $retCode || $retCode != 0) {
         return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
@@ -786,6 +789,164 @@ sub ReadCertificateDefaults {
     
     return $ret;
 }
+
+=item *
+C<$bool = WriteCertificateDefaults($valueMap)>
+
+Write the default values for the available certificate types.
+
+In I<$valueMap> you can define the following keys:
+
+* caName (required)
+
+* certType (required)
+
+* basicConstraints
+
+* nsComment
+
+* nsCertType
+
+* keyUsage
+
+* subjectKeyIdentifier
+
+* authorityKeyIdentifier
+
+* subjectAltName
+
+* issuerAltName
+
+* nsBaseUrl
+
+* nsRevocationUrl
+
+* nsCaRevocationUrl
+
+* nsRenewalUrl
+
+* nsCaPolicyUrl
+
+* nsSslServerName
+
+* extendedKeyUsage
+
+* authorityInfoAccess
+
+* crlDistributionPoints
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+     my $data = {
+                 'caName'    => 'My_CA',
+                 'certType'  => 'server',
+                 'nsComment' => '"My Server Certificate"'
+                };
+     my $res = YaPI::CaManagement->WriteCertificateDefaults($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         print "OK\n";
+     }
+ }
+
+=cut
+
+BEGIN { $TYPEINFO{WriteCertificateDefaults} = ["function", "boolean", ["map", "string", "any"]]; }
+sub WriteCertificateDefaults {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $certType   = "";
+    my $ret = undef;
+
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+    
+    # checking requires
+    if (!defined $data->{"caName"}) {
+        return $self->SetError( summary => "Missing value 'caName'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $caName = $data->{"caName"};
+    
+    if(! defined $data->{"certType"}) {
+        return $self->SetError( summary => "Missing value 'certType'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $certType = $data->{"certType"};
+
+    $ret = SCR->Execute(".target.bash",
+                        "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+    if (! defined $ret || $ret != 0) {
+        return $self->SetError( summary => "Can not create backup file '$CAM_ROOT/$caName/openssl.cnf'",
+                                code => "COPY_FAILED");
+    }
+
+    if (not SCR->Write(".var.lib.YaST2.CAM.value.$caName.".$certType."_cert.x509_extensions", 
+                       "v3_".$certType)) { 
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError( summary => "Can not write to config file",
+                                code => "SCR_WRITE_FAILED");
+    }
+
+    #####################################################
+    # merge this extentions to the config file
+    #
+    #             v3 ext. value               default
+    #####################################################
+    my %v3ext = (
+                 'basicConstraints'       => undef,
+                 'nsComment'              => undef,
+                 'nsCertType'             => undef,
+                 'keyUsage'               => undef,
+                 'subjectKeyIdentifier'   => undef,
+                 'authorityKeyIdentifier' => undef,
+                 'subjectAltName'         => undef,
+                 'issuerAltName'          => undef,
+                 'nsBaseUrl'              => undef,
+                 'nsRevocationUrl'        => undef,
+                 'nsCaRevocationUrl'      => undef,
+                 'nsRenewalUrl'           => undef,
+                 'nsCaPolicyUrl'          => undef,
+                 'nsSslServerName'        => undef,
+                 'extendedKeyUsage'       => undef,
+                 'authorityInfoAccess'    => undef,
+                 'crlDistributionPoints'  => undef
+                );
+    
+    foreach my $extName ( keys %v3ext) {
+        next if(!defined $data->{"$extName"});
+        if (not defined YaST::caUtils->mergeToConfig($extName, "v3_$certType",
+                                                     $data, $v3ext{$extName})) {
+            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+            return $self->SetError(%{YaST::caUtils->Error()});
+        }
+    }
+    
+    if (not SCR->Write(".var.lib.YaST2.CAM", undef)) {
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError( summary => "Can not write to config file",
+                                code => "SCR_WRITE_FAILED");
+    }
+
+    $ret = SCR->Execute(".target.bash", 
+                        "cp $CAM_ROOT/$caName/openssl.cnf $CAM_ROOT/$caName/openssl.cnf.tmpl");
+    if (! defined $ret || $ret != 0) {
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError( summary => "Can not create new template file '$CAM_ROOT/$caName/openssl.cnf.tmpl'",
+                                code => "COPY_FAILED");
+    }
+    SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+    return 1;
+}
+
 
 =item *
 C<$ca = ReadCA($valueMap)>
