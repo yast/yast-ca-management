@@ -4,7 +4,7 @@
 # $Id$
 #
 
-agent_SCRIPTS = ag_openca_openssl ag_ca_tools ag_openca_X509 
+agent_SCRIPTS = ag_openca_openssl ag_ca_tools ag_openca_X509 ag_openca_CRL 
 
 scrconf_DATA = \
 	openca_openssl.scr \
@@ -12,6 +12,7 @@ scrconf_DATA = \
 	openssl.tmpl.scr   \
 	opensslroot.tmpl.scr \
 	ca_tools.scr         \
-	openca_X509.scr
+	openca_X509.scr      \
+	openca_CRL.scr
 
 EXTRA_DIST = $(agent_SCRIPTS) $(scrconf_DATA)
