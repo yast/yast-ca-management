@@ -84,7 +84,7 @@ sub Read {
 #                        }
 #                    }
                     my @rdns = ();
-                    while( $subject =~ /(.*?[^\\])\//g ) {
+                    while( $subject =~ /(.*?[^\\])(\/|$)/g ) {
                         my $dummy = $1;
                         $dummy =~ s/^\///;
                         $dummy =~ s/\\\//\//;
