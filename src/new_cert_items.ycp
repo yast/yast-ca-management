@@ -287,9 +287,9 @@
 																`Left (`CheckBox( `id(`emailCA),	    
 																		  "emailCA",
 																		  CaMgm::adv_emailCA )),
-																`Left (`CheckBox( `id(`objectSign),	    
-																		  "objectSign",
-																		  CaMgm::adv_objectSign )),
+																`Left (`CheckBox( `id(`objsign),	    
+																		  "objsign",
+																		  CaMgm::adv_objsign )),
 																`Left (`CheckBox( `id(`objCA),
 																		  "objCA",
 																		  CaMgm::adv_objCA ))
