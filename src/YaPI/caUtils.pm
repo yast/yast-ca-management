@@ -50,7 +50,7 @@ sub checkValueWithConfig {
         # this is an error
         if (not defined $value) {
             return $self->SetError( summary => "Can not find $name in config file",
-                                   code => "PARAM_CHECK_FAILED");
+                                    code => "PARAM_CHECK_FAILED");
         }
         $min = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_min");
         $max = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_max");
@@ -91,7 +91,7 @@ sub mergeToConfig {
   
   my $cfg_exists = SCR->Read(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name");
   
-  if (defined $default && (not defined $param->{"$name"} or $param->{"$name"} eq "")) {
+  if (defined $default && (! defined $param->{"$name"} || $param->{"$name"} eq "")) {
       if (defined $cfg_exists) {  # a default in the configfile is given
           $param->{"$name"} = $cfg_exists;
       } else {                    # use hardcoded default
@@ -99,7 +99,7 @@ sub mergeToConfig {
       }
   }
 
-  if ((not defined $param->{"$name"} ) && (defined $cfg_exists )) {
+  if ((! defined $param->{"$name"} ) && (defined $cfg_exists )) {
       # remove value from config
       y2debug("remove value from config (".$param->{"$name"}."/$name");
       if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef)) {
@@ -124,7 +124,7 @@ sub checkCommonValues {
 
     foreach my $key (keys %{$data}) {
         if ( $key eq "caName") {
-            if (not defined $data->{$key} ||
+            if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
@@ -135,37 +135,37 @@ sub checkCommonValues {
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "newCaName") {
-            if (not defined $data->{$key} ||
+            if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "request") {
-            if (not defined $data->{$key} ||
+            if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[A-Za-z0-9\/=+]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "certificate") {
-            if (not defined $data->{$key} ||
+            if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[:A-Za-z0-9\/=+]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "keyPasswd" || $key eq "caPasswd") {
-            if (not defined $data->{$key} ||
+            if (! defined $data->{$key} ||
                 length($data->{$key}) < 4) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "keyLength") {
-            if ( not defined $data->{$key} ||
+            if ( ! defined $data->{$key} ||
                  $data->{$key} !~ /^\d{3,4}$/ ) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "days") {
-            if ( not defined $data->{$key} ||
+            if ( ! defined $data->{$key} ||
                  $data->{$key} !~ /^\d{1,}$/ ) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
