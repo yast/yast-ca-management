@@ -46,6 +46,7 @@
 					$[] );
 	y2milestone("Hostname :%1", retmap);
 	if (retmap["exit"]:0 != 0
+	    && CaMgm::prop_selection == `def
 	    && (!CaMgm::prop_server_commonNameChanged
 		|| !CaMgm::prop_emailChanged
 		|| force_reset))
