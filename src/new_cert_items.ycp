@@ -76,16 +76,30 @@
 								  ],
 
 			    `advanced_basic_constaints : 	$["name" 	: "Basic Constaints",
-								  "widget"	: `Frame("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_ca), _("critical"))),
-													   `VSpacing(1.5),
+								  "widget"	: `Frame("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_ca),
+														     _("critical"),
+														     CaMgm::adv_cri_ca)
+													   ),
+												    `VSpacing(1.5),
 												    `HBox (`HWeight(1,`ComboBox(`id(`id_adv_ca), "CA",
 														     [
-														      "CA:false",
-														      "CA:true"
+														      `item(`id(`caFalse),
+															    "CA:false",
+															    CaMgm::adv_ca == "CA:false"),
+														      `item(`id(`caTrue),
+															    "CA:true",
+															    CaMgm::adv_ca == "CA:true")
 														      ]))),
 												    `VSpacing(1.5),
-												    `Left (`CheckBox(`id(`id_adv_pathlen), "Pathlength available")),
-												    `HBox(`HSpacing (3),`IntField(`id(`id_adv_pathlenValue), "Pathlength",1,10000,1)),
+												    `Left (`CheckBox(`id(`id_adv_pathlen),
+														     `opt(`notify),
+														     "Pathlength available",
+														     CaMgm::adv_pathlen
+														     )
+													   ),
+												    `HBox(`HSpacing (3),`IntField(`id(`id_adv_pathlenValue),
+																  "Pathlength",1,10000,
+																  CaMgm::adv_pathlenValue)),
 												    `VSpacing(1.5)
 												    )
 											 ),
@@ -95,10 +109,15 @@
 								  ],
 
 			    `advanced_CRL_distribution_point : 	$["name" 	: "CRL Distribution Point",
-								  "widget"	: `Frame("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_distribution_point), _("critical"))),
+								  "widget"	: `Frame("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_distribution_point),
+														     _("critical"),
+														     CaMgm::adv_cri_distribution_point
+														     )
+													   ),
 												    `VSpacing(1.5),
 												    `TextEntry(`id(`id_adv_distribution_point),
-													       "CRL Distribution Point"),
+													       "CRL Distribution Point",
+													       CaMgm::adv_distribution_point),
 												    `VSpacing(1.5)
 												    )
 											 ),
@@ -108,10 +127,13 @@
 								  ],
 
 			    `advanced_challange_password : 	$["name" : "Challange Password",
-								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_challange_password), _("critical"))),
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_challange_password),
+														      _("critical"),
+														      CaMgm::adv_cri_challange_password)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_adv_challange_password),
-														"Challagen Password"),
+														"Challagen Password",
+														CaMgm::adv_challange_password),
 												     `VSpacing(1.5)
 												     )
 											  ),
@@ -121,7 +143,10 @@
 								  ],
 
 			    `advanced_issuer_alt_name : 	$["name" : "Issuer Alt Name",
-								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_issuer_alt_name), _("critical"))),
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_issuer_alt_name),
+														      _("critical"),
+														      CaMgm::adv_cri_issuer_alt_name)
+													    ),
 												     `VSpacing(1.5),
 												     `HBox (`HWeight (3,`Table (`id (`id_adv_issuer_alt_name),
 																`opt (`notify, `immediate),
@@ -158,20 +183,40 @@
 								  ],
 
 			    `advanced_key_usage : 		$["name" 	: "Key Usage",
-								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_key_usage), _("critical"))),
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_key_usage),
+														      _("critical"),
+														      CaMgm::adv_cri_key_usage)),
 												     `VSpacing(1.5),
 												     `MultiSelectionBox(`id(`id_adv_key_usage),
 															"Key Usage:",
 															[
-															 "digitalSignature",
-															 "nonRepudiation",
-															 "cRLSign",
-															 "keyEncipherment",
-															 "dataEncipherment",
-															 "encipherOnly",
-															 "keyAgreement",
-															 "keyCertSign",
-															 "decipherOnly"
+															 `item( `id(`digitalSignature),
+																"digitalSignature",
+																CaMgm::adv_digitalSignature ),
+															 `item( `id(`nonRepudiation),
+																"nonRepudiation",
+																CaMgm::adv_nonRepudiation ),
+															 `item( `id(`cRLSign),
+																"cRLSign",
+																CaMgm::adv_cRLSign ),
+															 `item( `id(`keyEncipherment),
+																"keyEncipherment",
+																CaMgm::adv_keyEncipherment ),
+															 `item( `id(`dataEncipherment),
+																"dataEncipherment",
+																CaMgm::adv_dataEncipherment ),
+															 `item( `id(`encipherOnly),
+																"encipherOnly",
+																CaMgm::adv_encipherOnly ),
+															 `item( `id(`keyAgreement),
+																"keyAgreement",
+																CaMgm::adv_keyAgreement ),
+															 `item( `id(`keyCertSign),
+																"keyCertSign",
+																CaMgm::adv_keyCertSign ),
+															 `item( `id(`decipherOnly),
+																"decipherOnly",
+																CaMgm::adv_decipherOnly )
 															 ]),
 												     `VSpacing(1.5)
 												 )
@@ -187,10 +232,14 @@
 								  ],
 
 			    `advanced_netscape_nsComment : 	$["name" 	: "NsComment",
-								  "widget"	: `Frame ("",`VBox (`Left (`CheckBox(`id(`id_adv_cri_NsComment), _("critical"))),
+								  "widget"	: `Frame ("",`VBox (`Left (`CheckBox(`id(`id_adv_cri_NsComment),
+														     _("critical"),
+														     CaMgm::adv_cri_NsComment
+														     )),
 												    `VSpacing(1.5),
 												    `TextEntry(`id(`id_adv_NsComment),
-													       "NsComment"),
+													       "NsComment",
+													       CaMgm::adv_NsComment),
 												    `VSpacing(1.5)
 												    )
 											 ),
@@ -200,19 +249,37 @@
 								  ],
 
 			    `advanced_netscape_nsCertType : 	$["name" 	: "NsCertType",
-								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_NsCertType), _("critical"))),
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_NsCertType), 
+														      _("critical"),
+														      CaMgm::adv_cri_NsCertType)),
 												     `VSpacing(1.5),
 												     `MultiSelectionBox(`id(`id_adv_NsCertType),
 															"NsCertTyp:",
 															[
-															 "client",
-															 "server",
-															 "sslCA",
-															 "email",
-															 "reserved",
-															 "emailCA",
-															 "objectSign",
-															 "objCA",
+															 `item( `id(`client),
+																"client",
+																CaMgm::adv_client ),
+															 `item( `id(`server),
+																"server",
+																CaMgm::adv_server ),
+															 `item( `id(`sslCA),
+																"sslCA",
+																CaMgm::adv_sslCA ),
+															 `item( `id(`email), 
+																"email",
+																CaMgm::adv_email ),
+															 `item( `id(`reserved),
+																"reserved",
+																CaMgm::adv_reserved ),
+															 `item( `id(`emailCA),	    
+																"emailCA",
+																CaMgm::adv_emailCA ),
+															 `item( `id(`objectSign),	    
+																"objectSign",
+																CaMgm::adv_objectSign ),
+															 `item( `id(`objCA),
+																"objCA",
+																CaMgm::adv_objCA )
 															 ]),
 												     `VSpacing(1.5)
 												     )
@@ -223,10 +290,13 @@
 								  ],
 
 			    `advanced_netscape_nsSslServerName :$["name" 	: "nsSslServerName",
-								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_nsSslServerName), _("critical"))),
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_nsSslServerName),
+														      _("critical"),
+														      CaMgm::adv_cri_nsSslServerName)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_adv_nsSslServerName),
-														"nsSslServerName"),
+														"nsSslServerName",
+														CaMgm::adv_nsSslServerName),
 												     `VSpacing(1.5)
 												     )
 											  ),
@@ -236,7 +306,10 @@
 								  ],
 
 			    `advanced_subject_alt_name : 	$["name" 	: "Subject Alt Name",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_adv_cri_subject_alt_name), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_adv_cri_subject_alt_name),
+														       _("critical"),
+														       CaMgm::adv_cri_subject_alt_name
+														       )),
 												     `VSpacing(1.5),
 												     `HBox(
 													   `VSpacing(5),
@@ -275,10 +348,14 @@
 								  ],
 
 			    `advanced_unstructured_name : 	$["name" 	: "Unstructured Name",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_adv_cri_unstructured_name), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_adv_cri_unstructured_name),
+														       _("critical"),
+														       CaMgm::adv_cri_unstructured_name)
+													     ),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_adv_unstructured_name),
-														"Unstructured Named"),
+														"Unstructured Named",
+														CaMgm::adv_unstructured_name),
 												     `VSpacing(1.5)
 												     )
 											 ),
@@ -293,15 +370,21 @@
 								  ],
 
 			    `expert_key_identifier : 		$["name" 	: "Key Identifier",
-								  "widget"	: `VBox ( `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_SubjectKeyIdentifier), _("critical"))),
+								  "widget"	: `VBox ( `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_SubjectKeyIdentifier),
+															      _("critical"),
+															      CaMgm::exp_cri_SubjectKeyIdentifier)),
 													     `TextEntry(`id(`id_exp_SubjectKeyIdentifier),
-															"Subject Key Identifier")
+															"Subject Key Identifier",
+															CaMgm::exp_SubjectKeyIdentifier )
 													     )
 												  ),
 											  `VSpacing(1.5),
-											  `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_AuthorityKeyIdentifier), _("critical"))),
+											  `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_AuthorityKeyIdentifier),
+															      _("critical"),
+															      CaMgm::exp_cri_AuthorityKeyIdentifier)),
 													     `TextEntry(`id(`id_exp_AuthorityKeyIdentifier),
-															"Subject Key Identifier"),
+															"Subject Key Identifier",
+															CaMgm::exp_AuthorityKeyIdentifier),
 													     `VSpacing(1.5)
 													     )
 												  )
@@ -317,10 +400,13 @@
 								  ],
 
 			    `expert_netscape_nsBaseUrl : 	$["name" 	: "nsBaseUrl",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsBaseUrl), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsBaseUrl),
+														       _("critical"),
+														       CaMgm::exp_cri_netscape_nsBaseUrl)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_exp_netscape_nsBaseUrl),
-														"nsBaseUrl"),
+														"nsBaseUrl",
+														CaMgm::exp_netscape_nsBaseUrl),
 												     `VSpacing(1.5)
 												     )
 											 ),
@@ -330,10 +416,13 @@
 								  ],
 
 			    `expert_netscape_nsRevocationUrl : 	$["name" 	: "nsRevocationUrl",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRevocationUrl), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRevocationUrl),
+														       _("critical"),
+														       CaMgm::exp_cri_netscape_nsRevocationUrl)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_exp_netscape_nsRevocationUrl),
-														"nsRevocationUrl"),
+														"nsRevocationUrl",
+														CaMgm::exp_netscape_nsRevocationUrl),
 												     `VSpacing(1.5)
 												     )
 											 ),
@@ -343,10 +432,13 @@
 								  ],
 
 			    `expert_netscape_nsCaRevocationUrl :$["name" 	: "nsCaRevocationUrl",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsCaRevocationUrl), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsCaRevocationUrl),
+														       _("critical"),
+														       CaMgm::exp_cri_netscape_nsCaRevocationUrl)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_exp_netscape_nsCaRevocationUrl),
-														"nsCaRevocationUrl"),
+														"nsCaRevocationUrl",
+														CaMgm::exp_netscape_nsCaRevocationUrl),
 												     `VSpacing(1.5)
 												     )
 											 ),
@@ -356,10 +448,13 @@
 								  ],
 
 			    `expert_netscape_nsRenewallUrl : 	$["name" 	: "nsRenewallUrl",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRenewallUrl), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRenewallUrl),
+														       _("critical"),
+														       CaMgm::exp_cri_netscape_nsRenewallUrl)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_exp_netscape_nsRenewallUrl),
-														"nsRenewallUrl"),
+														"nsRenewallUrl",
+														CaMgm::exp_netscape_nsRenewallUrl),
 												     `VSpacing(1.5)
 												     )
 											 ),
@@ -369,10 +464,13 @@
 								  ],
 
 			    `expert_netscape_nsCaPolicyUrl : 	$["name" 	: "nsCaPolicyUrl",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsCaPolicyUrl), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsCaPolicyUrl),
+														       _("critical"),
+														       CaMgm::exp_cri_netscape_nsCaPolicyUrl)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_exp_netscape_nsCaPolicyUrl),
-														"nsCaPolicyUrl"),
+														"nsCaPolicyUrl",
+														CaMgm::exp_netscape_nsCaPolicyUrl),
 												     `VSpacing(1.5)
 												     )
 											 ),
@@ -382,10 +480,13 @@
 								  ],
 
 			    `expert_authorityInfoAccess : 	$["name" 	: "authorityInfoAccess",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_authorityInfoAccess), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_authorityInfoAccess),
+														       _("critical"),
+														       CaMgm::exp_cri_authorityInfoAccess)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_exp_authorityInfoAccess),
-														"authorityInfoAccess"),
+														"authorityInfoAccess",
+														CaMgm::exp_authorityInfoAccess),
 												     `VSpacing(1.5)
 												     )
 											 ),
@@ -395,10 +496,13 @@
 								  ],
 
 			    `expert_extendedKeyUsage : 		$["name" 	: "extendedKeyUsage",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_extendedKeyUsage), _("critical"))),
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_extendedKeyUsage),
+														       _("critical"),
+														       CaMgm::exp_cri_extendedKeyUsage)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_exp_extendedKeyUsage),
-														"extendedKeyUsage"),
+														"extendedKeyUsage",
+														CaMgm::exp_extendedKeyUsage),
 												     `VSpacing(1.5)
 												     )
 											 ),

@@ -26,11 +26,29 @@
     import "CaMgm";
     import "CaManagement";
 
+    //  "get" functions are used for setting already existing values or
+    //  default values into the widgets. The most values are already set
+    //  by the default options of the widgets. All other values will be
+    //  be set by the "get" funcitons.
+    //
+    //  "set" functions read the values from the widget and save these
+    //  values to the global varibable ( defined in CaMgm.ycp )
+
     define void get_advanced_basic_constaints() ``{
 	y2debug("calling get_advanced_basic_constaints");
+
+	UI::ChangeWidget (`id (`id_adv_pathlenValue), `Enabled, CaMgm::adv_pathlen);
     }
     define string set_advanced_basic_constaints() ``{
 	y2debug("calling set_advanced_basic_constaints");
+	string error = "";
+
+	CaMgm::adv_cri_ca = (boolean) UI::QueryWidget(`id(`id_adv_cri_ca), `Value);
+	CaMgm::adv_ca = (string) UI::QueryWidget(`id(`id_adv_ca), `Value);
+	CaMgm::adv_pathlen = (boolean) UI::QueryWidget(`id(`id_adv_pathlen), `Value);
+	CaMgm::adv_pathlenValue = (integer) UI::QueryWidget(`id(`id_adv_pathlenValue), `Value);
+	
+	return error;
     }
 
     define void get_advanced_CRL_distribution_point() ``{
@@ -38,6 +56,12 @@
     }
     define string set_advanced_CRL_distribution_point() ``{
 	y2debug("calling set_advanced_CRL_distribution_point");
+	string error = "";
+
+	CaMgm::adv_cri_distribution_point = (boolean) UI::QueryWidget(`id(`id_id_adv_cri_distribution_point), `Value);
+	CaMgm::adv_distribution_point = (string) UI::QueryWidget(`id(`id_adv_distribution_point), `Value);
+	
+	return error;	
     }
     
     define void get_advanced_challange_password() ``{
@@ -45,13 +69,34 @@
     }
     define string set_advanced_challange_password() ``{
 	y2debug("calling set_advanced_challange_password");
+	string error = "";
+
+	CaMgm::adv_cri_challange_password = (boolean) UI::QueryWidget(`id(`id_adv_cri_challange_password), `Value);
+	CaMgm::adv_challange_password = (string) UI::QueryWidget(`id(`id_adv_challange_password), `Value);
+	
+	return error;
     }	
     
     define void get_advanced_issuer_alt_name() ``{
 	y2debug("calling get_advanced_issuer_alt_name");
+
+	list<term> itemList = [];
+	integer i = 0;
+	foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+	    itemList = add (itemList, `item (`id (i), element["kind"]:"", element["name"]:"" ) );
+	    i = i + 1;
+	});
+
+	UI::ChangeWidget(`id(`id_adv_issuer_alt_name), `Items, itemList);
     }
     define string set_advanced_issuer_alt_name() ``{
 	y2debug("calling set_advanced_issuer_alt_name");
+	string error = "";
+
+	CaMgm::adv_cri_issuer_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_issuer_alt_name), `Value);	
+	// The table widget will be filled in the add or delete callback
+	
+	return error;
     }
 
     define void get_advanced_key_usage() ``{
@@ -59,13 +104,20 @@
     }
     define string set_advanced_key_usage() ``{
 	y2debug("calling set_advanced_key_usage");
-    }
-    
-    define void get_advanced_netscape_settings() ``{
-	y2debug("calling get_advanced_netscape_settings");
-    }
-    define string set_advanced_netscape_settings() ``{
-	y2debug("calling set_advanced_netscape_settings");
+	string error = "";
+
+	CaMgm::adv_cri_key_usage = (boolean) UI::QueryWidget(`id(`id_adv_cri_key_usage), `Value);	
+	CaMgm::adv_digitalSignature = (boolean) UI::QueryWidget(`id(`digitalSignature), `Value);	
+	CaMgm::adv_nonRepudiation = (boolean) UI::QueryWidget(`id(`nonRepudiation), `Value);	
+	CaMgm::adv_cRLSign = (boolean) UI::QueryWidget(`id(`cRLSign), `Value);	
+	CaMgm::adv_keyEncipherment = (boolean) UI::QueryWidget(`id(`keyEncipherment), `Value);	
+	CaMgm::adv_dataEncipherment = (boolean) UI::QueryWidget(`id(`dataEncipherment), `Value);	
+	CaMgm::adv_encipherOnly = (boolean) UI::QueryWidget(`id(`encipherOnly), `Value);	
+	CaMgm::adv_keyAgreement = (boolean) UI::QueryWidget(`id(`keyAgreement), `Value);	
+	CaMgm::adv_keyCertSign = (boolean) UI::QueryWidget(`id(`keyCertSign), `Value);	
+	CaMgm::adv_decipherOnly = (boolean) UI::QueryWidget(`id(`decipherOnly), `Value);	
+	
+	return error;
     }
     
     define void get_advanced_netscape_nsComment() ``{
@@ -73,6 +125,12 @@
     }
     define string set_advanced_netscape_nsComment() ``{
 	y2debug("calling set_advanced_netscape_nsComment");
+	string error = "";
+
+	CaMgm::adv_cri_NsComment = (boolean) UI::QueryWidget(`id(`id_adv_cri_NsComment), `Value);
+	CaMgm::adv_NsComment = (string) UI::QueryWidget(`id(`id_adv_NsComment), `Value);		
+	
+	return error;
     }	
     
     define void get_advanced_netscape_nsCertType() ``{
@@ -80,6 +138,19 @@
     }
     define string set_advanced_netscape_nsCertType() ``{
 	y2debug("calling set_advanced_netscape_nsCertType");
+	string error = "";
+
+	CaMgm::adv_cri_NsCertType = (boolean) UI::QueryWidget(`id(`id_adv_NsCertType), `Value);
+	CaMgm::adv_client = (boolean) UI::QueryWidget(`id(`client), `Value);
+	CaMgm::adv_server = (boolean) UI::QueryWidget(`id(`server), `Value);
+	CaMgm::adv_sslCA = (boolean) UI::QueryWidget(`id(`sslCA), `Value);
+	CaMgm::adv_email = (boolean) UI::QueryWidget(`id(`email), `Value);
+	CaMgm::adv_reserved = (boolean) UI::QueryWidget(`id(`reserved), `Value);
+	CaMgm::adv_emailCA = (boolean) UI::QueryWidget(`id(`emailCA), `Value);
+	CaMgm::adv_objectSign = (boolean) UI::QueryWidget(`id(`objectSign), `Value);
+	CaMgm::adv_objCA = (boolean) UI::QueryWidget(`id(`objCA), `Value);
+	
+	return error;
     }
     
     define void get_advanced_netscape_nsSslServerName() ``{
@@ -87,13 +158,34 @@
     }
     define string set_advanced_netscape_nsSslServerName() ``{
 	y2debug("calling set_advanced_netscape_nsSslServerName");
+	string error = "";
+
+	CaMgm::adv_cri_nsSslServerName = (boolean) UI::QueryWidget(`id(`id_adv_cri_nsSslServerName), `Value);
+	CaMgm::adv_nsSslServerName = (string) UI::QueryWidget(`id(`id_adv_nsSslServerName), `Value);		
+	
+	return error;
     }
     
     define void get_advanced_subject_alt_name() ``{
 	y2debug("calling get_advanced_subject_alt_name");
+
+	list<term> itemList = [];
+	integer i = 0;
+	foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
+	    itemList = add (itemList, `item (`id (i), element["kind"]:"", element["name"]:"" ) );
+	    i = i + 1;
+	});
+
+	UI::ChangeWidget(`id(`id_adv_subject_alt_name), `Items, itemList);	
     }
     define string set_advanced_subject_alt_name() ``{
 	y2debug("calling set_advanced_subject_alt_name");
+	string error = "";
+
+	CaMgm::adv_cri_subject_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_subject_alt_name), `Value);	
+	// The table widget will be filled in the add or delete callback
+	
+	return error;
     }	
     
     define void get_advanced_unstructured_name() ``{
@@ -101,6 +193,12 @@
     }
     define string set_advanced_unstructured_name() ``{
 	y2debug("calling set_advanced_unstructured_name");
+	string error = "";
+
+	CaMgm::adv_cri_unstructured_name = (boolean) UI::QueryWidget(`id(`id_adv_unstructured_name), `Value);
+	CaMgm::adv_unstructured_name = (string) UI::QueryWidget(`id(`id_adv_unstructured_name), `Value);		
+	
+	return error;
     }	
     
     define void get_expert_key_identifier() ``{
@@ -108,13 +206,14 @@
     }
     define string set_expert_key_identifier() ``{
 	y2debug("calling set_expert_key_identifier");
-    }	
-    
-    define void get_expert_netscape_settings() ``{
-	y2debug("calling get_expert_netscape_settings");
-    }
-    define string set_expert_netscape_settings() ``{
-	y2debug("calling set_expert_netscape_settings");
+	string error = "";
+
+	CaMgm::exp_cri_SubjectKeyIdentifier = (boolean) UI::QueryWidget(`id(`id_exp_cri_SubjectKeyIdentifier), `Value);
+	CaMgm::exp_SubjectKeyIdentifier = (string) UI::QueryWidget(`id(`id_exp_SubjectKeyIdentifier), `Value);		
+	CaMgm::exp_cri_AuthorityKeyIdentifier = (boolean) UI::QueryWidget(`id(`id_exp_cri_AuthorityKeyIdentifier), `Value);
+	CaMgm::exp_AuthorityKeyIdentifier = (string) UI::QueryWidget(`id(`id_exp_AuthorityKeyIdentifier), `Value);		
+	
+	return error;
     }	
     
     define void get_expert_netscape_nsBaseUrl() ``{
@@ -122,6 +221,12 @@
     }
     define string set_expert_netscape_nsBaseUrl() ``{
 	y2debug("calling set_expert_netscape_nsBaseUrl");
+	string error = "";
+
+	CaMgm::exp_cri_netscape_nsBaseUrl = (boolean) UI::QueryWidget(`id(`id_exp_cri_netscape_nsBaseUrl), `Value);
+	CaMgm::exp_netscape_nsBaseUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsBaseUrl), `Value);		
+	
+	return error;
     }	
     
     define void get_expert_netscape_nsRevocationUrl() ``{
@@ -129,6 +234,12 @@
     }
     define string set_expert_netscape_nsRevocationUrl() ``{
 	y2debug("calling set_expert_netscape_nsRevocationUrl");
+	string error = "";
+
+	CaMgm::exp_cri_netscape_nsRevocationUrl = (boolean) UI::QueryWidget(`id(`id_exp_cri_netscape_nsRevocationUrl), `Value);
+	CaMgm::exp_netscape_nsRevocationUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsRevocationUrl), `Value);		
+	
+	return error;
     }	
     
     define void get_expert_netscape_nsCaRevocationUrl() ``{
@@ -136,6 +247,12 @@
     }
     define string set_expert_netscape_nsCaRevocationUrl() ``{
 	y2debug("calling set_expert_netscape_nsCaRevocationUrl");
+	string error = "";
+
+	CaMgm::exp_cri_netscape_nsCaRevocationUrl = (boolean) UI::QueryWidget(`id(`id_exp_cri_netscape_nsCaRevocationUrl), `Value);
+	CaMgm::exp_netscape_nsCaRevocationUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsCaRevocationUrl), `Value);		
+	
+	return error;
     }	
     
     define void get_expert_netscape_nsRenewallUrl() ``{
@@ -143,6 +260,12 @@
     }
     define string set_expert_netscape_nsRenewallUrl() ``{
 	y2debug("calling set_expert_netscape_nsRenewallUrl");
+	string error = "";
+
+	CaMgm::exp_cri_netscape_nsRenewallUrl = (boolean) UI::QueryWidget(`id(`id_exp_cri_netscape_nsRenewallUrl), `Value);
+	CaMgm::exp_netscape_nsRenewallUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsRenewallUrl), `Value);		
+	
+	return error;
     }	
     
     define void get_expert_netscape_nsCaPolicyUrl() ``{
@@ -150,6 +273,12 @@
     }
     define string set_expert_netscape_nsCaPolicyUrl() ``{
 	y2debug("calling set_expert_netscape_nsCaPolicyUrl");
+	string error = "";
+	
+	CaMgm::exp_cri_netscape_nsCaPolicyUrl = (boolean) UI::QueryWidget(`id(`id_exp_cri_netscape_nsCaPolicyUrl), `Value);
+	CaMgm::exp_netscape_nsCaPolicyUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsCaPolicyUrl), `Value);		
+	
+	return error;
     }	
     
     define void get_expert_authorityInfoAccess() ``{
@@ -157,6 +286,12 @@
     }
     define string set_expert_authorityInfoAccess() ``{
 	y2debug("calling set_expert_authorityInfoAccess");
+	string error = "";
+
+	CaMgm::exp_cri_authorityInfoAccess = (boolean) UI::QueryWidget(`id(`id_exp_cri_authorityInfoAccess), `Value);
+	CaMgm::exp_authorityInfoAccess = (string) UI::QueryWidget(`id(`id_exp_authorityInfoAccess), `Value);		
+	
+	return error;
     }	
     
     define void get_expert_extendedKeyUsage() ``{
@@ -164,6 +299,12 @@
     }	
     define string set_expert_extendedKeyUsage() ``{
 	y2debug("calling set_expert_extendedKeyUsage");
+	string error = "";
+
+	CaMgm::exp_cri_extendedKeyUsage = (boolean) UI::QueryWidget(`id(`id_exp_cri_extendedKeyUsage), `Value);
+	CaMgm::exp_extendedKeyUsage = (string) UI::QueryWidget(`id(`id_exp_extendedKeyUsage), `Value);		
+	
+	return error;
     }	
 
 }
