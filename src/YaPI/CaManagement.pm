@@ -4402,6 +4402,20 @@ sub DeleteCertificate {
         return $self->SetError(%{SCR->Error(".openssl")});
     } elsif( $st eq "Revoked" || $st eq "Expired" ) {
 
+        if( not SCR->Write(".caTools.delCAM", $caName, { MD5 => $req })) {
+            my $desc = "Can not remove the certificate from the database.\n";
+            my $err .= SCR->Error(".caTools");
+            if(defined $err && defined $err->{summary}) {
+                $desc .= $err->{summary}."\n";
+            }
+            if(defined $err && defined $err->{description}) {
+                $desc .= $err->{description}."\n";
+            }
+            return $self->SetError(summary => _("Removing the certificate failed."),
+                                   description => $desc,
+                                   code => "SCR_WRITE_FAILED");
+        }
+
         if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/newcerts/$certificate.pem")) {
             return $self->SetError(summary => _("Removing the certificate failed."),
                                    description => "Can not remove '$CAM_ROOT/$caName/keys/$req.key'",
