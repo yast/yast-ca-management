@@ -50,6 +50,12 @@ global string 	prop_ca_commonName = "";
 global string 	prop_server_commonName = "";
 global string 	prop_CAName = "";
 global string 	prop_country = "GB";
+global string 	prop_password = "";
+global string 	prop_email = "";
+global string 	prop_organisation = "";
+global string 	prop_organisationUnit = "";
+global string 	prop_locality = "";
+global string 	prop_state = "";
 global symbol   prop_selection = `def; // `none, `floppy `expert
 
 /**

@@ -15,6 +15,24 @@
     import "Hostname";
     import "YaPI::CaManagement";
 
+
+    /**
+     * Creates Country items
+     * @return a list country items formated for a UI table
+     */
+    define list<term> getCountryList () ``{
+        list<term> result = [];
+	map<string, string> country_names = (map<string, string>)
+	    eval(SCR::Read(.target.yast2, "country.ycp"));
+
+	foreach (string id, string name , country_names, ``{
+	    result = add (result, `item (`id (id), name ,
+					 CaMgm::country == id) );
+	});
+        return result;
+    }
+    
+
     /**
      * See RFC 2822, 3.4
      * But for now, no-spaces@valid_domainname
