@@ -103,7 +103,17 @@
             if (contains ([`createRoot, `enter], ui))
             {
                 integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		CaMgm::currentCA =  (string) UI::QueryWidget(`id(`table), `Item(id));
+		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+
+		if (table_item == nil)
+		{
+		    Popup::Error (_("No item has been selected."));
+		    ui = `again;
+		}
+		else
+		{
+		    CaMgm::currentCA = (string) select(table_item, 1, "");
+		}
             }
         }
         until (contains ([`createRoot, `enter,`next], ui));

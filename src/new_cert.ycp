@@ -39,23 +39,44 @@
         list<term> result = [];
         integer i = 0;
 
-	foreach (string element, CaMgm::emailList, ``{
-	    result = add (result, `item (`id (i), element ) );
+	foreach (map element, CaMgm::emailList, ``{
+	    result = add (result, `item (`id (i), element["name"]:"",
+					 element["default"]:false ? UI::Glyph(`CheckMark ): "" ) );
 	    i = i + 1;
 	});
         return result;
     }
 
     /**
+     * Creates Country items
+     * @return a list country items formated for a UI table
+     */
+    define list<term> getCountryList () ``{
+        list<term> result = [];
+	map country_names = (map) eval(SCR::Read(.target.yast2, "country.ycp"));
+
+	foreach (string id, string name , country_names, ``{
+	    result = add (result, `item (`id (id), name , CaMgm::country == id) );
+	});
+        return result;
+    }
+    
+
+    /**
      * Creating new CA/Certificate ( 1. step )
      * @return `next, 'back, 'cancel, 'again
      */
-    define symbol new_cert1 () ``{
+    define symbol new_cert1 (string kind) ``{
 
         // help text 1/5
         string helptext = _("<p>In order to generate a new ceritficate or CA some entries are needed.</p>");
         // help text 2/5
         helptext = helptext + _("<p>It depends on the policy defined in the configuration file.</p>");
+        // help text 3b/5 ( optional )
+	if (kind == "CA")
+	{
+	    helptext = helptext + _("<p><b>CA Name</b> is the name of a CA certificate.</p>");
+	}
         // help text 3/5
         helptext = helptext + _("<p><b>Common Name</b> is the name of the User/Admistrator/Server.</p>");
         // help text 4/5
@@ -71,6 +92,7 @@
         term buttons = `VBox ();
 	// To translators: pushbutton label
 	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`deleteEmail), `opt (`key_F5), Label::DeleteButton()))));
+	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`defaultEmail) , _("Default")))));	
         buttons = add (buttons, `VStretch());
 	// To translators: pushbutton label
         buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`addEmail), `opt (`key_F3), Label::AddButton()))));
@@ -81,7 +103,7 @@
 					  `Table (`id (`table), `opt (`notify, `immediate),
                                           `header (
                                               // To translators: table headers
-                                              _("E-Mail Address(es)")),
+                                              _("E-Mail Address(es)"), _("default")),
                                           emailTermList)));
 	editEmail = add (editEmail, `TextEntry (`id (`id_emailname ), "" ) );
 
@@ -90,17 +112,19 @@
         emails = add (emails, `HWeight (1, buttons));
 
         term contents = `VBox ();
-        contents = add (contents, `TextEntry( `id (`id_commonName), _("&Common Name"), CaMgm::commonName ));
+	if (kind == "CA")
+	{
+	    contents = add (contents, `TextEntry( `id (`id_CAName), _("&CA Name:"), CaMgm::CAName ));	    
+	}
+        contents = add (contents, `TextEntry( `id (`id_commonName), _("&Common Name:"), CaMgm::commonName ));
         contents = add (contents, emails);
-        contents = add (contents, `TextEntry( `id (`id_organisation), _("O&rgansisation"), CaMgm::organisation ));
-        contents = add (contents, `TextEntry( `id (`id_organisationUnit), _("Or&gansisation Unit"), CaMgm::organisationUnit ));
-        contents = add (contents, `TextEntry( `id (`id_locality), _("Loca&lity"), CaMgm::locality ));
-        contents = add (contents, `TextEntry( `id (`id_state), _("&State"), CaMgm::state ));
-        contents = add (contents, `Left (`ComboBox( `id (`id_country), _("C&ountry"),
-					     [
-					      `item(`id(`countryDE), "DE", CaMgm::country == "DE" ),
-					      `item(`id(`countryEN), "EN", CaMgm::country == "EN" )
-					      ] )));
+        contents = add (contents, `HBox(`TextEntry( `id (`id_organisation), _("O&rgansisation:"), CaMgm::organisation ),
+					`TextEntry( `id (`id_organisationUnit), _("Or&gansisation Unit:"), CaMgm::organisationUnit )));
+        contents = add (contents, `HBox(`TextEntry( `id (`id_locality), _("Loca&lity:"), CaMgm::locality ),
+					`TextEntry( `id (`id_state), _("&State:"), CaMgm::state )));
+
+	    
+        contents = add (contents, `HBox (`HWeight(1,`ComboBox( `id (`id_country), _("C&ountry:"), getCountryList()))));
 
                                 // To translators: dialog label
         Wizard::SetContents (_("Create new Certificate (step 1/3)"), contents, helptext, true, true);
@@ -112,33 +136,39 @@
         {
             boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
             UI::ChangeWidget (`id (`deleteEmail), `Enabled, anyitems);
+            UI::ChangeWidget (`id (`defaultEmail), `Enabled, anyitems);	    
 
             ui = (symbol) UI::UserInput ();
 
             if (ui == `next ||
 		ui == `addEmail ||
-		ui == `deleteEmail)
+		ui == `deleteEmail||
+		ui == `defaultEmail)
             {
 		CaMgm::commonName = (string) UI::QueryWidget(`id(`id_commonName), `Value);
+		CaMgm::CAName = (string) UI::QueryWidget(`id(`id_CAName), `Value);		
 		CaMgm::organisation = (string) UI::QueryWidget(`id(`id_organisation), `Value);
 		CaMgm::organisationUnit = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
 		CaMgm::locality = (string) UI::QueryWidget(`id(`id_locality), `Value);
 		CaMgm::state = (string) UI::QueryWidget(`id(`id_state), `Value);
-		if (UI::QueryWidget(`id(`id_country), `Value) == `countryDE)
-		{
-		    CaMgm::country = "DE";
-		}
-		else
-		{
-		    CaMgm::country = "EN";
-		}
+		CaMgm::country = (string) UI::QueryWidget(`id(`id_country), `Value);
 
 		if (ui == `addEmail)
 		{
-		    string selection = (string) UI::QueryWidget(`id(`id_emailname), `Value);
-		    if (size(selection) > 0)
+		    map selection = $[];
+		    selection["name"] = (string) UI::QueryWidget(`id(`id_emailname), `Value);
+		    if (size(CaMgm::emailList) > 0)
 		    {
-			if (check_mail_address(selection))
+			selection["default"] = false;
+		    }
+		    else
+		    {
+			selection["default"] = true;
+		    }
+			
+		    if (size(selection["name"]:"") > 0)
+		    {
+			if (check_mail_address(selection["name"]:""))
 			{
 			    CaMgm::emailList = add (CaMgm::emailList, selection);
 			}
@@ -152,10 +182,46 @@
 		if (ui == `deleteEmail)
 		{
 		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		    CaMgm::emailList = remove (CaMgm::emailList, id);
+		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+		    string current_name = (string) select(table_item, 1, "");
+		    list<map> dummy_map = [];
+
+		    //finding entry in list
+		    foreach (map element, CaMgm::emailList, ``{
+			if (element["name"]:"" != current_name )
+			{
+			    dummy_map = add (dummy_map, element);
+			}
+		    });
+		    
+		    CaMgm::emailList = dummy_map;
 
 		    ui = `again;
 		}
+		if (ui == `defaultEmail)
+		{
+		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+		    string current_name = (string) select(table_item, 1, "");
+		    list<map> dummy_map = [];
+
+		    //finding entry in list
+		    foreach (map element, CaMgm::emailList, ``{
+			if (element["name"]:"" == current_name )
+			{
+			    element["default"] = true;
+			}
+			else
+			{
+			    element["default"] = false;
+			}
+			dummy_map = add (dummy_map, element);			
+		    });
+		    
+		    CaMgm::emailList = dummy_map;
+
+		    ui = `again;
+		}		
 	    }
         }
         until (contains ([`back, `again, `next, `abort], ui));
@@ -168,7 +234,7 @@
      * Creating new CA/Certificate ( 2. step )
      * @return `next, 'back, 'cancel, `advancedOptions
      */
-    define symbol new_cert2 () ``{
+    define symbol new_cert2 (string kind) ``{
 
         // help text 1/5
         string helptext = _("<p>The private key of the certrificate needs a <B>Password</B>. For verification reasons please reenter it in the next field.</p>");
@@ -186,9 +252,9 @@
 
 
         term contents = `VBox ();
-        contents = add (contents, `Password( `id (`id_password), _("&Password"), CaMgm::password));
-        contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password"), CaMgm::verifyPassword));
-        contents = add (contents, `Password( `id (`id_caPassword), _("&CA Password"), CaMgm::CAPassword));
+        contents = add (contents, `Password( `id (`id_password), _("&Password:"), CaMgm::password));
+        contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password:"), CaMgm::verifyPassword));
+        contents = add (contents, `Password( `id (`id_caPassword), _("&CA Password:"), CaMgm::CAPassword));
 	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 1, 10000, CaMgm::keyLength));
 	contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
         contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
@@ -217,11 +283,6 @@
 		    Popup::Error(_("Passwords are different."));
 		    ui = `again;
 		}
-
-		if (ui == `advancedOptions)
-		{
-
-		}
 	    }
         }
         until (contains ([`back, `next, `abort, `advancedOptions ], ui));
@@ -233,7 +294,7 @@
      * Creating new CA/Certificate ( 3. step )
      * @return `next, 'back, 'cancel
      */
-    define symbol new_cert3 () ``{
+    define symbol new_cert3 (string kind) ``{
 
         // help text 1/4
         string helptext = _("<p>This frame gives an overview about all setting for the certificate which will be created.</p>");
@@ -242,22 +303,35 @@
 
 	string text = _("<br><h3>Summary</h3>");
 	text = text + "<pre>";
-	text = text +  _("Common Name:       ")  + CaMgm::commonName + "\n";
-	text = text +  _("Organisation:      ")  + CaMgm::organisation + "\n";
-	text = text +  _("Organisation Unit: ")  + CaMgm::organisationUnit + "\n";
-	text = text +  _("Locality:          ")  + CaMgm::locality + "\n";
-	text = text +  _("EMAIL(s):          ");
+	if (kind == "CA")
+	{
+	    text = text + _("CA Name:                 ")  + CaMgm::CAName + "\n";
+	}
+	text = text +  _("Common Name:             ")  + CaMgm::commonName + "\n";
+	text = text +  _("Organisation:            ")  + CaMgm::organisation + "\n";
+	text = text +  _("Organisation Unit:       ")  + CaMgm::organisationUnit + "\n";
+	text = text +  _("Locality:                ")  + CaMgm::locality + "\n";
+	text = text +  _("EMAIL(s):                ");
 
 	integer i = 0;
-	foreach (string element, CaMgm::emailList, ``{
+	foreach (map element, CaMgm::emailList, ``{
 	    if (i==0)
 	    {
-		text = text + element + "\n";
+		text = text + element["name"]:"";
 	    }
 	    else
 	    {
-		text = text + "                   " + element + "\n";
+		text = text + "                         " + element["name"]:"";
 	    }
+	    if (element["default"]:false)
+	    {
+		text = text + " (default)" + "\n";
+	    }
+	    else
+	    {
+		text = text + "\n";
+	    }
+	    
 	    i = i + 1;
 	});
 	if (i==0)
@@ -265,11 +339,328 @@
 	    text = text + "\n";
 	}
 
-	text = text + _("Locality:          ") + CaMgm::locality + "\n";
-	text = text + _("State:             ") + CaMgm::state + "\n";
-	text = text + _("Country:           ") + CaMgm::country + "\n";
-	text = text + _("Key Length:        ") + CaMgm::keyLength + " bit\n";
-	text = text + _("Valid Period:      ") + CaMgm::validPeriod + _(" days\n");
+	text = text + _("Locality:                ") + CaMgm::locality + "\n";
+	text = text + _("State:                   ") + CaMgm::state + "\n";
+	text = text + _("Country:                 ") + CaMgm::country + "\n";
+	text = text + _("Key Length:              ") + CaMgm::keyLength + " bit\n";
+	text = text + _("Valid Period:            ") + CaMgm::validPeriod + _(" days\n");
+	text = text + "Basic Constaints:        " + CaMgm::adv_ca
+	    + (CaMgm::adv_cri_ca ? _(" (critical)\n" ) : "\n") ;
+	if (CaMgm::adv_pathlen)
+	{
+	    text = text +  "                         "  + _("Pathlength ") + CaMgm::adv_pathlenValue + "\n"; 
+	}
+	text = text + "CRL Distribution Point:  " + CaMgm::adv_distribution_point
+	    + (CaMgm::adv_cri_distribution_point ? _(" (critical)\n" ) : "\n") ;
+	text = text + "Challage Password:       " + CaMgm::adv_challange_password
+	    + (CaMgm::adv_cri_challange_password ? _(" (critical)\n" ) : "\n") ;
+	
+	text = text + "Issuer Alt Name:         "
+	    + (CaMgm::adv_cri_issuer_alt_name ? _("(critical) " ) : "") ;
+	text = text + (CaMgm::adv_copy_issuer_alt_name ?  _("copy Subject Alt Name from CA"): "");
+	i = 0;
+	if (CaMgm::adv_cri_issuer_alt_name
+	    || CaMgm::adv_copy_issuer_alt_name)
+	{
+	    i = i + 1;
+	    text = text + "\n";	    
+	}
+	foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+	    if (i==0)
+	    {
+		text = text + element["kind"]:"" + ":" + element["name"]:"";
+	    }
+	    else
+	    {
+		text = text + "                         " + element["kind"]:"" + ":" + element["name"]:"";
+	    }
+	    text = text + "\n";
+	    i = i + 1;
+	});
+	if (i==0)
+	{
+	    text = text + "\n";
+	}
+	
+	text = text + "Key Usage:              "
+	    + (CaMgm::adv_cri_key_usage ? _(" (critical)\n" ) : "") ;
+	boolean nextLine = CaMgm::adv_cri_key_usage;
+	if (CaMgm::adv_digitalSignature)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "digitalSignature\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "digitalSignature\n";
+	    }	    
+	}
+	if (CaMgm::adv_nonRepudiation)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "nonRepudiation\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "nonRepudiation\n";
+	    }	    
+	}
+	if (CaMgm::adv_cRLSign)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "cRLSign\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "cRLSign\n";
+	    }	    
+	}
+	if (CaMgm::adv_keyEncipherment)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "keyEncipherment\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "keyEncipherment\n";
+	    }	    	    
+	}
+	if (CaMgm::adv_dataEncipherment)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "dataEncipherment\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "dataEncipherment\n";
+	    }	    
+	}
+	    	
+	if (CaMgm::adv_encipherOnly)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "encipherOnly\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "encipherOnly\n";
+	    }	    
+	}
+	if (CaMgm::adv_keyAgreement)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "keyAgreement\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "keyAgreement\n";
+	    }	    
+	}
+	if (CaMgm::adv_keyCertSign)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "keyCertSign\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "keyCertSign\n";
+	    }	    
+	}
+	if (CaMgm::adv_decipherOnly)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "decipherOnly\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "decipherOnly\n";
+	    }   	    
+	}
+	if (!nextLine)
+	{
+	    nextLine = true;
+	    text = text + "\n";
+	}
+
+ 
+	text = text + _("NsComment:               ") + CaMgm::adv_NsComment
+	    + (CaMgm::adv_cri_NsComment ? _(" (critical)\n" ) : "\n") ;
+
+	text = text + _("NsCertType:              ")
+	    + (CaMgm::adv_cri_NsCertType ? _(" (critical)\n" ) : "") ;
+	nextLine = CaMgm::adv_cri_NsCertType;
+	if (CaMgm::adv_client)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "client\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "client\n";
+	    }	    
+	}
+	if (CaMgm::adv_server)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "server\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "server\n";
+	    }	    
+	}
+	if (CaMgm::adv_sslCA)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "sslCA\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "sslCA\n";
+	    }	    
+	}
+	if (CaMgm::adv_email)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "email\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "email\n";
+	    }	    
+	}
+	if (CaMgm::adv_reserved)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "reserved\n";
+	    }
+	    else
+	    {	
+		text = text + "                         " + "reserved\n";
+	    }	    
+	}
+
+	if (CaMgm::adv_emailCA)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "emailCA\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "emailCA\n";
+	    }	    
+	}
+	if (CaMgm::adv_objectSign)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "objectSign\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "objectSign\n";
+	    }	    
+	}
+	if (CaMgm::adv_objCA)
+	{
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "objCA\n";
+	    }
+	    else
+	    {
+		text = text + "                         " + "objCA\n";
+	    }	    
+	}
+	if (!nextLine)
+	{
+	    nextLine = true;
+	    text = text + "\n";
+	}
+
+	text = text + "nsSslServerName:         " + CaMgm::adv_nsSslServerName
+	    + (CaMgm::adv_cri_nsSslServerName ? _(" (critical)\n" ) : "\n") ;
+	
+	text = text + "Subject Alt Name:        "
+	    + (CaMgm::adv_cri_subject_alt_name ? _("(critical) " ) : "") ;
+	text = text + (CaMgm::adv_copy_subject_alt_name ?   _("copy Standard EMAIL Address"): "");
+	i = 0;
+	if (CaMgm::adv_cri_subject_alt_name
+	    || CaMgm::adv_copy_subject_alt_name)
+	{
+	    i = i + 1;
+	    text = text + "\n";	    
+	}
+	foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
+	    if (i==0)
+	    {
+		text = text + element["kind"]:"" + ":" + element["name"]:"";
+	    }
+	    else
+	    {
+		text = text + "                         " + element["kind"]:"" + ":" + element["name"]:"";
+	    }
+	    text = text + "\n";
+	    i = i + 1;
+	});
+	if (i==0)
+	{
+	    text = text + "\n";
+	}
+
+	text = text +   "Unstructured Name:       "  + CaMgm::adv_unstructured_name
+	    + (CaMgm::adv_cri_unstructured_name ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "Subject Key Identifier:  "  + CaMgm::exp_SubjectKeyIdentifier
+	    + (CaMgm::exp_cri_SubjectKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "Authority Key Identifier:"  + CaMgm::exp_AuthorityKeyIdentifier
+	    + (CaMgm::exp_cri_AuthorityKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "nsBaseUrl:               "  + CaMgm::exp_netscape_nsBaseUrl
+	    + (CaMgm::exp_cri_netscape_nsBaseUrl ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "nsRevocationUrl:         "  + CaMgm::exp_netscape_nsRevocationUrl
+	    + (CaMgm::exp_cri_netscape_nsRevocationUrl ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "nsCaRevocationUrl:       "  + CaMgm::exp_netscape_nsCaRevocationUrl
+	    + (CaMgm::exp_cri_netscape_nsCaRevocationUrl ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "nsRenewallUrl:           "  + CaMgm::exp_netscape_nsRenewallUrl
+	    + (CaMgm::exp_cri_netscape_nsRenewallUrl ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "nsCaPolicyUrl:           "  + CaMgm::exp_netscape_nsCaPolicyUrl
+	    + (CaMgm::exp_cri_netscape_nsCaPolicyUrl ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "authorityInfoAccess:     "  + CaMgm::exp_authorityInfoAccess
+	    + (CaMgm::exp_cri_authorityInfoAccess ? _(" (critical)\n" ) : "\n") ;
+	text = text +   "extendedKeyUsage:        "  + CaMgm::exp_extendedKeyUsage
+	    + (CaMgm::exp_cri_extendedKeyUsage ? _(" (critical)\n" ) : "\n") ;			
+	
 	text = text + "</pre>";
 
         term contents = `VBox ();

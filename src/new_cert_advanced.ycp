@@ -70,8 +70,9 @@
 						  // back pushbutton: the user input is ignored and the last dialog is called
 						  `PushButton(`id(`back), `opt(`key_F8), Label::BackButton()),
 						  `HStretch(),
-						  `PushButton(`id(`help), `opt(`key_F1), Label::HelpButton()),
+						  `PushButton(`id(`abort), `opt(`key_F9), Label::AbortButton()),
 						  `HStretch(),
+						  `PushButton(`id(`help), `opt(`key_F1), Label::HelpButton()),
 						  `Empty()
 						  )
 					    )
@@ -84,7 +85,8 @@
 
 	symbol ret = `dummy;
 
-	while (ret != `back )
+	while (ret != `back
+	       && ret != `abort)
 	{
 	    ret = (symbol) UI::UserInput ();
 
@@ -92,66 +94,6 @@
 	    if (ret == `default)
 	    {
 
-	    }
-	    else if (ret == `help)
-	    {
-		UI::OpenDialog (`opt(`decorated ),
-				`HBox( `VSpacing(16),
-				       `VBox (
-					      `HSpacing (60),
-					      // popup window header
-					      `Heading (_("Help")),
-					      `VSpacing (0.5),
-					      `RichText (advanced_help),
-					      `VSpacing (1.5),
-					      // push button label
-					      `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
-					     )
-				       )
-				);
-
-		UI::SetFocus (`id(`ok));
-		UI::UserInput ();
-		UI::CloseDialog ();
-	    }
-	    else if (ret == `add)
-	    {
-		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
-		y2milestone ("Add for: %1", selected);
-
-		// Calling Add callback
-		map item = itemMap[lastItem]:$[];
-		any function = item["addCallback"]:nil;
-		if (function != nil)
-		{
-		    any ret = eval(function);
-		}
-	    }
-	    else if (ret == `modify)
-	    {
-		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
-		y2milestone ("Modify for: %1", selected);
-
-		// Calling Modify callback
-		map item = itemMap[lastItem]:$[];
-		any function = item["modifyCallback"]:nil;
-		if (function != nil)
-		{
-		    any ret = eval(function);
-		}		
-	    }
-	    else if (ret == `delete)
-	    {
-		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
-		y2milestone ("Delete for: %1", selected);
-
-		// Calling Delete callback
-		map item = itemMap[lastItem]:$[];
-		any function = item["deleteCallback"]:nil;
-		if (function != nil)
-		{
-		    any ret = eval(function);
-		}		
 	    }
 	    else 
 	    {
@@ -179,21 +121,84 @@
 		}
 		else
 		{
-		    // no error --> goto next selection
-		    lastItem = selected;
-		    item = itemMap[selected]:$[];
-		    // header label
-		    UI::ChangeWidget (`id(`heading), `Value, _("Current Selection: ") + item["name"]:"");
-		    // showing concerning input fields
-		    UI::ReplaceWidget (`id(`replace), item["widget"]:`Empty() );
-		    // enable/disable Default button
-		    UI::ChangeWidget (`id (`default), `Enabled, item["default"]:true );
-
-		    // getting values
-		    any function = item["getCallback"]:nil;
-		    if (function != nil)
+		    if (ret == `help)
 		    {
-			any ret = eval(function);
+			UI::OpenDialog (`opt(`decorated ),
+					`HBox( `VSpacing(16),
+					       `VBox (
+						      `HSpacing (60),
+						      // popup window header
+						      `Heading (_("Help")),
+						      `VSpacing (0.5),
+						      `RichText (advanced_help),
+						      `VSpacing (1.5),
+						      // push button label
+						      `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+						      )
+					       )
+					);
+
+			UI::SetFocus (`id(`ok));
+			UI::UserInput ();
+			UI::CloseDialog ();
+		    }
+		    else if (ret == `add)
+		    {
+			symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+			y2milestone ("Add for: %1", selected);
+
+			// Calling Add callback
+			map item = itemMap[lastItem]:$[];
+			any function = item["addCallback"]:nil;
+			if (function != nil)
+			{
+			    any ret = eval(function);
+			}
+		    }
+		    else if (ret == `modify)
+		    {
+			symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+			y2milestone ("Modify for: %1", selected);
+			
+			// Calling Modify callback
+			map item = itemMap[lastItem]:$[];
+			any function = item["modifyCallback"]:nil;
+			if (function != nil)
+			{
+			    any ret = eval(function);
+			}		
+		    }
+		    else if (ret == `delete)
+		    {
+			symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+			y2milestone ("Delete for: %1", selected);
+			
+			// Calling Delete callback
+			map item = itemMap[lastItem]:$[];
+			any function = item["deleteCallback"]:nil;
+			if (function != nil)
+			{
+			    any ret = eval(function);
+			}		
+		    }
+		    else
+		    {
+			// no error --> goto next selection
+			lastItem = selected;
+			item = itemMap[selected]:$[];
+			// header label
+			UI::ChangeWidget (`id(`heading), `Value, _("Current Selection: ") + item["name"]:"");
+			// showing concerning input fields
+			UI::ReplaceWidget (`id(`replace), item["widget"]:`Empty() );
+			// enable/disable Default button
+			UI::ChangeWidget (`id (`default), `Enabled, item["default"]:true );
+			
+			// getting values
+			any function = item["getCallback"]:nil;
+			if (function != nil)
+			{
+			    any ret = eval(function);
+			}
 		    }
 		}
 	    }

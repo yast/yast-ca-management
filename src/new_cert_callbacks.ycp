@@ -143,7 +143,7 @@
 							      ),
 					    `TextEntry(`id(`name), "Name:"),
 					    // push button label
-					    `HBox(`PushButton (`id(`candel), `opt(`default, `key_F9), Label::CancelButton()),
+					    `HBox(`PushButton (`id(`cancel), `opt(`key_F9), Label::CancelButton()),
 						  `HStretch(),
 						  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
 						  ),
@@ -333,7 +333,7 @@
     define void get_advanced_netscape_nsCertType() ``{
 	y2milestone("calling get_advanced_netscape_nsCertType");
 
-	UI::ChangeWidget(`id(`id_adv_NsCertType), `Value, CaMgm::adv_cri_NsCertType);
+	UI::ChangeWidget(`id(`id_adv_cri_NsCertType), `Value, CaMgm::adv_cri_NsCertType);
 	UI::ChangeWidget(`id(`client), `Value, CaMgm::adv_client);
 	UI::ChangeWidget(`id(`server), `Value, CaMgm::adv_server);
 	UI::ChangeWidget(`id(`sslCA), `Value, CaMgm::adv_sslCA);
@@ -347,7 +347,7 @@
 	y2milestone("calling set_advanced_netscape_nsCertType");
 	string error = "";
 
-	CaMgm::adv_cri_NsCertType = (boolean) UI::QueryWidget(`id(`id_adv_NsCertType), `Value);
+	CaMgm::adv_cri_NsCertType = (boolean) UI::QueryWidget(`id(`id_adv_cri_NsCertType), `Value);
 	CaMgm::adv_client = (boolean) UI::QueryWidget(`id(`client), `Value);
 	CaMgm::adv_server = (boolean) UI::QueryWidget(`id(`server), `Value);
 	CaMgm::adv_sslCA = (boolean) UI::QueryWidget(`id(`sslCA), `Value);
@@ -416,7 +416,7 @@
 							      ),
 					    `TextEntry(`id(`name), "Name:"),
 					    // push button label
-					    `HBox(`PushButton (`id(`candel), `opt(`default, `key_F9), Label::CancelButton()),
+					    `HBox(`PushButton (`id(`cancel), `opt(`key_F9), Label::CancelButton()),
 						  `HStretch(),
 						  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
 						  ),
@@ -474,7 +474,6 @@
                 // To translators: ContinueCancel Popup
                 _("Really delete this entry ?")))
         {
-	    map new_entry = $[];
 	    list<map> dummy_map = [];
 
 	    //finding entry in list
@@ -556,14 +555,14 @@
     define void get_advanced_unstructured_name() ``{
 	y2milestone("calling get_advanced_unstructured_name");
 
-	UI::ChangeWidget(`id(`id_adv_unstructured_name), `Value, CaMgm::adv_cri_unstructured_name);
+	UI::ChangeWidget(`id(`id_adv_cri_unstructured_name), `Value, CaMgm::adv_cri_unstructured_name);
 	UI::ChangeWidget(`id(`id_adv_unstructured_name), `Value, CaMgm::adv_unstructured_name);		
     }
     define string set_advanced_unstructured_name() ``{
 	y2milestone("calling set_advanced_unstructured_name");
 	string error = "";
 
-	CaMgm::adv_cri_unstructured_name = (boolean) UI::QueryWidget(`id(`id_adv_unstructured_name), `Value);
+	CaMgm::adv_cri_unstructured_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_unstructured_name), `Value);
 	CaMgm::adv_unstructured_name = (string) UI::QueryWidget(`id(`id_adv_unstructured_name), `Value);		
 	
 	return error;
