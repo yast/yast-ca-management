@@ -36,7 +36,7 @@
     define boolean	sav_adv_cri_distribution_point = false;
     define string	sav_adv_distribution_point = "";
 
-    define string	sav_adv_challange_password = "";
+    define string	sav_adv_challenge_password = "";
 
     define boolean 	sav_adv_cri_issuer_alt_name = false;
     define boolean 	sav_adv_copy_issuer_alt_name = false;
@@ -113,7 +113,7 @@
     	sav_adv_cri_distribution_point = CaMgm::adv_cri_distribution_point;
     	sav_adv_distribution_point = CaMgm::adv_distribution_point;
 
-    	sav_adv_challange_password = CaMgm::adv_challange_password;
+    	sav_adv_challenge_password = CaMgm::adv_challenge_password;
 
      	sav_adv_cri_issuer_alt_name = CaMgm::adv_cri_issuer_alt_name;
      	sav_adv_copy_issuer_alt_name = CaMgm::adv_copy_issuer_alt_name;
@@ -262,23 +262,23 @@
     }
     
     
-    define void get_advanced_challange_password() ``{
-	y2debug("calling get_advanced_challange_password");
+    define void get_advanced_challenge_password() ``{
+	y2debug("calling get_advanced_challenge_password");
 	
-	UI::ChangeWidget(`id(`id_adv_challange_password), `Value, CaMgm::adv_challange_password);
+	UI::ChangeWidget(`id(`id_adv_challenge_password), `Value, CaMgm::adv_challenge_password);
     }
-    define string set_advanced_challange_password() ``{
-	y2debug("calling set_advanced_challange_password");
+    define string set_advanced_challenge_password() ``{
+	y2debug("calling set_advanced_challenge_password");
 	string error = "";
 
-	CaMgm::adv_challange_password = (string) UI::QueryWidget(`id(`id_adv_challange_password), `Value);
+	CaMgm::adv_challenge_password = (string) UI::QueryWidget(`id(`id_adv_challenge_password), `Value);
 	
 	return error;
     }	
-    define void default_advanced_challange_password() ``{
-	y2debug("calling default_advanced_challange_password");
+    define void default_advanced_challenge_password() ``{
+	y2debug("calling default_advanced_challenge_password");
 
-	CaMgm::adv_challange_password = sav_adv_challange_password;
+	CaMgm::adv_challenge_password = sav_adv_challenge_password;
     }
     
     

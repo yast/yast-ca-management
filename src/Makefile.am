@@ -26,6 +26,8 @@ cam_DATA = 	openssl.cnf.tmpl
 
 client_DATA = 		\
 	ca_mgm.ycp	\
+	ca_select_proposal.ycp	\
+	ca_mgm_proposal.ycp	\
 	ca-mgm.ycp
 
 desktop_DATA = ca_mgm.desktop

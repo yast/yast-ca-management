@@ -55,7 +55,7 @@
 	CaMgm::adv_pathlenValue = 1;
 	CaMgm::adv_cri_distribution_point = false;
 	CaMgm::adv_distribution_point = "";
-	CaMgm::adv_challange_password = "";
+	CaMgm::adv_challenge_password = "";
  	CaMgm::adv_cri_issuer_alt_name = false;
  	CaMgm::adv_copy_issuer_alt_name = false;
 	CaMgm::adv_issuer_alt_name_list = [];
@@ -585,9 +585,9 @@
 	{
 	    param["organizationalUnitName"] = CaMgm::organisationUnit;
 	}
-	if (size (CaMgm::adv_challange_password) > 0)
+	if (size (CaMgm::adv_challenge_password) > 0)
 	{
-	    param["challengePassword"] = CaMgm::adv_challange_password;
+	    param["challengePassword"] = CaMgm::adv_challenge_password;
 	}
 	if (size (CaMgm::adv_unstructured_name) > 0)
 	{
