@@ -75,7 +75,15 @@ sub Read {
                     foreach my $d (@$indextxt) {
                         if($d->[3] eq "$serial") {
                             $subject = $d->[5];
-                            $certLine->{'status'} = $d->[0];
+                            if($d->[0] eq "V") {
+                                $certLine->{'status'} = "Valid";
+                            } elsif($d->[0] eq "R") {
+                                $certLine->{'status'} = "Revoked";
+                            } elsif($d->[0] eq "E") {
+                                $certLine->{'status'} = "Expired";
+                            } else {
+                                $certLine->{'status'} = $d->[0];
+                            }
                             last;
                         }
                     }
@@ -109,11 +117,6 @@ sub Read {
                             $certLine->{'emailAddress'} = $1;
                         }
                     }
-#                    my $stat = $class->status($caName, $certLine->{'certificate'});
-#                    if(not defined $stat) {
-#                        return undef;
-#                    }
-#                    $certLine->{'status'} = $stat;
                     push @ret, $certLine;
                 }
             }
@@ -211,7 +214,16 @@ sub Write {
         my $dn  = $hash->{DN} || return $class->SetError(summary => "Missing parameter 'DN'.",
                                                          code => "PARAM_CHECK_FAILED");
 
-        # FIXME: look in cam.txt if md5 already exist
+        my $db = $class->parseCAMDB($caName);
+        return undef if(not defined $db);
+        
+        foreach my $l (@$db) {
+            if($l->[0] eq $md5) {
+                return $class->SetError(summary => "Request already exist.",
+                                        code => "PARAM_CHECK_FAILED");
+            }
+        }
+
         if(!open(DB, ">> $CAM_ROOT/$caName/cam.txt")) {
             return $class->SetError(summary => "Can not open cam.txt.",
                                     description => "$!",
@@ -395,7 +407,7 @@ sub status {
                                                        code => "PARAM_CHECK_FAILED");;
     my $serial = "";
 
-    $certificate =~ /^([[:xdigit:]]+):[A-Za-z0-9\/=+]+$/;
+    $certificate =~ /^([[:xdigit:]]+):[[:xdigit:]]+$/;
     if(!defined $1) {
         return $class->SetError(summary=>"Unknown certificate name '$certificate'",
                                 code=>"PARAM_CHECK_FAILED");
