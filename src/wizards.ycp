@@ -10,6 +10,7 @@
 {
     textdomain "ca-management";
 
+    import "CaMgm";    
     import "Wizard";
     import "Label";
     include "wizard/sequencer.ycp";

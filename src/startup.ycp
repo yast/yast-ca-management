@@ -100,7 +100,7 @@
         // help text 1/2
         string helptext = _("<p>Select one CA and press <b>Enter CA</b>.</p>");
         // help text 2/2
-        helptext = helptext + _("<p><b>Create Root CA</b> generates a new root certificate authority.");
+        helptext = helptext + _("<p><b>Create Root CA</b> generates a new root certificate authority.</p>");
 
         list<term> termList = getCAList ();
 

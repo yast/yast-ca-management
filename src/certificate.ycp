@@ -21,7 +21,8 @@
 
 {
     textdomain "ca-management";
-
+    
+    import "CaMgm";
     import "Wizard";
     import "Label";
     import "Popup";    

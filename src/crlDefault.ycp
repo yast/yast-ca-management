@@ -123,7 +123,7 @@
 
 	contents = add (contents, `Frame ("Authority Key Identifier",
 					  `VBox (`Left (`CheckBox(`id(`id_exp_cri_authorityKeyIdentifier),
-								  _("critical"),
+								  _("&critical"),
 								  CaMgm::exp_cri_authorityKeyIdentifier)),
 						 `TextEntry(`id(`id_exp_authorityKeyIdentifier),
 							    "",
@@ -132,11 +132,11 @@
 			
 	contents = add (contents, `Frame ("Issuer Alt Name",
 					  `VBox (`Left (`CheckBox(`id(`id_adv_cri_issuer_alt_name),
-								  _("critical"),
+								  _("c&ritical"),
 								  CaMgm::adv_cri_issuer_alt_name)
 							),
 						 `Left (`CheckBox(`id(`id_adv_copy_issuer_alt_name),
-								  _("Copy Subject Alt Name from CA"),
+								  _("C&opy Subject Alt Name from CA"),
 								  CaMgm::adv_copy_issuer_alt_name)
 							),
 						 `HBox (`HWeight (3,`Table (`id (`id_adv_issuer_alt_name),

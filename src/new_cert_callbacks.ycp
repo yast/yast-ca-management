@@ -24,6 +24,8 @@
     textdomain "ca-management";
 
     import "CaMgm";
+    import "Label";
+    import "Popup";    
     import "YaPI::CaManagement";
 
 
@@ -350,7 +352,7 @@
 								    `RadioButton(`id("RID"), `opt(`notify), "RID")
 								    )
 							      ),
-					    `TextEntry(`id(`name), "Name:"),
+					    `TextEntry(`id(`name), _("&Name:")),
 					    // push button label
 					    `HBox(`PushButton (`id(`cancel), `opt(`key_F9), Label::CancelButton()),
 						  `HStretch(),
@@ -675,7 +677,7 @@
 								    `RadioButton(`id("RID"), `opt(`notify), "RID")
 								    )
 							      ),
-					    `TextEntry(`id(`name), "Name:"),
+					    `TextEntry(`id(`name), _("&Name:")),
 					    // push button label
 					    `HBox(`PushButton (`id(`cancel), `opt(`key_F9), Label::CancelButton()),
 						  `HStretch(),

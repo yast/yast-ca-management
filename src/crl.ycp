@@ -19,6 +19,10 @@
  */
 {
     textdomain "ca-management";
+
+    import "Label";
+    import "CaMgm";       
+    import "YaPI::CaManagement";
     
     include "ca-management/crlDefault.ycp";
 
@@ -149,7 +153,7 @@
         }
 	y2milestone("ReadCRL(%1): %2", CAname, ret);
 
-	string text = _("<b>Certificate Revocation List (CRL):</b>");
+	string text = _("<p><b>Certificate Revocation List (CRL):</b></p>");
 	text = text + "<pre>";
 	text = text + "\nVersion: " + ret["VERSION"]:"";
 	text = text + "\nSignature Algorithmus: " + ret["SIGNATURE_ALGORITHM"]:"";
@@ -189,8 +193,8 @@
 			       `HBox (
 				      `HSpacing (1),
 				      `PushButton (`id (`gererateCRL), _("&Generate CRL")),
-				      `PushButton (`id (`view) , _("View")),
-				      `PushButton (`id (`defaults) , _("Default")),
+				      `PushButton (`id (`view) , _("&View")),
+				      `PushButton (`id (`defaults) , _("&Default")),
 				      `HStretch(),
 				      `MenuButton (_("Export"),
 						   [

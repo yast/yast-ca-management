@@ -2,7 +2,7 @@
  * File:        include/ca-management/popup.ycp
  * Package:     Configuration of CAs
  * Summary:     Popup definitions
- * Authors:     Stefan Schubert
+ * Authors:     Stefan Schubert (schubi@suse.de)
  *
  * $Id$
  */
@@ -64,7 +64,7 @@
 	    y2error ("Showing error: %1", messageMap);
 	    if (size (description) > 0)
 	    {
-		if (!Popup::AnyQuestion( _("Error"),
+		if (!Popup::AnyQuestion( Label::ErrorMsg(),
 					 message,
 					 Label::OKButton(),
 					 _("Details"),
