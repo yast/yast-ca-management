@@ -1445,6 +1445,9 @@ In I<$valueMap> you can define the following keys:
 
 * crlDistributionPoints
 
+* notext (optional - if set to "1" do not output the 
+          text version in the PEM file)
+
 The return value is "undef" on an error and the 
 filename(without suffix) of the certificate on success.
 
@@ -1480,9 +1483,14 @@ sub IssueCertificate {
     my $request = "";
     my $certificate = "";
     my $certType = "client";
+    my $notext = "";
 
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (defined $data->{notext} && $data->{notext} eq "1") {
+        $notext = "1";
     }
 
     # checking requires
@@ -1641,6 +1649,10 @@ sub IssueCertificate {
                 OUTDIR  => "$CAM_ROOT/$caName/certs/",
                 OUTFILE => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem"
                };
+    if($notext eq "1") {
+        $hash->{NOTEXT} = "1";
+    }
+
     my $ret = SCR->Execute( ".openssl.issueCert", $caName, $hash);
 
     if (not defined $ret) {
