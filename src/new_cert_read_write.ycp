@@ -50,7 +50,7 @@
  	CaMgm::keyLength = 1024;
  	CaMgm::validPeriod = 365;
  	CaMgm::adv_cri_ca = false;
- 	CaMgm::adv_ca = "";
+ 	CaMgm::adv_ca = "none";
 	CaMgm::adv_pathlen = false;
 	CaMgm::adv_pathlenValue = 1;
 	CaMgm::adv_cri_distribution_point = false;
@@ -593,13 +593,23 @@
 	{
 	    param["unstructuredName"] = CaMgm::adv_unstructured_name;
 	}
-	if (CaMgm::adv_cri_ca)
+	if (CaMgm::adv_ca != "none")
 	{
-	    param["basicConstraints"] = "critical," + CaMgm::adv_ca;
+	    if (CaMgm::adv_cri_ca)
+	    {
+		param["basicConstraints"] = "critical," + CaMgm::adv_ca;
+	    }
+	    else
+	    {
+		param["basicConstraints"] = CaMgm::adv_ca;		
+	    }
 	}
 	else
 	{
-	    param["basicConstraints"] = CaMgm::adv_ca;		
+	    if (CaMgm::adv_cri_ca)
+	    {
+		param["basicConstraints"] = "critical";
+	    }
 	}
 	if (CaMgm::adv_pathlen)
 	{

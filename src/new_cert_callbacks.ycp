@@ -29,7 +29,7 @@
 
     // saved default settings
     define boolean	sav_adv_cri_ca = false;
-    define string	sav_adv_ca = "";
+    define string	sav_adv_ca = "none";
     define boolean	sav_adv_pathlen = false;
     define integer	sav_adv_pathlenValue = 1;
 
@@ -194,10 +194,14 @@
 	{
 	    UI::ChangeWidget(`id(`id_adv_ca), `Value, `caFalse);
 	}
-	else
+	if (CaMgm::adv_ca == "CA:true")
 	{
 	    UI::ChangeWidget(`id(`id_adv_ca), `Value, `caTrue);	    
 	}
+	if (CaMgm::adv_ca == "none")
+	{
+	    UI::ChangeWidget(`id(`id_adv_ca), `Value, `none);	    
+	}	
 	UI::ChangeWidget(`id(`id_adv_pathlen), `Value, CaMgm::adv_pathlen);
 	UI::ChangeWidget(`id(`id_adv_pathlenValue), `Value, CaMgm::adv_pathlenValue);
 	UI::ChangeWidget(`id(`id_adv_pathlenValue), `Enabled, CaMgm::adv_pathlen);
@@ -212,10 +216,14 @@
 	{
 	    CaMgm::adv_ca = "CA:false";	    
 	}
-	else
+	if (item == `caTrue)
 	{
 	    CaMgm::adv_ca = "CA:true";
 	}
+	if (item == `none)
+	{
+	    CaMgm::adv_ca = "none";
+	}	
 	CaMgm::adv_pathlen = (boolean) UI::QueryWidget(`id(`id_adv_pathlen), `Value);
 	CaMgm::adv_pathlenValue = (integer) UI::QueryWidget(`id(`id_adv_pathlenValue), `Value);
 	
