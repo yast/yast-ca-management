@@ -953,7 +953,6 @@ sub WriteCertificateDefaults {
                 );
     
     foreach my $extName ( keys %v3ext) {
-        next if(!defined $data->{"$extName"});
         if (not defined YaST::caUtils->mergeToConfig($extName, "v3_$certType",
                                                      $data, $v3ext{$extName})) {
             SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
