@@ -135,7 +135,9 @@ sub checkCommonValues {
                                                code => "PARAM_CHECK_FAILED");
     
     foreach my $key (keys %{$data}) {
-        if ( $key eq "caName") {
+        # we check only common values. 
+        # It is possible that keys appear which could not be checked.
+        if ( $key eq "caName" || $key eq "newCaName") {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
                 return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
@@ -148,12 +150,6 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "certType") {
             if ( !grep( ($_ eq $data->{$key}), ("client", "server", "ca") ) ) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
-                                       code    => "PARAM_CHECK_FAILED");
-            }
-        } elsif ( $key eq "newCaName") {
-            if (! defined $data->{$key} ||
-                $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
                 return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
@@ -232,6 +228,10 @@ sub checkCommonValues {
                                                            $p, $key),
                                         code => "PARAM_CHECK_FAILED");
             } 
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
         } elsif ( $key eq "nsComment") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
@@ -254,6 +254,10 @@ sub checkCommonValues {
                                           code    => "PARAM_CHECK_FAILED");
                 }
             }
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
         } elsif ( $key eq "keyUsage") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
@@ -272,6 +276,10 @@ sub checkCommonValues {
                                            code    => "PARAM_CHECK_FAILED");
                 }
             }
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
         } elsif ( $key eq "subjectKeyIdentifier") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
@@ -283,6 +291,10 @@ sub checkCommonValues {
                 next if($p eq "critical");
                 next if($p eq "hash");
                 next if($p =~ /^([[:xdigit:]]{2}:)+[[:xdigit:]]{2}$/);
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
                 return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
@@ -298,6 +310,10 @@ sub checkCommonValues {
                 next if(grep( ($_ eq $p), ("issuer:always", "keyid:always",
                                            "issuer", "keyid")));
           
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
                 return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
@@ -356,6 +372,10 @@ sub checkCommonValues {
                 }
             }
             $data->{$key} = join(",", @san);
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
         } elsif ( $key eq "nsBaseUrl" || $key eq "nsRevocationUrl" ||
                   $key eq "nsCaRevocationUrl" || $key eq "nsRenewalUrl" ||
                   $key eq "nsCaPolicyUrl" ) {
@@ -379,6 +399,10 @@ sub checkCommonValues {
                 return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
                                       code => "PARAM_CHECK_FAILED");
             }
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
         } elsif ( $key eq "extendedKeyUsage") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
@@ -397,6 +421,10 @@ sub checkCommonValues {
                                                           __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key), 
                                       code    => "PARAM_CHECK_FAILED");
+            }
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
             }
         
         } elsif ( $key eq "authorityInfoAccess") {
@@ -459,6 +487,10 @@ sub checkCommonValues {
                                           code    => "PARAM_CHECK_FAILED");
                 }
             }
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
         } elsif ( $key eq "crlDistributionPoints") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
@@ -482,9 +514,10 @@ sub checkCommonValues {
                                            code    => "PARAM_CHECK_FAILED");
                 }
             }
-        } else {
-            # FIXME: What do we do here?
-            y2error("ATTENTION: unsupported value '$key' = '".$data->{$key}."'");
+            if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
         }
     }
     return 1;

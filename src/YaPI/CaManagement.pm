@@ -552,7 +552,7 @@ sub AddRootCA {
         return $self->SetError( summary => __("Missing value 'keyPasswd' or password is too short."),
                                 code    => "CHECK_PARAM_FAILED");
     }
-    if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
+    if (!defined $data->{"commonName"}) {
                                            # parameter check failed
         return $self->SetError( summary => __("Missing value 'commonName'."),
                                 code    => "CHECK_PARAM_FAILED");
@@ -566,10 +566,10 @@ sub AddRootCA {
 
     # Set default values, if the values are not set and modify the
     # config with this values.
-    if (!defined $data->{"keyLength"} || $data->{"keyLength"} !~ /^\d{3,4}$/ ) {
+    if (!defined $data->{"keyLength"}) {
         $data->{"keyLength"} = 2048;
     }
-    if (!defined $data->{"days"} || $data->{"days"} !~ /^\d{1,}$/) {
+    if (!defined $data->{"days"}) {
         $data->{"days"} = 3650;
     }
     if (not SCR->Write(".caTools.caInfrastructure", $data->{"caName"})) {
@@ -1114,16 +1114,14 @@ sub ReadCA {
     my $type   = "";
     my $ret = undef;
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     # checking requires
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (! defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -1256,7 +1254,7 @@ sub AddRequest {
     }
 
     # checking requires
-    if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
+    if (!defined $data->{"caName"}) {
                                            # parameter check failed
         return $self->SetError( summary => __("Missing value 'caName'."),
                                 code    => "CHECK_PARAM_FAILED");
@@ -1268,7 +1266,7 @@ sub AddRequest {
         return $self->SetError( summary => __("Missing value 'keyPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
-    if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
+    if (!defined $data->{"commonName"}) {
                                            # parameter check failed
         return $self->SetError( summary => __("Missing value 'commonName'."),
                                 code    => "CHECK_PARAM_FAILED");
@@ -1276,7 +1274,7 @@ sub AddRequest {
 
     # Set default values, if the values are not set and modify the
     # config with this values.
-    if (!defined $data->{"keyLength"} || $data->{"keyLength"} !~ /^\d{3,4}$/ ) {
+    if (!defined $data->{"keyLength"}) {
         $data->{"keyLength"} = 2048;
     }
 
@@ -1532,7 +1530,7 @@ sub IssueCertificate {
 
     # Set default values, if the values are not set and modify the
     # config with this values.
-    if (!defined $data->{"days"} || $data->{"days"} !~ /^\d{1,}$/) {
+    if (!defined $data->{"days"}) {
         $data->{"days"} = 365;
     }
     if (defined $data->{"certType"}) {
@@ -1879,24 +1877,16 @@ sub ReadCertificateList {
     my $data = shift;
     my $ret  = undef;
 
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (! defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Missing parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
-                               code    => "PARAM_CHECK_FAILED");
-    }
     my $caName = $data->{'caName'};
-    if (defined $data->{'caPasswd'} &&
-        length($data->{'caPasswd'}) < 4) {
-                                           # parameter check failed
-        return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
     if ( defined $data->{'caPasswd'} ) { # needed only for UpdateDB
         $ret = $self->UpdateDB($data);
         if ( not defined $ret ) {
@@ -1948,20 +1938,17 @@ sub UpdateDB {
     my $self = shift;
     my $data = shift;
     
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (! defined $data->{'caName'} ) {
                                            # parameter check failed
         return $self->SetError(summary => __("Missing parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
-                               code    => "PARAM_CHECK_FAILED");
-    }
     my $caName = $data->{'caName'};
-    if (! defined $data->{'caPasswd'} ||
-        length($data->{'caPasswd'}) < 4) {
+    if (! defined $data->{'caPasswd'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -2052,16 +2039,14 @@ sub ReadCertificate {
     my $type   = "";
     my $ret = undef;
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     # checking requires
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (! defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -2074,8 +2059,7 @@ sub ReadCertificate {
     }
     $type = $data->{"type"};
     
-    if (! defined $data->{"certificate"} || 
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
+    if (! defined $data->{"certificate"}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code => "PARAM_CHECK_FAILED");
@@ -2339,16 +2323,14 @@ sub ReadCRL {
     my $type   = "";
     my $ret = undef;
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     # checking requires
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (! defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -2460,16 +2442,14 @@ sub ExportCA {
     my $destinationFile = undef;
     my $format = undef;
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     # checking requires
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (! defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -2501,7 +2481,7 @@ sub ExportCA {
     }
     $format = $data->{"exportFormat"};
 
-    if (not defined $data->{'caPasswd'}) {
+    if (! defined $data->{'caPasswd'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code => "PARAM_CHECK_FAILED");
@@ -2748,22 +2728,19 @@ sub ExportCertificate {
     my $destinationFile = undef;
     my $format = undef;
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     # checking requires
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (!defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
-                               code    => "PARAM_CHECK_FAILED");
-    }
     $caName = $data->{"caName"};
 
-    if (! defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
+    if (! defined $data->{'certificate'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -2804,7 +2781,7 @@ sub ExportCertificate {
     }
     $format = $data->{"exportFormat"};
 
-    if (not defined $data->{'keyPasswd'}) {
+    if (! defined $data->{'keyPasswd'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'keyPasswd'."),
                                code => "PARAM_CHECK_FAILED");
@@ -3032,16 +3009,14 @@ sub ExportCRL {
     my $destinationFile = undef;
     my $format = undef;
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     # checking requires
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (!defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -3162,22 +3137,19 @@ sub Verify {
     my $caName = "";
     my $certificate = "";
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     # checking requires
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (!defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
-                               code    => "PARAM_CHECK_FAILED");
-    }
     $caName = $data->{"caName"};
 
-    if (!defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
+    if (!defined $data->{'certificate'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -3346,10 +3318,10 @@ sub AddSubCA {
 
     # Set default values, if the values are not set and modify the
     # config with this values.
-    if (!defined $data->{"keyLength"} || $data->{"keyLength"} !~ /^\d{3,4}$/ ) {
+    if (!defined $data->{"keyLength"}) {
         $data->{"keyLength"} = 2048;
     }
-    if (!defined $data->{"days"} || $data->{"days"} !~ /^\d{1,}$/) {
+    if (!defined $data->{"days"}) {
         $data->{"days"} = 3650;
     }
     my $request = $self->AddRequest($data);
@@ -3358,7 +3330,7 @@ sub AddSubCA {
     }
     $data->{'request'} = $request;
     my $certificate = $self->IssueCertificate($data);
-    if (not defined $certificate) {
+    if (! defined $certificate) {
         my $caName = $data->{'caName'};
         SCR->Write(".caTools.delCAM", $caName, {MD5 => $request});
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
@@ -3462,15 +3434,13 @@ sub ExportCAToLDAP {
     my $caName  = "";
     my $action = "add";
 
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (!defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
@@ -3712,15 +3682,13 @@ sub ExportCRLToLDAP {
     my $action  = "add";
     my $doCRLdp = 0;
 
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (!defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
@@ -4024,18 +3992,7 @@ sub ReadLDAPExportDefaults {
     }
 
     if (defined $data->{'caName'} ) {
-        if($data->{'caName'} =~ /^[A-Za-z0-9-_]+$/) {
-            if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                                       description => "'-' as first or last character is forbidden.",
-                                       code    => "PARAM_CHECK_FAILED");
-            }
-            $caName = $data->{'caName'};
-        } else {
-                                           # parameter check failed
-            return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                                   code    => "PARAM_CHECK_FAILED");
-        }
+        $caName = $data->{'caName'};
     }
     
     if(!defined $data->{'type'} ||
@@ -4075,9 +4032,6 @@ sub ReadLDAPExportDefaults {
 
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
-
-        #use Data::Dumper;
-        #y2debug(Data::Dumper->Dump([$ldapMap]));
 
         if(defined $ldapMap->{'ldap_server'} && $ldapMap->{'ldap_server'} ne "") {
             my $dummy = $ldapMap->{'ldap_server'};
@@ -4439,21 +4393,18 @@ sub ExportCertificateToLDAP {
     my $key = "";
     my $exportPKCS12 = 0;
 
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (!defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
-                               code    => "PARAM_CHECK_FAILED");
-    }
     $caName = $data->{'caName'};
 
-    if (!defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
+    if (!defined $data->{'certificate'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -4672,21 +4623,18 @@ sub DeleteCertificate {
     my $req = "";
     my $serial = "";
 
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (!defined $data->{'caName'} ) {
                                     # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
-                               code    => "PARAM_CHECK_FAILED");
-    }
     $caName = $data->{'caName'};
     
-    if (!defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
+    if (!defined $data->{'certificate'}) {
         # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -4806,6 +4754,10 @@ BEGIN { $TYPEINFO{ImportCommonServerCertificate} = [
 sub ImportCommonServerCertificate {
     my $self = shift;
     my $data = shift;
+
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
 
     if(! defined $data->{inFile} || $data->{inFile} eq "") {
         # parameter check
@@ -5049,6 +5001,10 @@ sub ReadFile {
     my $data = shift;
     my $ret  = undef;
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     if(! defined $data->{inFile} || $data->{inFile} eq "") {
         return $self->SetError(summary => "Missing parameter 'inFile'",
                                code => "PARAM_CHECK_FAILED");
@@ -5201,16 +5157,14 @@ sub ReadRequest {
     my $type   = "";
     my $ret = undef;
 
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
     # checking requires
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (! defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -5223,8 +5177,7 @@ sub ReadRequest {
     }
     $type = $data->{"type"};
     
-    if (! defined $data->{"request"} || 
-        $data->{'request'} !~ /^[[:xdigit:]]+[\d-]*$/) {
+    if (! defined $data->{"request"}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'request'."),
                                code => "PARAM_CHECK_FAILED");
@@ -5320,15 +5273,13 @@ sub ReadRequestList {
     my $data = shift;
     my $ret  = undef;
 
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (! defined $data->{'caName'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Missing parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     my $caName = $data->{'caName'};
@@ -5392,15 +5343,13 @@ sub ImportRequest {
     my $data = shift;
     my $pemReq = "";
 
-    if (! defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (! defined $data->{'caName'}) {
                                           # parameter check failed
         return $self->SetError(summary => __("Missing parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     my $caName = $data->{'caName'};
@@ -5571,21 +5520,18 @@ sub DeleteRequest {
 
     my $req = "";
 
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (!defined $data->{'caName'} ) {
                                     # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
-                               code    => "PARAM_CHECK_FAILED");
-    }
     $caName = $data->{'caName'};
     
-    if (!defined $data->{'request'} ||
-        $data->{'request'} !~ /^[[:xdigit:]]+[\d-]*$/) {
+    if (!defined $data->{'request'}) {
         # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'request'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -5669,15 +5615,13 @@ sub ImportCA {
     
     my $caName = "";
     
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (!defined $data->{'caName'}) {
                                     # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
-                               code    => "PARAM_CHECK_FAILED");
-    }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
@@ -5735,7 +5679,7 @@ sub ImportCA {
     }
 
     if($pemKey !~ /ENCRYPTED/si) {
-        if(! defined $data->{caPasswd} || $data->{caPasswd} eq "") {
+        if(! defined $data->{caPasswd}) {
             return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                    code    => "PASSWD_REQUIRED");
         }
@@ -5838,21 +5782,18 @@ sub DeleteCA {
     my $caName = "";
     my $doDelete = 0;
 
-    if (!defined $data->{'caName'} ||
-        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    if (!defined $data->{'caName'}) {
                                     # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
-        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
-                               description => "'-' as first or last character is forbidden.",
-                               code    => "PARAM_CHECK_FAILED");
-    }
     $caName = $data->{'caName'};
 
-    if (! defined $data->{'caPasswd'} ||
-        length($data->{'caPasswd'}) < 4) {
+    if (! defined $data->{'caPasswd'}) {
                                # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -5972,7 +5913,7 @@ sub ReadCRLDefaults {
 
     $ret = {
             'authorityKeyIdentifier' => undef,
-            'issuerAltName'         => undef,
+            'issuerAltName'          => undef,
            };
 
     foreach my $extName ( keys %{$ret}) {
@@ -6089,7 +6030,7 @@ sub WriteCRLDefaults {
         }
     }
     
-    if(defined $data->{days} && $data->{days} =~ /\d+/) {
+    if(defined $data->{days}) {
         if(not SCR->Write(".CAM.openssl_cnf.value.$caName.ca.default_crl_days", $data->{days})) {
             return $self->SetError( summary => "Can not write to config file",
                                     code => "SCR_WRITE_FAILED");
