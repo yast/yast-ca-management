@@ -1,0 +1,87 @@
+#! /usr/bin/perl
+
+package ag_openca_CRL;
+use YaST::SCRAgent;
+use ycp;
+our @ISA = ("YaST::SCRAgent");
+
+use OpenCA::OpenSSL;
+use OpenCA::CRL;
+
+my $openssl = undef;
+my $CAM_ROOT = "/var/lib/YaST2/CAM/";
+
+
+sub check_initialized ()
+{
+    my $class = shift;
+    if (not defined $openssl)
+    {
+        $class->SetError(summary => "Agent not initialized yet",
+                         code => "SCR_INIT_ERR");
+    }
+    return !!$openssl;
+}
+
+sub OtherCommand () {
+    my $class = shift;
+    my ($symbol, $config, @rest) = @_;
+    
+    if ($symbol ne "CRL") {
+        return $class->SetError(summary=> "The first command must be the configuration.(Seen '$_')",
+                                code => "SCR_INIT_ERR");
+    } else {
+        $openssl = OpenCA::OpenSSL->new( SHELL => $config->{"path"} );
+        if( not defined $openssl ) {
+            return $class->SetError(summary => "Can not initialize OpenCA::OpenSSL",
+                                    code => "SCR_INIT_ERR");
+        }
+        $openssl->setParams(TMPDIR=>$config->{"tmpdir"},
+                            STDERR=>$config->{"stderr"},
+                            CONFIG=>"$CAM_ROOT/openssl.cnf.tmpl",
+                            DEBUG=>1
+                           );
+    }
+    
+    return 1;
+}
+
+sub Read { 
+    my $class = shift;
+    my ($path, $infile) = @_;
+    $class->check_initialized || return undef;
+    
+    if($path eq ".getParsed") {
+        my $CRL = new OpenCA::CRL(INFILE => $infile , 
+                                  SHELL  => $openssl);
+        if(not defined $CRL) {
+            return $class->SetError(summary => "Can not initialize OpenCA::CRL",
+                                    code => "SCR_INIT_ERR");
+        }
+        if(not defined $CRL->getParsed()) {
+            return $class->SetError(summary     => "Can not parse certificate",
+                                    description => "(".$OpenCA::CRL::errno.")".$OpenCA::CRL::errval,
+                                    code => "SCR_READ_ERROR");
+        }
+        return $CRL->getParsed();
+    } elsif($path eq ".getTXT") {
+        my $CRL = new OpenCA::CRL(INFILE => $infile , 
+                                  SHELL  => $openssl);
+        if(not defined $CRL) {
+            return $class->SetError(summary => "Can not initialize OpenCA::CRL",
+                                    code => "SCR_INIT_ERR");
+        }
+        if(not defined $CRL->getParsed()) {
+            return $class->SetError(summary     => "Can not parse certificate",
+                                    description => "(".$OpenCA::CRL::errno.")".$OpenCA::CRL::errval,
+                                    code => "SCR_READ_ERROR");
+        }
+        return $CRL->getTXT();
+    }
+    return 1;
+}
+
+
+package main;
+ag_openca_CRL->Run;
+
