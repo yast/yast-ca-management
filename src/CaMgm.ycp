@@ -73,6 +73,12 @@ global string currentCA = "";
  */
 global string currentCertificate = "";
 
+/**
+ * selected Request
+ */
+global string currentRequest = "";
+
+
 
 /**
  * Password map for CA

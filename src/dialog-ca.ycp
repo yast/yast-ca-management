@@ -35,6 +35,7 @@ include "ca-management/floppy.ycp";
 include "ca-management/ca.ycp";
 include "ca-management/certificate.ycp";
 include "ca-management/crl.ycp";
+include "ca-management/request.ycp";
 
 /**
  * Faking Tab Widget for NCurses
@@ -67,6 +68,7 @@ term getDialogCATab (string tab_id) {
     if		( tab_id == "CA" )		return getCATab();
     else if	( tab_id == "Certificates" )	return getCertificateTab();
     else if	( tab_id == "CRL" )		return getCRLTab();
+    else if	( tab_id == "Request" )		return getRequestTab();    
     // This should never happen, but ...
     y2error ( "unknown tab_id: %1", tab_id );
     // When no dialog defined for this tab (software error)
@@ -86,6 +88,10 @@ void initDialogCATab (string dialog) {
     {
 	initCRLTab ();
     }
+    else if (dialog == "Request")
+    {
+	initRequestTab ();
+    }    
 }
 
 string getHelpText (string dialog) {
@@ -101,6 +107,10 @@ string getHelpText (string dialog) {
     {
 	return CRLHelptext;
     }
+    else if (dialog == "Request")
+    {
+	return requestHelptext;
+    }    
     return "missing help text";
 }
 
@@ -117,6 +127,10 @@ void storeDialogCATab (string dialog) {
     {
 	storeCRLTab ();
     }
+    else if (dialog == "Request")
+    {
+	storeRequestTab ();
+    }    
 }
 
 symbol handleDialogCATab (string dialog, map event) {
@@ -133,6 +147,10 @@ symbol handleDialogCATab (string dialog, map event) {
     {
 	ret = handleCRLTab (event);
     }
+    else if (dialog == "Request")
+    {
+	ret = handleRequestTab (event);
+    }    
     return ret;
 }
 
@@ -154,6 +172,8 @@ symbol runCADialog () {
 			    `item ( `id( "Certificates" ),	_("C&ertificates") ),
 								// Menu Item - CA - Tab
 			    `item ( `id( "CRL" ),		_("CR&L") ),
+								// Menu Item - CA - Tab
+			    `item ( `id( "Request" ),		_("&Request") ),			    
 			    ];
 
     term contents =
@@ -195,14 +215,17 @@ symbol runCADialog () {
 	{
 	    break;
 	}
-	else if ( ret == `cancel || ret == `abort)
+	else if (ret == `cancel || ret == `abort)
 	{
 	    if (Popup::ReallyAbort (true))
 		return `abort;
 	    else
 		continue;
         }
-	else if	( ret == "CA" || ret == "Certificates" || ret == "CRL" )
+	else if	(ret == "CA"
+		  || ret == "Certificates"
+		  || ret == "CRL"
+		  || ret == "Request")
 	{
 	    storeDialogCATab (current_tab);
 	    current_tab = (string)ret;
