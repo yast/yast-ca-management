@@ -17,9 +17,9 @@
  * CRL of a selected CA
  *
  */
-
-
 {
+
+    include "ca-management/crlDefault.ycp";
 
     // help text 1/4
     string CRLHelptext = _("<p>Here, see the most important values of the CRL.</p>");
@@ -235,7 +235,7 @@
 	}
 	if (ui == `defaults)
 	{
-//	    editDefaults (CaMgm::currentCA); 
+	    editCRLDefaults (CaMgm::currentCA); 
 	}	
 	return (symbol) ui;	
     }
