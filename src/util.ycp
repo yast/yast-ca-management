@@ -88,20 +88,22 @@
 	{
 	    // asking user
 	    UI::OpenDialog (`opt(`decorated ),
-			    `HBox( `VSpacing(16),
+			    `HBox( `HSpacing(2),
 				   `VBox (
-					  `HSpacing (60),
+					  `VSpacing (1),
 					  // popup window header
 					  `Heading (_("Enter CA Password")),
-					  `VSpacing (0.5),
-					  `TextEntry( `id (`entry), _("&Password:"), password ),
+					  `VSpacing (1),
+					  `Password( `id (`entry), _("&Password:"), password ),
+					  `VSpacing (1),					  
 					  `HBox (  // push button label
 						 `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 						 `HStretch(),
-						 `PushButton (`id(`cancel), `opt(`default, `key_F10), Label::CancelButton())
-						 )
+						 `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+						 ),
+					  `VSpacing (1)					  
 					  ),
-				   `VSpacing (1.5)
+				   `HSpacing (2)
 				   )
 			    );
 
@@ -117,7 +119,21 @@
 		}
 		else
 		{
-		    CaMgm::passwdMap[CAname] = password;
+		    // checking password
+		    boolean ret = nil;
+		    ret = (boolean) CaManagement::UpdateDB ($["caName": CAname, "caPasswd":password]);
+		    if (ret == nil
+			|| ret == false)
+		    {
+			showErrorCaManagement ();
+			password = nil;
+		    }
+		    else
+		    {
+			// saving for next call
+			y2milestone("Checking password for %1 OK", CAname);
+			CaMgm::passwdMap[CAname] = password;
+		    }
 		}
 	    }
 	    until (contains ([`ok, `cancel], ui));
