@@ -72,85 +72,85 @@
 								  "widget"	: `RichText(`id(`id_advanced), advanced_help),
 								  "default"     : false,
 								  ],
+			    
 			    `advanced_basic_constaints : 	$["name" 	: "Basic Constaints",
-								  "widget"	: `VBox (
-											 `Left (`CheckBox(`id(`id_adv_cri_ca), "critical")),
-											 `Frame("", `VBox (`HBox (`HWeight(1,`ComboBox(`id(`id_adv_ca), "CA",
+								  "widget"	: `Frame("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_ca), _("critical"))),
+													   `VSpacing(1.5),
+												    `HBox (`HWeight(1,`ComboBox(`id(`id_adv_ca), "CA",
 														     [
 														      "CA:false",
 														      "CA:true"
 														      ]))),
-													   `VSpacing(1.5),
-													   `Left (`CheckBox(`id(`id_adv_pathlen), "Pathlength available")),
-													   `HBox(`HSpacing (3),`IntField(`id(`id_adv_pathlenValue), "Pathlength",1,10000,1)),
-													   `VSpacing(1.5)
-													   )
-												 )
-											 ),
-								  "default"    	: true,
-								  ],
-			    `advanced_CRL_distribution_point : 	$["name" 	: "CRL Distribution Point",
-								  "widget"	: `VBox (
-											 `Left (`CheckBox(`id(`id_adv_cri_distribution_point), "critical")),
-											 `Frame("", `VBox (`TextEntry(`id(`id_adv_distribution_point),
-														      "CRL Distribution Point"),
-													   `VSpacing(1.5)
-													   )
-												)
-											 ),
-								  "default"    	: true,
-								  ],
-			    `advanced_challange_password : 	$["name" : "Challange Password",
-								  "widget"	: `VBox (
-											 `Left (`CheckBox(`id(`id_adv_cri_challange_password), "critical")),
-											 `Frame ("", `VBox (`TextEntry(`id(`id_adv_challange_password),
-														       "Challagen Password"),
-													    `VSpacing(1.5)
-													    )
-												 )
-											 ),
-								  "default"    	: true,
-								  ],
-			                                     
-			    `advanced_issuer_alt_name : 	$["name" : "Issuer Alt Name",
-								  "widget"	: `VBox (
-											 `Left (`CheckBox(`id(`id_adv_cri_issuer_alt_name), "critical")),
-											 `Frame ("", `HBox(
-													   `HWeight (3,`Table (`id (`id_adv_issuer_alt_name),
-															       `opt (`notify, `immediate),
-															       `header (
-																	// To translators: table headers
-																	_("Kind"),
-																	_("Name")
-																	)
-															       )
-														     ),
-													   `HWeight (1,`VBox(
-															     `HBox ( `HWeight (1,
-																	       `PushButton (`id (`add),
-																			    `opt (`key_F3),
-																			    Label::AddButton()))),
-															     `HBox ( `HWeight (1,
-																	       `PushButton (`id (`modify),
-																			    `opt (`key_F3),
-																			    Label::EditButton()))), 
-															     `HBox ( `HWeight (1,
-																	       `PushButton (`id (`delete),
-																			    `opt (`key_F5),
-																			    Label::DeleteButton()))),
-															     `VStretch()
-															     )
-														     )
-													   )
-												 )
+												    `VSpacing(1.5),
+												    `Left (`CheckBox(`id(`id_adv_pathlen), "Pathlength available")),
+												    `HBox(`HSpacing (3),`IntField(`id(`id_adv_pathlenValue), "Pathlength",1,10000,1)),
+												    `VSpacing(1.5)
+												    )
 											 ),
 								  "default"    	: true,
 								  ],
 			    
+			    `advanced_CRL_distribution_point : 	$["name" 	: "CRL Distribution Point",
+								  "widget"	: `Frame("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_distribution_point), _("critical"))),
+												    `VSpacing(1.5),
+												    `TextEntry(`id(`id_adv_distribution_point),
+													       "CRL Distribution Point"),
+												    `VSpacing(1.5)
+												    )
+											 ),
+								  "default"    	: true,
+								  ],
+			    
+			    `advanced_challange_password : 	$["name" : "Challange Password",
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_challange_password), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_adv_challange_password),
+														"Challagen Password"),
+												     `VSpacing(1.5)
+												     )
+											  ),
+								  "default"    	: true,
+								  ],
+			                                     
+			    `advanced_issuer_alt_name : 	$["name" : "Issuer Alt Name",
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_issuer_alt_name), _("critical"))),
+												     `VSpacing(1.5),
+												     `HBox (`HWeight (3,`Table (`id (`id_adv_issuer_alt_name),
+																`opt (`notify, `immediate),
+																`header (
+																	 // To translators: table headers
+																	 _("Kind"),
+																	 _("Name")
+																	 )
+																)	
+														      ),
+													    `HWeight (1,`VBox(
+															      `HBox ( `HWeight (1,
+																		`PushButton (`id (`add),
+																			     `opt (`key_F3),
+																			     Label::AddButton()))),
+															      `HBox ( `HWeight (1,
+																		`PushButton (`id (`modify),
+																			     `opt (`key_F3),
+																			     Label::EditButton()))), 
+															      `HBox ( `HWeight (1,
+																		`PushButton (`id (`delete),
+																			     `opt (`key_F5),
+																			     Label::DeleteButton()))),
+															      `VStretch()
+															      )
+														      )
+													    ),
+												     `VSpacing(1.5)
+												     )
+											  ),
+								  "default"    	: true,
+								  ],
+			    
 			    `advanced_key_usage : 		$["name" 	: "Key Usage",
-								  "widget"	: `VBox (
-											 `Left (`CheckBox(`id(`id_adv_cri_key_usage), "critical")),
-											 `Frame ("", `MultiSelectionBox(`id(`id_adv_key_usage),
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_key_usage), _("critical"))),
+												     `VSpacing(1.5),
+												     `MultiSelectionBox(`id(`id_adv_key_usage),
 															"Key Usage:",
 															[
 															 "digitalSignature",
@@ -162,7 +162,8 @@
 															 "keyAgreement",
 															 "keyCertSign",
 															 "decipherOnly"
-															 ])
+															 ]),
+												     `VSpacing(1.5)
 												 )
 											 ),
 								  "default"    	: true,
@@ -174,131 +175,197 @@
 								  ],
 			    
 			    `advanced_netscape_nsComment : 	$["name" 	: "NsComment",
-								  "widget"	: `VBox (
-											 `Left (`CheckBox(`id(`id_adv_cri_NsComment), "critical")),
-											 `Frame ("", `VBox (`TextEntry(`id(`id_adv_NsComment),
-														       "NsComment"),
-													    `VSpacing(1.5)
-													    )
-												 )
+								  "widget"	: `Frame ("",`VBox (`Left (`CheckBox(`id(`id_adv_cri_NsComment), _("critical"))),
+												    `VSpacing(1.5),
+												    `TextEntry(`id(`id_adv_NsComment),
+													       "NsComment"),
+												    `VSpacing(1.5)
+												    )
 											 ),
 								  "default"    	: true,
 								  ],
 
 			    `advanced_netscape_nsCertType : 	$["name" 	: "NsCertType",
-								  "widget"	: `VBox (
-											 `Left (`CheckBox(`id(`id_adv_cri_NsCertType), "critical")),
-											 `Frame ("", `MultiSelectionBox(`id(`id_adv_NsCertType),
-													    "NsCertTyp:",
-													    [
-													     "client",
-													     "server",
-													     "sslCA",
-													     "email",
-													     "reserved",
-													     "emailCA",
-													     "objectSign",
-													     "objCA",
-													     ])
-												 )
-											 ),
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_NsCertType), _("critical"))),
+												     `VSpacing(1.5),
+												     `MultiSelectionBox(`id(`id_adv_NsCertType),
+															"NsCertTyp:",
+															[
+															 "client",
+															 "server",
+															 "sslCA",
+															 "email",
+															 "reserved",
+															 "emailCA",
+															 "objectSign",
+															 "objCA",
+															 ]),
+												     `VSpacing(1.5)
+												     )
+											  ),
 								  "default"    	: true,
 								  ],
 
 			    `advanced_netscape_nsSslServerName :$["name" 	: "nsSslServerName",
-								  "widget"	: `VBox (
-											 `Left (`CheckBox(`id(`id_adv_cri_nsSslServerName), "critical")),
-											 `Frame ("",
-												 `VBox (`TextEntry(`id(`id_adv_nsSslServerName),
-														   "nsSslServerName"),
-													`VSpacing(1.5)	
-													)
-												 )
-											 ),
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_nsSslServerName), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_adv_nsSslServerName),
+														"nsSslServerName"),
+												     `VSpacing(1.5)	
+												     )
+											  ),
 								  "default"    	: true,
 								  ],
 								  
 			    `advanced_subject_alt_name : 	$["name" 	: "Subject Alt Name",
-								  "widget"	: `HBox(
-											`VSpacing(5),
-											`HWeight (3, `Table (`id (`id_adv_subject_alt_name),
-													     `opt (`notify, `immediate),
-													     `header (
-														      // To translators: table headers
-														      _("Kind"),
-														      _("Name")
-														      )
-													     )
-												  ),
-											`HWeight (1, `VBox(
-													   `HBox ( `HWeight (1,
-															     `PushButton (`id (`add),
-																	  `opt (`key_F3),
-																	  Label::AddButton()))),
-													   `HBox ( `HWeight (1,
-															     `PushButton (`id (`modify),
-																	  `opt (`key_F3),
-																	  Label::EditButton()))), 
-													   `HBox ( `HWeight (1,
-															     `PushButton (`id (`delete),
-																	  `opt (`key_F5),
-																	  Label::DeleteButton()))),
-													   `VStretch()
-													   )
-												  )
-											),
-								  "critical"   	: true,
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_adv_cri_subject_alt_name), _("critical"))),
+												     `VSpacing(1.5),
+												     `HBox(
+													   `VSpacing(5),
+													   `HWeight (3, `Table (`id (`id_adv_subject_alt_name),
+																`opt (`notify, `immediate),
+																`header (
+																	 // To translators: table headers
+																	 _("Kind"),
+																	 _("Name")
+																	 )
+																)
+														     ),
+													   `HWeight (1, `VBox(
+															      `HBox ( `HWeight (1,
+																		`PushButton (`id (`add),
+																			     `opt (`key_F3),
+																			     Label::AddButton()))),
+															      `HBox ( `HWeight (1,
+																		`PushButton (`id (`modify),
+																			     `opt (`key_F3),
+																			     Label::EditButton()))), 
+															      `HBox ( `HWeight (1,
+																		`PushButton (`id (`delete),
+																			     `opt (`key_F5),
+																			     Label::DeleteButton()))),
+															      `VStretch()
+															      )
+														     )
+													   ),
+												     `VSpacing(1.5)
+												 )
+											 ),
 								  "default"    	: true,
 								  ],
 
 			    `advanced_unstructured_name : 	$["name" 	: "Unstructured Name",
-								  "widget"	: `TextEntry(`id(`id_adv_unstructured_name),
-											     "Unstructured Named"),
-								  "critical"   	: true,
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_adv_cri_unstructured_name), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_adv_unstructured_name),
+														"Unstructured Named"),
+												     `VSpacing(1.5)
+												     )
+											 ),
 								  "default"    	: true,
 								  ],
 								  
 			    `expert : 				$["name" 	: _("Expert Settings"),
 								  "widget"	: `RichText(`id(`id_expert), expert_help),
-								  "critical"    : false,
 								  "default"     : false,
 								  ],
+			    
 			    `expert_key_identifier : 		$["name" 	: "Key Identifier",
-								  "widget"	: `VBox(`TextEntry(`id(`id_exp_SubjectKeyIdentifier),
-												   "Subject Key Identifier"),
-											`TextEntry(`id(`id_exp_AuthorityKeyIdentifier),
-												   "Authority Key Identifier")
-											),
-								  "critical"   	: true,
+								  "widget"	: `VBox ( `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_SubjectKeyIdentifier), _("critical"))),
+													     `TextEntry(`id(`id_exp_SubjectKeyIdentifier),
+															"Subject Key Identifier")
+													     )
+												  ),
+											  `VSpacing(1.5),
+											  `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_AuthorityKeyIdentifier), _("critical"))),
+													     `TextEntry(`id(`id_exp_AuthorityKeyIdentifier),
+															"Subject Key Identifier"),
+													     `VSpacing(1.5)
+													     )
+												  )
+											  ),
 								  "default"    	: true,
 								  ],
 
-			    `expert_netscape_settings : 	$["name" : "Netscape Settings",
-								  "widget"	: `VBox(`TextEntry(`id(`id_exp_nsBaseUrl),
-												   "nsBaseUrl"),
-											`TextEntry(`id(`id_exp_nsRevocationUrl),
-												   "nsRevocationUrl"),
-											`TextEntry(`id(`id_exp_nsCaRevocationUrl),
-												   "nsnsCaRevocationUrl"),
-											`TextEntry(`id(`id_exp_nsRenewallUrl),
-												   "nsRenewallUrl"),
-											`TextEntry(`id(`id_exp_nsCaPolicyUrl),
-												   "nsCaPolicyUrl")
-											),
-								  "critical"   	: true,
+			    `expert_netscape_settings : 	$["name" 	: "Netscape Settings",
+								  "widget"	: `Empty(),
+								  "default"    	: true,
+								  ],
+			    
+			    `expert_netscape_nsBaseUrl : 	$["name" 	: "nsBaseUrl",
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsBaseUrl), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_exp_netscape_nsBaseUrl),
+														"nsBaseUrl"),
+												     `VSpacing(1.5)
+												     )
+											 ),
+								  "default"    	: true,
+								  ],
+			    
+			    `expert_netscape_nsRevocationUrl : 	$["name" 	: "nsRevocationUrl",
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRevocationUrl), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_exp_netscape_nsRevocationUrl),
+														"nsRevocationUrl"),
+												     `VSpacing(1.5)
+												     )
+											 ),
+								  "default"    	: true,
+								  ],
+			    
+			    `expert_netscape_nsCaRevocationUrl :$["name" 	: "nsCaRevocationUrl",
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsCaRevocationUrl), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_exp_netscape_nsCaRevocationUrl),
+														"nsCaRevocationUrl"),
+												     `VSpacing(1.5)
+												     )
+											 ),
+								  "default"    	: true,
+								  ],
+			    
+			    `expert_netscape_nsRenewallUrl : 	$["name" 	: "nsRenewallUrl",
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRenewallUrl), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_exp_netscape_nsRenewallUrl),
+														"nsRenewallUrl"),
+												     `VSpacing(1.5)
+												     )
+											 ),
+								  "default"    	: true,
+								  ],
+			    
+			    `expert_netscape_nsCaPolicyUrl : 	$["name" 	: "nsCaPolicyUrl",
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsCaPolicyUrl), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_exp_netscape_nsCaPolicyUrl),
+														"nsCaPolicyUrl"),
+												     `VSpacing(1.5)
+												     )
+											 ),
 								  "default"    	: true,
 								  ],
 			    
 			    `expert_authorityInfoAccess : 	$["name" 	: "authorityInfoAccess",
-								  "widget"	: `TextEntry(`id(`id_exp_authorityInfoAccess),
-											     "authorityInfoAccess"),
-								  "critical"   	: true,
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_authorityInfoAccess), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_exp_authorityInfoAccess),
+														"authorityInfoAccess"),
+												     `VSpacing(1.5)
+												     )
+											 ),
 								  "default"    	: true,
 								  ],
+			    
 			    `expert_extendedKeyUsage : 		$["name" 	: "extendedKeyUsage",
-								  "widget"	: `TextEntry(`id(`id_exp_extendedKeyUsage),
-											     "extendedKeyUsage"),
-								  "critical"   	: true,
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_extendedKeyUsage), _("critical"))),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_exp_extendedKeyUsage),
+														"extendedKeyUsage"),
+												     `VSpacing(1.5)
+												     )
+											 ),
 								  "default"    	: true,
 								  ]
     ];
