@@ -247,5 +247,6 @@
 	until (contains ([`ok, `cancel], ui));
 	UI::CloseDialog ();
     }
-    
+
+
 }
