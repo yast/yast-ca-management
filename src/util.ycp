@@ -272,7 +272,7 @@
 				      `VSpacing (1),
 				      `TextEntry( `id (`hostname), _("&Hostname:"), hostname),
 				      `TextEntry( `id (`port), _("&Port:"), port),
-				      `ComboBox( `id (`dn), `opt(`editable), _("&DN:"), dn),
+				      `HBox (`HWeight (1, `ComboBox( `id (`dn), `opt(`editable), _("&DN:"), dn))),
 				      `TextEntry( `id (`binddn), _("&Bind DN:"), binddn),
 				      passwordTerm,
 				      `VSpacing (1),					  
