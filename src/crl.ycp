@@ -21,18 +21,18 @@
 
 {
 
-    textdomain "ca-management";
-
-    import "CaMgm";
-    import "Wizard";
-    import "Label";
-    import "Popup";
-    import "YaPI::CaManagement";
-
-    include "ca-management/util.ycp";
+    // help text 1/4
+    string CRLHelptext = _("<p>Here, see the most important values of the CRL.</p>");
+    // help text 2/4
+    CRLHelptext = CRLHelptext + _("<p>With <b>Generate CRL</b>, a new CRL will be generated.</p>");
+    // help text 3/4
+    CRLHelptext = CRLHelptext + _("<p><b>View</b> shows a complete description.</p>");	
+    // help text 4/4
+    CRLHelptext = CRLHelptext + _("<p>You can <b>Export</b> the CRL to a file or LDAP Directory.</p>");
+    
 
     /**
-     * getDescription - CRL description
+     * createCRL -  creating new CRL
      * @param CA name
      * @return `again
      */
@@ -174,67 +174,74 @@
     }
 
     /**
-     * CRL Overview 
-     * @return  'back, 'abort
+     * Dialog Tab - CRL - 
+     * @return term for the CRL of a selected CA
      */
-    define symbol crl () ``{
+    term getCRLTab () {
+        term contents = `VBox (
+			       `VSpacing (1),
+			       `HBox (
+				      `HSpacing (1),
+				      `RichText(`id(`textinfo),""),
+				      `HSpacing (1)
+				      ),
+			       `HBox (
+				      `HSpacing (1),
+				      `PushButton (`id (`gererateCRL), _("&Generate CRL")),
+				      `PushButton (`id (`view) , _("View")),
+				      `HStretch(),
+				      `MenuButton (_("Export"),
+						   [
+						    `item(`id(`exportFile), _("to &File") ),
+						    `item(`id(`exportLDAP), _("to &LDAP"))
+						    ]
+						   ),
+				      `HSpacing (1)
+				      )
+			       );
+	return contents;
+    }
 
-	integer i = 0;
+    /**
+     * Initialize the tab of the dialog
+     */
+    void initCRLTab () {
+        UI::ChangeWidget( `id(`textinfo), `Value, getCRLDescription (CaMgm::currentCA));	
+    }
+
+
+    /**
+     * Store settings of a tab of a dialog
+     */
+    void storeCRLTab () {
 	
-        // help text 1/4
-        string helptext = _("<p>Here, see the most important values of the CRL.</p>");
-        // help text 2/4
-        helptext = helptext + _("<p>With <b>Generate CRL</b>, a new CRL will be generated.</p>");
-        // help text 3/4
-        helptext = helptext + _("<p><b>View</b> shows a complete description.</p>");	
-        // help text 4/4
-        helptext = helptext + _("<p>You can <b>Export</b> the CRL to a file or LDAP Directory.</p>");
+    }
 
-        term contents = `VBox ();
-        contents = add (contents, `RichText(`id(`textinfo),""));
-        term buttons = `HBox ();
-        // To translators: pushbutton label
-        buttons = add (buttons, `PushButton (`id (`gererateCRL), _("&Generate CRL")));
-	buttons = add (buttons, `PushButton (`id (`view) , _("View")));	
-	buttons = add (buttons, `HStretch());
-	buttons = add (buttons, `MenuButton( _("Export"),
-					      [
-					       `item(`id(`exportFile), _("to &File") ),
-					       `item(`id(`exportLDAP), _("to &LDAP"))
-					       ]
-					      ));
-	
-	contents = add (contents, buttons);
-
-                                // To translators: dialog label
-        Wizard::SetContents ( _("Certificate Revocation List (CRL) for CA: ") + CaMgm::currentCA, contents, helptext, true, true);
-        UI::ChangeWidget( `id(`textinfo), `Value, getCRLDescription (CaMgm::currentCA));
-
-        symbol ui = nil;
-
-        repeat
-        {
-            ui = (symbol) UI::UserInput ();
-	    if (ui == `gererateCRL)
-	    {
-		ui = createCRL (CaMgm::currentCA);
-	    }
-	    if (ui == `view)
-	    {
-		showLongCRLDescription (CaMgm::currentCA);
-	    }	    	
-	    if (ui == `exportLDAP)
-	    {
-		exportToLDAP ("CRL", CaMgm::currentCA, "" ,"", "");
-	    }
-	    if (ui == `exportFile)
-	    {
-		exportCRLtoFile (CaMgm::currentCA); 
-	    }	    
-        }
-        until (contains ([`back, `abort, `createSubCA, `again, `next], ui));
-
-        return ui;
+    /**
+     * Handle events in a tab of a dialog
+     */
+    symbol handleCRLTab (map event) {
+	any ui = event["ID"]:nil;    
+	if (ui == `gererateCRL)
+	{
+	    ui = createCRL (CaMgm::currentCA);
+	}
+	if (ui == `view)
+	{
+	    showLongCRLDescription (CaMgm::currentCA);
+	}	    	
+	if (ui == `exportLDAP)
+	{
+	    exportToLDAP ("CRL", CaMgm::currentCA, "" ,"", "");
+	}
+	if (ui == `exportFile)
+	{
+	    exportCRLtoFile (CaMgm::currentCA); 
+	}
+	if (ui == `createSubCA)
+	{
+	}
+	return nil;	
     }
 
 }
