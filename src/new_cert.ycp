@@ -52,10 +52,17 @@
      */
     define symbol new_cert1 () ``{
 
-        // help text 1/4
-        string helptext = _("<p>Help Text 1.</p>");
-        // help text 2/4
-        helptext = helptext + _("<p>Help Text 2.");
+        // help text 1/5
+        string helptext = _("<p>In order to generate a new ceritficate or CA some entries are needed: </p>");
+        // help text 2/5
+        helptext = helptext + _("<p><b>Common Name</b> is the name of the User/Admistrator/Server.</p>");
+        // help text 2/5
+        helptext = helptext + _("<p><b>EMAILs</b> are valid EMAIL addresses of the User or Server-Admistrator.</p>");
+        // help text 4/5
+        helptext = helptext + _("<p><b>Locality</b> and <b>State</p> are optional.</p>");
+        // help text 5/5
+        helptext = helptext + _("<p><b>Country</b> is the ISO signature of a country.</p>");
+	
 
         list<term> emailTermList = getEMAILList ();
 	
@@ -161,11 +168,21 @@
      */
     define symbol new_cert2 () ``{
 
-        // help text 1/4
-        string helptext = _("<p>Help Text 1.</p>");
-        // help text 2/4
-        helptext = helptext + _("<p>Help Text 2.");
+        // help text 1/5
+        string helptext = _("<p>Each certrificate needs a <B>password</B>. For verification reasons please reenter it in the next field.</p>");
+        // help text 2/5
+        helptext = helptext + _("<p><b>CA Password</b> is the password of the CA to which the new certificate belongs.</p>");
 
+        // help text 3/5
+        helptext = helptext + _("<p>Each certificate has it own <b>Key Lenght</b>. Please take care that some applications which use certifications, need special key lengths. Have a look into the application manual.</p>");
+
+        // help text 4/5
+        helptext = helptext + _("<p>The ceritfication will be valid for only specific period. The validation period of a user certificate will be 1 year.</p>");
+
+        // help text 5/5
+        helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you use this option, please take care that SuSE cannot guarentee that the generated certification will work correctly.</p>");
+
+	
         term contents = `VBox ();
         contents = add (contents, `Password( `id (`id_password), _("&Password"), CaMgm::password));
         contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password"), CaMgm::verifyPassword));	
@@ -219,7 +236,7 @@
         // help text 1/4
         string helptext = _("<p>This frame gives an overview about all setting for the certificate which will be created.</p>");
         // help text 2/4
-        helptext = helptext + _("<p>Klick <b>finish</b> to create the certificate.</p>");
+        helptext = helptext + _("<p>Klick <b>Create</b> to generate the certificate.</p>");
 
 	string text = _("<br><h3>Summary</h3>");
 	text = text + "<pre>";
