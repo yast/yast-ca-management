@@ -15,7 +15,8 @@
     include "wizard/sequencer.ycp";
 
     include "ca-management/popup.ycp";
-    include "ca-management/startup.ycp";    
+    include "ca-management/startup.ycp";
+    include "ca-management/new_cert.ycp";        
 
 /**
  * Main workflow of the CA management configuration
@@ -25,7 +26,7 @@ define symbol MainSequence() ``{
 
     map aliases = $[
         "startup"        : ``(Startup()),
-//      "createRootCA"   : ``(createRootCA ()),
+        "new_cert1"   	 : ``(new_cert1 ()),
 //        "ca_main"        : ``(CAMain ()),
 //        "ca_certificate" : ``(CACertificate ()),
 //        "ca_crl"         : ``(CACrl ()),
@@ -35,9 +36,13 @@ define symbol MainSequence() ``{
         "ws_start"      : "startup",
         "startup"       : $[
                             `next       : `abort,
-//                          `createRoot : "createRootCA",                   
+			    `createRoot : "new_cert1",                   
 //                          `enter      : "ca_main",
                             ],
+        "new_cert1"       : $[
+                            `next       : `abort,
+			    `again : "new_cert1",                   
+                            ],	
 //        "ca_main"       : $[
 //                            `certificate: "ca_certificate",
 //                            `crl        : "ca_crl",

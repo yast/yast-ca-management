@@ -1,0 +1,148 @@
+/**
+ *
+ * File:
+ *   new_cert.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   Creating a new CA/Certificate
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Creating a new CA/Certificate
+ *
+ */
+
+
+{
+
+    textdomain "ca_mgm";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    import "CaManagement";
+
+
+    /**
+     * Creates EMAIL items
+     * @return a list EMAIL items formated for a UI table
+     */
+    define list<term> getEMAILList () ``{
+        list<term> result = [];
+        integer i = 0;
+
+	foreach (string element, CaMgm::emailList, ``{
+	    result = add (result, `item (`id (i), element ) );
+	    i = i + 1;
+	});
+        return result;
+    }
+    
+    /**
+     * Creating new CA/Certificate ( 1. step )
+     * @return `next, 'back, 'cancel
+     */
+    define symbol new_cert1 () ``{
+
+        // help text 1/4
+        string helptext = _("<p>Help Text 1.</p>");
+        // help text 2/4
+        helptext = helptext + _("<p>Help Text 2.");
+
+        list<term> emailTermList = getEMAILList ();
+	
+        term buttons = `VBox ();
+	// To translators: pushbutton label
+	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`deleteEmail), `opt (`key_F5), _("&Delete")))));
+        buttons = add (buttons, `VStretch());
+	// To translators: pushbutton label
+        buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`addEmail), `opt (`key_F3), _("&Add")))));
+
+	term editEmail = `VBox ();
+	editEmail = add (editEmail, `HBox(
+					  `VSpacing(5),
+					  `Table (`id (`table), `opt (`notify, `immediate),
+                                          `header (
+                                              // To translators: table headers
+                                              _("EMAIL Address(es)")),
+                                          emailTermList)));
+	editEmail = add (editEmail, `TextEntry (`id (`id_emailname ), "" ) );
+	
+        term emails = `HBox ();
+        emails = add (emails, `HWeight (3, editEmail));
+        emails = add (emails, `HWeight (1, buttons));
+
+        term contents = `VBox ();
+        contents = add (contents, `TextEntry( `id (`id_commonName), _("Common Name"), CaMgm::commonName ));
+        contents = add (contents, emails);
+        contents = add (contents, `TextEntry( `id (`id_organisation), _("Organsisation"), CaMgm::organisation ));
+        contents = add (contents, `TextEntry( `id (`id_organisationUnit), _("Organsisation Unit"), CaMgm::organisationUnit ));
+        contents = add (contents, `TextEntry( `id (`id_locality), _("Locality"), CaMgm::locality ));
+        contents = add (contents, `TextEntry( `id (`id_state), _("State"), CaMgm::state ));
+        contents = add (contents, `Left (`ComboBox( `id (`id_country), _("Country"),
+					     [
+					      `item(`id(`countryDE), "DE", CaMgm::country == "DE" ),
+					      `item(`id(`countryEN), "EN", CaMgm::country == "EN" )
+					      ] )));
+
+                                // To translators: dialog label
+        Wizard::SetContents (_("Create new Certification"), contents, helptext, true, true);
+
+        symbol ui = nil;
+
+        repeat
+        {
+            boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
+            UI::ChangeWidget (`id (`deleteEmail), `Enabled, anyitems);
+
+            ui = (symbol) UI::UserInput ();
+
+            if (ui == `next)
+            {
+		CaMgm::commonName = (string) UI::QueryWidget(`id(`id_commonName), `Value);
+		CaMgm::organisation = (string) UI::QueryWidget(`id(`id_organisation), `Value);
+		CaMgm::organisationUnit = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
+		CaMgm::locality = (string) UI::QueryWidget(`id(`id_locality), `Value);
+		CaMgm::state = (string) UI::QueryWidget(`id(`id_state), `Value);
+		if (UI::QueryWidget(`id(`id_countery), `Value) == `countryDE)
+		{
+		    CaMgm::country = "DE";
+		}
+		else
+		{
+		    CaMgm::country = "EN";
+		}
+	    }
+
+            if (ui == `addEmail)
+            {
+		string selection = (string) UI::QueryWidget(`id(`id_emailname), `Value);
+		if (size(selection) > 0)
+		{
+		    CaMgm::emailList = add (CaMgm::emailList, selection);
+		}
+		ui = `again;
+	    }	    
+            if (ui == `deleteEmail)
+            {
+                integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+                if (is(id, integer))
+                {
+		    CaMgm::emailList = remove (CaMgm::emailList, id);		    
+                }
+		ui = `again;		
+            }
+        }
+        until (contains ([`back, `again, `next, `abort], ui));
+
+        return ui;
+    }
+
+}

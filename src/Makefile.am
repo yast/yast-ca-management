@@ -5,6 +5,7 @@ myincludedir = @yncludedir@/ca-management
 myinclude_DATA =		\
 	popup.ycp		\
 	startup.ycp		\
+	new_cert.ycp		\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	\
