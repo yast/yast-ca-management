@@ -321,10 +321,25 @@
 	    
 	    if (ui == `delete)
 	    {
-		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		    CaMgm::currentCertificate = (string) certificateID[id]:"";		    
-
+		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+		CaMgm::currentCertificate = (string) certificateID[id]:"";		    
+		if (Popup::ContinueCancelHeadline (_("Delete"), _("Deleting current certificate ?")))
+		{
+		    boolean ret = nil;
+//		    ret = (boolean) YaPI::CaManagement::DeleteCertificate ($["caName": CaMgm::currentCA,                   FIXME
+//									     "certificate" : CaMgm::currentCertificate
+//									   ]);
+		    y2milestone ("DeleteCertificate(%1) return %2", $["caName": CaMgm::currentCA,
+								      "certificate" : CaMgm::currentCertificate
+				 ],
+				 ret);
+		    if (ret == nil
+			|| ret == false)
+		    {
+			showErrorCaManagement ();
+		    }
 		    ui = `again;
+		}
 	    }
 	    if (ui == `revoke)
 	    {
