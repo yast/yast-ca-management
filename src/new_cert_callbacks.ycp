@@ -221,6 +221,14 @@
 	
 	return error;
     }
+    define void default_advanced_basic_constaints() ``{
+	y2debug("calling default_advanced_basic_constaints");
+
+	CaMgm::adv_cri_ca = sav_adv_cri_ca;
+	CaMgm::adv_ca = sav_adv_ca;
+	CaMgm::adv_pathlen = sav_adv_pathlen;
+	CaMgm::adv_pathlenValue = sav_adv_pathlenValue;
+    }
 
     
     define void get_advanced_CRL_distribution_point() ``{
@@ -238,7 +246,13 @@
 	
 	return error;	
     }
+    define void default_advanced_CRL_distribution_point() ``{
+	y2debug("calling default_advanced_CRL_distribution_point");
 
+	CaMgm::adv_cri_distribution_point = sav_adv_cri_distribution_point;
+	CaMgm::adv_distribution_point = sav_adv_distribution_point;
+    }
+    
     
     define void get_advanced_challange_password() ``{
 	y2debug("calling get_advanced_challange_password");
@@ -253,7 +267,12 @@
 	
 	return error;
     }	
+    define void default_advanced_challange_password() ``{
+	y2debug("calling default_advanced_challange_password");
 
+	CaMgm::adv_challange_password = sav_adv_challange_password;
+    }
+    
     
     define void get_advanced_issuer_alt_name() ``{
 	y2debug("calling get_advanced_issuer_alt_name");
@@ -279,6 +298,13 @@
 	
 	return error;
     }
+    define void default_advanced_issuer_alt_name() ``{
+	y2debug("calling default_advanced_issuer_alt_name");
+
+	CaMgm::adv_cri_issuer_alt_name = sav_adv_cri_issuer_alt_name;
+	CaMgm::adv_copy_issuer_alt_name = sav_adv_copy_issuer_alt_name;
+    }
+    
 
     define term issuer_box = `HBox( `VSpacing(10),
 				     `VBox (
@@ -462,6 +488,20 @@
 	
 	return error;
     }
+    define void default_advanced_key_usage() ``{
+	y2debug("calling default_advanced_key_usage");
+	
+	CaMgm::adv_cri_key_usage = sav_adv_cri_key_usage;
+	CaMgm::adv_digitalSignature = sav_adv_digitalSignature;
+	CaMgm::adv_nonRepudiation = sav_adv_nonRepudiation;
+	CaMgm::adv_cRLSign = sav_adv_cRLSign;
+	CaMgm::adv_keyEncipherment = sav_adv_keyEncipherment;
+	CaMgm::adv_dataEncipherment = sav_adv_dataEncipherment;
+	CaMgm::adv_encipherOnly = sav_adv_encipherOnly;
+	CaMgm::adv_keyAgreement = sav_adv_keyAgreement;
+	CaMgm::adv_keyCertSign = sav_adv_keyCertSign;
+	CaMgm::adv_decipherOnly = sav_adv_decipherOnly;
+    }    
 
     
     define void get_advanced_netscape_nsComment() ``{
@@ -479,7 +519,13 @@
 	
 	return error;
     }	
+    define void default_advanced_netscape_nsComment() ``{
+	y2debug("calling default_advanced_netscape_nsComment");
 
+	CaMgm::adv_cri_nsComment = sav_adv_cri_nsComment;
+	CaMgm::adv_nsComment = sav_adv_nsComment;
+    }
+    
     
     define void get_advanced_netscape_nsCertType() ``{
 	y2debug("calling get_advanced_netscape_nsCertType");
@@ -510,6 +556,19 @@
 	
 	return error;
     }
+    define void default_advanced_netscape_nsCertType() ``{
+	y2debug("calling default_advanced_netscape_nsCertType");
+
+	CaMgm::adv_cri_nsCertType = sav_adv_cri_nsCertType;
+	CaMgm::adv_client = sav_adv_client;
+	CaMgm::adv_server = sav_adv_server;
+	CaMgm::adv_sslCA = sav_adv_sslCA;
+	CaMgm::adv_email = sav_adv_email;
+	CaMgm::adv_reserved = sav_adv_reserved;
+	CaMgm::adv_emailCA = sav_adv_emailCA;
+	CaMgm::adv_objectSign = sav_adv_objectSign;
+	CaMgm::adv_objCA = sav_adv_objCA;
+    }
 
     
     define void get_advanced_netscape_nsSslServerName() ``{
@@ -526,6 +585,12 @@
 	CaMgm::adv_nsSslServerName = (string) UI::QueryWidget(`id(`id_adv_nsSslServerName), `Value);		
 	
 	return error;
+    }
+    define void default_advanced_netscape_nsSslServerName() ``{
+	y2debug("calling default_advanced_netscape_nsSslServerName");
+
+	CaMgm::adv_cri_nsSslServerName = sav_adv_cri_nsSslServerName;
+	CaMgm::adv_nsSslServerName = sav_adv_nsSslServerName;
     }
 
     
@@ -553,6 +618,13 @@
 	
 	return error;
     }
+    define void default_advanced_subject_alt_name() ``{
+	y2debug("calling default_advanced_subject_alt_name");
+
+	CaMgm::adv_cri_subject_alt_name = sav_adv_cri_subject_alt_name;
+	CaMgm::adv_copy_subject_alt_name = sav_adv_copy_subject_alt_name;
+    }
+    
 
     define term subject_box = `HBox( `VSpacing(10),
 				     `VBox (
@@ -716,7 +788,12 @@
 	
 	return error;
     }	
+    define void default_advanced_unstructured_name() ``{
+	y2debug("calling default_advanced_unstructured_name");
 
+	CaMgm::adv_unstructured_name = sav_adv_unstructured_name;
+    }
+    
     
     define void get_expert_key_identifier() ``{
 	y2debug("calling get_expert_key_identifier");
@@ -736,7 +813,15 @@
 	CaMgm::exp_authorityKeyIdentifier = (string) UI::QueryWidget(`id(`id_exp_authorityKeyIdentifier), `Value);		
 	
 	return error;
-    }	
+    }
+    define void default_expert_key_identifier() ``{
+	y2debug("calling default_expert_key_identifier");
+
+	CaMgm::exp_cri_subjectKeyIdentifier = sav_exp_cri_subjectKeyIdentifier;
+	CaMgm::exp_subjectKeyIdentifier = sav_exp_subjectKeyIdentifier;
+	CaMgm::exp_cri_authorityKeyIdentifier = sav_exp_cri_authorityKeyIdentifier;
+	CaMgm::exp_authorityKeyIdentifier = sav_exp_authorityKeyIdentifier;
+    }	    
 
     
     define void get_expert_netscape_nsBaseUrl() ``{
@@ -754,7 +839,13 @@
 	
 	return error;
     }	
+    define void default_expert_netscape_nsBaseUrl() ``{
+	y2debug("calling default_expert_netscape_nsBaseUrl");
 
+	CaMgm::exp_cri_netscape_nsBaseUrl = sav_exp_cri_netscape_nsBaseUrl;
+	CaMgm::exp_netscape_nsBaseUrl = sav_exp_netscape_nsBaseUrl;
+    }
+    
     
     define void get_expert_netscape_nsRevocationUrl() ``{
 	y2debug("calling get_expert_netscape_nsRevocationUrl");
@@ -770,7 +861,13 @@
 	CaMgm::exp_netscape_nsRevocationUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsRevocationUrl), `Value);		
 	
 	return error;
-    }	
+    }
+    define void default_expert_netscape_nsRevocationUrl() ``{
+	y2debug("calling default_expert_netscape_nsRevocationUrl");
+
+	CaMgm::exp_cri_netscape_nsRevocationUrl = sav_exp_cri_netscape_nsRevocationUrl;
+	CaMgm::exp_netscape_nsRevocationUrl = sav_exp_netscape_nsRevocationUrl;
+    }	    
 
     
     define void get_expert_netscape_nsCaRevocationUrl() ``{
@@ -788,6 +885,12 @@
 	
 	return error;
     }	
+    define void default_expert_netscape_nsCaRevocationUrl() ``{
+	y2debug("calling default_expert_netscape_nsCaRevocationUrl");
+
+	CaMgm::exp_cri_netscape_nsCaRevocationUrl = sav_exp_cri_netscape_nsCaRevocationUrl;
+	CaMgm::exp_netscape_nsCaRevocationUrl = sav_exp_netscape_nsCaRevocationUrl;
+    }	
 
     
     define void get_expert_netscape_nsRenewalUrl() ``{
@@ -804,7 +907,13 @@
 	CaMgm::exp_netscape_nsRenewalUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsRenewalUrl), `Value);		
 	
 	return error;
-    }	
+    }
+    define void default_expert_netscape_nsRenewalUrl() ``{
+	y2debug("calling default_expert_netscape_nsRenewalUrl");
+
+	CaMgm::exp_cri_netscape_nsRenewalUrl = sav_exp_cri_netscape_nsRenewalUrl;
+	CaMgm::exp_netscape_nsRenewalUrl = sav_exp_netscape_nsRenewalUrl;
+    }	    
 
     
     define void get_expert_netscape_nsCaPolicyUrl() ``{
@@ -822,7 +931,13 @@
 	
 	return error;
     }	
-
+    define void default_expert_netscape_nsCaPolicyUrl() ``{
+	y2debug("calling default_expert_netscape_nsCaPolicyUrl");
+	
+	CaMgm::exp_cri_netscape_nsCaPolicyUrl = sav_exp_cri_netscape_nsCaPolicyUrl;
+	CaMgm::exp_netscape_nsCaPolicyUrl = sav_exp_netscape_nsCaPolicyUrl;
+    }
+    
     
     define void get_expert_authorityInfoAccess() ``{
 	y2debug("calling get_expert_authorityInfoAccess");
@@ -838,7 +953,13 @@
 	CaMgm::exp_authorityInfoAccess = (string) UI::QueryWidget(`id(`id_exp_authorityInfoAccess), `Value);		
 	
 	return error;
-    }	
+    }
+    define void default_expert_authorityInfoAccess() ``{
+	y2debug("calling default_expert_authorityInfoAccess");
+
+	CaMgm::exp_cri_authorityInfoAccess = sav_exp_cri_authorityInfoAccess;
+	CaMgm::exp_authorityInfoAccess = sav_exp_authorityInfoAccess;
+    }	    
 
     
     define void get_expert_extendedKeyUsage() ``{
@@ -856,7 +977,12 @@
 	
 	return error;
     }
-    
+    define void default_expert_extendedKeyUsage() ``{
+	y2debug("calling default_expert_extendedKeyUsage");
+
+	CaMgm::exp_cri_extendedKeyUsage = sav_exp_cri_extendedKeyUsage;
+	CaMgm::exp_extendedKeyUsage = sav_exp_extendedKeyUsage;
+    }    
 
     
 }

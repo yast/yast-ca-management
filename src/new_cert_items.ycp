@@ -72,7 +72,6 @@
 
     define map itemMap = $[ `advanced : 			$["name"	: _("Advanced Settings"),
 								  "widget"	: `RichText(`id(`id_advanced), advanced_help),
-								  "default"     : false,
 								  ],
 
 			    `advanced_basic_constaints : 	$["name" 	: "Basic Constaints",
@@ -103,7 +102,7 @@
 												    `VSpacing(1.5)
 												    )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_basic_constaints()),
 								  "getCallback" : ``(get_advanced_basic_constaints()),
 								  "setCallback" : ``(set_advanced_basic_constaints()),								  
 								  ],
@@ -123,7 +122,7 @@
 											 ),
 								  "getCallback" : ``(get_advanced_CRL_distribution_point()),
 								  "setCallback" : ``(set_advanced_CRL_distribution_point()),		  
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_CRL_distribution_point()),		  
 								  ],
 
 			    `advanced_challange_password : 	$["name" : "Challange Password",
@@ -135,7 +134,7 @@
 												     `VSpacing(1.5)
 												     )
 											  ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_challange_password()),
 								  "getCallback" : ``(get_advanced_challange_password()),
 								  "setCallback" : ``(set_advanced_challange_password()),
 								  ],
@@ -179,7 +178,7 @@
 												     `VSpacing(1.5)
 												     )
 											  ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_issuer_alt_name()),
 								  "getCallback" : ``(get_advanced_issuer_alt_name()),
 								  "setCallback" : ``(set_advanced_issuer_alt_name()),
 								  "addCallback" : ``(add_advanced_issuer_alt_name()),
@@ -234,14 +233,13 @@
 												 `VSpacing(1.5)
 												 )
 											  ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_key_usage()),
 								  "getCallback" : ``(get_advanced_key_usage()),
 								  "setCallback" : ``(set_advanced_key_usage()),
 								  ],
 
 			    `advanced_netscape_settings : 	$["name" 	: "Netscape Settings",
 								  "widget"	: `Empty(),
-								  "default"    	: false,
 								  ],
 
 			    `advanced_netscape_nsComment : 	$["name" 	: "nsComment",
@@ -256,7 +254,7 @@
 												    `VSpacing(1.5)
 												    )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_netscape_nsComment()),
 								  "getCallback" : ``(get_advanced_netscape_nsComment()),
 								  "setCallback" : ``(set_advanced_netscape_nsComment()),
 								  ],
@@ -303,7 +301,7 @@
 												     `VSpacing(1.5)
 												     )
 											  ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_netscape_nsCertType()),
 								  "getCallback" : ``(get_advanced_netscape_nsCertType()),
 								  "setCallback" : ``(set_advanced_netscape_nsCertType()),
 								  ],
@@ -319,7 +317,7 @@
 												     `VSpacing(1.5)
 												     )
 											  ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_netscape_nsSslServerName()),
 								  "getCallback" : ``(get_advanced_netscape_nsSslServerName()),
 								  "setCallback" : ``(set_advanced_netscape_nsSslServerName()),
 								  ],
@@ -365,7 +363,7 @@
 												     `VSpacing(1.5)
 												 )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_subject_alt_name()),
 								  "getCallback" : ``(get_advanced_subject_alt_name()),
 								  "setCallback" : ``(set_advanced_subject_alt_name()),
 								  "addCallback"	: ``(add_advanced_subject_alt_name()),
@@ -382,14 +380,13 @@
 												     `VSpacing(1.5)
 												     )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_advanced_unstructured_name()),
 								  "getCallback" : ``(get_advanced_unstructured_name()),
 								  "setCallback" : ``(set_advanced_unstructured_name()),
 								  ],
 
 			    `expert : 				$["name" 	: _("Expert Settings"),
 								  "widget"	: `RichText(`id(`id_expert), expert_help),
-								  "default"     : false,
 								  ],
 
 			    `expert_key_identifier : 		$["name" 	: "Key Identifier",
@@ -412,14 +409,13 @@
 													     )
 												  )
 											  ),
-								  "default"    	: true,
+								  "default"    	: ``(default_expert_key_identifier()),
 								  "getCallback" : ``(get_expert_key_identifier()),
 								  "setCallback" : ``(set_expert_key_identifier()),
 								  ],
 
 			    `expert_netscape_settings : 	$["name" 	: "Netscape Settings",
 								  "widget"	: `Empty(),
-								  "default"    	: false,
 								  ],
 
 			    `expert_netscape_nsBaseUrl : 	$["name" 	: "nsBaseUrl",
@@ -433,7 +429,7 @@
 												     `VSpacing(1.5)
 												     )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_expert_netscape_nsBaseUrl()),
 								  "getCallback" : ``(get_expert_netscape_nsBaseUrl()),
 								  "setCallback" : ``(set_expert_netscape_nsBaseUrl()),
 								  ],
@@ -449,7 +445,7 @@
 												     `VSpacing(1.5)
 												     )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_expert_netscape_nsRevocationUrl()),
 								  "getCallback" : ``(get_expert_netscape_nsRevocationUrl()),
 								  "setCallback" : ``(set_expert_netscape_nsRevocationUrl()),
 								  ],
@@ -465,7 +461,7 @@
 												     `VSpacing(1.5)
 												     )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_expert_netscape_nsCaRevocationUrl()),
 								  "getCallback" : ``(get_expert_netscape_nsCaRevocationUrl()),
 								  "setCallback" : ``(set_expert_netscape_nsCaRevocationUrl()),
 								  ],
@@ -481,7 +477,7 @@
 												     `VSpacing(1.5)
 												     )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_expert_netscape_nsRenewalUrl()),
 								  "getCallback" : ``(get_expert_netscape_nsRenewalUrl()),
 								  "setCallback" : ``(set_expert_netscape_nsRenewalUrl()),
 								  ],
@@ -497,7 +493,7 @@
 												     `VSpacing(1.5)
 												     )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_expert_netscape_nsCaPolicyUrl()),
 								  "getCallback" : ``(get_expert_netscape_nsCaPolicyUrl()),
 								  "setCallback" : ``(set_expert_netscape_nsCaPolicyUrl()),
 								  ],
@@ -513,7 +509,7 @@
 												     `VSpacing(1.5)
 												     )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_expert_authorityInfoAccess()),
 								  "getCallback" : ``(get_expert_authorityInfoAccess()),
 								  "setCallback" : ``(set_expert_authorityInfoAccess()),
 								  ],
@@ -529,7 +525,7 @@
 												     `VSpacing(1.5)
 												     )
 											 ),
-								  "default"    	: true,
+								  "default"    	: ``(default_expert_extendedKeyUsage()),
 								  "getCallback" : ``(get_expert_extendedKeyUsage()),
 								  "setCallback" : ``(set_expert_extendedKeyUsage()),
 								  ]

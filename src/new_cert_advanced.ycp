@@ -93,7 +93,17 @@
 	    // "Default" button
 	    if (ret == `default)
 	    {
-
+		map item = itemMap[lastItem]:$[];
+		any function = item["default"]:nil;
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		}
+		function = item["getCallback"]:nil;
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		}		
 	    }
 	    else 
 	    {
@@ -191,10 +201,18 @@
 			// showing concerning input fields
 			UI::ReplaceWidget (`id(`replace), item["widget"]:`Empty() );
 			// enable/disable Default button
-			UI::ChangeWidget (`id (`default), `Enabled, item["default"]:true );
+			any function = item["default"]:nil;
+			if (function != nil)
+			{
+			    UI::ChangeWidget (`id (`default), `Enabled, true );
+			}
+			else
+			{
+			    UI::ChangeWidget (`id (`default), `Enabled, false );
+			}
 			
 			// getting values
-			any function = item["getCallback"]:nil;
+			function = item["getCallback"]:nil;
 			if (function != nil)
 			{
 			    any ret = eval(function);
