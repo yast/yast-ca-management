@@ -34,7 +34,7 @@
 
     define string expert_help = advanced_help + _("<P>Please take care that wrong entries can make the certificate unuseable.</P>");
 
-    global list itemList = [
+    define list itemList = [
        `item(`id(`advanced), _("Advanced Settings"), true,
 	     [
 	      `item(`id(`advanced_basic_constaints),"Basic Constaints"),
@@ -70,7 +70,7 @@
 	      ]
 	     )];
 
-    global map itemMap = $[ `advanced : 			$["name"	: _("Advanced Settings"),
+    define map itemMap = $[ `advanced : 			$["name"	: _("Advanced Settings"),
 								  "widget"	: `RichText(`id(`id_advanced), advanced_help),
 								  "default"     : false,
 								  ],
@@ -132,7 +132,7 @@
 														      CaMgm::adv_cri_challange_password)),
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_adv_challange_password),
-														"Challagen Password",
+														"Challage Password",
 														CaMgm::adv_challange_password),
 												     `VSpacing(1.5)
 												     )
@@ -411,7 +411,7 @@
 															      _("critical"),
 															      CaMgm::exp_cri_AuthorityKeyIdentifier)),
 													     `TextEntry(`id(`id_exp_AuthorityKeyIdentifier),
-															"Subject Key Identifier",
+															"Authority Key Identifier",
 															CaMgm::exp_AuthorityKeyIdentifier),
 													     `VSpacing(1.5)
 													     )

@@ -30,13 +30,14 @@ global string currentCA = "";
 /**
  * variables for new CA/Certificate
  */
-global list<string> emailList = [];
+global list<map> emailList = [];
 global string 	commonName = "";
+global string 	CAName = "";
 global string 	organisation = "";
 global string 	organisationUnit = "";
 global string 	locality = "";
 global string 	state = "";
-global string 	country = "EN";
+global string 	country = "GB";
 
 global string 	password = "";
 global string 	verifyPassword = "";
