@@ -147,6 +147,10 @@ $cert = ReadRequest($valueMap)
 
   Returns a request as plain text or parsed map.
 
+$request = ImportRequest($valueMap)
+
+  Import a request in a CA repository.
+
 
 =head1 COMMON PARAMETER
 
@@ -5263,6 +5267,189 @@ sub ReadRequestList {
     return $ret;
 }
 
+
+=item *
+C<$request = ImportRequest($valueMap)>
+
+Import a request in a CA repository.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* inFile 
+
+* data
+
+* importFormat (default PEM)
+
+B<inFile> is the path to a request.
+B<data> the request data directly 
+
+One of B<inFile> or B<data> is required.
+
+B<importFormat> can be "PEM" or "DER". Default is PEM.
+
+The return value is "undef" on an error and the request name on success.
+
+EXAMPLE:
+
+ my $data = {
+             caName        => 'My_CA',
+             inFile        => '/media/floppy/my_request.pem',
+             importFormat  => 'PEM'
+            };
+
+    my $res = YaPI::CaManagement->ImportRequest($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "$res\n";
+    }
+
+=cut
+
+BEGIN { $TYPEINFO{ImportRequest} = [
+                                    "function", 
+                                    "string", 
+                                    ["map", "string", "any"] 
+                                   ]; }
+sub ImportRequest {
+    my $self = shift;
+    my $data = shift;
+    my $pemReq = "";
+
+    if (! defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+                                          # parameter check failed
+        return $self->SetError(summary => __("Missing parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    my $caName = $data->{'caName'};
+
+    if(defined $data->{inFile} && $data->{inFile} ne "") {
+        my $size = SCR->Read(".target.size", $data->{inFile});
+        if ($size <= 0) {
+            return $self->SetError(summary => __("Request not found in")." '$data->{inFile}'",
+                                   code => "FILE_DOES_NOT_EXIST");
+        }
+        
+        $data->{data} = SCR->Read(".target.string",$data->{inFile});
+        if(! defined $data->{data}) {
+            return $self->SetError(summary => "Can not read the request.",
+                                   code => "OPEN_FAILED");
+        }
+    }
+
+    if(! defined $data->{data} || $data->{data} eq "") {
+        return $self->SetError(summary => "No request data found.",
+                               code => "OPEN_FAILED");
+    }
+    
+    if(defined $data->{importFormat} && $data->{importFormat} eq "DER") {
+        
+        $pemReq = SCR->Execute(".openssl.dataConvert", $caName, { DATATYPE => "REQ",
+                                                                  INFORM   => "DER",
+                                                                  OUTFORM  => "PEM",
+                                                                  DATA     => $data->{data}
+                                                                });
+        if(! defined $pemReq) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+    } else {
+        my $beginReq = "-----BEGIN[\\w\\s]+[-]{5}";
+        my $endReq   = "-----END[\\w\\s]+[-]{5}";
+        ( $pemReq ) = ( $data->{'data'} =~ /($beginReq[\S\s\n]+$endReq)/ );
+        
+        if(! defined $pemReq || $pemReq eq "") {
+            return $self->SetError(summary => "Invalid request data.",
+                                   code => "PARSING_ERROR");
+        }
+    }
+
+    my $hash = {
+                DATA   => $pemReq,
+                INFORM => "PEM"
+               };
+
+    my $parsed = SCR->Read(".openssl.getParsedREQ", $caName, $hash);
+    if (not defined $parsed) {
+        return $self->SetError(%{SCR->Error(".openssl")});
+    }
+    my $dnHash = {};
+
+    if(exists  $parsed->{DN_HASH}->{CN}->[0] &&
+       defined $parsed->{DN_HASH}->{CN}->[0] &&
+       $parsed->{DN_HASH}->{CN}->[0] ne "")
+      {
+          $dnHash->{'commonName'} = $parsed->{DN_HASH}->{CN}->[0];
+      }
+    if(exists  $parsed->{DN_HASH}->{C}->[0] &&
+       defined $parsed->{DN_HASH}->{C}->[0] &&
+       $parsed->{DN_HASH}->{C}->[0] ne "")
+      {
+          $dnHash->{'country'} = $parsed->{DN_HASH}->{C}->[0];
+      }
+    if(exists  $parsed->{DN_HASH}->{OU}->[0] &&
+       defined $parsed->{DN_HASH}->{OU}->[0] &&
+       $parsed->{DN_HASH}->{OU}->[0] ne "")
+      {
+          $dnHash->{'organizationalUnitName'} = $parsed->{DN_HASH}->{OU}->[0];
+      }
+    if(exists  $parsed->{DN_HASH}->{ST}->[0] &&
+       defined $parsed->{DN_HASH}->{ST}->[0] &&
+       $parsed->{DN_HASH}->{ST}->[0] ne "")
+      {
+          $dnHash->{'stateOrProvinceName'} = $parsed->{DN_HASH}->{ST}->[0];
+      }
+    if(exists  $parsed->{DN_HASH}->{O}->[0] &&
+       defined $parsed->{DN_HASH}->{O}->[0] &&
+       $parsed->{DN_HASH}->{O}->[0] ne "")
+      {
+          $dnHash->{'organizationName'} = $parsed->{DN_HASH}->{O}->[0];
+      }
+    if(exists  $parsed->{DN_HASH}->{EMAILADDRESS}->[0] &&
+       defined $parsed->{DN_HASH}->{EMAILADDRESS}->[0] &&
+       $parsed->{DN_HASH}->{EMAILADDRESS}->[0] ne "")
+      {
+          $dnHash->{'emailAddress'} = $parsed->{DN_HASH}->{EMAILADDRESS}->[0];
+      }
+    if(exists  $parsed->{DN_HASH}->{L}->[0] &&
+       defined $parsed->{DN_HASH}->{L}->[0] &&
+       $parsed->{DN_HASH}->{L}->[0] ne "")
+      {
+          $dnHash->{'localityName'} = $parsed->{DN_HASH}->{L}->[0];
+      }
+    
+    my $subject = YaST::caUtils->stringFromDN($dnHash);
+    if(!defined $subject) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+    my $md5 = md5_hex($subject);
+
+    my $dummy = SCR->Read(".target.size", "$CAM_ROOT/$caName/req/$md5.req");
+    if ($dummy != -1) {
+        return $self->SetError(summary => __("Duplicate DN. Request already exists."),
+                               description => "'$subject' already exists.",
+                               code => "FILE_ALREADY_EXIST");
+    }
+
+    if(!SCR->Write(".target.string", "$CAM_ROOT/$caName/req/$md5.req", $pemReq)) {
+        return $self->SetError( summary => "Can not write the request.",
+                                code => "SCR_WRITE_FAILED");
+    }
+
+    if(! SCR->Write(".caTools.addCAM", $caName, { MD5 => $md5, DN => $subject})) {
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/$md5.req");
+        return $self->SetError(%{SCR->Error(".caTools")});
+    }
+    return $md5;
+}
 
 1;
 
