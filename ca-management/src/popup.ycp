@@ -1,0 +1,103 @@
+/**
+ * File:        include/ca-management/popup.ycp
+ * Package:     Configuration of CAs
+ * Summary:     Popup definitions
+ * Authors:     Stefan Schubert (schubi@suse.de)
+ *
+ * $Id$
+ */
+
+{
+    textdomain "ca-management";
+
+    import "CaMgm";
+    import "Require";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    import "YaPI";    
+    import "YaPI::CaManagement";
+
+    /**
+     * Popup to confirm after finish is pressed
+     * @return `yes or `back
+     */
+    define symbol FinishPopup () ``{
+        if (Popup::ContinueCancelHeadline (
+                // To translators: ContinueCancel Popup headline
+                _("Finish"),
+                // To translators: ContinueCancel Popup
+                _("Really save configuration ?")))
+        {
+            return `yes;
+        }
+        return `back;
+    }
+
+    /**
+     * Popup to confirm vhen exitting without saving
+     * @return `exit or `back
+     */
+    define symbol ExitPopup () ``{
+        if (Popup::YesNoHeadline (
+                // To translators: YesNo Popup headline
+                _("Exit"),
+                // To translators: YesNo Popup
+                _("Really exit configuration without saving ?")))
+        {
+            return `exit;
+        }
+        return `back;
+    }
+
+
+    /**
+     * Popup displaying openssl error messages
+     * @return void
+     */
+    define void showErrorCaManagement () ``{
+        map<string,any> messageMap = YaPI::Error();
+	string message = messageMap["summary"]:"";
+	string description = messageMap["description"]:"";
+        if (size (message) > 0)
+        {
+	    y2error ("Showing error: %1", messageMap);
+	    if (size (description) > 0)
+	    {
+		if (!Popup::AnyQuestion( Label::ErrorMsg(),
+					 message,
+					 Label::OKButton(),
+					 _("Details"),
+					 `focus ))
+		{
+		    description = "<pre>" + description + "</pre>";		    
+		    UI::OpenDialog (`opt(`decorated ),
+				    `HBox( `VSpacing(16),
+					   `VBox (
+						  `HSpacing (100),
+						  // popup window header
+						  `Heading (message),
+						  `VSpacing (0.5),
+						  `RichText (description),
+						  `VSpacing (1.5),
+						  // push button label
+						  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+						  )
+					   )
+				    );
+
+		    UI::SetFocus (`id(`ok));
+		    UI::UserInput ();
+		    UI::CloseDialog ();	    
+		}
+	    }
+	    else
+	    {
+		Popup::Error (message);		
+	    }
+        }
+	return;
+    }
+
+
+}

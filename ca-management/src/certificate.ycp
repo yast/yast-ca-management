@@ -1,0 +1,467 @@
+/**
+ *
+ * File:
+ *   certificate.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   Handling certificates of a CA
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Showing and hadling CA certificates
+ *
+ */
+
+
+{
+    textdomain "ca-management";
+    
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";    
+    import "YaPI::CaManagement";
+    
+    define list<string> certificateID = [];
+
+    // help text 1/6
+    string certificateHelptext = _("<p>First, see a list view with all available certificates from this CA. The columns are the DN of the certificates including the e-mail address and the state of the certificate (such as valid or revoked).</p>");
+    // help text 2/6 
+    certificateHelptext = certificateHelptext + _("<p>Select one of the certificates and execute some actions.</p>");
+    // help text 3/6 
+    certificateHelptext = certificateHelptext + _("<p><b>View</b> opens a window with a text representation of the complete certificate.</p>");
+    // help text 4/6
+    certificateHelptext = certificateHelptext + _("<p>Furthermore, you can <b>Revoke</b>, <b>Delete</b>, or <b>Export</b> a certificate.</p>");
+    // help text 5/6
+    certificateHelptext = certificateHelptext + _("<p>With <b>Add</b>, generate a new server or client certificate.</p>");
+    // help text 6/6
+    certificateHelptext = certificateHelptext + _("<p>In the area below, see the most important values of the selected certificate.</p>");
+
+
+    /**
+     * Creating new Server Certificate sequence
+     * @return sequence result
+     */
+    define symbol newServerCertificateSequence() ``{
+
+	map aliases = $[
+	   "new_certinit"   	: ``(new_cert_init ("Server Certificate")),
+	   "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+	   "new_cert1"  	: ``(new_cert1 ("Server Certificate")),
+	   "new_cert2"   	: ``(new_cert2 ("Server Certificate")),
+	   "new_cert3"   	: ``(new_cert3 ("Server Certificate")),
+	   "new_cert_advanced"  : ``(new_cert_advanced (false, "Server Certificate")),
+	   ];
+
+	Wizard::CreateDialog();
+	Wizard::SetDesktopIcon("ca-management");
+	symbol ret = WizardSequencer(aliases, CaMgm::certificateSequence);
+	
+	UI::CloseDialog();
+
+	return ret;
+    }
+
+    /**
+     * Creating new Client Certificate sequence
+     * @return sequence result
+     */
+    define symbol newClientCertificateSequence() ``{
+
+	map aliases = $[
+          "new_certinit"   	: ``(new_cert_init ("Client Certificate")),
+	  "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+	  "new_cert1"  	 	: ``(new_cert1 ("Client Certificate")),
+	  "new_cert2"   	: ``(new_cert2 ("Client Certificate")),
+	  "new_cert3"   	: ``(new_cert3 ("Client Certificate")),
+	  "new_cert_advanced"   : ``(new_cert_advanced (false, "Client Certificate")),
+	  ];
+
+	Wizard::CreateDialog();
+	Wizard::SetDesktopIcon("ca-management");
+	symbol ret = WizardSequencer(aliases, CaMgm::certificateSequence);
+
+	UI::CloseDialog();
+
+	return ret;
+    }
+
+    
+    /**
+     * Dialog for revoking a certificate
+     */
+    define void revokeCertificate() ``{
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      // popup window header
+				      `Heading (_("Revoke Certificate")),
+				      `VSpacing (1),
+				      `Label(_("You are only revoking the certificate. No new CRL will be created.")),
+				      `Frame ( _("Reasons"),
+					       `RadioButtonGroup(`id(`rb),
+								 `VBox(
+								       `Left(`RadioButton(`id("none"), "&no reason set", true)),
+								       `Left(`RadioButton(`id("unspecified"), "&unspecified")),
+								       `Left(`RadioButton(`id("keyCompromise"), "&keyCompromise" )),
+								       `Left(`RadioButton(`id("CACompromise"), "CAC&ompromise" )),
+								       `Left(`RadioButton(`id("affiliationChanged"), "&affiliationChanged" )),
+								       `Left(`RadioButton(`id("superseded"), "&superseded" )),
+								       `Left(`RadioButton(`id("cessationOfOperation"), "&cessationOfOperation" )),
+								       `Left(`RadioButton(`id("certificateHold"), "c&ertificateHold" ))
+								       )
+								 )
+					       ),
+				      `VSpacing (1),					  
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),
+				      `VSpacing (1)					  
+				      ),
+			       `HSpacing (2)
+			       )
+			);
+
+	symbol ui = nil;
+	repeat
+ 	{
+	    ui = (symbol) UI::UserInput ();
+	    
+            string reason = (string) UI::QueryWidget(`id(`rb), `CurrentButton);	    
+	    
+	    if (ui == `ok)
+	    {
+		// Revoke certificate
+		boolean ret = nil;
+		if (reason != "none")
+		{
+		    ret = (boolean) YaPI::CaManagement::RevokeCertificate ($["caName": CaMgm::currentCA,
+									     "caPasswd" : getPassword(CaMgm::currentCA),
+									     "certificate" : CaMgm::currentCertificate,
+									     "crlReason" : reason
+									   ]);
+		}
+		else
+		{
+		    ret = (boolean) YaPI::CaManagement::RevokeCertificate ($["caName": CaMgm::currentCA,
+									     "caPasswd" : getPassword(CaMgm::currentCA),
+									     "certificate" : CaMgm::currentCertificate
+									   ]);		    
+		}
+		y2milestone ("RevokeCertificate(%1) return %2", $["caName": CaMgm::currentCA,
+								  "certificate" : CaMgm::currentCertificate,
+								  "crlReason" : reason
+			     ],
+			     ret);
+		if (ret == nil
+		    || ret == false)
+		{
+		    showErrorCaManagement ();
+		    ret = false;
+		}
+	    }
+	}
+	until (contains ([`ok, `cancel], ui));
+	UI::CloseDialog ();
+    }        
+
+    /**
+     * showLongCertDescription - description of a certificate in textform
+     * @param CA name , certification name
+     */
+    define string showLongCertDescription (string CAname,
+					   string Certname) ``{
+
+	string ret = (string) YaPI::CaManagement::ReadCertificate ($["caName":CAname,
+								     "certificate":Certname,
+								     "type":"plain"]);
+	
+	y2milestone("ReadCertificate(%1,%2): %3", CAname, Certname, ret);
+	ret = "<pre>" + ret + "</pre>";
+	
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+        }
+	else
+	{
+	    UI::OpenDialog (`opt(`decorated ),
+			    `HBox( `VSpacing(16),
+				   `VBox (
+					  `HSpacing (100),
+					  // popup window header
+					  `Heading (_("Description")),
+					  `VSpacing (0.5),
+					  `RichText (ret),
+					  `VSpacing (1.5),
+					  // push button label
+					  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+					  )
+				   )
+			    );
+
+	    UI::SetFocus (`id(`ok));
+	    UI::UserInput ();
+	    UI::CloseDialog ();	    
+	}	
+    }
+    
+
+    /**
+     * getCertDescription - description of a certificate
+     * @param map of description
+     * @return a string with the certification description  
+     */      
+    define string getCertDescription (map certMap) ``{
+	string text = _("<p><b>Description</b></p>");
+        if (certMap == nil)
+        {
+            showErrorCaManagement ();
+            return _("\nCertificate not found");
+        }
+	text = text + "<pre>";
+	text = text + "Fingerprint:        " + certMap["FINGERPRINT"]:"";
+	map dn = certMap["DN_HASH"]:$[];
+	if (size (dn) > 0)
+	{
+	    text = text + "\nCommon Name:        " + ((list)dn["CN"]:[])[0]:"";
+	    text = text + "\nOrganization:       " + ((list)dn["O"]:[])[0]:"";
+	    text = text + "\nLocation:           " + ((list)dn["L"]:[])[0]:"";	    
+	    text = text + "\nState:              " + ((list)dn["ST"]:[])[0]:"";
+	    text = text + "\nCountry:            " + ((list)dn["C"]:[])[0]:"";
+	    text = text + "\nEMAIL:              " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
+	}
+	text = text + "\nIs CA:              " + certMap["IS_CA"]:"";
+	text = text + "\nKey Size:           " + certMap["KEYSIZE"]:"";
+	text = text + "\nSerialnumber:       " + certMap["SERIAL"]:"";
+	text = text + "\nVersion:            " + certMap["VERSION"]:"";	
+	text = text + "\nValid from:         " + certMap["NOTBEFORE"]:"";
+	text = text + "\nValid to:           " + certMap["NOTAFTER"]:"";
+	text = text + "\nalgo. of pub. Key : " + certMap["PUBKEY_ALGORITHM"]:"";
+	text = text + "\nalgo. of signature: " + certMap["SIGNATURE_ALGORITHM"]:"";			
+	text = text + "</pre>";	
+	return text;
+    }
+    
+
+    /**
+     * Creates certikficate items
+     *
+     * @param name of the selected CA
+     * @return a list certificate items formated for a UI table
+     */
+    define list<term> getCertificateList ( string currentCA, string password) ``{
+        list<term> result = [];
+        integer i = 0;
+
+	certificateID = [];
+	
+	list<map> ret = (list<map>) YaPI::CaManagement::ReadCertificateList ($["caName":currentCA, "caPasswd":password]);
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+	    CaMgm::passwdMap = remove (CaMgm::passwdMap, currentCA);
+	    return nil;
+        }
+        y2milestone("ReadCertificateList(%1): %2", currentCA, ret);
+	
+
+	foreach (map element, ret, ``{
+	    result = add (result, `item (`id (i), element["status"]:"",
+					 element["commonName"]:"",
+					 element["emailAddress"]:"",
+					 element["organizationName"]:"",
+					 element["organizationalUnitName"]:"",
+					 element["localityName"]:"",
+					 element["stateOrProvinceName"]:"",
+					 element["country"]:"" ) );
+	    certificateID = add (certificateID, element["certificate"]:"");
+	    i = i + 1;
+	});
+        return result;
+    }
+
+    /**
+     * Dialog Tab - certificate - 
+     * @return term for certificates of a selected CA
+     */
+    term getCertificateTab () {    
+	string password = getPassword (CaMgm::currentCA);
+	if (password == nil)
+	{
+	    return nil;
+	}
+
+        list<term> certTermList = getCertificateList ( CaMgm::currentCA, password );	
+	if (certTermList == nil)
+	{
+	    return nil;
+	}
+
+        term contents = `VBox (
+			       `VSpacing (1),
+			       `HBox (
+				      `HSpacing (1),
+				      `Table (`id (`table), `opt (`notify, `immediate),
+					      `header (
+						       // To translators: table headers
+						       _("Status"), _("Common Name"),
+						       _("E-Mail Address"), _("Organization"),
+						       _("Organizational Unit"), _("Locality"),
+						       _("State"), _("Country")),
+					      certTermList),
+				      `HSpacing (1)
+				      ),			       
+			       `HBox (
+				      `HSpacing (1),
+				      `RichText(`id(`textinfo),""),
+				      `HSpacing (1)
+				      ),
+			       `HBox (
+				      `HSpacing (1),
+				      `MenuButton( _("Add"),
+						   [
+						    `item(`id(`addServerCerti), _("Add Server Certificate") ),
+						    `item(`id(`addClientCerti), _("Add Client Certificate") )
+						    ]
+						   ),
+				      `PushButton (`id (`view) , _("&View")),
+				      `PushButton (`id (`revoke) , _("&Revoke")),
+				      `PushButton (`id (`delete) , _("&Delete")),
+				      `HStretch(),
+				      `MenuButton(`id(`export),
+						  _("Export"),
+						  [
+						   `item(`id(`exportFile), _("Export to File") ),
+						   `item(`id(`exportLDAP), _("Export to LDAP") ),
+						   `item(`id(`exportCommon), _("Export as Common Server Certificate") )		       
+						   ]
+						  ),
+				      `HSpacing (1)
+				      ),
+			       `VSpacing (1)
+			       );
+	return contents;
+    }
+    
+    /**
+     * Initialize the tab of the dialog
+     */
+    void initCertificateTab () {
+	boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
+	UI::ChangeWidget (`id (`delete), `Enabled, anyitems);
+	UI::ChangeWidget (`id (`revoke), `Enabled, anyitems);
+	UI::ChangeWidget (`id (`view), `Enabled, anyitems);
+	UI::ChangeWidget (`id (`export), `Enabled, anyitems);
+	
+	integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+	CaMgm::currentCertificate = (string) certificateID[id]:"";
+	
+	if (anyitems)
+	{
+	    map ret = (map) YaPI::CaManagement::ReadCertificate ($["caName":CaMgm::currentCA,
+								   "certificate":CaMgm::currentCertificate,
+								   "type":"parsed"]);
+	    y2milestone("ReadCertificate(%1,%2): %3", CaMgm::currentCA, CaMgm::currentCertificate, ret);	    
+	    
+	    UI::ChangeWidget( `id(`textinfo), `Value, getCertDescription (ret));
+	    
+	    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+	    boolean valid = ((string) table_item[1]:"") == "Valid";
+	    UI::ChangeWidget (`id (`delete), `Enabled, !valid);
+	    UI::ChangeWidget (`id (`revoke), `Enabled, valid);
+	    // do not export certificates which are a CA or revoked certificate
+	    UI::ChangeWidget (`id (`export), `Enabled, valid && ret["IS_CA"]:"" != "1" );
+	}	    
+    }
+
+
+    /**
+     * Handle events in a tab of a dialog
+     */
+    symbol handleCertificateTab (map event) {
+	any ui = event["ID"]:nil;
+
+	if (ui == `table)
+	{
+	    initCertificateTab ();
+	}
+	    
+	if (ui == `view)
+	{
+	    showLongCertDescription (CaMgm::currentCA,
+				     CaMgm::currentCertificate);		
+	}	    	
+	    
+	if (ui == `delete)
+	{
+	    if (Popup::ContinueCancelHeadline (_("Delete"), _("Delete current certificate?")))
+	    {
+		boolean ret = nil;
+		ret = (boolean) YaPI::CaManagement::DeleteCertificate ($["caName":CaMgm::currentCA,
+									 "certificate":CaMgm::currentCertificate,
+									 "caPasswd" : getPassword(CaMgm::currentCA)
+								       ]);
+		y2milestone ("DeleteCertificate(%1) return %2", $["caName":CaMgm::currentCA,
+								  "certificate":CaMgm::currentCertificate
+			     ],
+			     ret);
+		if (ret == nil
+		    || ret == false)
+		{
+		    showErrorCaManagement ();
+		}
+		ui = `again;
+	    }
+	}
+	if (ui == `revoke)
+	{
+	    revokeCertificate();
+	    ui = `again;		
+	}
+	if (ui == `exportFile)
+	{
+	    exportCertificateToFile (CaMgm::currentCA, CaMgm::currentCertificate);
+	}
+	if (ui == `exportLDAP)
+	{
+	    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+	    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+	    exportToLDAP ("CERT",
+			  CaMgm::currentCA,
+			  (string) table_item[2]:"", //common name
+			  (string) table_item[3]:"", //EMAIL
+			  CaMgm::currentCertificate);
+	}	
+	if (ui == `exportCommon)
+	{
+	    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);	    
+	    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));		
+	    exportCommonServerCertificate (CaMgm::currentCA,
+					   CaMgm::currentCertificate,
+					   (string) table_item[2]:"");
+	}
+	if (ui == `addServerCerti)
+	{
+	    newServerCertificateSequence ();
+	    ui = `again;			    
+	}
+	if (ui == `addClientCerti)
+	{
+	    newClientCertificateSequence ();
+	    ui = `again;			    
+	}
+
+	return (symbol)ui;
+    }
+
+}

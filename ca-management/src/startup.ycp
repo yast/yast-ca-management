@@ -1,0 +1,180 @@
+/**
+ *
+ * File:
+ *   startup.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   Shows all available Root CAs
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * CA Management - Root CAs
+ *
+ */
+
+
+{
+
+    textdomain "ca-management";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    import "YaPI::CaManagement";
+
+    include "ca-management/util.ycp";    
+
+    /**
+     * Creates CA items
+     * @return a list of CA items formated for a UI table
+     */
+    define list<term> getCAList () ``{
+        list<term> result = [];
+
+        list<string> CAList = (list<string>) YaPI::CaManagement::ReadCAList(); 
+	y2milestone("Output of ReadCAList: %1", CAList);
+	if (CAList == nil)
+	{
+	    showErrorCaManagement ();
+	}
+	else
+	{
+	    foreach (string element, CAList, ``{
+		result = add (result, `item (`id (element), element ) );
+	    });
+	}
+        return result;
+    }
+
+    /**
+     * Deleting current CA
+     */
+    define void deleteCurrentCA () ``{
+	y2milestone("deleting CA: %1", CaMgm::currentCA );
+
+	string message = sformat(_("Do you realy want to delete CA %1 ?"), CaMgm::currentCA );
+
+	if (Popup::YesNoHeadline (_("Delete"),
+				  message)
+	    && getPassword(CaMgm::currentCA) != nil)
+	{
+	    if (YaPI::CaManagement::DeleteCA ($[ "caName":CaMgm::currentCA,
+						 "caPasswd":getPassword(CaMgm::currentCA)]) == nil)
+	    {
+		map<string,any> messageMap = YaPI::Error();
+		if (messageMap["code"]:"" == "CA_STILL_IN_USE")
+		{
+		    if (Popup::YesNoHeadline (_("Force Delete"),
+					      _("This CA is still in use. Deleting ?")))
+		    {
+			if (YaPI::CaManagement::DeleteCA ($["caName":CaMgm::currentCA,
+							    "caPasswd":getPassword(CaMgm::currentCA),
+							    "force":"1"]) == nil)
+			{
+			    showErrorCaManagement ();			    			
+			}
+		    }
+		}
+		else
+		{
+		    showErrorCaManagement ();			    		    
+		}
+	    }
+	}
+     }
+
+
+    /**
+     * startup dialog
+     * @return `finish, `enter, 'createRoot
+     */
+    define symbol Startup () ``{
+
+        // help text 1/2
+        string helptext = _("<p>Select one CA and press <b>Enter CA</b>.</p>");
+        // help text 2/2
+        helptext = helptext + _("<p><b>Create Root CA</b> generates a new root certificate authority.</p>");
+
+        list<term> termList = getCAList ();
+
+        term buttons = `VBox ();
+                                // To translators: pushbutton label
+        buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`enter), `opt (`key_F4), _("&Enter CA")))));
+        buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`delete), `opt (`key_F5), _("&Delete CA")))));
+        buttons = add (buttons, `VStretch());
+                                // To translators: pushbutton label
+        buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`createRoot), `opt (`key_F3), _("&Create Root CA")))));
+                                // To translators: pushbutton label	
+        buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`import), _("&Import CA")))));	
+
+        term contents = `HBox ();
+        contents = add (contents, `HWeight (9,`Table (`id (`table), `opt (`notify, `immediate),
+                                          `header (
+                                              // To translators: table headers
+                                              _("CA List")),
+                                          termList)));
+        contents = add (contents, `HWeight (4, buttons));
+
+
+                                // To translators: dialog label
+        Wizard::SetContents (_("CA Selection"), contents, helptext, false, true);
+        Wizard::SetNextButton(`next, Label::FinishButton() );
+	UI::ChangeWidget (`id (`abort), `Enabled, false);
+	UI::ChangeWidget (`id (`table), `CurrentItem, CaMgm::currentCA);
+			  
+        symbol ui = nil;
+
+        repeat
+        {
+            boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
+            UI::ChangeWidget (`id (`enter), `Enabled, anyitems);
+
+            // Kludge, because a `Table still does not have a shortcut. #16116
+            UI::SetFocus (`id (`table));
+
+            ui = (symbol) UI::UserInput ();
+            if (contains ([`enter,`import,`delete], ui))
+            {
+                string id = (string) UI::QueryWidget (`id (`table), `CurrentItem);
+		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+
+		if (table_item == nil)
+		{
+		    Popup::Error (_("No item has been selected."));
+		    ui = `again;
+		}
+		else
+		{
+		    CaMgm::currentCA = (string) table_item[1]:"";
+		}
+		if (ui == `enter)
+		{
+		    // checking password
+		    if (getPassword(CaMgm::currentCA) == nil)
+		    {
+			ui = `again;
+		    }
+		}
+		if (ui == `import)
+		{
+		    importCAFromDisk();  
+		}
+		if (ui == `delete)
+		{
+		    deleteCurrentCA ();
+		}
+            }
+        }
+        until (contains ([`createRoot, `enter, `next, `import, `delete], ui));
+
+        return ui;
+    }
+
+}

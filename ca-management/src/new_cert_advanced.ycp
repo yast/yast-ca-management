@@ -1,0 +1,258 @@
+/**
+ *
+ * File:
+ *   new_cert_advanced.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   Creating a new CA/Certificate ( Advanced Settings )
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Creating a new CA/Certificate
+ *
+ */
+
+
+{
+
+    textdomain "ca-management";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    import "YaPI::CaManagement";
+
+    include "ca-management/util.ycp";
+    include "ca-management/new_cert_items.ycp";
+
+    define symbol lastItem = nil;
+
+    /**
+     * Creating new CA/Certificate ( Advanced Settings )
+     * @param nextbutton - The dialog has a next button
+     * @return `next, 'back, 'cancel, 'again
+     */
+    define symbol new_cert_advanced (boolean nextbutton, string kind) ``{
+	list itemList = [];
+
+	if (kind == "Client Request"
+	    || kind == "Server Request")
+	{
+	    itemList = requestItemList;
+	}
+	else
+	{
+	    itemList = generalItemList;
+	}	    
+	
+	term button = `HBox(
+			    `PushButton(`id(`help), `opt(`key_F1), Label::HelpButton()),
+			    `HStretch(),			    
+			    `PushButton(`id(`abort), `opt(`key_F9), Label::AbortButton()),
+			    `HStretch(),
+			    `PushButton(`id(`back), `opt(`key_F8), Label::OKButton()),
+			    `Empty()
+			    );
+
+	if (nextbutton)
+	{
+	    // The dialog has a next button
+	    button = `HBox(
+			   `PushButton(`id(`back), `opt(`key_F8), Label::BackButton()),			   
+			   `HStretch(),			   
+			   `PushButton(`id(`abort), `opt(`key_F9), Label::AbortButton()),
+			   `HStretch(),
+			   `PushButton(`id(`next), `opt(`key_F10), Label::NextButton()),			   
+			   `Empty()
+			   );	    
+	}
+	
+	UI::OpenDialog (`opt(`defaultsize),
+			`VBox (`VSpacing(3),
+			      `HSpacing(85),
+			      `HWeight (70,
+					`VBox(
+					      `HBox(
+						    `HWeight (35,
+							      // tree widget label
+							      `Tree(`id(`tree), `opt(`notify, `vstretch), _("&Advanced Options"), itemList)
+							      ),
+						    `HSpacing(1),
+						    `HWeight(65,
+							     `VBox(`HSpacing(60),
+								   // label widget
+								   `Left(`Heading(`id(`heading), `opt(`hstretch), _("Current Selection: "))),
+								   `VSpacing(0.5),
+								   `VBox (
+									  `HBox (`HStretch(),
+										 `PushButton(`id(`default), `opt(`disabled), _("&Default"))
+										 ),
+									  `ReplacePoint(`id(`replace),
+											`RichText(`id(`id_advanced), advanced_help)),
+									  `VStretch()
+									  )
+								   )
+							     )
+						    ),
+					      button
+					      )
+					)
+			      )
+			);
+
+	UI::ChangeWidget (`id( `tree ), `CurrentItem, `advanced);
+	lastItem = `advanced;
+
+	symbol ret = `dummy;
+
+	while (ret != `back
+	       && ret != `abort
+	       && ret != `next)
+	{
+	    ret = (symbol) UI::UserInput ();
+
+	    // "Default" button
+	    if (ret == `default)
+	    {
+		map item = itemMap[lastItem]:$[];
+		any function = item["default"]:nil;
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		}
+		function = item["getCallback"]:nil;
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		}		
+	    }
+	    else 
+	    {
+		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+		y2milestone ("Selected: %1", selected);
+
+		// saving settings for old selection
+		map item = itemMap[lastItem]:$[];
+		any function = item["setCallback"]:nil;
+		string error = "";
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		    if (is(ret, string))
+		    {
+			error = (string) ret;
+		    }
+		}
+
+		if (size(error) > 0)
+		{
+		    Popup::Error (error);
+		    // set selection back
+		    UI::ChangeWidget (`id( `tree ), `CurrentItem, lastItem);		    
+		}
+		else
+		{
+		    if (ret == `help)
+		    {
+			UI::OpenDialog (`opt(`decorated ),
+					`HBox( `VSpacing(16),
+					       `VBox (
+						      `HSpacing (60),
+						      // popup window header
+						      `Heading (_("Help")),
+						      `VSpacing (0.5),
+						      `RichText (advanced_help),
+						      `VSpacing (1.5),
+						      // push button label
+						      `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+						      )
+					       )
+					);
+
+			UI::SetFocus (`id(`ok));
+			UI::UserInput ();
+			UI::CloseDialog ();
+		    }
+		    else if (ret == `add)
+		    {
+			symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+			y2milestone ("Add for: %1", selected);
+
+			// Calling Add callback
+			map item = itemMap[lastItem]:$[];
+			any function = item["addCallback"]:nil;
+			if (function != nil)
+			{
+			    any ret = eval(function);
+			}
+		    }
+		    else if (ret == `modify)
+		    {
+			symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+			y2milestone ("Modify for: %1", selected);
+			
+			// Calling Modify callback
+			map item = itemMap[lastItem]:$[];
+			any function = item["modifyCallback"]:nil;
+			if (function != nil)
+			{
+			    any ret = eval(function);
+			}		
+		    }
+		    else if (ret == `delete)
+		    {
+			symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+			y2milestone ("Delete for: %1", selected);
+			
+			// Calling Delete callback
+			map item = itemMap[lastItem]:$[];
+			any function = item["deleteCallback"]:nil;
+			if (function != nil)
+			{
+			    any ret = eval(function);
+			}		
+		    }
+		    else
+		    {
+			// no error --> goto next selection
+			lastItem = selected;
+			item = itemMap[selected]:$[];
+			// header label
+			UI::ChangeWidget (`id(`heading), `Value, _("Current Selection: ") + item["name"]:"");
+			// showing concerning input fields
+			UI::ReplaceWidget (`id(`replace), item["widget"]:`Empty() );
+			// enable/disable Default button
+			any function = item["default"]:nil;
+			if (function != nil)
+			{
+			    UI::ChangeWidget (`id (`default), `Enabled, true );
+			}
+			else
+			{
+			    UI::ChangeWidget (`id (`default), `Enabled, false );
+			}
+			
+			// getting values
+			function = item["getCallback"]:nil;
+			if (function != nil)
+			{
+			    any ret = eval(function);
+			}
+		    }
+		}
+	    }
+	}
+
+	UI::CloseDialog ();
+
+	return ret;
+    }
+
+}

@@ -1,0 +1,173 @@
+-------------------------------------------------------------------
+Tue Nov 30 09:14:23 CET 2004 - schubi@suse.de
+
+- Fixes for new yast intepreter
+
+-------------------------------------------------------------------
+Thu Nov 25 13:31:06 CET 2004 - schubi@suse.de
+
+- Bug 47672 - disable X509 extension subjectAltName and issuerAltName if these
+
+-------------------------------------------------------------------
+Thu Aug 19 17:08:12 CEST 2004 - schubi@suse.de
+
+- Checking for KDE session before starting kfiledialog
+
+-------------------------------------------------------------------
+Thu Aug 12 16:19:04 CEST 2004 - schubi@suse.de
+
+- translation flags added 
+
+-------------------------------------------------------------------
+Tue Aug 10 14:03:11 CEST 2004 - schubi@suse.de
+
+- Removed wrong include files
+
+-------------------------------------------------------------------
+Tue Aug 10 11:03:22 CEST 2004 - schubi@suse.de
+
+- Bugfix in sign request ( missing description)
+
+-------------------------------------------------------------------
+Mon Aug  9 15:52:36 CEST 2004 - schubi@suse.de
+
+- Added signing requests and handling crl defaults
+
+-------------------------------------------------------------------
+Mon Jun 14 17:14:34 CEST 2004 - mc@suse.de
+
+- #41994; fix wrong CRL Distribution Point 
+
+-------------------------------------------------------------------
+Mon Jun  7 15:03:41 CEST 2004 - schubi@suse.de
+
+- Bug 41533 - wrong suse logo in some yast2 modules
+
+-------------------------------------------------------------------
+Wed May 26 15:33:30 CEST 2004 - schubi@suse.de
+
+- integrated running testsuite
+
+-------------------------------------------------------------------
+Wed May 26 12:35:18 CEST 2004 - schubi@suse.de
+
+- Better layout in proposal
+
+-------------------------------------------------------------------
+Mon May 24 12:16:40 CEST 2004 - mc@suse.de
+
+- "-" as first or last character of caName if forbidden. (#40867) 
+
+-------------------------------------------------------------------
+Mon May 24 11:05:45 CEST 2004 - schubi@suse.de
+
+- Bug 40839 - Installation - Service Configuration - Illogical workflow
+
+-------------------------------------------------------------------
+Wed May 19 17:21:23 CEST 2004 - schubi@suse.de
+
+- Bug 40862 - CA Management - Create Root CA - Wrong SetFocus
+- Bug 40860 - CA Management - Create New CA - No ValidChars Defined
+- Bug 40859 - CA Management - Creating New CA - Advanced Options
+
+-------------------------------------------------------------------
+Tue May 18 17:54:24 CEST 2004 - mc@suse.de
+
+- use LDAPInit to initilize the ldap connection. (#40366) 
+- fixed gettext handling (#40160)
+
+-------------------------------------------------------------------
+Fri May 14 10:15:25 CEST 2004 - schubi@suse.de
+
+- Bug 40521 - ca suggests to change root password
+
+-------------------------------------------------------------------
+Thu May 13 17:50:18 CEST 2004 - schubi@suse.de
+
+- manage use_tls in the right way (#37393)
+- create base_config_dn with ldap-client (#40366)
+
+-------------------------------------------------------------------
+Tue May 11 14:03:50 CEST 2004 - schubi@suse.de
+
+- Bug 40061 - CA: no key work in ncurses UI
+
+-------------------------------------------------------------------
+Mon May 10 18:00:50 CEST 2004 - schubi@suse.de
+
+- add default_md=sha1 to req section. This is needed to create rootCAs
+  also with sha1 hashing algorithm (#40119)
+- New translation function: change _() to __() (#40160)
+
+-------------------------------------------------------------------
+Mon May 10 15:48:18 CEST 2004 - schubi@suse.de
+
+- sorting language selection box Bug #39928 
+- Bug 39930 fixed - CA settings dialog looks bad in ncurses
+
+-------------------------------------------------------------------
+Thu May  6 17:06:25 CEST 2004 - schubi@suse.de
+
+- Better description Bug#39966
+- exporting common server certificate added
+
+-------------------------------------------------------------------
+Mon May  3 14:02:58 CEST 2004 - schubi@suse.de
+
+- Bufixes while writing default settings
+- Bug #39360. Help text for password changed.
+- Bug #39689. Headline changed.
+- Bug #38751. Exporting CA/Certificate to local directory ( not tmp)
+- exporting certificates disabled if it has been revoked
+- do not export Sub CA in the certificate frame
+- Using temporary path for mounting floppy
+- Importing CA/Certificate from disk while installation
+- Using /bin/hostname for evaluating the hostname and the domain
+  name
+
+-------------------------------------------------------------------
+Fri Apr 30 13:42:00 CEST 2004 - schubi@suse.de
+
+- Icon changed
+
+-------------------------------------------------------------------
+Thu Apr 29 16:38:59 CEST 2004 - schubi@suse.de
+
+- Import CA/Certificate via floppy
+- Bugfixing
+- Proposal test
+
+-------------------------------------------------------------------
+Fri Apr 23 14:57:22 CEST 2004 - schubi@suse.de
+
+- finished proposal
+- Import of common server certificate
+- Moving CA repository to /var/lib/CAM
+- Bugfixes
+
+-------------------------------------------------------------------
+Fri Apr 16 16:52:05 CEST 2004 - mc@suse.de
+
+- add proposal files to spec 
+
+-------------------------------------------------------------------
+Fri Apr 16 14:36:30 CEST 2004 - mc@suse.de
+
+- remove Execute .status from ag_ca_tools; is now in ag_openssl
+- first version of a proposal implemented
+- basicconstraits accept none
+- WriteCertificateDefaults() supports 'days' and 'keylength'
+- At DeleteCertificate remove the certificate entry from cam.txt
+- add "use_tls" to ldap init.
+- some other smal bugfixes 
+
+-------------------------------------------------------------------
+Fri Apr  2 16:27:56 CEST 2004 - schubi@suse.de
+
+- fist complete working version
+
+-------------------------------------------------------------------
+Thu Mar 25 18:14:18 CET 2004 - schubi@suse.de
+
+- initial; CA Management module
+
