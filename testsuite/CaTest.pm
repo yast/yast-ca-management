@@ -25,7 +25,7 @@ sub run {
 #    test_Version();
 #    test_Capabilities();
 #    test_AddRootCA();
-#    test_ReadCAList();
+    test_ReadCAList();
 #    test_AddRootCA2();
 #    test_ReadCertificateDefaults();
 #    test_ReadCertificateDefaults2();
@@ -34,7 +34,7 @@ sub run {
 #    test_issueCertificate();
 #    test_AddCertificate();
 #    test_AddCertificate2();
-#    test_ReadCertificateList();
+    test_ReadCertificateList();
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
 
@@ -53,7 +53,11 @@ sub run {
 #    test_ListManyCerts('215152321042820');
 #    test_WriteCertificateDefaults();
 #    test_ReadLDAPExportDefaults();
-    test_InitLDAPcaManagement();
+#    test_ReadLDAPExportDefaults2();
+#    test_InitLDAPcaManagement();
+    test_ExportCertificateToLDAP();
+
+# dummy_test();
     return 1;
 }
 
@@ -815,6 +819,19 @@ sub test_ReadLDAPExportDefaults {
 
 }
 
+sub test_ReadLDAPExportDefaults2 {
+
+    my $res = YaPI::CaManagement->ReadLDAPExportDefaults({ type => "certificate",
+                                                           commonName => "Michael Calmer"});
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
 sub test_InitLDAPcaManagement {
 
     my $res = YaPI::CaManagement->InitLDAPcaManagement({ ldapPasswd => "system" });
@@ -826,6 +843,60 @@ sub test_InitLDAPcaManagement {
         print STDERR "OK \n";
     }
     
+}
+
+sub test_ExportCertificateToLDAP {
+
+    my $data = {
+                caName        => $exampleCA,
+                certificate   => $exampleCert,
+                ldapHostname  => 'tait.suse.de',
+                ldapPort      => 389,
+                destinationDN => "uid=mc,ou=people,dc=suse,dc=de",
+                BindDN        => "uid=cyrus,dc=suse,dc=de",
+                ldapPasswd    => "system",
+                keyPasswd     => "system",
+                p12Passwd     => "System"
+            };
+
+    my $res = YaPI::CaManagement->ExportCertificateToLDAP($data);
+    if( not defined $res ) {
+        # error
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK\n";
+    }
+}
+
+sub dummy_test {
+
+    use strict;
+    use Data::Dumper;
+    use YaST::YCP;
+    use ycp;
+    
+    YaST::YCP::Import ("SCR");
+    
+    SCR->Execute(".ldap", {"hostname" => "ldap.suse.de",
+                           "port"     => 389});
+    
+    SCR->Execute(".ldap.bind", {});
+    
+    my $ldapret = SCR->Read(".ldap.search", {
+                                             "base_dn" => "dc=suse,dc=de",
+                                             "filter" => "(& (objectclass=inetOrgPerson) (cn=x*))",
+                                             "scope" => 2,
+                                             "not_found_ok" => 1,
+                                             "dn_only" => 1
+                                            });
+    
+    if (! defined $ldapret) {
+        my $ldapERR = SCR->Read(".ldap.error");
+        print STDERR $ldapERR->{'code'}." : ".$ldapERR->{'msg'}."\n";
+    }
+    print Data::Dumper->Dump([$ldapret])."\n";
 }
 
 1;
