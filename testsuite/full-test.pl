@@ -86,6 +86,8 @@ T49_DeleteRequest();
 
 T50_ImportCA();
 T51_DeleteCA();
+T52_ReadCRLDefaults();
+T53_WriteCRLDefaults();
 
 sub printError {
     my $err = shift;
@@ -1890,6 +1892,47 @@ sub T51_DeleteCA {
             };
     
     $res = YaPI::CaManagement->DeleteCA($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub T52_ReadCRLDefaults {
+    print STDERR "------------------- T52_ReadCRLDefaults ---------------------\n";
+    print "------------------- T52_ReadCRLDefaults ---------------------\n";
+
+    my $data = {
+                'caName'       => 'Test1_SuSE_CA',
+               };
+    
+    my $res = YaPI::CaManagement->ReadCRLDefaults($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub T53_WriteCRLDefaults {
+    print STDERR "------------------- T52_WriteCRLDefaults ---------------------\n";
+    print "------------------- T52_WriteCRLDefaults ---------------------\n";
+
+    my $data = {
+                'caName'                 => 'Test1_SuSE_CA',
+                'days'                   => '1',
+                'authorityKeyIdentifier' => 'keyid:always,issuer:always',
+                'issuerAltName'          => 'issuer:copy'
+               };
+    
+    my $res = YaPI::CaManagement->WriteCRLDefaults($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
         my $err = YaPI::CaManagement->Error();
