@@ -71,6 +71,8 @@ T40_CheckCertificate2();
 T41_CheckCRL1();
 T45_CheckCRL3();
 
+T46_ReadRequest();
+
 sub printError {
     my $err = shift;
     foreach my $k (keys %$err) {
@@ -1668,4 +1670,26 @@ sub __checkCerts {
         $last = $orig;
     }
     return $err;
+}
+
+sub T46_ReadRequest {
+    print STDERR "------------------- T46_ReadRequest ---------------------\n";
+    print "------------------- T46_ReadRequest ---------------------\n";
+    foreach my $type ("parsed", "plain") {
+        my $data = {
+                    'caName' => 'Test1_SuSE_CA',
+                    'type'   => $type,
+                    'request' => '52324820ee92ebe512780bec85174c14'
+                   };
+       
+        my $res = YaPI::CaManagement->ReadRequest($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = YaPI::CaManagement->Error();
+            printError($err);
+        } else {
+            print "OK:\n";
+            print STDERR Data::Dumper->Dump([$res])."\n";
+        }
+    }
 }
