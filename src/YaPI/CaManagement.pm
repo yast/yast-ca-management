@@ -32,6 +32,10 @@ $caList = ReadCAList()
 
   returns a list of available CAs
 
+$caList = ReadCATree()
+
+  returns a list of lists of the available CAs containing the issuer caName
+
 $bool = AddRootCA($valueMap)
 
   create a new selfsigned root CA
@@ -432,6 +436,101 @@ sub ReadCAList {
         return $self->SetError(%{SCR->Error(".caTools")});
     }
     return $ret;
+}
+
+=item *
+C<$caList = ReadCATree()>
+
+Returns a list of lists of the available CAs 
+containing the issuer caName.
+
+* $caList->[$x]->[0] is the caName
+
+* $caList->[$x]->[1] is the issuer caName 
+
+If the issuer caName is empty caName is a root CA.
+The list is sorted. If an entry has an issuer, the 
+issuer entry was listed before.
+
+The function return undef on an error.
+
+EXAMPLE:
+
+ my $caList = YaPI::CaManagement->ReadCATree();
+ if(not defined $caList) {
+     #error
+ }
+
+ print Data::Dumper->Dump([$ca])."\n";
+
+=cut
+
+BEGIN { $TYPEINFO{ReadCATree} = ["function", ["list", ["list", "string"]]]; }
+sub ReadCATree {
+    my $self = shift;
+    my $caName = undef;
+    my %caHash = ();
+    my $result = [];
+
+    my $caList = $self->ReadCAList();
+    return undef if(! defined $caList);
+
+    foreach $caName (@$caList) {
+        my $ca = $self->ReadCA({'caName' => $caName, 'type' => 'parsed'});
+        return undef if(! defined $ca);
+
+        $caHash{$caName} = [$ca->{'DN'}, $ca->{'ISSUER'}]
+    }
+
+    foreach $caName (keys %caHash) {
+
+        if($caHash{$caName}[0] eq $caHash{$caName}[1]) {
+            # root CA
+            unshift(@$result, [$caName, '']);
+        } else {
+
+            # sub CA; find caName of the issuer
+            foreach my $d (keys %caHash) {
+                                         
+                if($caHash{$caName}->[1] eq $caHash{$d}->[0]) {
+                    push(@$result, [$caName, $d]);
+                    last;
+                }
+            }
+        }
+    }
+
+    # sort the list
+    my $i = 0;
+    while(exists $result->[$i]) {
+        #print STDERR "STATUS:\n".Data::Dumper->Dump([$result])."\n";
+        if($result->[$i]->[1] eq '') {
+            #print STDERR "found root CA\n";
+            $i++;
+            next;
+        } else {
+
+            my $y = $i - 1;
+            my $ok = 0;
+            while($y >= 0) {
+                if($result->[$i]->[1] eq $result->[$y]->[0]) {
+                    #print STDERR "Sub CA is after the issuer\n";
+                    $ok = 1;
+                    $i++;
+                    last;
+
+                }
+                $y--;
+            }
+            if(!$ok) {  # we must swap
+                #print STDERR "do swap\n";
+                push(@$result, $result->[$i]);
+                splice( @$result, $i, 1);
+            }
+        }
+    }
+
+    return $result;
 }
 
 =item *
