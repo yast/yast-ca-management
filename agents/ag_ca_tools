@@ -208,6 +208,69 @@ sub Write {
 }
 
 sub Execute {
+    my $class = shift;
+    my $path = shift;
+    
+    if($path eq ".verify") {
+        my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
+                                                      code => "PARAM_CHECK_FAILED");
+        my $hash   = shift || return $class->SetError(summary =>"Parameter 'hash' missing",
+                                                      code => "PARAM_CHECK_FAILED");
+        my $retValue = "";
+        my $errorMsg = "";
+        my $errorNmb = 0;
+        
+        if(not defined $hash->{'CERT'}) {
+            return $class->SetError(summary =>"Parameter 'CERT' missing",
+                                    code => "PARAM_CHECK_FAILED");
+        }
+        if(! -e "$CAM_ROOT/$caName/newcerts/".$hash->{'CERT'}.".pem") {
+            return $class->SetError(summary =>"Certificate does not exist",
+                                    code => "FILE_DOES_NOT_EXIST");
+        }
+
+        my $command = "openssl verify -CApath $CAM_ROOT/.cas/ ";
+        $command   .= "-crl_check ";
+        $command   .= "$CAM_ROOT/$caName/newcerts/".$hash->{'CERT'}.".pem ";
+
+        y2debug("executing:$command");
+        
+        if (not open( OUT, "$command |" )) {
+            return $class->SetError(summary => "Cannot open pipe to OpenSSL",
+                                    code => "OPEN_FAILED");
+        }
+        my @ret = <OUT>;
+        close OUT;
+
+        foreach my $line (@ret) {
+
+            $line =~ /^\/.*\.pem:\s+(.*)\s*$/;
+            if( defined $1 && $1 eq "OK" ) {
+                $retValue = "OK";
+                last;
+            }
+
+            $line =~ /^error\s+(\d+)\s+at\s+\d+\s+[\w\s]+:(.*)$/;
+
+            if(defined $1 && defined $2 ) {
+                chomp($line);
+                $retValue = $2;
+                $errorMsg = $line;
+                $errorNmb = $1;
+            }
+        }
+        if($retValue eq "OK") {
+            return $retValue;
+        } else {
+            return $class->SetError(summary => "Certificate invalid: $retValue",
+                                    description => "$errorMsg",
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+    } else {
+        $class->SetError(summary => "Wrong path '$path' ",
+                         code => "SCR_WRONG_PATH");
+        return 0;
+    }
     return 1;
 }
 
@@ -309,7 +372,7 @@ sub createCaInf {
         return $class->SetError( summary => "Can not create serial file '$CAM_ROOT/$caName/serial' '$!'",
                                  code    => "OPEN_FAILED");
     }
-    print SR "00";
+    print SR "01";
     close SR;
 
     if (!open(DB, "> $CAM_ROOT/$caName/index.txt") ) {
