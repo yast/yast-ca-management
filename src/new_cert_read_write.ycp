@@ -1038,7 +1038,8 @@
 	if (kind == "Server Certificate"
 	    || kind == "Client Certificate")
 	{
-//	    y2milestone("CaManagement::AddCertificate(%1)", param);	
+//	    y2milestone("CaManagement::AddCertificate(%1)", param);
+	    param["notext"] = "1";
 	    string filename = YaPI::CaManagement::AddCertificate (param);
 	    if (filename == nil
 		|| size(filename) == 0)
@@ -1058,6 +1059,7 @@
 	}
 	if (kind == "signRequest")
 	{
+	    param["notext"] = "1";	    
 //	    y2milestone("CaManagement::IssueCertificate(%1)", param);	
 	    return YaPI::CaManagement::IssueCertificate (param) == nil ? false:true;	    
 	}
