@@ -17,6 +17,7 @@ myinclude_DATA =		\
 	ca.ycp			\
 	crl.ycp			\
 	certificate.ycp		\
+	default.ycp		\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	
