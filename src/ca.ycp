@@ -31,6 +31,44 @@
 
     include "ca-management/util.ycp";
 
+
+    /**
+     * showLongDescription - description of a CA in textform
+     * @param CA name
+     */
+    define string showLongDescription (string CAname) ``{
+
+	string ret = (string) YaPI::CaManagement::ReadCA ($["caName":CAname, "type":"plain"]);
+	y2milestone("ReadCA(%1): %2", CAname, ret);
+	
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+        }
+	else
+	{
+	    UI::OpenDialog (`opt(`decorated ),
+			    `HBox( `VSpacing(16),
+				   `VBox (
+					  `HSpacing (100),
+					  // popup window header
+					  `Heading (_("Description")),
+					  `VSpacing (0.5),
+					  `RichText (ret),
+					  `VSpacing (1.5),
+					  // push button label
+					  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+					  )
+				   )
+			    );
+
+	    UI::SetFocus (`id(`ok));
+	    UI::UserInput ();
+	    UI::CloseDialog ();	    
+	}	
+    }
+
+    
     /**
      * getDescription - description of a CA
      * @param CA name
@@ -129,6 +167,10 @@
         {
             ui = (symbol) UI::UserInput ();
 
+	    if (ui == `information)
+	    {
+		showLongDescription (CaMgm::currentCA);
+	    }
         }
         until (contains ([`back, `abort, `certificates, `createSubCA, `crl], ui));
 
