@@ -534,7 +534,7 @@
      * setExtentionValues - Accept special extention values
      * @param list of accepted extentions
      */
-    define void () setExtentionValues (list<string> acceptedExtentions)``{
+    define void setExtentionValues (list<string> acceptedExtentions)``{
 	foreach( string extention, acceptedExtentions, ``{
 	    // setting all accepted extentions
 	    setRequestExtentions (extention);

@@ -403,8 +403,8 @@
 	    return;
 	}
 
-	string current_kind = (string) select(table_item, 1, "");
-	string current_name = (string) select(table_item, 2, "");
+	string current_kind = (string) table_item[1]:"";
+	string current_name = (string) table_item[2]:"";
 	
         if (Popup::YesNoHeadline (
                 // To translators: ContinueCancel Popup headline
@@ -442,8 +442,8 @@
 	    return;
 	}
 
-	string current_kind = (string) select(table_item, 1, "");
-	string current_name = (string) select(table_item, 2, "");
+	string current_kind = (string) table_item[1]:"";
+	string current_name = (string) table_item[2]:"";
 	
 	UI::OpenDialog (`opt(`decorated ),
 			issuer_box
@@ -728,8 +728,8 @@
 	    return;
 	}
 
-	string current_kind = (string) select(table_item, 1, "");
-	string current_name = (string) select(table_item, 2, "");
+	string current_kind = (string) table_item[1]:"";
+	string current_name = (string) table_item[2]:"";
 	
         if (Popup::YesNoHeadline (
                 // To translators: ContinueCancel Popup headline
@@ -766,8 +766,8 @@
 	    return;
 	}
 
-	string current_kind = (string) select(table_item, 1, "");
-	string current_name = (string) select(table_item, 2, "");
+	string current_kind = (string) table_item[1]:"";
+	string current_name = (string) table_item[2]:"";
 	
 	UI::OpenDialog (`opt(`decorated ),
 			subject_box

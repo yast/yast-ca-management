@@ -152,7 +152,7 @@
 		}
 		else
 		{
-		    CaMgm::currentCA = (string) select(table_item, 1, "");
+		    CaMgm::currentCA = (string) table_item[1]:"";
 		}
 		if (ui == `enter)
 		{

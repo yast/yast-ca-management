@@ -342,7 +342,7 @@
 
 	    // Add generation time to map
 	    term itemTerm =  (term) UI::QueryWidget(`id(`table), `Item(id));
-	    ret = add (ret, "date", select (itemTerm, 8, ""));
+	    ret = add (ret, "date", itemTerm[8]:"");
 	    
 	    UI::ChangeWidget( `id(`textinfo), `Value, getRequestDescription (ret, false));
 	}	    

@@ -376,7 +376,7 @@
 	    UI::ChangeWidget( `id(`textinfo), `Value, getCertDescription (ret));
 	    
 	    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
-	    boolean valid = ((string) select(table_item, 1, "") == "Valid");
+	    boolean valid = ((string) table_item[1]:"") == "Valid";
 	    UI::ChangeWidget (`id (`delete), `Enabled, !valid);
 	    UI::ChangeWidget (`id (`revoke), `Enabled, valid);
 	    // do not export certificates which are a CA or revoked certificate
@@ -438,8 +438,8 @@
 	    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
 	    exportToLDAP ("CERT",
 			  CaMgm::currentCA,
-			  (string) select(table_item, 2, ""), //common name
-			  (string) select(table_item, 3, ""), //EMAIL
+			  (string) table_item[2]:"", //common name
+			  (string) table_item[3]:"", //EMAIL
 			  CaMgm::currentCertificate);
 	}	
 	if (ui == `exportCommon)
@@ -448,7 +448,7 @@
 	    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));		
 	    exportCommonServerCertificate (CaMgm::currentCA,
 					   CaMgm::currentCertificate,
-					   (string) select(table_item, 2, ""));
+					   (string) table_item[2]:"");
 	}
 	if (ui == `addServerCerti)
 	{
