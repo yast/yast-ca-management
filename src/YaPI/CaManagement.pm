@@ -3739,9 +3739,9 @@ sub ReadLDAPExportDefaults {
 
     if(defined $caName && $caName ne "") {
         $ldapret = SCR->Read(".ldap.search", {
-                                              "base_dn" => $ldapMap->{'base_dn'},
-                                              "filter" => '(& (objectclass=suseCaConfiguration) (cn=$caName))',
-                                              "scope" => 0,
+                                              "base_dn" => $ldapMap->{'ldap_domain'},
+                                              "filter" => "(& (objectclass=suseCaConfiguration) (cn=$caName))",
+                                              "scope" => 2,
                                               "not_found_ok" => 1,
                                               "attrs" => [ 'suseDefaultBase' ]
                                             });
@@ -3752,15 +3752,15 @@ sub ReadLDAPExportDefaults {
                                    code => "LDAP_SEARCH_FAILED");
         }
         if(@$ldapret > 0) {
-            $retMap->{'destinationDN'} = $ldapret->[0]->{suseDefaultBase};
+            $retMap->{'destinationDN'} = $ldapret->[0]->{susedefaultbase}->[0];
         }
     }
 
     if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
         $ldapret = SCR->Read(".ldap.search", {
-                                              "base_dn" => $ldapMap->{'base_dn'},
+                                              "base_dn" => $ldapMap->{'ldap_domain'},
                                               "filter" => '(& (objectclass=suseCaConfiguration) (cn=default))',
-                                              "scope" => 0,
+                                              "scope" => 2,
                                               "not_found_ok" => 1
                                              });
         if (! defined $ldapret) {
@@ -3770,7 +3770,7 @@ sub ReadLDAPExportDefaults {
                                    code => "LDAP_SEARCH_FAILED");
         }
         if(@$ldapret > 0) {
-            $retMap->{'destinationDN'} = $ldapret->[0]->{suseDefaultBase};
+            $retMap->{'destinationDN'} = $ldapret->[0]->{susedefaultbase}->[0];
         }
     }
 
