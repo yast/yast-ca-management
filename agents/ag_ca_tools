@@ -132,6 +132,71 @@ sub Read {
             return $class->SetError( code    => "Opendir_Failed",
                                      summary => "Can not read directory '$CAM_ROOT' '$!'");
         }
+    } elsif($path eq ".requestList") {
+        my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
+                                                      code => "PARAM_CHECK_FAILED");
+        my @ret = ();
+
+        my $camdb = $class->parseCAMDB($caName);
+        if (opendir(REQDIR, "$CAM_ROOT/$caName/req/")) {
+            foreach my $d (readdir(REQDIR)) {
+                if ($d !~ /^\./ && -e "$CAM_ROOT/$caName/req/$d") {
+
+                    $d =~ /^([[:xdigit:]]+)\.req$/;
+                    if(!defined $1) {
+                        y2warning("unknown filename $d");
+                        next;
+                    }
+                    my $md5 = $1;
+                    my $subject = "";
+                    my $reqLine = {};
+                    $reqLine->{'request'} = $md5;
+
+                    foreach my $d (@$camdb) {
+                        if($d->[0] eq "$md5") {
+                            $subject = $d->[1];
+                            last;
+                        }
+                    }
+                    if($subject eq "") {
+                        return $class->SetError(summary => "Can not find request subject.",
+                                                code => "PARSE_ERROR");
+                    }
+                    my @rdns = ();
+                    while( $subject =~ /(.*?[^\\])(\/|$)/g ) {
+                        my $dummy = $1;
+                        $dummy =~ s/^\///;
+                        $dummy =~ s/\\\//\//;
+                        
+                        push( @rdns, $dummy );
+                    }
+
+                    foreach my $rdn (@rdns) {
+                        if($rdn =~ /^C=(.*)$/ && defined $1 && $1 ne "") {
+                            $reqLine->{'country'} = $1;
+                        } elsif($rdn =~ /^ST=(.*)$/ && defined $1 && $1 ne "") {
+                            $reqLine->{'stateOrProvinceName'} = $1;
+                        } elsif($rdn =~ /^L=(.*)$/ && defined $1 && $1 ne "") {
+                            $reqLine->{'localityName'} = $1;
+                        } elsif($rdn =~ /^O=(.*)$/ && defined $1 && $1 ne "") {
+                            $reqLine->{'organizationName'} = $1;
+                        } elsif($rdn =~ /^OU=(.*)$/ && defined $1 && $1 ne "") {
+                            $reqLine->{'organizationalUnitName'} = $1;
+                        } elsif($rdn =~ /^CN=(.*)$/ && defined $1 && $1 ne "") {
+                            $reqLine->{'commonName'} = $1;
+                        } elsif($rdn =~ /^emailAddress=(.*)$/ && defined $1 && $1 ne "") {
+                            $reqLine->{'emailAddress'} = $1;
+                        }
+                    }
+                    push @ret, $reqLine;
+                }
+            }
+            closedir(REQDIR);
+            return \@ret;
+        } else {
+            return $class->SetError( code    => "Opendir_Failed",
+                                     summary => "Can not read directory '$CAM_ROOT' '$!'");
+        }
     } elsif($path eq ".checkKey") {
         my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
                                                       code => "PARAM_CHECK_FAILED");
