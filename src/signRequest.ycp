@@ -40,8 +40,8 @@
     define list<term> createExtentionItem () ``{
         list<term> result = [];
 
-	foreach (string key, string value, CaMgm::requestExtentionValue, ``{
-	    result = add (result, `item (`id (key), key + ": " + value,
+	foreach (string key, list value, CaMgm::requestExtentionValue, ``{
+	    result = add (result, `item (`id (key), key + ": " + mergestring ((list<string>)value, " "),
 					 contains (CaMgm::slectedRequestExtention, key)));
 	});
         return result;
@@ -53,7 +53,6 @@
      * @return void
      */
     define void unsetRequestExtentions (string extention)``{
-	list<string> dummy = [];
 
 	y2milestone("Unset requestExtention %1", extention);
 	if (extention == "X509v3 Subject Key Identifier")
@@ -126,15 +125,14 @@
      * @return void
      */
     define void setRequestExtentions (string extention)``{
-	list<string> dummy = [];
 
 	y2milestone("Set requestExtention %1", extention);
+	y2milestone("requestExtention %1", CaMgm::requestExtentionValue[extention]:[]);	
 	if (extention == "X509v3 Subject Key Identifier")
 	{
 	    CaMgm::exp_cri_subjectKeyIdentifier = false;
 	    CaMgm::exp_subjectKeyIdentifier = "";
-	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
-	    foreach ( string entry, dummy, ``{
+	    foreach ( string entry, (list<string>) CaMgm::requestExtentionValue[extention]:[], ``{
 		entry = strip(entry);
 		if (entry == "critical")
 		{
@@ -152,8 +150,7 @@
 	    CaMgm::adv_cri_subject_alt_name = false;
 	    CaMgm::adv_copy_subject_alt_name = false;
 	    
-	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
-	    foreach ( string entry, dummy, ``{
+	    foreach ( string entry, (list<string>) CaMgm::requestExtentionValue[extention]:[], ``{
 		entry = strip(entry);
 		list valuelist = splitstring (entry,":");
 		string ident = strip(valuelist[0]:"");
@@ -184,8 +181,7 @@
 	    CaMgm::adv_cri_ca = false;
 	    CaMgm::adv_ca = "";
 	    
-	    list<string> dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
-	    foreach ( string entry, dummy, ``{
+	    foreach ( string entry, (list<string>) CaMgm::requestExtentionValue[extention]:[], ``{
 		entry = strip(entry);
 		list valuelist = splitstring (entry,":");
 		string ident = strip(valuelist[0]:"");
@@ -227,8 +223,7 @@
 	    CaMgm::adv_keyCertSign = false;
 	    CaMgm::adv_decipherOnly = false;
 	    
-	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
-	    foreach ( string entry, dummy, ``{
+	    foreach ( string entry, (list<string>) CaMgm::requestExtentionValue[extention]:[], ``{
 		entry = strip(entry);
 		if (entry == "critical")
 		{
@@ -277,9 +272,8 @@
 	    CaMgm::exp_cri_extendedKeyUsage = false;
 	    CaMgm::exp_extendedKeyUsage = "";
 	    
-	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
 	    integer counter = 0;
-	    foreach ( string entry, dummy, ``{
+	    foreach ( string entry, (list<string>) CaMgm::requestExtentionValue[extention]:[], ``{
 		entry = strip(entry);
 		list valuelist = splitstring (entry,":");
 		string ident = strip(valuelist[0]:"");
@@ -310,8 +304,7 @@
 	    CaMgm::adv_cri_nsComment = false;
 	    CaMgm::adv_nsComment = "";
 	    
-	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
-	    foreach ( string entry, dummy, ``{
+	    foreach ( string entry, (list<string>) CaMgm::requestExtentionValue[extention]:[], ``{
 		entry = strip(entry);
 		if (entry == "critical")
 		{
@@ -328,13 +321,8 @@
 	    CaMgm::exp_cri_authorityKeyIdentifier = false;
 	    CaMgm::exp_authorityKeyIdentifier = "";
 	    
-	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
-	    integer counter = 0;
-	    foreach ( string entry, dummy, ``{
-		entry = strip(entry);
-		list valuelist = splitstring (entry,":");
-		string ident = strip(valuelist[0]:"");
-		string value = strip(valuelist[1]:"");
+	    foreach ( string ident, (list<string>) CaMgm::requestExtentionValue[extention]:[], ``{
+		ident = strip (ident);
 	    
 		if (ident == "critical")
 		{
@@ -342,19 +330,11 @@
 		}
 		else
 		{
-		    if (counter == 0)
-		    {
-			CaMgm::exp_authorityKeyIdentifier = CaMgm::exp_authorityKeyIdentifier +
-			    ident + ((size(value) > 0) ? ":" : "") + value;
-		    }
-		    else
-		    {
-			CaMgm::exp_authorityKeyIdentifier = CaMgm::exp_authorityKeyIdentifier +
-			    "," + ident + ((size(value) > 0) ? ":" : "") + value;
-		    }
-		    counter = counter +1;
+		    CaMgm::exp_authorityKeyIdentifier = CaMgm::exp_authorityKeyIdentifier +
+			" " + ident;
 		}
 	    });
+	    CaMgm::exp_authorityKeyIdentifier = strip (CaMgm::exp_authorityKeyIdentifier);
 	}	    	    	    
 	else if (extention == "Netscape Cert Type")
 	{
@@ -368,8 +348,7 @@
 	    CaMgm::adv_objsign = false;
 	    CaMgm::adv_objCA = false;
 	    
-	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
-	    foreach ( string entry, dummy, ``{
+	    foreach ( string entry, (list<string>) CaMgm::requestExtentionValue[extention]:[], ``{
 		entry = strip(entry);
 		if (entry == "critical")
 		{
@@ -487,7 +466,7 @@
 	foreach (string key, list value, opensslExtentions, {
 	    if (contains (CaMgm::validRequestExtention,key))
 	    {
-		CaMgm::requestExtentionValue = add (CaMgm::requestExtentionValue, key, (string) value[0]:"");
+		CaMgm::requestExtentionValue = add (CaMgm::requestExtentionValue, key, value);
 	    }
 	    else
 	    {
