@@ -823,6 +823,8 @@ sub ReadCertificateDefaults {
 C<$bool = WriteCertificateDefaults($valueMap)>
 
 Write the default values for the available certificate types.
+Keys which are not present, will be removed if they are available
+in the configuration file.
 
 In I<$valueMap> you can define the following keys:
 
@@ -863,6 +865,10 @@ In I<$valueMap> you can define the following keys:
 * authorityInfoAccess
 
 * crlDistributionPoints
+
+* days
+
+* keyLength
 
 The syntax of these values are explained in the 
 B<COMMON PARAMETER> section.
@@ -960,6 +966,38 @@ sub WriteCertificateDefaults {
         }
     }
     
+    my $default_bits = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req.default_bits");
+    
+    if(defined $data->{keyLength}) {
+        # write new default_bits
+        if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.req.default_bits", $data->{keyLength})) {
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    } elsif(defined $default_bits) {
+        # remove default_bits
+        if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.req.default_bits", undef)) {
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    }
+    my $sect = ($certType eq "ca")? $certType : $certType."_cert";
+    my $default_days = SCR->Read(".var.lib.YaST2.CAM.value.$caName.$sect.default_days");
+    if(defined $data->{days}) {
+        # write new default_days
+        
+        if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$sect.default_days", $data->{days})) {
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    } elsif(defined $default_days) {
+        # remove default_days
+        if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$sect.default_days", undef)) {
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    }
+
     if (not SCR->Write(".var.lib.YaST2.CAM", undef)) {
         SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
