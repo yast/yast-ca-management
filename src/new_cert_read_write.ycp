@@ -105,8 +105,12 @@
 	CaMgm::exp_cri_extendedKeyUsage = false;
 	CaMgm::exp_extendedKeyUsage = "";
 
+	map ret = nil;
 	
-	map ret = (map) CaManagement::ReadCertificateDefaults ($["certType":kind]);
+	if (kind == "Root CA")
+	{
+	    ret = (map) CaManagement::ReadCertificateDefaults ($["certType":"ca"]);
+	}
 	if (ret == nil)
 	{
 	    showErrorCaManagement ();
@@ -505,7 +509,7 @@
 
 	// fillup parameters
 
-	if (kind == "ca")
+	if (kind == "Root CA")
 	{
 	    param["caName"] =  CaMgm::CAName;
 	    param["keyPasswd"] = CaMgm::password;

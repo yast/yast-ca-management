@@ -74,7 +74,7 @@
         // help text 2/5 
         helptext = helptext + _("<p>It depends on the policy defined in the configuration file.</p>");
         // help text 3b/5 ( optional )
-	if (kind == "ca")
+	if (kind == "Root CA")
 	{
 	    helptext = helptext + _("<p><b>CA Name</b> is the name of a CA certificate.</p>");
 	}
@@ -113,7 +113,7 @@
         emails = add (emails, `HWeight (1, buttons));
 
         term contents = `VBox ();
-	if (kind == "ca")
+	if (kind == "Root CA")
 	{
 	    contents = add (contents, `TextEntry( `id (`id_CAName), _("&CA Name:"), CaMgm::CAName ));	    
 	}
@@ -128,7 +128,8 @@
         contents = add (contents, `HBox (`HWeight(1,`ComboBox( `id (`id_country), _("C&ountry:"), getCountryList()))));
 
                                 // To translators: dialog label
-        Wizard::SetContents (_("Create new Certificate (step 1/3)"), contents, helptext, true, true);
+
+        Wizard::SetContents ( _("Create new ") + kind + _(" (step 1/3)"), contents, helptext, true, true);
 	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());
 	UI::ChangeWidget (`id (`back), `Enabled, false);	
 
@@ -226,7 +227,7 @@
 		}
 		if (ui == `next)
 		{
-		    if (kind == "ca"
+		    if (kind == "Root CA"
 			&& size (CaMgm::CAName) <= 0)
 		    {
 			Popup::Error(_("CA Name required"));
@@ -276,7 +277,7 @@
         contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
 
                                 // To translators: dialog label
-        Wizard::SetContents (_("Create new Certificate (step 2/3)"), contents, helptext, true, true);
+        Wizard::SetContents ( _("Create new ") + kind + _(" (step 2/3)"), contents, helptext, true, true);
 	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());
 
         symbol ui = nil;
@@ -330,7 +331,7 @@
 
 	string text = _("<br><h3>Summary</h3>");
 	text = text + "<pre>";
-	if (kind == "ca"
+	if (kind == "Root CA"
 	    && size (CaMgm::CAName) > 0)
 	{
 	    text = text + _("CA Name:                  ")  + CaMgm::CAName + "\n";
@@ -782,7 +783,7 @@
         contents = add (contents, `RichText(text));
 
                                 // To translators: dialog label
-        Wizard::SetContents (_("Create new Certificate (step 3/3)"), contents, helptext, true, true);
+        Wizard::SetContents ( _("Create new ") + kind + _(" (step 3/3)"), contents, helptext, true, true);
 	UI::ChangeWidget (`id (`next), `Label, Label::CreateButton());
 
         symbol ui = nil;
