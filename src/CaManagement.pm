@@ -284,12 +284,12 @@ sub ReadCA {
     if($type eq "parsed") {
         $ret = SCR::Read(".openca.X509.getParsed", "$CAM_ROOT/$caName/cacert.pem");
         if(not defined $ret) {
-            return $self->setError(%{SCR::Error(".openca.X509")});
+            return $self->SetError(%{SCR::Error(".openca.X509")});
         }
     } else {
         $ret = SCR::Read(".openca.X509.getTXT", "$CAM_ROOT/$caName/cacert.pem");
         if(not defined $ret) {
-            return $self->setError(%{SCR::Error(".openca.X509")});
+            return $self->SetError(%{SCR::Error(".openca.X509")});
         }
     }
     return $ret;
@@ -663,6 +663,13 @@ sub UpdateDB {
                                code    => "PARAM_CHECK_FAILED");
     }
 
+    my $retCode = SCR::Execute(".target.bash",
+                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+    if(not defined $retCode || $retCode != 0) {
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+                                code => "COPY_FAILED");
+    }
+
     my $hash = {
                 CAKEY  => "$CAM_ROOT/$caName/cacert.key",
                 CACERT => "$CAM_ROOT/$caName/cacert.pem",
@@ -670,9 +677,170 @@ sub UpdateDB {
                };
     my $ret = SCR::Read(".openca.openssl.updateDB", $data->{'caName'}, $hash);
     if ( not defined $ret ) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
+    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
 }
+
+BEGIN { $TYPEINFO{ReadCertificate} = ["function", "any", "any"]; }
+sub ReadCertificate {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $certificate = "";
+    my $type   = "";
+    my $ret = undef;
+
+   # checking requires
+    if (not defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{"caName"};
+    
+    if (not defined $data->{"type"} || 
+        !$self->isOneOfList($data->{"type"}, ["parsed", "plain"])) 
+      {
+          return $self->SetError(summary => "Wrong value for parameter 'type'",
+                                 code => "PARAM_CHECK_FAILED");
+      }
+    $type = $data->{"type"};
+    
+    if (not defined $data->{"certificate"} || 
+        $data->{'certificate'} !~ /^[:A-Za-z0-9\/=+]+$/)
+    {
+        return $self->SetError(summary => "Wrong value for parameter 'certificate'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    $certificate = $data->{"certificate"};
+
+    my $size = SCR::Read(".target.size", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
+    if($size <= 0) {
+        return $self->SetError(summary => "Certificate '$certificate.pem' not available in '$caName'",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+    if($type eq "parsed") {
+        $ret = SCR::Read(".openca.X509.getParsed", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
+        if(not defined $ret) {
+            return $self->SetError(%{SCR::Error(".openca.X509")});
+        }
+    } else {
+        $ret = SCR::Read(".openca.X509.getTXT", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
+        if(not defined $ret) {
+            return $self->SetError(%{SCR::Error(".openca.X509")});
+        }
+    }
+    return $ret;
+}
+
+BEGIN { $TYPEINFO{RevokeCertificate} = ["function", "boolean", "any"]; }
+sub RevokeCertificate {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $certificate = "";
+
+    return undef if(not defined $self->checkCommonValues($data));
+
+    # checking requires
+    if (!defined $data->{"caName"}) {
+        return $self->SetError( summary => "Missing value 'caName'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $caName = $data->{"caName"};
+    
+    if(!defined $data->{"caPasswd"} ) {
+        return $self->SetError( summary => "Missing value 'caPasswd'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    if(!defined $data->{"certificate"} ) {
+        return $self->SetError( summary => "Missing value 'certificate'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $certificate = $data->{"certificate"};
+
+    my $size = SCR::Read(".target.size", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
+    if($size <= 0) {
+        return $self->SetError(summary => "Certificate '$certificate.pem' not available in '$caName'",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+
+    my $retCode = SCR::Execute(".target.bash",
+                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+    if(not defined $retCode || $retCode != 0) {
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+                                code => "COPY_FAILED");
+    }
+
+    my $hash = {
+                CAKEY  => "$CAM_ROOT/$caName/cacert.key",
+                CACERT => "$CAM_ROOT/$caName/cacert.pem",
+                PASSWD => $data->{'caPasswd'},
+                INFILE => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem"
+               };
+    if(defined $data->{'crlReason'}) {
+        $hash->{'CRL_REASON'} = $data->{'crlReason'};
+    }
+    my $ret = SCR::Execute(".openca.openssl.revoke", $caName, $hash);
+    if(not defined $ret) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
+    }
+    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+    return 1;
+}
+
+BEGIN { $TYPEINFO{AddCRL} = ["function", "boolean", "any"]; }
+sub AddCRL {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+
+    return undef if(not defined $self->checkCommonValues($data));
+
+    # checking requires
+    if (!defined $data->{"caName"}) {
+        return $self->SetError( summary => "Missing value 'caName'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $caName = $data->{"caName"};
+    
+    if(!defined $data->{"caPasswd"} ) {
+        return $self->SetError( summary => "Missing value 'caPasswd'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    if(!defined $data->{"days"} ) {
+        return $self->SetError( summary => "Missing value 'days'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+
+    my $retCode = SCR::Execute(".target.bash",
+                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+    if(not defined $retCode || $retCode != 0) {
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+                                code => "COPY_FAILED");
+    }
+
+    my $hash = {
+                CAKEY   => "$CAM_ROOT/$caName/cacert.key",
+                CACERT  => "$CAM_ROOT/$caName/cacert.pem",
+                PASSWD  => $data->{'caPasswd'},
+                DAYS    => $data->{'days'},
+                OUTFORM => "PEM",
+                OUTFILE => "$CAM_ROOT/$caName/crl/crl.pem"
+               };
+    my $ret = SCR::Execute(".openca.openssl.issueCrl", $caName, $hash);
+    if(not defined $ret) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
+    }
+    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+    return 1;
+}
+
+
 
 sub cleanCaInfrastructure {
     my $self     = shift || return undef;
@@ -798,13 +966,13 @@ sub checkCommonValues {
             #FIXME: Is this parameter needed?
         } elsif ( $key eq "request") {
             if (not defined $data->{$key} ||
-                $data->{$key} !~ /^[A-Za-z0-9\/=+]+\.req$/) {
+                $data->{$key} !~ /^[A-Za-z0-9\/=+]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "certificate") {
             if (not defined $data->{$key} ||
-                $data->{$key} !~ /^[:A-Za-z0-9\/=+]+\.pem$/) {
+                $data->{$key} !~ /^[:A-Za-z0-9\/=+]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
