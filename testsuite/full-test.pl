@@ -305,7 +305,7 @@ sub T08_ReadCertificateDefaults2 {
 sub T09_ReadCA {
     print STDERR "------------------- T09_ReadCA ---------------------\n";
     print "------------------- T09_ReadCA ---------------------\n";
-    foreach my $type ("parsed", "plain") {
+    foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test2_SuSE_CA',
                     'type'   => $type
@@ -493,7 +493,7 @@ sub T14_ReadCertificateList {
 sub T15_ReadCertificate {
     print STDERR "------------------- T15_ReadCertificate ---------------------\n";
     print "------------------- T15_ReadCertificate ---------------------\n";
-    foreach my $type ("parsed", "plain") {
+    foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
                     'type'   => $type,
@@ -555,7 +555,7 @@ sub T17_AddCRL {
 sub T18_ReadCRL {
     print STDERR "------------------- T18_ReadCRL ---------------------\n";
     print "------------------- T18_ReadCRL ---------------------\n";
-    foreach my $type ("parsed", "plain") {
+    foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
                     'type'   => $type,
@@ -960,7 +960,7 @@ sub T35_ImportCommonServerCertificate {
 sub T36_ReadFile {
     print STDERR "------------------- T36_ReadFile ---------------------\n";
     print "------------------- T36_ReadFile ---------------------\n";
-    foreach my $type ( "parsed", "plain" ) {
+    foreach my $type ( "parsed", "plain", "extended" ) {
         my $data = {
                     datatype      => "CERTIFICATE",
                     inFile        => '/var/lib/CAM/Test1_SuSE_CA/certs/01.pem',
@@ -980,7 +980,7 @@ sub T36_ReadFile {
         }
     }
 
-    foreach my $type ( "parsed", "plain" ) {
+    foreach my $type ( "parsed", "plain", "extended" ) {
         my $data = {
                     datatype      => "CRL",
                     inFile        => '/var/lib/CAM/Test1_SuSE_CA/crl/crl.pem',
@@ -1528,7 +1528,7 @@ sub T43_AddCRL3 {
 sub T44_ReadCRL3 {
     print STDERR "------------------- T44_ReadCRL3 ---------------------\n";
     print "------------------- T44_ReadCRL3 ---------------------\n";
-    foreach my $type ("parsed", "plain") {
+    foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test2_SuSE_CA',
                     'type'   => $type,
@@ -1721,7 +1721,7 @@ sub __checkCerts {
 sub T46_ReadRequest {
     print STDERR "------------------- T46_ReadRequest ---------------------\n";
     print "------------------- T46_ReadRequest ---------------------\n";
-    foreach my $type ("parsed", "plain") {
+    foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
                     'type'   => $type,
