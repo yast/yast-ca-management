@@ -7,6 +7,8 @@ myinclude_DATA =		\
 	startup.ycp		\
 	new_cert.ycp		\
 	util.ycp		\
+	new_cert_items.ycp	\
+	new_cert_advanced.ycp	\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	\
