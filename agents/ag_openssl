@@ -98,6 +98,17 @@ sub Read {
                                     code => "SCR_EXECUTE_FAILED");
         }
         return $ret;
+    } elsif($path eq ".getExtendedParsedCert") {
+        $hash = shift;
+        $ret = $openssl->getExtendedParsedCert(%{$hash});
+        if(not defined $ret) {
+            my $desc = ($openssl->errmsg() ne "") ? $openssl->errmsg() : "Unknown error in $path";
+            $desc .= ($openssl->erropenssl() ne "") ? "\nOPENSSL message:\n".$openssl->erropenssl() : "";
+            return $class->SetError(summary => "Can not parse certificate!",
+                                    description => $desc,
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
     } elsif($path eq ".getTXTCert") {
         $hash = shift;
         $ret = $openssl->getTXTCert(%{$hash});
@@ -120,6 +131,17 @@ sub Read {
                                     code => "SCR_EXECUTE_FAILED");
         }
         return $ret;
+    } elsif($path eq ".getExtendedParsedCRL") {
+        $hash = shift;
+        $ret = $openssl->getExtendedParsedCRL(%{$hash});
+        if(not defined $ret) {
+            my $desc = ($openssl->errmsg() ne "") ? $openssl->errmsg() : "Unknown error in $path";
+            $desc .= ($openssl->erropenssl() ne "") ? "\nOPENSSL message:\n".$openssl->erropenssl() : "";
+            return $class->SetError(summary => "Can not parse CRL!",
+                                    description => $desc,
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
     } elsif($path eq ".getTXTCRL") {
         $hash = shift;
         $ret = $openssl->getTXTCRL(%{$hash});
@@ -134,6 +156,17 @@ sub Read {
     } elsif($path eq ".getParsedREQ") {
         $hash = shift;
         $ret = $openssl->getParsedREQ(%{$hash});
+        if(not defined $ret) {
+            my $desc = ($openssl->errmsg() ne "") ? $openssl->errmsg() : "Unknown error in $path";
+            $desc .= ($openssl->erropenssl() ne "") ? "\nOPENSSL message:\n".$openssl->erropenssl() : "";
+            return $class->SetError(summary => "Can not parse request!",
+                                    description => $desc,
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
+    } elsif($path eq ".getExtendedParsedREQ") {
+        $hash = shift;
+        $ret = $openssl->getExtendedParsedREQ(%{$hash});
         if(not defined $ret) {
             my $desc = ($openssl->errmsg() ne "") ? $openssl->errmsg() : "Unknown error in $path";
             $desc .= ($openssl->erropenssl() ne "") ? "\nOPENSSL message:\n".$openssl->erropenssl() : "";
