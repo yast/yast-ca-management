@@ -33,6 +33,7 @@ client_DATA = 		\
 	ca_select_proposal.ycp	\
 	ca_mgm_proposal.ycp	\
 	ca-mgm.ycp		\
+	ca_mgm_auto.ycp         \
 	common-cert.ycp		\
 	common_cert.ycp
 
