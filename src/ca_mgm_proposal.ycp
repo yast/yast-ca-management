@@ -36,7 +36,7 @@
 
     if (func == "MakeProposal")
     {
-	boolean force_reset = lookup (param, "force_reset", false);
+	boolean force_reset = param["force_reset"]:false;
 	string proposal = "";
 	string warning = nil;
 	symbol warning_level = nil;
@@ -45,9 +45,17 @@
 					"/bin/hostname --long",
 					$[] );
 	y2milestone("Hostname :%1", retmap);
+	if (retmap["exit"]:0 != 0
+	    && (!CaMgm::prop_server_commonNameChanged
+		|| !CaMgm::prop_emailChanged
+		|| force_reset))
+	{
+	    ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Please change the values of \"Server Name\" and \"Email\"."));
+	    ret = add( ret, "warning_level", `blocker );
+	}
+	
 	string longhostname = strip(retmap["stdout"]:"");
 	string hostname = ((list<string>) splitstring (longhostname, "."))[0]:"";
-
         string domain = substring (longhostname, findfirstof(longhostname,".")+1);
 
 	if (size (domain) <= 0)
@@ -103,7 +111,8 @@
 
 	if (!check_mail_address(CaMgm::prop_email))
 	{
-	    Popup::Error(_("Invalid e-mail format."));
+	    ret = add( ret, "warning", _("Invalid e-mail format. Please change it."));
+	    ret = add( ret, "warning_level", `blocker );	    
 	}
 
 	if (CaMgm::prop_selection == `def)

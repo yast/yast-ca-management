@@ -215,7 +215,7 @@
 		{
 		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
 		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
-		    string current_name = (string) select(table_item, 1, "");
+		    string current_name = (string) table_item[1]:"";
 		    list<map> dummy_map = [];
 
 		    //finding entry in list
@@ -234,7 +234,7 @@
 		{
 		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
 		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
-		    string current_name = (string) select(table_item, 1, "");
+		    string current_name = (string) table_item[1]:"";
 		    list<map> dummy_map = [];
 
 		    //finding entry in list
