@@ -125,6 +125,15 @@ sub Execute {
                                     code => "SCR_EXECUTE_FAILED");
         }
         return $ret;
+    } elsif($path eq ".updateDB") {
+        my $hash = shift;
+        $openssl->updateDB(%{$hash});
+        if($openssl->errno() != 0 || not defined $ret) {
+            return $class->SetError(summary => "OpenCA::OpenSSL::updateDB failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
     } else {
         return $class->SetError(summary => "Wrong path '$path' ",
                                 code => "SCR_WRONG_PATH");
