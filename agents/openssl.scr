@@ -18,8 +18,8 @@
   `OPENSSL ($[
     "bin"       : "/usr/bin/openssl",
     "tmpdir"    : "/tmp",
-    "stderr"    : ">> /var/log/YaST2/ca.log",
-    "debug"     : "1",
+    "stderr"    : "/dev/null",
+    "debug"     : "0",
     "privkeyalg": "des3",
   ])
 )
