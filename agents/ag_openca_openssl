@@ -1,6 +1,7 @@
-#! /usr/bin/perl
+#! /usr/bin/perl -w
 
 package ag_openca_openssl;
+use strict;
 use YaST::SCRAgent;
 use ycp;
 our @ISA = ("YaST::SCRAgent");
@@ -49,11 +50,16 @@ sub setConfig {
     my $class  = shift;
     my $caName = shift;
 
-    $class->check_initialized() || return 0;
     if( ! -e "$CAM_ROOT/$caName/openssl.cnf" ) {
-        $class->SetError(summary=>"config does not exist!",
-                         code =>"SCR_INIT_ERR");
-        return 0;
+	if(! -e "$CAM_ROOT/$caName/openssl.cnf.tmpl") {
+        	$class->SetError(summary=>"config does not exist!",
+                	         code =>"SCR_INIT_ERR");
+        	return 0;
+	}
+	$openssl->setParams(
+			    CONFIG=>"$CAM_ROOT/$caName/openssl.cnf.tmpl"
+		           );
+	return 1;
     }
     $openssl->setParams(
                         CONFIG=>"$CAM_ROOT/$caName/openssl.cnf"
@@ -61,18 +67,14 @@ sub setConfig {
     return 1;
 }
 
-sub Read { 
-    return 1;
-}
-
-sub Write { 
-    return 1; 
-}
-
 sub Execute {
-    my $class  = shift;
-    my $path   = shift;
-    my $caName = shift;
+    my $class  = shift || return undef;
+    my $path   = shift || return $class->SetError(summary => "Missing 'path'", 
+                                                  code => "PARAM_CHECK_FAILED");
+    my $caName = shift || return $class->SetError(summary => "Missing 'caName'", 
+                                                  code => "PARAM_CHECK_FAILED");
+    my $hash = undef;
+
     $class->check_initialized || return undef;
     
     $class->setConfig($caName) || return undef;
@@ -117,7 +119,7 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".getNumericDate") {
-        $date = shift;
+        my $date = shift;
         my $ret = $openssl->getNumericDate( $date );
         if($openssl->errno() != 0 || not defined $ret) {
             return $class->SetError(summary => "OpenCA::OpenSSL::getNumericDate failed! (".
@@ -126,7 +128,7 @@ sub Execute {
         }
         return $ret;
     } elsif($path eq ".updateDB") {
-        my $hash = shift;
+        $hash = shift;
         $openssl->updateDB(%{$hash});
         if($openssl->errno() != 0 ) {
             return $class->SetError(summary => "OpenCA::OpenSSL::updateDB failed! (".
@@ -135,7 +137,7 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".revoke") {
-        my $hash = shift;
+        $hash = shift;
         $openssl->revoke(%{$hash});
         if($openssl->errno() != 0) {
             return $class->SetError(summary => "OpenCA::OpenSSL::revoke failed! (".
@@ -144,7 +146,7 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".issueCrl") {
-        my $hash = shift;
+        $hash = shift;
         $openssl->issueCrl(%{$hash});
         if($openssl->errno() != 0) {
             return $class->SetError(summary => "OpenCA::OpenSSL::issueCrl failed! (".
@@ -153,7 +155,7 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".dataConvert") {
-        my $hash = shift;
+        $hash = shift;
         my $ret = $openssl->dataConvert(%{$hash});
         if($openssl->errno() != 0) {
             return $class->SetError(summary => "OpenCA::OpenSSL::dataConvert failed! (".

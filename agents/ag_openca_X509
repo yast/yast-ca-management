@@ -1,6 +1,7 @@
-#! /usr/bin/perl
+#! /usr/bin/perl -w
 
 package ag_openca_X509;
+use strict;
 use YaST::SCRAgent;
 use ycp;
 our @ISA = ("YaST::SCRAgent");

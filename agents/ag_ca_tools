@@ -1,6 +1,7 @@
-#! /usr/bin/perl
+#! /usr/bin/perl -w
 
 package ag_ca_tools;
+use strict;
 use YaST::SCRAgent;
 use ycp;
 use MIME::Base64;
@@ -82,6 +83,7 @@ sub Read {
 #                            $rdns[$x] = $dummy;
 #                        }
 #                    }
+                    my @rdns = ();
                     while( $subject =~ /(.*?[^\\])\//g ) {
                         my $dummy = $1;
                         $dummy =~ s/^\///;
@@ -107,7 +109,7 @@ sub Read {
                             $certLine->{'emailAddress'} = $1;
                         }
                     }
-                    $stat = $class->status($caName, $certLine->{'certificate'});
+                    my $stat = $class->status($caName, $certLine->{'certificate'});
                     if(not defined $stat) {
                         return undef;
                     }
@@ -154,7 +156,7 @@ sub Read {
         } elsif(defined $data->{'CERT'}) {
             $data->{'CERT'} =~ /^[[:xdigit:]]+:([A-Za-z0-9\/=+]+)$/;
             if(not defined $1) {
-                return $self->SetError(summary => "Can not parse certificate name",
+                return $class->SetError(summary => "Can not parse certificate name",
                                        code => "PARSING_ERROR");
             }
             my $keyname = $1;
@@ -422,8 +424,8 @@ sub status {
         if($line =~ /^$serial=(\w+)\s+.*$/) {
             return $1;
         } else {
-            $err .= $l;
-            y2error("status:".$l);
+            $err .= $line;
+            y2error("status:".$line);
         }
     }
     return $class->SetError(summary => "Error at Read status",
