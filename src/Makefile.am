@@ -20,6 +20,7 @@ myinclude_DATA =		\
 	request.ycp		\
 	signRequest.ycp		\
 	certDefault.ycp		\
+	crlDefault.ycp		\
 	floppy.ycp		\
 	dialog-ca.ycp		\
 	wizards.ycp
