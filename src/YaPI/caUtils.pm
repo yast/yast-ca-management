@@ -111,7 +111,7 @@ sub mergeToConfig {
 
   if ((! defined $param->{"$name"} ) && (defined $cfg_exists )) {
       # remove value from config
-      y2debug("remove value from config (".$param->{"$name"}."/$name");
+      y2debug("remove value from config ($name)");
       if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef)) {
           return $self->SetError( summary => "Can not write to config file",
                                  code => "SCR_WRITE_FAILED");
