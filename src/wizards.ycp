@@ -72,6 +72,7 @@ define symbol newCASequence() ``{
     ];
 
     Wizard::CreateDialog();
+    Wizard::SetDesktopIcon("ca_mgm");
     symbol ret = WizardSequencer(aliases, certificateSequence);
 
     UI::CloseDialog();
@@ -95,6 +96,7 @@ define symbol newServerCertificateSequence() ``{
     ];
 
     Wizard::CreateDialog();
+    Wizard::SetDesktopIcon("ca_mgm");
     symbol ret = WizardSequencer(aliases, certificateSequence);
 
     UI::CloseDialog();
@@ -118,6 +120,7 @@ define symbol newClientCertificateSequence() ``{
     ];
 
     Wizard::CreateDialog();
+    Wizard::SetDesktopIcon("ca_mgm");
     symbol ret = WizardSequencer(aliases, certificateSequence);
 
     UI::CloseDialog();
@@ -141,6 +144,7 @@ define symbol newSubCASequence() ``{
     ];
 
     Wizard::CreateDialog();
+    Wizard::SetDesktopIcon("ca_mgm");
     symbol ret = WizardSequencer(aliases, certificateSequence);
 
     UI::CloseDialog();
@@ -211,6 +215,7 @@ define symbol MainSequence() ``{
         ];
 
     Wizard::CreateDialog();
+    Wizard::SetDesktopIcon("ca_mgm");
     symbol ret = WizardSequencer(aliases, sequence);
 
     UI::CloseDialog();
