@@ -159,6 +159,11 @@ $bool = ImportCA($valueMap)
 
   Import a CA certificate and creates a infrastructure
 
+$bool = DeleteCA($valueMap)
+
+  Delete a Certificate Authority infrastructure
+
+
 =head1 COMMON PARAMETER
 
 Here is a list of common parameter which are often 
@@ -5791,6 +5796,124 @@ sub ImportCA {
     return 1;
 }
 
+
+=item *
+C<$bool = DeleteCA($valueMap)>
+
+  Delete a Certificate Authority infrastructure
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required - A name for this CA)
+
+* caPasswd (required)
+
+* force (0/1 default is 0)
+
+Normaly you can only delete a CA if the CA certificate is expired or
+you have never signed a certificate with this CA. In all other cases 
+you have to set the force parameter to 1 if you realy want to delete 
+the CA and you know what you are doing.
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+ my $data = {
+             caName      => 'My_CA',
+             caPasswd    => 'system,
+            };
+
+    my $res = YaPI::CaManagement->DeleteCA($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "OK\n";
+    }
+
+=cut
+
+BEGIN { $TYPEINFO{DeleteCA} = ["function", "boolean", ["map", "string", "any"] ]; }
+sub DeleteCA {
+    my $self   = shift;
+    my $data   = shift;
+    
+    my $caName = "";
+    my $doDelete = 0;
+
+    if (!defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+                                    # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{'caName'};
+
+    if (! defined $data->{'caPasswd'} ||
+        length($data->{'caPasswd'}) < 4) {
+                               # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    if(! defined SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'},
+                                                           CACERT => 1})) 
+      {
+          return $self->SetError(%{SCR->Error(".caTools")});
+      }
+    
+    if(exists $data->{force} && defined $data->{force} && $data->{force} == 1) {
+        # force delete
+        $doDelete = 1;
+print STDERR "FORCE\n";
+    } else {
+
+        my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/index.txt");
+        if($size <= 0) {
+            # no certificate signed with this CA or broken infrastucture
+            # delete is OK
+            $doDelete = 1;
+print STDERR "not cert\n";
+        }
+
+        my $OSSLexpDate = $self->ReadCA({ caName => "$caName",
+                                          type   => 'parsed'})->{NOTAFTER};
+        my $expDate = SCR->Execute(".openssl.getNumericDate", $caName, $OSSLexpDate);
+        if (not defined $expDate) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+        my ($year,$month,$day, $hour,$min,$sec) = Today_and_Now();
+        my $now = $year.$month.$day.$hour.$min.$sec;
+        
+        if($now > $expDate) {
+            # CA is expired
+            # delete is ok
+            $doDelete = 1;
+print STDERR "CA expired\n";
+        }
+    }
+
+    if($doDelete) {
+        if(! defined YaST::caUtils->cleanCaInfrastructure($caName)) {
+            return $self->SetError( summary => __("Deleting the CA failed."),
+                                    code    => "DELETE_FAILED");
+        }
+
+        SCR->Execute(".target.bash", "rm -f $CAM_ROOT/.cas/$caName.pem");
+        SCR->Execute(".target.bash", "rm -f $CAM_ROOT/.cas/crl_$caName.pem");
+        SCR->Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
+
+    } else {
+        return $self->SetError( summary => __("Deleting the CA is not allowed."),
+                                description => "The CA must be expired or no certificate was signed with this CA",
+                                code    => "DELETE_FAILED");
+    }
+}
 
 
 1;

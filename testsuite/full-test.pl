@@ -85,6 +85,7 @@ T48_ImportRequest();
 T49_DeleteRequest();
 
 T50_ImportCA();
+T51_DeleteCA();
 
 sub printError {
     my $err = shift;
@@ -1837,6 +1838,58 @@ sub T50_ImportCA {
                };
     
     my $res = YaPI::CaManagement->ImportCA($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub T51_DeleteCA {
+    print STDERR "------------------- T51_DeleteCA ---------------------\n";
+    print "------------------- T51_DeleteCA ---------------------\n";
+
+    my $data = {
+                'caName'       => 'Test4_SuSE_CA',
+                'caPasswd'     => 'system'
+               };
+    
+    my $res = YaPI::CaManagement->DeleteCA($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+
+    $data = {
+             'caName'       => 'Test2_SuSE_CA',
+             'caPasswd'     => 'system'
+            };
+    
+    $res = YaPI::CaManagement->DeleteCA($data);
+    if( not defined $res ) {
+        print "OK false positiv\n";
+        my $err = YaPI::CaManagement->Error();
+        print STDERR Data::Dumper->Dump([$err])."\n";
+    } else {
+        print "Fehler darf nicht gelöscht werden:\n";
+        print STDERR "Fehler darf nicht gelöscht werden:\n";
+        exit 1;
+    }
+
+    $data = {
+             'caName'       => 'Test2_SuSE_CA',
+             'caPasswd'     => 'system',
+             'force'        => 1
+            };
+    
+    $res = YaPI::CaManagement->DeleteCA($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
         my $err = YaPI::CaManagement->Error();
