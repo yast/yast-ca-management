@@ -824,7 +824,8 @@
 	}
 
 	if (size (CaMgm::adv_subject_alt_name_list) > 0
-	    || CaMgm::adv_copy_subject_alt_name)
+	    || (CaMgm::adv_copy_subject_alt_name
+		&& size(CaMgm::emailList) > 0))
 	{	
 	    text = text + "Subject Alt Name:         "
 		+ (CaMgm::adv_cri_subject_alt_name ? _("(critical) ") : "") ;
