@@ -136,7 +136,8 @@ sub Execute {
     
     $class->setConfig($caName) || return undef;
     if($path eq ".genKey") {
-        $hash = shift;
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         if(not defined $hash->{'ALGORITHM'}) {
             $hash->{'ALGORITHM'} = $privkeyalg;
         }
@@ -148,7 +149,8 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".genReq") {
-        $hash = shift;
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         $ret = $openssl->createReq( %{$hash} );
         if(not defined $ret) {
             return $class->SetError(summary => "Can not create request!",
@@ -157,7 +159,8 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".genCert") {
-        $hash = shift;
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         $ret = $openssl->createSelfSignedCert( %{$hash} );
         if(not defined $ret) {
             return $class->SetError(summary => "Can not create a self-signed certificate!",
@@ -166,7 +169,8 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".issueCert") {
-        $hash = shift;
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         my $ret = $openssl->issueReq( %{$hash} );
         if(not defined $ret) {
             return $class->SetError(summary => "Can not issuer request!",
@@ -175,7 +179,8 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".getNumericDate") {
-        my $date = shift;
+        my $date = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         $ret = $openssl->getNumericDate( $date );
         if(not defined $ret) {
             return $class->SetError(summary => "Can not get a numeric date!",
@@ -184,7 +189,8 @@ sub Execute {
         }
         return $ret;
     } elsif($path eq ".updateDB") {
-        $hash = shift;
+        $hash = shift|| return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         $ret = $openssl->updateDB(%{$hash});
         if(not defined $ret) {
             return $class->SetError(summary => "Can not update the database",
@@ -193,7 +199,8 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".revoke") {
-        $hash = shift;
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         $ret = $openssl->revokeCert(%{$hash});
         if(not defined $ret) {
             return $class->SetError(summary => "Can not revoke certificate!",
@@ -202,7 +209,8 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".issueCrl") {
-        $hash = shift;
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         $ret = $openssl->issueCRL(%{$hash});
         if(not defined $ret) {
             return $class->SetError(summary => "Can not issue the CRL!",
@@ -211,7 +219,8 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".dataConvert") {
-        $hash = shift;
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         $ret = $openssl->convert(%{$hash});
         if(not defined $ret) {
             return $class->SetError(summary => "Convert failed!",
@@ -220,7 +229,8 @@ sub Execute {
         }
         return $ret;
     } elsif($path eq ".verify") {
-        $hash = shift;
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                    code => "SCR_EXECUTE_FAILED");
         $ret = $openssl->verify(%{$hash});
         if(not defined $ret) {
             return $class->SetError(summary => "Verify failed!",
