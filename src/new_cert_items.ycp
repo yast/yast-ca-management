@@ -28,7 +28,9 @@
     import "Label";
     import "CaManagement";
 
-    define string advanced_help = _("<P>This frame shows further attributes and OpenSSL X509v3 extensions which can be set. If you are not familiar with these extentions please have a look to the file /usr/share/doc/packages/openssl-doc/openssl.txt ( packagen openssl-doc )</P>" );
+    include "ca-management/new_cert_callbacks.ycp";    
+
+    define string advanced_help = _("<P>This frame shows further attributes and OpenSSL X509v3 extensions which can be set. If you are not familiar with these extentions please have a look to the file /usr/share/doc/packages/openssl-doc/openssl.txt ( package openssl-doc )</P>" );
 
     define string expert_help = advanced_help + _("<P>Please take care that wrong entries can make the certificate unuseable.</P>");
 
@@ -88,6 +90,8 @@
 												    )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_basic_constaints()),
+								  "setCallback" : ``(set_advanced_basic_constaints()),								  
 								  ],
 
 			    `advanced_CRL_distribution_point : 	$["name" 	: "CRL Distribution Point",
@@ -98,6 +102,8 @@
 												    `VSpacing(1.5)
 												    )
 											 ),
+								  "getCallback" : ``(get_advanced_CRL_distribution_point()),
+								  "setCallback" : ``(set_advanced_CRL_distribution_point()),		  
 								  "default"    	: true,
 								  ],
 
@@ -110,6 +116,8 @@
 												     )
 											  ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_challange_password()),
+								  "setCallback" : ``(set_advanced_challange_password()),
 								  ],
 
 			    `advanced_issuer_alt_name : 	$["name" : "Issuer Alt Name",
@@ -145,6 +153,8 @@
 												     )
 											  ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_issuer_alt_name()),
+								  "setCallback" : ``(set_advanced_issuer_alt_name()),
 								  ],
 
 			    `advanced_key_usage : 		$["name" 	: "Key Usage",
@@ -167,11 +177,13 @@
 												 )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_key_usage()),
+								  "setCallback" : ``(set_advanced_key_usage()),
 								  ],
 
 			    `advanced_netscape_settings : 	$["name" 	: "Netscape Settings",
 								  "widget"	: `Empty(),
-								  "default"    	: true,
+								  "default"    	: false,
 								  ],
 
 			    `advanced_netscape_nsComment : 	$["name" 	: "NsComment",
@@ -183,6 +195,8 @@
 												    )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_netscape_nsComment()),
+								  "setCallback" : ``(set_advanced_netscape_nsComment()),
 								  ],
 
 			    `advanced_netscape_nsCertType : 	$["name" 	: "NsCertType",
@@ -204,6 +218,8 @@
 												     )
 											  ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_netscape_nsCertType()),
+								  "setCallback" : ``(set_advanced_netscape_nsCertType()),
 								  ],
 
 			    `advanced_netscape_nsSslServerName :$["name" 	: "nsSslServerName",
@@ -215,6 +231,8 @@
 												     )
 											  ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_netscape_nsSslServerName()),
+								  "setCallback" : ``(set_advanced_netscape_nsSslServerName()),
 								  ],
 
 			    `advanced_subject_alt_name : 	$["name" 	: "Subject Alt Name",
@@ -252,6 +270,8 @@
 												 )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_subject_alt_name()),
+								  "setCallback" : ``(set_advanced_subject_alt_name()),
 								  ],
 
 			    `advanced_unstructured_name : 	$["name" 	: "Unstructured Name",
@@ -263,6 +283,8 @@
 												     )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_advanced_unstructured_name()),
+								  "setCallback" : ``(set_advanced_unstructured_name()),
 								  ],
 
 			    `expert : 				$["name" 	: _("Expert Settings"),
@@ -285,11 +307,13 @@
 												  )
 											  ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_expert_key_identifier()),
+								  "setCallback" : ``(set_expert_key_identifier()),
 								  ],
 
 			    `expert_netscape_settings : 	$["name" 	: "Netscape Settings",
 								  "widget"	: `Empty(),
-								  "default"    	: true,
+								  "default"    	: false,
 								  ],
 
 			    `expert_netscape_nsBaseUrl : 	$["name" 	: "nsBaseUrl",
@@ -301,6 +325,8 @@
 												     )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_expert_netscape_nsBaseUrl()),
+								  "setCallback" : ``(set_expert_netscape_nsBaseUrl()),
 								  ],
 
 			    `expert_netscape_nsRevocationUrl : 	$["name" 	: "nsRevocationUrl",
@@ -312,6 +338,8 @@
 												     )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_expert_netscape_nsRevocationUrl()),
+								  "setCallback" : ``(set_expert_netscape_nsRevocationUrl()),
 								  ],
 
 			    `expert_netscape_nsCaRevocationUrl :$["name" 	: "nsCaRevocationUrl",
@@ -323,6 +351,8 @@
 												     )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_expert_netscape_nsCaRevocationUrl()),
+								  "setCallback" : ``(set_expert_netscape_nsCaRevocationUrl()),
 								  ],
 
 			    `expert_netscape_nsRenewallUrl : 	$["name" 	: "nsRenewallUrl",
@@ -334,6 +364,8 @@
 												     )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_expert_netscape_nsRenewallUrl()),
+								  "setCallback" : ``(set_expert_netscape_nsRenewallUrl()),
 								  ],
 
 			    `expert_netscape_nsCaPolicyUrl : 	$["name" 	: "nsCaPolicyUrl",
@@ -345,6 +377,8 @@
 												     )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_expert_netscape_nsCaPolicyUrl()),
+								  "setCallback" : ``(set_expert_netscape_nsCaPolicyUrl()),
 								  ],
 
 			    `expert_authorityInfoAccess : 	$["name" 	: "authorityInfoAccess",
@@ -356,6 +390,8 @@
 												     )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_expert_authorityInfoAccess()),
+								  "setCallback" : ``(set_expert_authorityInfoAccess()),
 								  ],
 
 			    `expert_extendedKeyUsage : 		$["name" 	: "extendedKeyUsage",
@@ -367,6 +403,8 @@
 												     )
 											 ),
 								  "default"    	: true,
+								  "getCallback" : ``(get_expert_extendedKeyUsage()),
+								  "setCallback" : ``(set_expert_extendedKeyUsage()),
 								  ]
     ];
 

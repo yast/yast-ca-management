@@ -1,0 +1,169 @@
+/**
+ *
+ * File:
+ *   new_cert_callbacks.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   Callback definitions for advanced setting ( creating
+ *   new certificate )
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Creating a new CA/Certificate
+ *
+ */
+
+
+{
+    textdomain "ca-management";
+
+    import "CaMgm";
+    import "CaManagement";
+
+    define void get_advanced_basic_constaints() ``{
+	y2debug("calling get_advanced_basic_constaints");
+    }
+    define string set_advanced_basic_constaints() ``{
+	y2debug("calling set_advanced_basic_constaints");
+    }
+
+    define void get_advanced_CRL_distribution_point() ``{
+	y2debug("calling get_advanced_CRL_distribution_point");
+    }
+    define string set_advanced_CRL_distribution_point() ``{
+	y2debug("calling set_advanced_CRL_distribution_point");
+    }
+    
+    define void get_advanced_challange_password() ``{
+	y2debug("calling get_advanced_challange_password");
+    }
+    define string set_advanced_challange_password() ``{
+	y2debug("calling set_advanced_challange_password");
+    }	
+    
+    define void get_advanced_issuer_alt_name() ``{
+	y2debug("calling get_advanced_issuer_alt_name");
+    }
+    define string set_advanced_issuer_alt_name() ``{
+	y2debug("calling set_advanced_issuer_alt_name");
+    }
+
+    define void get_advanced_key_usage() ``{
+	y2debug("calling get_advanced_key_usage");
+    }
+    define string set_advanced_key_usage() ``{
+	y2debug("calling set_advanced_key_usage");
+    }
+    
+    define void get_advanced_netscape_settings() ``{
+	y2debug("calling get_advanced_netscape_settings");
+    }
+    define string set_advanced_netscape_settings() ``{
+	y2debug("calling set_advanced_netscape_settings");
+    }
+    
+    define void get_advanced_netscape_nsComment() ``{
+	y2debug("calling get_advanced_netscape_nsComment");
+    }
+    define string set_advanced_netscape_nsComment() ``{
+	y2debug("calling set_advanced_netscape_nsComment");
+    }	
+    
+    define void get_advanced_netscape_nsCertType() ``{
+	y2debug("calling get_advanced_netscape_nsCertType");
+    }
+    define string set_advanced_netscape_nsCertType() ``{
+	y2debug("calling set_advanced_netscape_nsCertType");
+    }
+    
+    define void get_advanced_netscape_nsSslServerName() ``{
+	y2debug("calling get_advanced_netscape_nsSslServerName");
+    }
+    define string set_advanced_netscape_nsSslServerName() ``{
+	y2debug("calling set_advanced_netscape_nsSslServerName");
+    }
+    
+    define void get_advanced_subject_alt_name() ``{
+	y2debug("calling get_advanced_subject_alt_name");
+    }
+    define string set_advanced_subject_alt_name() ``{
+	y2debug("calling set_advanced_subject_alt_name");
+    }	
+    
+    define void get_advanced_unstructured_name() ``{
+	y2debug("calling get_advanced_unstructured_name");
+    }
+    define string set_advanced_unstructured_name() ``{
+	y2debug("calling set_advanced_unstructured_name");
+    }	
+    
+    define void get_expert_key_identifier() ``{
+	y2debug("calling get_expert_key_identifier");
+    }
+    define string set_expert_key_identifier() ``{
+	y2debug("calling set_expert_key_identifier");
+    }	
+    
+    define void get_expert_netscape_settings() ``{
+	y2debug("calling get_expert_netscape_settings");
+    }
+    define string set_expert_netscape_settings() ``{
+	y2debug("calling set_expert_netscape_settings");
+    }	
+    
+    define void get_expert_netscape_nsBaseUrl() ``{
+	y2debug("calling get_expert_netscape_nsBaseUrl");
+    }
+    define string set_expert_netscape_nsBaseUrl() ``{
+	y2debug("calling set_expert_netscape_nsBaseUrl");
+    }	
+    
+    define void get_expert_netscape_nsRevocationUrl() ``{
+	y2debug("calling get_expert_netscape_nsRevocationUrl");
+    }
+    define string set_expert_netscape_nsRevocationUrl() ``{
+	y2debug("calling set_expert_netscape_nsRevocationUrl");
+    }	
+    
+    define void get_expert_netscape_nsCaRevocationUrl() ``{
+	y2debug("calling get_expert_netscape_nsCaRevocationUrl");
+    }
+    define string set_expert_netscape_nsCaRevocationUrl() ``{
+	y2debug("calling set_expert_netscape_nsCaRevocationUrl");
+    }	
+    
+    define void get_expert_netscape_nsRenewallUrl() ``{
+	y2debug("calling get_expert_netscape_nsRenewallUrl");
+    }
+    define string set_expert_netscape_nsRenewallUrl() ``{
+	y2debug("calling set_expert_netscape_nsRenewallUrl");
+    }	
+    
+    define void get_expert_netscape_nsCaPolicyUrl() ``{
+	y2debug("calling get_expert_netscape_nsCaPolicyUrl");
+    }
+    define string set_expert_netscape_nsCaPolicyUrl() ``{
+	y2debug("calling set_expert_netscape_nsCaPolicyUrl");
+    }	
+    
+    define void get_expert_authorityInfoAccess() ``{
+	y2debug("calling get_expert_authorityInfoAccess");
+    }
+    define string set_expert_authorityInfoAccess() ``{
+	y2debug("calling set_expert_authorityInfoAccess");
+    }	
+    
+    define void get_expert_extendedKeyUsage() ``{
+	y2debug("calling get_expert_extendedKeyUsage");
+    }	
+    define string set_expert_extendedKeyUsage() ``{
+	y2debug("calling set_expert_extendedKeyUsage");
+    }	
+
+}

@@ -8,6 +8,7 @@ myinclude_DATA =		\
 	new_cert.ycp		\
 	util.ycp		\
 	new_cert_items.ycp	\
+	new_cert_callbacks.ycp	\
 	new_cert_advanced.ycp	\
 	wizards.ycp
 

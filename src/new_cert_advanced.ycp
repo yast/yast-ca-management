@@ -32,6 +32,8 @@
     include "ca-management/util.ycp";
     include "ca-management/new_cert_items.ycp";
 
+    define symbol lastItem = nil;
+
     /**
      * Creating new CA/Certificate ( Advanced Settings )
      * @return `next, 'back, 'cancel, 'again
@@ -78,6 +80,7 @@
 		       );
 
 	UI::ChangeWidget (`id( `tree ), `CurrentItem, `advanced);
+	lastItem = `advanced;
 
 	symbol ret = `dummy;
 
@@ -124,11 +127,44 @@
 		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
 		y2milestone ("Selected: %1", selected);
 
-		map item = itemMap[selected]:$[];
-		// header label
-		UI::ChangeWidget (`id(`heading), `Value, _("Current Selection: ") + item["name"]:"");
-		UI::ReplaceWidget (`id(`replace), item["widget"]:`Empty() );
-		UI::ChangeWidget (`id (`default), `Enabled, item["default"]:true );
+		// saving settings for old selection
+		map item = itemMap[lastItem]:$[];
+		any function = item["setCallback"]:nil;
+		string error = "";
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		    if (is(ret, string))
+		    {
+			error = (string) ret;
+		    }
+		}
+
+		if (size(error) > 0)
+		{
+		    Popup::Error (error);
+		    // set selection back
+		    UI::ChangeWidget (`id( `tree ), `CurrentItem, lastItem);		    
+		}
+		else
+		{
+		    // no error --> goto next selection
+		    lastItem = selected;
+		    item = itemMap[selected]:$[];
+		    // header label
+		    UI::ChangeWidget (`id(`heading), `Value, _("Current Selection: ") + item["name"]:"");
+		    // showing concerning input fields
+		    UI::ReplaceWidget (`id(`replace), item["widget"]:`Empty() );
+		    // enable/disable Default button
+		    UI::ChangeWidget (`id (`default), `Enabled, item["default"]:true );
+
+		    // getting values
+		    any function = item["getCallback"]:nil;
+		    if (function != nil)
+		    {
+			any ret = eval(function);
+		    }
+		}
 	    }
 	}
 
