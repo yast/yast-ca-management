@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Mar 21 12:07:41 CET 2005 - mc@suse.de
+
+- add "digitalSignature" extension to keyusage in server_v3 section
+  [#73859] 
+- mark openssl.cnf.templ as %config
+
+-------------------------------------------------------------------
 Tue Nov 30 09:14:23 CET 2004 - schubi@suse.de
 
 - Fixes for new yast intepreter
