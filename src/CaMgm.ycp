@@ -22,6 +22,12 @@ import "Summary";
 
 
 /**
+ * selected default type
+ */
+global string currentDefault = "Sub CA";
+
+
+/**
  * selected CA
  */
 global string currentCA = "";

@@ -175,8 +175,12 @@
 								    "caName":CAname,
 								    "commonName":commonName,
 								    "emailAddress":email]);
-	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("key Password:")));
-	    passwordTerm = add (passwordTerm, `Password(  `id (`p12Passwd), _("p12 Password:")));	    
+	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("&Password:")));
+	    passwordTerm = add (passwordTerm, `HBox(
+						    `Password(  `id (`p12Passwd), _("&new Password:")),
+						    `Password( `id (`verifyPassword), "&verify Password:")
+						    )
+				);
 	}
 	else
 	{
@@ -335,16 +339,24 @@
 		    if (size (keyPasswd) > 0)
 		    {
 			// p12Passwd is required is keyPasswd has been given
-			ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CAname,
-										       "certificate" : certificate,
-										       "ldapHostname" : hostname,
-										       "ldapPort" : port,
-										       "destinationDN" : stringDN,
-										       "BindDN" : binddn,
-										       "ldapPasswd" : password,
-										       "keyPasswd" : keyPasswd,
-										       "p12Passwd" : p12Passwd
-										     ]);
+			if (UI::QueryWidget (`id(`p12Passwd), `Value) != UI::QueryWidget (`id(`verifyPassword), `Value))
+			{
+			    Popup::Error(_("New passwords are not equal."));
+			    ui = `again;
+			}
+			else
+			{
+			    ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CAname,
+											   "certificate" : certificate,
+											   "ldapHostname" : hostname,
+											   "ldapPort" : port,
+											   "destinationDN" : stringDN,
+											   "BindDN" : binddn,
+											   "ldapPasswd" : password,
+											   "keyPasswd" : keyPasswd,
+											   "p12Passwd" : p12Passwd
+											 ]);
+			}
 		    }
 		    else
 		    {
@@ -357,16 +369,20 @@
 										       "ldapPasswd" : password
 										     ]);
 		    }
-		}				
-		if (ret == nil
-		    || ret == false)
-		{
-		    showErrorCaManagement ();
-		    ret = false;
 		}
-		else
+		if (ui == `ok)
 		{
-		    Popup::Message(_("Saved to LDAP successfully."));
+		    // Checking error
+		    if (ret == nil
+			|| ret == false)
+		    {
+			showErrorCaManagement ();
+			ret = false;
+		    }
+		    else
+		    {
+			Popup::Message(_("Saved to LDAP successfully."));
+		    }
 		}
 	    }
 	}
@@ -406,7 +422,10 @@
 								       )
 								 )
 					       ),
-				      `Password( `id (`PK12password), "&P12Password:"),
+				      `HBox(
+					    `Password( `id (`PK12password), "&new Password:"),
+					    `Password( `id (`verifyPassword), "&verify Password:")
+					    ),				      
 				      `HBox ( 
 					     `HWeight(1, `TextEntry( `id (`filename), _("&Filename:"))),
 					     `VBox(
@@ -427,7 +446,8 @@
 			);
 
 	symbol ui = nil;
-	UI::ChangeWidget (`id (`PK12password), `Enabled, false);	
+	UI::ChangeWidget (`id (`PK12password), `Enabled, false);
+	UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);		
 	repeat
  	{
 	    ui = (symbol) UI::UserInput ();
@@ -439,22 +459,34 @@
 					   `PKCS12:"PKCS12",
 					   `PKCS12_CHAIN:"PKCS12_CHAIN"];
 	    
-            string kind =  kindmap[(symbol) UI::QueryWidget(`id(`rb),
-						   `CurrentButton)]:"";
+            string kind = kindmap[(symbol) UI::QueryWidget(`id(`rb),
+							   `CurrentButton)]:"";
+
+	    map<symbol,string> filtermap = $[`PEM_CERT:"*.pem *.crt *",
+					     `PEM_CERT_KEY:"*.pem *.crt *",
+					     `PEM_CERT_ENCKEY:"*.pem *.crt *",
+					     `DER_CERT:"*.der *.crt *",
+					     `PKCS12:"*.p12 *.crt *",
+					     `PKCS12_CHAIN:"*.p12 *.crt *"];
+	    
+	    string filterString	= filtermap[(symbol) UI::QueryWidget(`id(`rb),
+								     `CurrentButton)]:"*";    
 
 	    if (kind == "PKCS12"
 		|| kind == "PKCS12_CHAIN")
 	    {
 		UI::ChangeWidget (`id (`PK12password), `Enabled, true);
+		UI::ChangeWidget (`id (`verifyPassword), `Enabled, true);				
 	    }
 	    else
 	    {
-		UI::ChangeWidget (`id (`PK12password), `Enabled, false);		
+		UI::ChangeWidget (`id (`PK12password), `Enabled, false);
+		UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);				
 	    }
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( "/tmp", "*", "Export to ..." );
+		string name = UI::AskForSaveFileName( "/tmp", filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -464,14 +496,23 @@
 	    if (ui == `ok)
 	    {
 		// export to file
-
+		if ( ( kind == "PKCS12"
+		       || kind == "PKCS12_CHAIN")
+		     &&
+		     UI::QueryWidget (`id(`PK12password), `Value) != UI::QueryWidget (`id(`verifyPassword), `Value))
+		{
+		    Popup::Error(_("New passwords are not equal."));
+		    ui = `again;
+		}
+		
 		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
 		if (size (filename) == 0)
 		{
 		    Popup::Error(_("Filename required"));
 		    ui = `again;
 		}
-		else
+
+		if (ui == `ok)
 		{
 		    string ret = nil;
 		    if (kind == "PKCS12"
@@ -562,13 +603,19 @@
 
 	    map<symbol,string> kindmap = $[`PEM:"PEM",
 					   `DER:"DER" ];
+
+	    map<symbol,string> filtermap = $[`PEM:"*.pem *.crt *",
+					     `DER:"*.der *.crt *"];
 	    
-            string kind =  kindmap[(symbol) UI::QueryWidget(`id(`rb),
-						   `CurrentButton)]:"";
+	    string filterString	= filtermap[(symbol) UI::QueryWidget(`id(`rb),
+								     `CurrentButton)]:"*";    	    
+	    
+            string kind = kindmap[(symbol) UI::QueryWidget(`id(`rb),
+							   `CurrentButton)]:"";
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( "/tmp", "*", "Export to ..." );
+		string name = UI::AskForSaveFileName( "/tmp", filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -631,7 +678,7 @@
 					       `RadioButtonGroup(`id(`rb), 
 								 `VBox(
 								       `Left(`RadioButton(`id(`PEM_CERT), `opt(`notify),
-											  _("o&nly the certificate in PEM format"), true)),
+											  _("&only the certificate in PEM format"), true)),
 								       `Left(`RadioButton(`id(`PEM_CERT_KEY), `opt(`notify),
 											  _("ce&rtificate and the key unencrypted in PEM format" ))),
 								       `Left(`RadioButton(`id(`PEM_CERT_ENCKEY), `opt(`notify),
@@ -645,8 +692,11 @@
 								       )
 								 )
 					       ),
-				      `Password( `id (`PK12password), "&P12Password:"),
-				      `Password( `id (`keyPassword), "&keyPassword:"),
+				      `Password( `id (`keyPassword), "&Password:"),
+				      `HBox(
+					    `Password( `id (`PK12password), "&new Password:"),
+					    `Password( `id (`verifyPassword), "&verify Password:")
+					    ),
 				      `HBox ( 
 					     `HWeight(1, `TextEntry( `id (`filename), _("&Filename:"))),
 					     `VBox(
@@ -667,7 +717,8 @@
 			);
 
 	symbol ui = nil;
-	UI::ChangeWidget (`id (`PK12password), `Enabled, false);	
+	UI::ChangeWidget (`id (`PK12password), `Enabled, false);
+	UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);		
 	repeat
  	{
 	    ui = (symbol) UI::UserInput ();
@@ -682,19 +733,32 @@
             string kind =  kindmap[(symbol) UI::QueryWidget(`id(`rb),
 						   `CurrentButton)]:"";
 
+	    map<symbol,string> filtermap = $[`PEM_CERT:"*.pem *.crt *",
+					     `PEM_CERT_KEY:"*.pem *.crt *",
+					     `PEM_CERT_ENCKEY:"*.pem *.crt *",
+					     `DER_CERT:"*.der *.crt *",
+					     `PKCS12:"*.p12 *.crt *",
+					     `PKCS12_CHAIN:"*.p12 *.crt *"];
+	    
+	    string filterString	= filtermap[(symbol) UI::QueryWidget(`id(`rb),
+								     `CurrentButton)]:"*";    
+	    
+
 	    if (kind == "PKCS12"
 		|| kind == "PKCS12_CHAIN")
 	    {
 		UI::ChangeWidget (`id (`PK12password), `Enabled, true);
+		UI::ChangeWidget (`id (`verifyPassword), `Enabled, true);		
 	    }
 	    else
 	    {
-		UI::ChangeWidget (`id (`PK12password), `Enabled, false);		
+		UI::ChangeWidget (`id (`PK12password), `Enabled, false);
+		UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);		
 	    }
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( "/tmp", "*", "Export to ..." );
+		string name = UI::AskForSaveFileName( "/tmp", filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -705,13 +769,23 @@
 	    {
 		// export to file
 
+		if ( ( kind == "PKCS12"
+		       || kind == "PKCS12_CHAIN")
+		     &&
+		     UI::QueryWidget (`id(`PK12password), `Value) != UI::QueryWidget (`id(`verifyPassword), `Value))
+		{
+		    Popup::Error(_("New passwords are not equal."));
+		    ui = `again;
+		}
+
 		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
 		if (size (filename) == 0)
 		{
 		    Popup::Error(_("Filename required"));
 		    ui = `again;
 		}
-		else
+
+		if (ui == `ok)
 		{
 		    string ret = nil;
 		    if (kind == "PKCS12"
