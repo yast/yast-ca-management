@@ -106,18 +106,21 @@
 
 	map ret = nil;
 	
-	if (kind == "Root CA"
-	    || kind == "Sub CA")
+	if (kind == "Root CA")
+        {
+            ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"ca"]);
+        }
+	if (kind == "Sub CA")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"ca"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"ca"]);
 	}
 	if (kind == "Server Certificate")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"server"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"server"]);
 	}
 	if (kind == "Client Certificate")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"client"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"client"]);
 	}		
 	if (ret == nil)
 	{
