@@ -78,7 +78,7 @@
 
                                 // To translators: dialog label
         Wizard::SetContents (_("NIS Server Query Hosts Setup"), contents, helptext, true, true);
-        UI::ChangeWidget (`id (`next), `Label, Label::FinishButton());
+        Wizard::SetNextButton(`next, Label::FinishButton() );
 
         symbol ui = nil;
 
@@ -133,7 +133,7 @@
         }
         until (contains ([`back, `next, `abort], ui));
 
-        if (ui == `back) UI::ChangeWidget (`id (`next), `Label, Label::NextButton());
+        if (ui == `back) Wizard::RestoreNextButton();
 
         // and finally merge
         NisServer::securenets = MergeNetsEntries (NisServer::securenets, allow_query);

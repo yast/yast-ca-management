@@ -85,7 +85,7 @@
 
                                 // To translators: dialog label
         Wizard::SetContents (_("CA Selection"), contents, helptext, false, true);
-        UI::ChangeWidget (`id (`next), `Label, Label::FinishButton());
+        Wizard::SetNextButton(`next, Label::FinishButton() );
 	UI::ChangeWidget (`id (`abort), `Enabled, false);
 	UI::ChangeWidget (`id (`table), `CurrentItem, CaMgm::currentCA);
 			  
