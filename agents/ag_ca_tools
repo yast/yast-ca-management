@@ -126,12 +126,6 @@ sub Read {
             return $class->SetError( code    => "Opendir_Failed",
                                      summary => "Can not read directory '$CAM_ROOT' '$!'");
         }
-    } elsif($path eq ".status") {
-        my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
-                                                      code => "PARAM_CHECK_FAILED");
-        my $certificate = shift || return $class->SetError(summary =>"Parameter 'certificate' missing",
-                                                           code => "PARAM_CHECK_FAILED");
-        return $class->status($caName, $certificate);
     } elsif($path eq ".checkKey") {
         my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
                                                       code => "PARAM_CHECK_FAILED");
@@ -397,45 +391,6 @@ sub createCaInf {
     close DB2;
     
     return 1;
-}
-
-sub status {
-    my $class       = shift || return undef;
-    my $caName      = shift || return $class->SetError(summary =>"Missing Parameter 'caName'",
-                                                       code => "PARAM_CHECK_FAILED");
-    my $certificate = shift || return $class->SetError(summary =>"Missing Parameter 'certificate'",
-                                                       code => "PARAM_CHECK_FAILED");;
-    my $serial = "";
-
-    $certificate =~ /^([[:xdigit:]]+):[[:xdigit:]]+$/;
-    if(!defined $1) {
-        return $class->SetError(summary=>"Unknown certificate name '$certificate'",
-                                code=>"PARAM_CHECK_FAILED");
-    }
-    $serial = $1;
-
-    my $command = "/usr/bin/openssl ca ";
-    $command .= "-config $CAM_ROOT/$caName/openssl.cnf.tmpl ";
-    $command .= "-status $serial";
-    if (not open( FD, "$command 2>&1|" )) {
-        return $class->SetError(summary => "Cannot open pipe to OpenSSL.",
-                                code => "OPEN_FAILED");
-    }
-    my @ret = <FD>;
-    close(FD);
-    my $err = "";
-    foreach my $line (@ret) {
-        next if($line =~ /^Using configuration from/);
-        if($line =~ /^$serial=(\w+)\s+.*$/) {
-            return $1;
-        } else {
-            $err .= $line;
-            y2error("status:".$line);
-        }
-    }
-    return $class->SetError(summary => "Error at Read status",
-                            description => $err,
-                            code => "SCR_READ_FAILED");
 }
 
 sub parseIndexTXT {
