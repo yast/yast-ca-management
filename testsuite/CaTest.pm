@@ -30,15 +30,16 @@ sub run {
 #    test_ReadCA();
 #    test_AddRequest();
 #    test_issueCertificate();
-    test_AddCertificate();
-    test_ReadCertificateList();
+#    test_AddCertificate();
+#    test_ReadCertificateList();
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
-    test_AddCRL();
+#    test_AddCRL();
     test_ReadCRL();
 #    test_ExportCA();
 #    test_ExportCertificate();
-    test_Verify();
+    test_ExportCRL();
+#    test_Verify();
 
     return 1;
 }
@@ -434,6 +435,30 @@ sub test_ExportCertificate {
             print OUT $res;
             close OUT;
         }
+    }
+}
+
+sub test_ExportCRL {
+    foreach my $ef ("PEM", "DER") {
+        my $data = {
+                    'caName' => $exampleCA,
+                    'exportFormat' => $ef,
+                   };
+        print STDERR "trying to call YaST::caManagement::ExportCRL($ef)\n";
+        print STDERR "with caName = '$exampleCA' \n";
+    
+        my $res = CaManagement::ExportCRL($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = CaManagement::Error();
+            printError($err);
+        } else {
+            if(! open(OUT, "> /tmp/mc/certs/CRL_$ef")) {
+                print STDERR "OPEN_FAILED\n";
+            }
+            print OUT $res;
+            close OUT;
+        }        
     }
 }
 
