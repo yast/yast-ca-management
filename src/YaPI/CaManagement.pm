@@ -4325,7 +4325,8 @@ sub DeleteCertificate {
     my $caName  = "";
     my $certificate = "";
     my $req = "";
-    
+    my $serial = "";
+
     if (!defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
                                     # parameter check failed
@@ -4342,9 +4343,10 @@ sub DeleteCertificate {
     }
     $certificate = $data->{'certificate'};
     
-    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+)$/;
-    if(defined $1 && $1 ne "") {
-        $req = $1;
+    $certificate =~ /^([[:xdigit:]]+):([[:xdigit:]]+)$/;
+    if(defined $1 && defined $2 && $1 ne "" && $2 ne "") {
+        $serial = $1;
+        $req = $2;
     }
     
     my $check = SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'},
@@ -4358,9 +4360,9 @@ sub DeleteCertificate {
                                code => "FILE_DOES_NOT_EXIST");
     }
     
-    my $st = SCR->Read(".caTools.status", $caName, $certificate);
+    my $st = SCR->Execute(".openssl.status", $caName, {SERIAL => "$serial"});
     if(! defined $st) {
-        return $self->SetError(%{SCR->Error(".caTools")});
+        return $self->SetError(%{SCR->Error(".openssl")});
     } elsif( $st eq "Revoked" || $st eq "Expired" ) {
 
         if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/newcerts/$certificate.pem")) {
