@@ -308,9 +308,9 @@
 						   `item(`id(`view), _("View") ),
 						   `menu( _("Sign"),
 							  [
-							   `item(`id(`signClient), _("as Client Request") ),
-							   `item(`id(`signServer), _("as Server Request") ),
-							   `item(`id(`signCA), _("as CA Request") )
+							   `item(`id(`signClient), _("as Client Certificate") ),
+							   `item(`id(`signServer), _("as Server Certificate") ),
+							   `item(`id(`signCA), _("as CA Certificate") )
 							   ]),
 						   `item(`id(`delete), _("Delete") ),
 						   `item(`id(`exportFile), _("Export to File") )

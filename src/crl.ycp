@@ -43,6 +43,9 @@
      */
     
     define symbol createCRL(string CAname)``{
+	map ret = (map) YaPI::CaManagement::ReadCRLDefaults ($["caName":CAname]);
+	y2milestone ("ReadCRLDefaults(%1) return %2",
+		     $["caName":CAname], ret );
 
 	// asking user
 	UI::OpenDialog (`opt(`decorated ),
@@ -52,7 +55,7 @@
 				      // popup window header
 				      `Heading (_("Generate New CRL")),
 				      `VSpacing (1),
-				      `IntField( `id (`entry), _("&Valid to (days):"), 1, 10000, 30),
+				      `IntField( `id (`entry), _("&Valid to (days):"), 1, 10000, tointeger(ret["days"]:"30")),
 				      `VSpacing (1),					  
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),

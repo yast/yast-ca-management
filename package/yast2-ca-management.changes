@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Mar 29 10:41:12 CEST 2005 - schubi@suse.de
+
+- Add autoyast functions
+- Bug 73848 - ca-mgm: wrong text
+- Bug 73846 - ca-mgm: "generate CRL" does not take care of the default
+
+-------------------------------------------------------------------
 Mon Mar 21 12:07:41 CET 2005 - mc@suse.de
 
 - add "digitalSignature" extension to keyusage in server_v3 section
