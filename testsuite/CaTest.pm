@@ -21,8 +21,9 @@ my $exampleReq = "";
 my $exampleCert = "";
 
 sub run {
+    test_Interface();
 #    test_AddRootCA();
-    test_ReadCAList();
+#    test_ReadCAList();
 #    test_AddRootCA2();
 #    test_ReadCertificateDefaults();
 #    test_ReadCertificateDefaults2();
@@ -33,7 +34,7 @@ sub run {
 #    test_ReadCertificateList();
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
-    test_AddCRL();
+#    test_AddCRL();
 
     return 1;
 }
@@ -44,6 +45,19 @@ sub printError {
         print STDERR "$k = ".$err->{$k}."\n";
     }
     print STDERR "\n";
+}
+
+sub test_Interface {
+    my $interface = CaManagement->Interface();
+    if( not defined $interface ) {
+        my $msg = CaManagement->Error();
+        print STDERR "ERROR Interface: \n";
+        printError($err);
+    } else {
+        print STDERR "SUCCESS Interface: \n";
+        print STDERR Data::Dumper->Dump($interface)."\n";
+    }
+    
 }
 
 sub test_ReadCAList {
