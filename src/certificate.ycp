@@ -310,6 +310,11 @@
 		    CaMgm::currentCertificate = (string) certificateID[id]:"";
 		    UI::ChangeWidget( `id(`textinfo), `Value, getCertDescription (CaMgm::currentCA,
 										  CaMgm::currentCertificate));
+		    
+		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+		    boolean valid = ((string) select(table_item, 1, "") == "Valid");
+		    UI::ChangeWidget (`id (`delete), `Enabled, valid);
+		    UI::ChangeWidget (`id (`revoke), `Enabled, valid);			
 	    }	    
 
             ui = (symbol) UI::UserInput ();
