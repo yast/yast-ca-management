@@ -94,6 +94,10 @@ $bool = ExportCRLToLDAP($valueMap)
 
   Export a CRL to a LDAP directory
 
+$bool = ExportCertificateToLDAP($valueMap)
+
+  Export a Certificate in a LDAP Directory.
+
 $defaultsMap = ReadLDAPExportDefaults($valueMap)
 
   Return the defaults for export CA, CRL or certificates to LDAP.
@@ -101,6 +105,11 @@ $defaultsMap = ReadLDAPExportDefaults($valueMap)
 $bool = InitLDAPcaManagement($valueMap)
 
   Creates the default configuration structure in LDAP
+
+$bool = DeleteCertificate($valueMap)
+
+  Delete a Certificate. This function removes also
+  the request and the private key.
 
 
 =head1 COMMON PARAMETER
@@ -3745,6 +3754,12 @@ sub ReadLDAPExportDefaults {
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
+#    if(not defined SCR->Execute(".ldap.start_tls") ) {
+#        my $ldapERR = SCR->Read(".ldap.error");
+#        return $self->SetError(summary => "LDAP start_tls failed",
+#                               description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'} ,
+#                               code => "SCR_INIT_FAILED");
+#    }
     
     # anonymous bind
     if (! SCR->Execute(".ldap.bind", {}) ) {
@@ -4266,5 +4281,111 @@ sub ExportCertificateToLDAP {
     return 1;
     
 }
+
+=item *
+C<$bool = DeleteCertificate($valueMap)>
+
+Delete a Certificate. This function removes also
+the request and the private key.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* certificate (required)
+
+* caPasswd (required)
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+ my $data = {
+             caName        => 'My_CA',
+             certificate   => $certificateName,
+             caPasswd      => 'system'
+            };
+
+    my $res = YaPI::CaManagement->DeleteCertificate($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "OK\n";
+    }
+
+=cut
+
+BEGIN { $TYPEINFO{DeleteCertificate} = ["function", "boolean", ["map", "string", "any"] ]; }
+sub DeleteCertificate {
+    my $self = shift;
+    my $data = shift;
+    my $caName  = "";
+    my $certificate = "";
+    my $req = "";
+    
+    if (!defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+                                    # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{'caName'};
+    
+    if (!defined $data->{'certificate'} ||
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
+        # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'certificate'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $certificate = $data->{'certificate'};
+    
+    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+)$/;
+    if(defined $1 && $1 ne "") {
+        $req = $1;
+    }
+    
+    my $check = SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'},
+                                                          CACERT => 1});
+    if(not defined $check) {
+        return $self->SetError(%{SCR->Error(".caTools")});
+    }
+    
+    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/$certificate.pem") == -1) {
+        return $self->SetError(summary => _("Certificate does not exist."),
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+    
+    my $st = SCR->Read(".caTools.status", $caName, $certificate);
+    if(! defined $st) {
+        return $self->SetError(%{SCR->Error(".caTools")});
+    } elsif( $st eq "Revoked" || $st eq "Expired" ) {
+
+        if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/newcerts/$certificate.pem")) {
+            return $self->SetError(summary => _("Removing the certificate failed."),
+                                   description => "Can not remove '$CAM_ROOT/$caName/keys/$req.key'",
+                                   code => "SCR_EXECUTE_ERROR");
+        }
+        
+        if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/$req.key") >= 0) {
+            if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/$req.key")) {
+                y2error("Removing key failed. '$CAM_ROOT/$caName/keys/$req.key'");
+            }
+        }
+        if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/$req.req") >= 0) {
+            if(!SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/$req.req")) {
+                y2error("Removing request failed. '$CAM_ROOT/$caName/keys/$req.key'");
+            }
+        }
+    } else {
+        return $self->SetError( summary => _("Only revoked or expired certificates can be deleted"),
+                                description => "The status of the certificate is '$st'",
+                                code => "PARAM_CHECK_FAILED");
+    }
+    return 1;    
+}
+
 
 1;
