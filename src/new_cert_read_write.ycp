@@ -106,7 +106,8 @@
 
 	map ret = nil;
 	
-	if (kind == "Root CA")
+	if (kind == "Root CA"
+	    || kind == "Sub CA")
 	{
 	    ret = (map) CaManagement::ReadCertificateDefaults ($["certType":"ca"]);
 	}
@@ -539,7 +540,14 @@
 	    param["caName"] =  CaMgm::currentCA;
 	    param["certType"] =  "client";	    
 	    param["caPasswd"] =  getPassword(CaMgm::currentCA);
-	}	
+	}
+
+	if (kind == "Sub CA")
+	{
+	    param["caName"] =  CaMgm::currentCA;
+	    param["newCaName"] =  CaMgm::CAName;	    
+	    param["caPasswd"] =  getPassword(CaMgm::currentCA);	    
+	}
 	
 	// fillup parameters which are equal
 	
@@ -979,6 +987,12 @@
 		return true;
 	    }
 	}
+	if (kind == "Sub CA")
+	{
+	    y2milestone("CaManagement::AddSubCA(%1)", param);	
+//	    return CaManagement::AddSubCA (param);   // FIXME
+	    return true;
+	}	
     }
 
 }
