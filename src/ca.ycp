@@ -225,14 +225,6 @@
         UI::ChangeWidget( `id(`textinfo), `Value, getDescriptionCA (CaMgm::currentCA));	
     }
 
-
-    /**
-     * Store settings of a tab of a dialog
-     */
-    void storeCATab () {
-	
-    }
-
     /**
      * Handle events in a tab of a dialog
      */

@@ -343,14 +343,6 @@
 
 
     /**
-     * Store settings of a tab of a dialog
-     */
-    void storeRequestTab () {
-	
-    }
-    
-
-    /**
      * Handle events in a tab of a dialog
      */
     symbol handleRequestTab (map event) {

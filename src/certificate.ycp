@@ -382,14 +382,6 @@
 
 
     /**
-     * Store settings of a tab of a dialog
-     */
-    void storeCertificateTab () {
-	
-    }
-    
-
-    /**
      * Handle events in a tab of a dialog
      */
     symbol handleCertificateTab (map event) {

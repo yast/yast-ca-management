@@ -211,13 +211,6 @@
 
 
     /**
-     * Store settings of a tab of a dialog
-     */
-    void storeCRLTab () {
-	
-    }
-
-    /**
      * Handle events in a tab of a dialog
      */
     symbol handleCRLTab (map event) {

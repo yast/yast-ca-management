@@ -115,22 +115,7 @@ string getHelpText (string dialog) {
 }
 
 void storeDialogCATab (string dialog) {
-    if (dialog == "CA")
-    {
-	storeCATab ();
-    }
-    else if (dialog == "Certificates")
-    {
-	storeCertificateTab ();
-    }
-    else if (dialog == "CRL")
-    {
-	storeCRLTab ();
-    }
-    else if (dialog == "Request")
-    {
-	storeRequestTab ();
-    }    
+    y2debug("stroring current Tab");
 }
 
 symbol handleDialogCATab (string dialog, map event) {
