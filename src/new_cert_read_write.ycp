@@ -33,7 +33,7 @@
     
     /**
      * Values initializing for creating CA/Certificate/Request
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request")
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request", "Sub CA Request")
      * @return `next
      */
     define symbol new_cert_init (string kind) ``{
@@ -115,7 +115,8 @@
 			$["certType":"ca"],
 			ret);	    
         }
-	if (kind == "Sub CA")
+	if (kind == "Sub CA"
+	    || kind == "Sub CA Request")
 	{
 	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"ca"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
@@ -528,7 +529,7 @@
 
     /**
      * Creating CA/Certificate or signing a request by calling the CaManagement module
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate", "signRequest")     
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate", "signRequest", "Sub CA Request")     
      * @return true ( success )
      */
     define boolean cert_write (string kind) ``{
@@ -536,14 +537,13 @@
 
 	// fillup parameters depending on kind
 	
-	if (kind == "Root CA"
-	    ||kind == "Server Request"
-	    ||kind == "Client Request")
+	if (kind == "Root CA")
 	{
 	    param["caName"] =  CaMgm::CAName;
 	}
 	if (kind == "Server Request"
-	    ||kind == "Client Request")
+	    ||kind == "Client Request"
+	    ||kind == "Sub CA Request")
 	{
 	    param["caName"] =  CaMgm::currentCA;	    
 	}
@@ -626,7 +626,8 @@
 	}
 
 	if (kind != "Server Request"
-	    &&kind != "Client Request")
+	    && kind != "Client Request"
+	    && kind != "Sub CA Request")
 	{
 	    param["days"] = tostring (CaMgm::validPeriod);
 
@@ -1061,7 +1062,8 @@
 	    return YaPI::CaManagement::IssueCertificate (param) == nil ? false:true;	    
 	}
 	if (kind == "Server Request"
-	    ||kind == "Client Request")
+	    || kind == "Client Request"
+	    || kind == "Sub CA Request")
 	{
 	    y2milestone("CaManagement::AddRequest(%1)", param);	
 	    return YaPI::CaManagement::AddRequest (param) == nil ? false:true;	    	    

@@ -52,7 +52,7 @@
     
     /**
      * Creating new CA/Certificate ( 1. step )
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request")     
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request","Sub CA Request")     
      * @return `next, 'abort, 'again
      */
     define symbol new_cert1 (string kind) ``{
@@ -70,7 +70,8 @@
 	    helptext = _("<p>To generate a new certificate, some entries are needed.</p>");	    
 	}
 	else if (kind == "Client Request"
-		 || kind == "Server Request")
+		 || kind == "Server Request"
+		 || kind == "Sub CA Request")
 	{
 	    helptext = _("<p>To generate a new request, some entries are needed.</p>");	    	    
 	}
@@ -255,8 +256,9 @@
 		}
 		if (ui == `next)
 		{
-		    if (kind == "Root CA"
-			&& size (CaMgm::CAName) <= 0)
+		    if ( (kind == "Root CA"
+			  || kind == "Sub CA")
+			 && size (CaMgm::CAName) <= 0)
 		    {
 			UI::SetFocus(`id(`id_CAName));
 			Popup::Error(_("CA name required."));
@@ -306,7 +308,7 @@
 
     /**
      * Creating new CA/Certificate ( 2. step )
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request")          
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request", "Sub CA Request")          
      * @return `next, 'back, 'cancel, `advancedOptions
      */
     define symbol new_cert2 (string kind) ``{
@@ -344,7 +346,8 @@
 	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
 	}
 	else if (kind == "Client Request"
-		 || kind == "Server Request")
+		 || kind == "Server Request"
+		 || kind == "Sub CA Request")
 	{
 	    // help text 1/3
 	    helptext = _("<p>The private key of the request needs a <B>Password</B> with a minimum length of five characters. For verification reasons, reenter it in the next field.</p>");
@@ -361,7 +364,8 @@
         contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password:"), CaMgm::verifyPassword));
 	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 100, 9999, CaMgm::keyLength));
 	if (kind != "Client Request"
-	    && kind != "Server Request")
+	    && kind != "Server Request"
+	    && kind != "Sub CA Request")
 	{
 	    contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
 	}
@@ -385,7 +389,8 @@
 		CaMgm::verifyPassword = (string) UI::QueryWidget(`id(`id_verifyPassword), `Value);
 		CaMgm::keyLength = (integer) UI::QueryWidget(`id(`id_keyLength), `Value);
 		if (kind != "Client Request"
-		    &&kind != "Server Request")
+		    &&kind != "Server Request"
+		    &&kind != "Sub CA Request")
 		{
 		    CaMgm::validPeriod = (integer) UI::QueryWidget(`id(`id_validPeriod), `Value);
 		}
@@ -414,6 +419,7 @@
 
     /**
      * Creating new CA/Certificate ( 3. step )
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request", "Sub CA Request")               
      * @return `next, 'back, 'cancel
      */
     define symbol new_cert3 (string kind) ``{
@@ -439,7 +445,8 @@
 	    helptext = helptext + _("<p>Click <b>Create</b> to generate the certificate.</p>");
 	}
 	else if (kind == "Client Request"
-		 || kind == "Server Request")
+		 || kind == "Server Request"
+		 || kind == "Sub CA Request")
 	{
 	    // help text 1/2
 	    helptext = _("<p>This frame gives an overview of all settings for the request that will be created.</p>");
@@ -450,7 +457,8 @@
 	string text = _("\n<b>Summary</b>");
 	text = text + "<br><pre>";
 	if ( (kind == "Root CA"
-	      || kind == "Sub CA")
+	      || kind == "Sub CA"
+	      || kind == "Sub CA Request")
 	    && size (CaMgm::CAName) > 0)
 	{
 	    text = text + _("CA Name:                  ")  + CaMgm::CAName + "\n";
