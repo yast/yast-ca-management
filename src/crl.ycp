@@ -160,11 +160,11 @@
 	    }
 	    if (ui == `exportLDAP)
 	    {
-		exportToLDAP ("CRL");
+		exportToLDAP ("CRL", CaMgm::currentCA);
 	    }
 	    if (ui == `exportFile)
 	    {
-//		exportToFile ("CRL"); // FIXME
+//		exportToFile ("CRL"); FIXME
 	    }	    
         }
         until (contains ([`back, `abort, `createSubCA, `again], ui));
