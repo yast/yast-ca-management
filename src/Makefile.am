@@ -10,6 +10,7 @@ myinclude_DATA =		\
 	new_cert_items.ycp	\
 	new_cert_callbacks.ycp	\
 	new_cert_advanced.ycp	\
+	new_cert_read_write.ycp \
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	\
