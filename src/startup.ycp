@@ -99,7 +99,7 @@
             UI::SetFocus (`id (`table));
 
             ui = (symbol) UI::UserInput ();
-            if (contains ([`createRoot, `enter], ui))
+            if (contains ([`enter], ui))
             {
                 integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
 		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
