@@ -34,11 +34,65 @@
     /**
      * getDescription - CRL description
      * @param CA name
+     * @return `again
+     */
+    
+    define symbol createCRL(string CAname)``{
+
+	// asking user
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      // popup window header
+				      `Heading (_("Generate new CRL")),
+				      `VSpacing (1),
+				      `IntField( `id (`entry), _("&Valid to (days):"), 1, 10000, 30),
+				      `VSpacing (1),					  
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),
+				      `VSpacing (1)					  
+				      ),
+			       `HSpacing (2)
+			       )
+			);
+
+	UI::SetFocus (`id(`entry));
+	symbol ui = nil;
+	repeat
+ 	{
+	    ui = (symbol) UI::UserInput ();
+	    integer days = (integer) UI::QueryWidget(`id(`entry), `Value);
+	    if (ui == `ok)
+	    {
+		// generating CRL
+		boolean ret = nil;
+		ret = (boolean) CaManagement::AddCRL ($["caName"  : CAname,
+							"caPasswd": getPassword(CaMgm::currentCA),
+							"days"    : tostring(days)]);
+		if (ret == nil
+		    || ret == false)
+		{
+		    showErrorCaManagement ();
+		}
+	    }
+	}
+	until (contains ([`ok, `cancel], ui));
+	UI::CloseDialog ();
+	
+	return `again;
+    }
+    
+
+    /**
+     * getDescription - CRL description
+     * @param CA name
      * @return a string with the CRL description
      */
     define string getCRLDescription (string CAname) ``{
-	string text = _("<br><h3>CA description</h3>");
-
 	map ret = (map) CaManagement::ReadCRL ($["caName":CAname, "type":"parsed"]);
         if (ret == nil)
         {
@@ -46,26 +100,17 @@
             return _("<br>CRL not found");
         }
 	y2milestone("ReadCRL(%1): %2", CAname, ret);
+	SCR::Write (.target.ycp, "/tmp/stefan13", ret)	;
 
-//	map dn = ret["DN_HASH"]:$[];
-//	if (size (dn) > 0)
-//	{
-//	    text = text + _("<h4>Issued for:</h4>");
-//	    text = text + "<pre>";
-//	    text = text + "Common Name:  " + ((list)dn["CN"]:[])[0]:"";
-//	    text = text + "<br>Organization: " + ((list)dn["O"]:[])[0]:"";
-//	    text = text + "<br>Location:     " + ((list)dn["L"]:[])[0]:"";	    
-//	    text = text + "<br>State:        " + ((list)dn["ST"]:[])[0]:"";
-//	    text = text + "<br>Country:      " + ((list)dn["C"]:[])[0]:"";
-//	    text = text + "<br>EMAIL:        " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
-//	    text = text + "</pre>";	    
-//	}
-
-
-	text = text + _("<br>Valid from: ") + ret["NOTBEFORE"]:"";
-	text = text + _("<br>Valid to: ") + ret["NOTAFTER"]:"";
-	text = text + "<br><br>Fingerprint: " + ret["FINGERPRINT"]:"";
-
+	string text = text + _("<h4>Certificate Revocation List (CRL):</h4>");
+	text = text + "<pre>";
+	text = text + "<br>Version: " + ret["VERSION"]:"";
+	text = text + "<br>Signature Algorithmus: " + ret["ALGORITHM"]:"";
+	text = text + "<br>Issuer: " + ret["ISSUER"]:"";
+	text = text + "<br>Flag export state: " + ret["FLAG_EXPORT_STATE"]:"";	
+	text = text + _("<br>Last Update: ") + ret["LAST_UPDATE"]:"";
+	text = text + _("<br>Next Update: ") + ret["NEXT_UPDATE"]:"";
+	
 	return text;
 	
     }
@@ -103,7 +148,7 @@
 	contents = add (contents, buttons);
 
                                 // To translators: dialog label
-        Wizard::SetContents ( _("CRL for CA: ") + CaMgm::currentCA, contents, helptext, true, false);
+        Wizard::SetContents ( _("Certificate Revocation List (CRL) for CA: ") + CaMgm::currentCA, contents, helptext, true, false);
         UI::ChangeWidget( `id(`textinfo), `Value, getCRLDescription (CaMgm::currentCA));
 
         symbol ui = nil;
@@ -111,9 +156,12 @@
         repeat
         {
             ui = (symbol) UI::UserInput ();
-
+	    if (ui == `gererateCRL)
+	    {
+		ui = createCRL (CaMgm::currentCA);
+	    }
         }
-        until (contains ([`back, `abort, `exportFile, `createSubCA, `gererateCRL], ui));
+        until (contains ([`back, `abort, `exportFile, `createSubCA, `again], ui));
 
         return ui;
     }
