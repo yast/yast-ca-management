@@ -33,6 +33,7 @@ sub run {
 #    test_AddRequest();
 #    test_issueCertificate();
 #    test_AddCertificate();
+    test_AddCertificate2();
 #    test_ReadCertificateList();
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
@@ -49,7 +50,7 @@ sub run {
 #    test_UpdateDB();
 #    test_CreateManyCerts();
 #    test_ListManyCerts('215152321042820');
-    test_WriteCertificateDefaults();
+#    test_WriteCertificateDefaults();
     
     return 1;
 }
@@ -699,6 +700,53 @@ sub test_WriteCertificateDefaults {
     }
 }
 
+sub test_AddCertificate2 {
+
+    my $data = {
+                'caName'                => $exampleCA,
+                'certType'              => 'client',
+                'keyPasswd'             => 'system',
+                'caPasswd'              => 'system',
+                'commonName'            => 'My Request new1',
+                'emailAddress'          => 'my@linux.tux',
+                'keyLength'             => '2048',
+                'days'                  => '365',
+                'countryName'           => 'DE',
+                'localityName'          => 'Nuremberg',
+                'stateOrProvinceName'   => 'Bavaria',
+                'organizationalUnitName'=> 'IT Abteilung',
+                'organizationName'      => 'My Linux Tux GmbH',
+                'challengePassword'     => 'tralla',
+                'unstructuredName'      => 'My unstructured Name',
+                'basicConstraints'      => 'critical, CA:FALSE',
+                'nsComment'             => '"Heide Witzka, Herr Kapitaen"',
+                'nsCertType'            => 'client, email',
+                'keyUsage'              => 'digitalSignature, keyEncipherment',
+                'subjectKeyIdentifier'  => 'critical, hash',
+                'authorityKeyIdentifier' => 'issuer, keyid',
+                'subjectAltName'        => 'email:me@linux.tux, URI:http://www.linux.tux/, DNS:tait.linux.tux, RID:1.2.3.4, IP:10.10.0.161',
+                'issuerAltName'         => 'email:iss@linux.tux, URI:http://www.linux.tux/, DNS:hermes.linux.tux, RID:1.7.9.1.1.4.5.7.1, IP:10.10.0.8',
+                'nsBaseUrl'             => 'http://www.linux.tux/',
+                'nsRevocationUrl'       => 'http://www.linux.tux/',
+                'nsCaRevocationUrl'     => 'http://www.linux.tux/',
+                'nsRenewalUrl'          => 'http://www.linux.tux/',
+                'nsCaPolicyUrl'         => 'http://www.linux.tux/',
+                'nsSslServerName'       => 'tait.suse.de',
+                'extendedKeyUsage'      => 'emailProtection, msSGC, nsSGC',
+                'authorityInfoAccess'   => 'OCSP;URI:http://ocsp.my.host/',
+                'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
+               };
+    print STDERR "trying to call YaPI::CaManagement->AddCertificate with caName = '$exampleCA'\n";
+    
+    my $res = YaPI::CaManagement->AddCertificate($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK: '$res'\n";
+    }
+}
 
 1;
 
