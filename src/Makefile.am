@@ -1,5 +1,7 @@
 # Makefile.am for source/ca-management/src
 
+SUBDIRS = YaPI
+
 myincludedir = @yncludedir@/ca-management
 
 myinclude_DATA =		\
@@ -16,8 +18,7 @@ myinclude_DATA =		\
 	certificate.ycp		\
 	wizards.ycp
 
-module_DATA = 	CaMgm.ycp	\
-		CaManagement.pm
+module_DATA = 	CaMgm.ycp	
 
 client_DATA = 		\
 	ca_mgm.ycp	\
