@@ -69,7 +69,7 @@ any caAutoSequence() {
     	string help_text = _("<p>
 YaST generates a <b>default CA and certificate</b> automatically. This CA and certificate
 is used for communicating with the <b>Apache server</b>.
-Here, change the <b>password</b> of this CA/certificate.
+Here, change the settings of this CA/certificate or import a CA/certificate from file.
 </p>
 ");
 	
@@ -79,45 +79,76 @@ Here, change the <b>password</b> of this CA/certificate.
     confirmPassword = CaMgm::autoYaSTSettings["password"]:"";
 
     term contents = `VBox (
-			   `HBox(`HWeight (1,`TextEntry( `id (`id_CAName), _("&CA Name:"),
-							 CaMgm::autoYaSTSettings["CAName"]:"")),
-				 `HSpacing(2), 
-				 `HWeight (1,`TextEntry( `id (`id_commonName), _("&Common Name:"),
-							 CaMgm::autoYaSTSettings["ca_commonName"]:""))
-				     ),
-			   `HBox(`HWeight (1,`TextEntry(`id(`email), _("Email:"),
-							 CaMgm::autoYaSTSettings["server_email"]:"")),
-				 `HSpacing(2), 
-				 `HWeight (1,`ComboBox( `id (`id_country), _("C&ountry:"),
-							getAutoCountryList()))
-				 ),				     
-			   `HBox(`HWeight (1,`TextEntry( `id (`id_organisation), _("O&rganization:"),
-							 CaMgm::autoYaSTSettings["organisation"]:"")),
-				 `HSpacing(2), 
-				 `HWeight (1,`TextEntry( `id (`id_organisationUnit), _("Or&ganizational Unit:"),
-							 CaMgm::autoYaSTSettings["organisationUnit"]:""))
-				 ),
-			   `HBox(`HWeight (1,`TextEntry( `id (`id_locality), _("Loca&lity:"),
-							 CaMgm::autoYaSTSettings["locality"]:"")),
-				 `HSpacing(2), 
-				 `HWeight (1,`TextEntry( `id (`id_state), _("&State:"),
-							 CaMgm::autoYaSTSettings["state"]:""))
-				 ),
-			   `Left(`CheckBox(`id(`rootPassword), `opt(`notify),
-					   _("Take root password"),
-					   CaMgm::autoYaSTSettings["takeRootPassword"]:true)),
-			   `HBox(`HWeight (1,`Password(`id(`pw1), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
-				 `HSpacing(2), 
-				 `HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password:"), confirmPassword))
-				 ),
-			   `Left(`CheckBox(`id(`localServerName), `opt(`notify),
-					   _("Take local server name"),
-					   CaMgm::autoYaSTSettings["takeLocalServerName"]:true)),
-			   `HBox(`HWeight (1,`TextEntry( `id (`id_serverName), _("&Server Name:"),
-							 CaMgm::autoYaSTSettings["server_commonName"]:"")),
-				 `HSpacing(2), 
-				 `HWeight (1,`Empty())
-				 )
+			   `RadioButtonGroup(`id(`rb),
+				`VBox(
+				      `Left(`RadioButton(`id(`import), `opt( `notify),
+							 _("Import Common CA/Certificate"),
+							 CaMgm::autoYaSTSettings["importCertificate"]:true)),
+				      `HBox ( `HSpacing (3),
+					      `VBox(    
+						    `HBox (
+							   `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of Certificate:"),
+										   CaMgm::autoYaSTSettings["pathCertificate"]:"")),
+							   `HWeight(1,`VBox(
+									    `Label(""),
+									    `PushButton (`id(`browseCert), `opt( `notify), Label::BrowseButton())
+									    )
+								    )
+							   ),
+						    `HBox(`HWeight (1,`Password(`id(`pw3), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
+							  `HSpacing(2), 
+							  `HWeight (1,`Password(`id(`pw4), _("Co&nfirm Password:"), confirmPassword))
+							  )
+						    )
+					      ),				      
+				      `Left(`RadioButton(`id(`notImport), `opt( `notify),
+							 _("Generate Common CA/Certificate"),
+							 !(CaMgm::autoYaSTSettings["importCertificate"]:false))),
+				      `HBox(`HSpacing (3),
+					    `VBox(    
+						  `HBox(`HWeight (1,`TextEntry( `id (`id_CAName), _("&CA Name:"),
+										CaMgm::autoYaSTSettings["CAName"]:"YaST_Default_CA")),
+							`HSpacing(2), 
+							`HWeight (1,`TextEntry( `id (`id_commonName), _("&Common Name:"),
+										CaMgm::autoYaSTSettings["ca_commonName"]:""))
+							),
+						  `HBox(`HWeight (1,`TextEntry(`id(`email), _("Email:"),
+									       CaMgm::autoYaSTSettings["server_email"]:"")),
+							`HSpacing(2), 
+							`HWeight (1,`ComboBox( `id (`id_country), _("C&ountry:"),
+									       getAutoCountryList()))
+							),				     
+						  `HBox(`HWeight (1,`TextEntry( `id (`id_organisation), _("O&rganization:"),
+										CaMgm::autoYaSTSettings["organisation"]:"")),
+							`HSpacing(2), 
+							`HWeight (1,`TextEntry( `id (`id_organisationUnit), _("Or&ganizational Unit:"),
+										CaMgm::autoYaSTSettings["organisationUnit"]:""))
+							),
+						  `HBox(`HWeight (1,`TextEntry( `id (`id_locality), _("Loca&lity:"),
+										CaMgm::autoYaSTSettings["locality"]:"")),
+							`HSpacing(2), 
+							`HWeight (1,`TextEntry( `id (`id_state), _("&State:"),
+										CaMgm::autoYaSTSettings["state"]:""))
+							),
+						  `Left(`CheckBox(`id(`rootPassword), `opt(`notify),
+								  _("Take root password"),
+								  CaMgm::autoYaSTSettings["takeRootPassword"]:true)),
+						  `HBox(`HWeight (1,`Password(`id(`pw1), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
+							`HSpacing(2), 
+							`HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password:"), confirmPassword))
+							),
+						  `Left(`CheckBox(`id(`localServerName), `opt(`notify),
+								  _("Take local server name"),
+								  CaMgm::autoYaSTSettings["takeLocalServerName"]:true)),
+						  `HBox(`HWeight (1,`TextEntry( `id (`id_serverName), _("&Server Name:"),
+										CaMgm::autoYaSTSettings["server_commonName"]:"")),
+							`HSpacing(2), 
+							`HWeight (1,`Empty())
+							)
+						  )
+					    )
+				      )
+				)
 			   );
     
     Wizard::SetContents (caption, contents, help_text, false, true);
@@ -129,32 +160,86 @@ Here, change the <b>password</b> of this CA/certificate.
 
     repeat 
     {
-	if ((boolean) UI::QueryWidget(`id(`rootPassword), `Value))
+	if (UI::QueryWidget(`id(`rb), `CurrentButton) == `import)
 	{
+ 	    UI::ChangeWidget (`id (`id_CAName), `Enabled, false);
+	    UI::ChangeWidget (`id (`id_commonName), `Enabled, false);
+	    UI::ChangeWidget (`id (`email), `Enabled, false);
+	    UI::ChangeWidget (`id (`id_country), `Enabled, false);
+	    UI::ChangeWidget (`id (`id_organisation), `Enabled, false);
+	    UI::ChangeWidget (`id (`id_organisationUnit), `Enabled, false);
+	    UI::ChangeWidget (`id (`id_locality), `Enabled, false);
+	    UI::ChangeWidget (`id (`id_state), `Enabled, false);
+	    UI::ChangeWidget (`id (`rootPassword), `Enabled, false);
 	    UI::ChangeWidget (`id (`pw1), `Enabled, false);
 	    UI::ChangeWidget (`id (`pw2), `Enabled, false);
+	    UI::ChangeWidget (`id (`localServerName), `Enabled, false);
+	    UI::ChangeWidget (`id (`id_serverName), `Enabled, false);
+	    UI::ChangeWidget (`id (`pathCert), `Enabled, true); 
+	    UI::ChangeWidget (`id(`browseCert), `Enabled, true);
+	    UI::ChangeWidget (`id (`pw3), `Enabled, true);
+	    UI::ChangeWidget (`id (`pw4), `Enabled, true);
+	    
 	}
 	else
 	{
-	    UI::ChangeWidget (`id (`pw1), `Enabled, true);
-	    UI::ChangeWidget (`id (`pw2), `Enabled, true);
+ 	    UI::ChangeWidget (`id (`id_CAName), `Enabled, true);
+	    UI::ChangeWidget (`id (`id_commonName), `Enabled, true);
+	    UI::ChangeWidget (`id (`email), `Enabled, true);
+	    UI::ChangeWidget (`id (`id_country), `Enabled, true);
+	    UI::ChangeWidget (`id (`id_organisation), `Enabled, true);
+	    UI::ChangeWidget (`id (`id_organisationUnit), `Enabled, true);
+	    UI::ChangeWidget (`id (`id_locality), `Enabled, true);
+	    UI::ChangeWidget (`id (`id_state), `Enabled, true);
+	    UI::ChangeWidget (`id (`rootPassword), `Enabled, true);
+	    UI::ChangeWidget (`id (`localServerName), `Enabled, true);
+	    UI::ChangeWidget (`id (`pathCert), `Enabled, false); 
+	    UI::ChangeWidget (`id(`browseCert), `Enabled, false);
+	    UI::ChangeWidget (`id (`pw3), `Enabled, false);
+	    UI::ChangeWidget (`id (`pw4), `Enabled, false);
+	    
+	    if ((boolean) UI::QueryWidget(`id(`rootPassword), `Value))
+	    {
+		UI::ChangeWidget (`id (`pw1), `Enabled, false);
+		UI::ChangeWidget (`id (`pw2), `Enabled, false);
+	    }
+	    else
+	    {
+		UI::ChangeWidget (`id (`pw1), `Enabled, true);
+		UI::ChangeWidget (`id (`pw2), `Enabled, true);
+	    }
+
+	    if ((boolean) UI::QueryWidget(`id(`localServerName), `Value))
+	    {
+		UI::ChangeWidget (`id (`id_serverName), `Enabled, false);
+	    }
+	    else
+	    {
+		UI::ChangeWidget (`id (`id_serverName), `Enabled, true);
+	    }	    
 	}
 
-	if ((boolean) UI::QueryWidget(`id(`localServerName), `Value))
-	{
-	    UI::ChangeWidget (`id (`id_serverName), `Enabled, false);
-	}
-	else
-	{
-	    UI::ChangeWidget (`id (`id_serverName), `Enabled, true);
-	}	    
 	
 	ret = Wizard::UserInput();
+
+	if (ret == `browseCert)
+	{
+	    string name = selectFile (false, "*.p12", "Import from ..." );
+	    if ( name != nil )
+	    {
+		UI::ChangeWidget(`id(`pathCert), `Value, name);
+	    }
+	    ret = `again;		
+	}
 
 	if (ret == `next
 	    ||ret == `back)
 	{
-	    if (!((boolean) UI::QueryWidget(`id(`rootPassword), `Value)))
+	    remove (CaMgm::autoYaSTSettings, "certificate");
+	    
+	    boolean notImport = (boolean) (UI::QueryWidget(`id(`rb), `CurrentButton) == `notImport);
+	    if (notImport
+		&& !((boolean) UI::QueryWidget(`id(`rootPassword), `Value)))
 	    {
 		confirmPassword = (string) UI::QueryWidget(`id(`pw2), `Value);
 		if ((string) UI::QueryWidget(`id(`pw1), `Value) != confirmPassword)
@@ -168,26 +253,30 @@ Here, change the <b>password</b> of this CA/certificate.
 		    ret = `again;
 		}
 	    }
-	    if (size ((string) UI::QueryWidget(`id(`id_CAName), `Value)) <= 0
+	    if (notImport
+		&& size ((string) UI::QueryWidget(`id(`id_CAName), `Value)) <= 0
 		&& ret!=`again)
 	    {
 		Popup::Error(_("CA Name required."));
 		ret = `again;
 	    }	    	    
-	    if (size ((string) UI::QueryWidget(`id(`id_commonName), `Value)) <= 0
+	    if (notImport
+		&& size ((string) UI::QueryWidget(`id(`id_commonName), `Value)) <= 0
 		&& ret!=`again)
 	    {
 		Popup::Error(_("Common Name required."));
 		ret = `again;
 	    }
-	    if (!check_mail_address((string) UI::QueryWidget(`id(`email), `Value))
+	    if (notImport
+		&& !check_mail_address((string) UI::QueryWidget(`id(`email), `Value))
 		&& ret!=`again)
 	    {
 		Popup::Error(_("Invalid e-mail format."));
 		ret = `again;
 	    }
 
-	    if (!((boolean) UI::QueryWidget(`id(`localServerName), `Value))
+	    if (notImport
+		&& !((boolean) UI::QueryWidget(`id(`localServerName), `Value))
 		&& size ((string) UI::QueryWidget(`id(`id_serverName), `Value)) <= 0
 		&& ret!=`again)
 	    {
@@ -195,34 +284,79 @@ Here, change the <b>password</b> of this CA/certificate.
 		ret = `again;		
 	    }
 
+	    if (!notImport
+		&& ret!=`again)
+	    {
+		confirmPassword = (string) UI::QueryWidget(`id(`pw4), `Value);
+		if ((string) UI::QueryWidget(`id(`pw3), `Value) != confirmPassword)
+		{
+		    Popup::Error(_("New passwords do not match."));
+		    ret = `again;
+		}
+		else if ( size(confirmPassword) < 4)
+		{
+		    Popup::Error(_("Password lenght should be greater than 3 characters."));
+		    ret = `again;
+		}		
+	    }	    
+
+	    map retmap = $[];
+	    
+	    if (!notImport
+		&& ret!=`again)
+	    {
+		string command = sformat("/usr/bin/openssl base64 -in %1 -e",
+					 (string) UI::QueryWidget(`id (`pathCert), `Value));
+		retmap = (map) SCR::Execute (.target.bash_output,
+						 command,
+						 $[] );
+		y2milestone("%1 :%2", command, retmap);
+		if (retmap["exit"]:0 != 0)
+		{
+		    y2error("%1 :%2", command, retmap);		    
+		    Popup::Error(_("Cannot Read the certificate."));
+		    ret = `again;		
+		}
+	    }
+
 	    if (ret!=`again)
 	    {
-		CaMgm::autoYaSTSettings["takeRootPassword"] = (boolean) UI::QueryWidget(`id(`rootPassword), `Value);
-		CaMgm::autoYaSTSettings["takeLocalServerName"] = (boolean) UI::QueryWidget(`id(`localServerName), `Value);	
+		CaMgm::autoYaSTSettings = $[];
 		
-		if (!CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+		CaMgm::autoYaSTSettings["importCertificate"] = (boolean) ((symbol)UI::QueryWidget(`id(`rb), `CurrentButton) == `import);
+		if (CaMgm::autoYaSTSettings["importCertificate"]:false)
 		{
-		    CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw1), `Value);
+		    CaMgm::autoYaSTSettings["certificate"] = strip(retmap["stdout"]:"");
+		    CaMgm::autoYaSTSettings["pathCertificate"] = (string) UI::QueryWidget(`id (`pathCert), `Value);
+		    CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw3), `Value);		    
 		}
-		if (!CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
+		else
 		{
-		    CaMgm::autoYaSTSettings["server_commonName"] = (string) UI::QueryWidget(`id(`id_serverName), `Value);
+		    CaMgm::autoYaSTSettings["takeRootPassword"] = (boolean) UI::QueryWidget(`id(`rootPassword), `Value);
+		    CaMgm::autoYaSTSettings["takeLocalServerName"] = (boolean) UI::QueryWidget(`id(`localServerName), `Value);	
+		    if (!CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+		    {
+			CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw1), `Value);
+		    }
+		    if (!CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
+		    {
+			CaMgm::autoYaSTSettings["server_commonName"] = (string) UI::QueryWidget(`id(`id_serverName), `Value);
+		    }
+		    CaMgm::autoYaSTSettings["CAName"] = (string) UI::QueryWidget(`id(`id_CAName), `Value);
+		    CaMgm::autoYaSTSettings["ca_commonName"] = (string) UI::QueryWidget(`id(`id_commonName), `Value);
+		    CaMgm::autoYaSTSettings["server_email"] = (string) UI::QueryWidget(`id(`email), `Value);
+		    CaMgm::autoYaSTSettings["country"] = (string) UI::QueryWidget(`id(`id_country), `Value);
+		    CaMgm::autoYaSTSettings["organisation"] = (string) UI::QueryWidget(`id(`id_organisation), `Value);
+		    CaMgm::autoYaSTSettings["organisationUnit"] = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
+		    CaMgm::autoYaSTSettings["locality"] = (string) UI::QueryWidget(`id(`id_locality), `Value);
+		    CaMgm::autoYaSTSettings["state"] = (string) UI::QueryWidget(`id(`id_state), `Value);
 		}
-		CaMgm::autoYaSTSettings["CAName"] = (string) UI::QueryWidget(`id(`id_CAName), `Value);
-		CaMgm::autoYaSTSettings["ca_commonName"] = (string) UI::QueryWidget(`id(`id_commonName), `Value);
-		CaMgm::autoYaSTSettings["server_email"] = (string) UI::QueryWidget(`id(`email), `Value);
-		CaMgm::autoYaSTSettings["country"] = (string) UI::QueryWidget(`id(`id_country), `Value);
-		CaMgm::autoYaSTSettings["organisation"] = (string) UI::QueryWidget(`id(`id_organisation), `Value);
-		CaMgm::autoYaSTSettings["organisationUnit"] = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
-		CaMgm::autoYaSTSettings["locality"] = (string) UI::QueryWidget(`id(`id_locality), `Value);
-		CaMgm::autoYaSTSettings["state"] = (string) UI::QueryWidget(`id(`id_state), `Value);
 	    }
 	}
     }
     until ( ret == `next
 	    || ret == `abort
 	    || ret == `back);
-
 
     UI::CloseDialog();
     return ret;
@@ -238,74 +372,87 @@ boolean Import (map settings) {
     boolean ret = true;
 
     CaMgm::autoYaSTSettings = $[];
-    
-    CaMgm::autoYaSTSettings["takeRootPassword"] = settings["takeRootPassword"]:true;
-    if (settings["takeRootPassword"]:true)
+
+
+    CaMgm::autoYaSTSettings["importCertificate"] = settings["importCertificate"]:false;
+    if (CaMgm::autoYaSTSettings["importCertificate"]:false)
     {
-	CaMgm::prop_password = Users::GetRootPassword();
+	// importing CA/certificate
+	CaMgm::autoYaSTSettings["certificate"] = settings["certificate"]:"";
+	CaMgm::autoYaSTSettings["pathCertificate"] = settings["pathCertificate"]:"";
+	CaMgm::autoYaSTSettings["password"] = settings["password"]:"";	
     }
     else
     {
-	if (haskey (settings, "password"))
+	//create one
+	CaMgm::autoYaSTSettings["takeRootPassword"] = settings["takeRootPassword"]:true;
+	if (settings["takeRootPassword"]:true)
 	{
-	    CaMgm::autoYaSTSettings["password"] = settings["password"]:"";
-	}
-    }
-    
-    CaMgm::autoYaSTSettings["takeLocalServerName"] = settings["takeLocalServerName"]:true;
-    if (settings["takeLocalServerName"]:true )
-    {
-	map retmap = (map) SCR::Execute (.target.bash_output,
-					"/bin/hostname --long",
-					$[] );
-	y2milestone("Hostname :%1", retmap);
-	if (retmap["exit"]:0 != 0)
-	{
-	    ret = false;
+	    CaMgm::prop_password = Users::GetRootPassword();
 	}
 	else
 	{
-	    CaMgm::autoYaSTSettings["server_commonName"] = strip(retmap["stdout"]:"");
+	    if (haskey (settings, "password"))
+	    {
+		CaMgm::autoYaSTSettings["password"] = settings["password"]:"";
+	    }
 	}
-    }
-    else
-    {
-	if (haskey (settings, "server_commonName"))
+    
+	CaMgm::autoYaSTSettings["takeLocalServerName"] = settings["takeLocalServerName"]:true;
+	if (settings["takeLocalServerName"]:true )
+	{
+	    map retmap = (map) SCR::Execute (.target.bash_output,
+					     "/bin/hostname --long",
+					     $[] );
+	    y2milestone("Hostname :%1", retmap);
+	    if (retmap["exit"]:0 != 0)
+	    {
+		ret = false;
+	    }
+	    else
+	    {
+		CaMgm::autoYaSTSettings["server_commonName"] = strip(retmap["stdout"]:"");
+	    }
+	}
+	else
+	{
+	    if (haskey (settings, "server_commonName"))
+	    {	    
+		CaMgm::autoYaSTSettings["server_commonName"] = settings["server_commonName"]:"";
+	    }
+	}
+	if (haskey (settings, "CAName"))
 	{	    
-	    CaMgm::autoYaSTSettings["server_commonName"] = settings["server_commonName"]:"";
+	    CaMgm::autoYaSTSettings["CAName"] = settings["CAName"]:"YaST_Default_CA";
 	}
-    }
-    if (haskey (settings, "CAName"))
-    {	    
-	CaMgm::autoYaSTSettings["CAName"] = settings["CAName"]:"";
-    }
-    if (haskey (settings, "ca_commonName"))
-    {	        
-	CaMgm::autoYaSTSettings["ca_commonName"] = settings["ca_commonName"]:"";
-    }
-    if (haskey (settings, "server_email"))
-    {	        
-	CaMgm::autoYaSTSettings["server_email"] = settings["server_email"]:"";
-    }
-    if (haskey (settings, "country"))
-    {	        
-	CaMgm::autoYaSTSettings["country"] = settings["country"]:"";
-    }
-    if (haskey (settings, "organisation"))
-    {	        
-	CaMgm::autoYaSTSettings["organisation"] = settings["organisation"]:"";
-    }
-    if (haskey (settings, "organisationUnit"))
-    {	        
-	CaMgm::autoYaSTSettings["organisationUnit"] = settings["organisationUnit"]:"";
-    }
-    if (haskey (settings, "locality"))
-    {	        
-	CaMgm::autoYaSTSettings["locality"] = settings["locality"]:"";
-    }
-    if (haskey (settings, "state"))
-    {	        
-	CaMgm::autoYaSTSettings["state"] = settings["state"]:"";
+	if (haskey (settings, "ca_commonName"))
+	{	        
+	    CaMgm::autoYaSTSettings["ca_commonName"] = settings["ca_commonName"]:"";
+	}
+	if (haskey (settings, "server_email"))
+	{	        
+	    CaMgm::autoYaSTSettings["server_email"] = settings["server_email"]:"";
+	}
+	if (haskey (settings, "country"))
+	{	        
+	    CaMgm::autoYaSTSettings["country"] = settings["country"]:"";
+	}
+	if (haskey (settings, "organisation"))
+	{	        
+	    CaMgm::autoYaSTSettings["organisation"] = settings["organisation"]:"";
+	}
+	if (haskey (settings, "organisationUnit"))
+	{	        
+	    CaMgm::autoYaSTSettings["organisationUnit"] = settings["organisationUnit"]:"";
+	}
+	if (haskey (settings, "locality"))
+	{	        
+	    CaMgm::autoYaSTSettings["locality"] = settings["locality"]:"";
+	}
+	if (haskey (settings, "state"))
+	{	        
+	    CaMgm::autoYaSTSettings["state"] = settings["state"]:"";
+	}
     }
     
     return ret;
@@ -317,14 +464,6 @@ boolean Import (map settings) {
  * @return map Dumped settings (later acceptable by Import ())
  */
 map Export () {
-    if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
-    {
-	remove (CaMgm::autoYaSTSettings, "password");
-    }
-    if (CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
-    {
-	remove (CaMgm::autoYaSTSettings, "server_commonName");
-    }
     
     return CaMgm::autoYaSTSettings;
 }
@@ -346,42 +485,50 @@ map AutoPackages() {
 string Summary() {
     /* Configuration summary text for autoyast */
     string summary = "";
-    
-    summary = Summary::AddHeader (summary,_("Server Name"));
-    if (CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
+
+    if (CaMgm::autoYaSTSettings["importCertificate"]:false)
     {
-	summary = Summary::AddLine (summary, _("[local server name]"));
+	summary = Summary::AddHeader (summary,_("Import Certificate from File"));	
+    	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["pathCertificate"]:"");
     }
     else
     {
-	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["server_commonName"]:"");
-    }
-    summary = Summary::AddHeader (summary,_("CA Name"));
-    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["CAName"]:_("[not set]"));
-    summary = Summary::AddHeader (summary, _("Common Name"));
-    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["ca_commonName"]:_("[not set]"));
-    summary = Summary::AddHeader (summary, _("Email"));
-    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["server_email"]:_("[not set]"));
-    summary = Summary::AddHeader (summary, _("Country"));
-    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["country"]:_("[not set]"));
-    summary = Summary::AddHeader (summary, _("Organization"));
-    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["organisation"]:_("[not set]"));
-    summary = Summary::AddHeader (summary, _("Organizational Unit"));
-    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["organisationUnit"]:_("[not set]"));
-    summary = Summary::AddHeader (summary, _("Locality"));
-    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["locality"]:_("[not set]"));
-    summary = Summary::AddHeader (summary, _("State"));
-    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["state"]:_("[not set]"));
+	summary = Summary::AddHeader (summary,_("Server Name"));
+	if (CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
+	{
+	    summary = Summary::AddLine (summary, _("[local server name]"));
+	}
+	else
+	{
+	    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["server_commonName"]:"");
+	}
+	summary = Summary::AddHeader (summary,_("CA Name"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["CAName"]:_("YaST_Default_CA"));
+	summary = Summary::AddHeader (summary, _("Common Name"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["ca_commonName"]:_("[not set]"));
+	summary = Summary::AddHeader (summary, _("Email"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["server_email"]:_("[not set]"));
+	summary = Summary::AddHeader (summary, _("Country"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["country"]:_("[not set]"));
+	summary = Summary::AddHeader (summary, _("Organization"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["organisation"]:_("[not set]"));
+	summary = Summary::AddHeader (summary, _("Organizational Unit"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["organisationUnit"]:_("[not set]"));
+	summary = Summary::AddHeader (summary, _("Locality"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["locality"]:_("[not set]"));
+	summary = Summary::AddHeader (summary, _("State"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["state"]:_("[not set]"));
     
-    summary = Summary::AddHeader (summary, _("Password"));
-    if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
-    {
-	summary = Summary::AddLine (summary, _("[root password]"));
+	summary = Summary::AddHeader (summary, _("Password"));
+	if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+	{
+	    summary = Summary::AddLine (summary, _("[root password]"));
+	}
+	else
+	{
+	    summary = Summary::AddLine (summary, _("[manually set]"));
+	}
     }
-    else
-    {
-	summary = Summary::AddLine (summary, _("[manually set]"));
-    }    
     
     return summary;
 }
@@ -418,45 +565,59 @@ boolean Write() {
     );
 
     // Read server information
-        
-    Progress::NextStage();
 
-    if (CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
-    {
-	map retmap = (map) SCR::Execute (.target.bash_output,
-					 "/bin/hostname --long",
-					 $[] );
-
-	y2milestone("Hostname :%1", retmap);
-	if (retmap["exit"]:0 != 0)
-	{
-	    Report::Error(_("Cannot evaluate the name of the local machine"));
-	    success = false;
-	}
-	CaMgm::prop_server_commonName = strip(retmap["stdout"]:"");
-    }
-    else
-    {
-	CaMgm::prop_server_commonName = CaMgm::autoYaSTSettings["server_commonName"]:"";
-    }
+    string tmpfile = (string) SCR::Read (.target.tmpdir) + "/YaST-Servercert.p12";
     
-    CaMgm::prop_selection = `def;
-    CaMgm::prop_ca_commonName = CaMgm::autoYaSTSettings["ca_commonName"]:"";
-    CaMgm::prop_CAName = CaMgm::autoYaSTSettings["CAName"]:"";
-    CaMgm::prop_country = CaMgm::autoYaSTSettings["country"]:"";
-    CaMgm::prop_email = CaMgm::autoYaSTSettings["server_email"]:"";
-    CaMgm::prop_organisation = CaMgm::autoYaSTSettings["organisation"]:"";
-    CaMgm::prop_organisationUnit = CaMgm::autoYaSTSettings["organisationUnit"]:"";
-    CaMgm::prop_locality = CaMgm::autoYaSTSettings["locality"]:"";
-    CaMgm::prop_state = CaMgm::autoYaSTSettings["state"]:"";
-
-    if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+    Progress::NextStage();
+    if (CaMgm::autoYaSTSettings["importCertificate"]:false)
     {
-	CaMgm::prop_password = Users::GetRootPassword();
+	// importing CA/certificate
+	string command = sformat("/usr/bin/openssl base64 -out %1 -d",
+				 tmpfile);
+	SCR::Execute (.target.bash_input,
+		      command,
+		      CaMgm::autoYaSTSettings["certificate"]:"");
     }
     else
     {
-	CaMgm::prop_password = CaMgm::autoYaSTSettings["password"]:Users::GetRootPassword();
+	// create one
+	if (CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
+	{
+	    map retmap = (map) SCR::Execute (.target.bash_output,
+					     "/bin/hostname --long",
+					     $[] );
+
+	    y2milestone("Hostname :%1", retmap);
+	    if (retmap["exit"]:0 != 0)
+	    {
+		Report::Error(_("Cannot evaluate the name of the local machine"));
+		success = false;
+	    }
+	    CaMgm::prop_server_commonName = strip(retmap["stdout"]:"");
+	}
+	else
+	{
+	    CaMgm::prop_server_commonName = CaMgm::autoYaSTSettings["server_commonName"]:"";
+	}
+    
+	CaMgm::prop_selection = `def;
+	CaMgm::prop_ca_commonName = CaMgm::autoYaSTSettings["ca_commonName"]:"";
+	CaMgm::prop_CAName = CaMgm::autoYaSTSettings["CAName"]:"YaST_Default_CA";
+	CaMgm::prop_country = CaMgm::autoYaSTSettings["country"]:"";
+	CaMgm::prop_email = CaMgm::autoYaSTSettings["server_email"]:"";
+	CaMgm::prop_organisation = CaMgm::autoYaSTSettings["organisation"]:"";
+	CaMgm::prop_organisationUnit = CaMgm::autoYaSTSettings["organisationUnit"]:"";
+	CaMgm::prop_locality = CaMgm::autoYaSTSettings["locality"]:"";
+	CaMgm::prop_state = CaMgm::autoYaSTSettings["state"]:"";
+
+	if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+	{
+	    CaMgm::prop_password = Users::GetRootPassword();
+	}
+	else
+	{
+	    CaMgm::prop_password = CaMgm::autoYaSTSettings["password"]:Users::GetRootPassword();
+	}
     }
 
     Progress::NextStage();
@@ -465,8 +626,24 @@ boolean Write() {
 
     if (success)
     {
-	success = create_default_CA_certificate();	
-
+	if (CaMgm::autoYaSTSettings["importCertificate"]:false)
+	{
+	    boolean importret =
+		(boolean) YaPI::CaManagement::ImportCommonServerCertificate
+		($["passwd":CaMgm::autoYaSTSettings["password"]:"",
+		   "inFile" : tmpfile]);
+		y2milestone ("ImportCommonServerCertificate() return %1",
+			     importret);
+		if (importret == nil
+		    || !importret)
+		{
+		    success = false;
+		}	
+	}
+	else
+	{
+	    success = create_default_CA_certificate();	
+	}
     }
     if (!success)
     {
