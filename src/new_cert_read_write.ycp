@@ -132,6 +132,13 @@
 
  	CaMgm::keyLength = tointeger(ret["keyLength"]:"");
  	CaMgm::validPeriod = tointeger(ret["days"]:"");
+
+	map<string,list> dn = ret["DN"]:$[];
+ 	CaMgm::organisation = ((list)dn["O"]:[])[0]:"";
+ 	CaMgm::organisationUnit = ((list)dn["OU"]:[])[0]:"";
+ 	CaMgm::locality = ((list)dn["L"]:[])[0]:"";
+ 	CaMgm::state = ((list)dn["ST"]:[])[0]:"";
+ 	CaMgm::country = ((list)dn["C"]:[])[0]:"GB";
 	
 	list<string> dummy = splitstring (ret["basicConstraints"]:"", ",");
 	foreach ( string entry, dummy, ``{
@@ -164,30 +171,16 @@
 	});
 
 	dummy = splitstring (ret["crlDistributionPoints"]:"", ",");
-	integer counter = 0;
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
-	    list valuelist = splitstring (entry,":");
-	    string ident = strip(valuelist[0]:"");
-	    string value = strip(valuelist[1]:"");
 	    
-	    if (ident == "critical")
+	    if (entry == "critical")
 	    {
 		CaMgm::adv_cri_distribution_point = true;
 	    }
 	    else
 	    {
-		if (counter == 0)
-		{
-		    CaMgm::adv_distribution_point = CaMgm::adv_distribution_point +
-			ident + ((size(value) > 0) ? ":" : "") + value;
-		}
-		else
-		{
-		    CaMgm::adv_distribution_point = CaMgm::adv_distribution_point +
-			"," + ident + ((size(value) > 0) ? ":" : "") + value;
-		}
-		counter = counter +1;		
+		CaMgm::adv_distribution_point = entry;
 	    }
 	});
 
@@ -367,7 +360,7 @@
 	});
 	
 	dummy = splitstring (ret["authorityKeyIdentifier"]:"", ",");
-	counter = 0;
+	integer counter = 0;
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    list valuelist = splitstring (entry,":");
