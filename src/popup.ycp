@@ -56,13 +56,13 @@
      * @return void
      */
     define void showErrorCaManagement () ``{
-//        map<string,any> messageMap = (map<string,any>) YaPI::CaManagement::Error();
-//	string message = messageMap["summary"]:"";
-//        if (size (message) > 0)
-//        {
-//	    y2error ("Showing error: %1", message);
-//            Popup::Error (message);  FIXME
-//        }
+        map<string,any> messageMap = YaPI::Error();
+	string message = messageMap["summary"]:"";
+        if (size (message) > 0)
+        {
+	    y2error ("Showing error: %1", message);
+            Popup::Error (message);
+        }
 	return;
     }
 
