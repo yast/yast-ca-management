@@ -1345,6 +1345,90 @@ sub ExportCertificate {
     }
 }
 
+BEGIN { $TYPEINFO{ExportCRL} = ["function", "any", "any"]; }
+sub ExportCRL {
+    my $data = shift;
+    my $caName = "";
+    my $destinationFile = undef;
+    my $format = undef;
+
+    # checking requires
+    if (not defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+        return SetError(summary => "Wrong value for parameter 'caName'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{"caName"};
+ 
+    if (not defined $data->{"exportFormat"} || 
+        !isOneOfList($data->{"exportFormat"}, ["PEM", "DER"])) 
+    {
+        return SetError(summary => "Wrong value for parameter 'exportFormat'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    $format = $data->{"exportFormat"};
+
+    if(defined $data->{'destinationFile'}) {
+        $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
+        if(not defined $1) {
+            return SetError(summary => "Can not parse 'destinationFile' '".$data->{'destinationFile'}."'",
+                                   code => "PARAM_CHECK_FAILED");
+        }
+        my $ret = SCR::Read(".target.dir", $1);
+        if(not defined $ret) {
+            return SetError(summary => "Directory '$1' does not exist.",
+                                   code => "DIR_DOES_NOT_EXIST");
+        }
+        $destinationFile = $data->{'destinationFile'};
+    }
+
+    if(SCR::Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem") == -1) {
+        return SetError(summary => "CRL does not exist",
+                        code => "FILE_DOES_NOT_EXIST");
+    }
+
+    if($format eq "PEM") {
+
+        my $file = SCR::Read(".target.string", "$CAM_ROOT/$caName/crl/crl.pem");
+
+        if(defined $destinationFile) {
+            if(!open(OUT, "> $destinationFile")) {
+                return SetError(summary => "Can not open File '$destinationFile' '$!'",
+                                code => "OPEN_FAILED");
+            }
+            print OUT $file;
+            close OUT;
+            return 1;
+        } else {
+            return $file;
+        }
+    } elsif($format eq "DER") {
+        my $hash = {
+                    DATATYPE => "CRL",
+                    INFORM   => "PEM",
+                    INFILE   => "$CAM_ROOT/$caName/crl/crl.pem",
+                    OUTFORM  => "DER"
+                   };
+        
+        if(defined $destinationFile) {
+            $hash->{'OUTFILE'} = $destinationFile;
+        }
+        
+        my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
+        if(not defined $file) {
+            return SetError(%{SCR::Error(".openca.openssl")});
+        }
+        if(defined $destinationFile) {
+            return 1;
+        } else {
+            return $file;
+        }
+    } else {
+        return SetError(summary => "Wrong value for parameter 'exportFormat'",
+                        code => "PARAM_CHECK_FAILED");
+    }
+}
+
 BEGIN { $TYPEINFO{Verify} = ["function", "any", "any"]; }
 sub Verify {
     my $data = shift;
