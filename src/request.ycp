@@ -20,7 +20,6 @@
 
 
 {
-    include "ca-management/floppy.ycp";
     include "ca-management/signRequest.ycp";
     
     define list<string> requestID = [];

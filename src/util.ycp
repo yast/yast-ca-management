@@ -77,7 +77,7 @@
 	{
 	    // using kfiledialog
 	    map retmap = (map) SCR::Execute (.target.bash_output,
-					     sformat ("/opt/kde3/bin/kfiledialog drives:/ \"%1\"", filterString),
+					     sformat ("/opt/kde3/bin/kfiledialog \"\" \"%1\"", filterString),
 					     $[] );
 	    y2milestone("kfiledialog :%1", retmap);
 	    ret = strip(retmap["stdout"]:"");
