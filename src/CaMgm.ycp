@@ -38,6 +38,13 @@ global string locality = "";
 global string state = "";
 global string country = "EN";
 
+global string password = "";
+global string verifyPassword = "";
+global string CAPassword = "";
+global integer keyLength = 1024;
+global integer validPeriod = 365;
+
+
 
 
 

@@ -75,12 +75,12 @@
         buttons = add (buttons, `VStretch());
 
         term contents = `HBox ();
-        contents = add (contents, `HWeight (3,`Table (`id (`table), `opt (`notify, `immediate),
+        contents = add (contents, `HWeight (9,`Table (`id (`table), `opt (`notify, `immediate),
                                           `header (
                                               // To translators: table headers
                                               _("CA List")),
                                           termList)));
-        contents = add (contents, `HWeight (1, buttons));
+        contents = add (contents, `HWeight (4, buttons));
 
 
                                 // To translators: dialog label
