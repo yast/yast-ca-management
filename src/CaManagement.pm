@@ -248,6 +248,48 @@ sub ReadCertificateDefaults {
     return $ret;
 }
 
+BEGIN { $TYPEINFO{ReadCA} = ["function", "any", "any"]; }
+sub ReadCA {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $type   = "";
+    my $ret = undef;
+
+   # checking requires
+    if (not defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{"caName"};
+     
+    if (not defined $data->{"type"} || 
+        !$self->isOneOfList($data->{"type"}, ["parsed", "plain"])) 
+    {
+        return $self->SetError(summary => "Wrong value for parameter 'type'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    $type = $data->{"type"};
+
+    my $size = SCR::Read(".target.size", "$CAM_ROOT/$caName/cacert.pem");
+    if($size <= 0) {
+        return $self->SetError(summary => "CA Certificate not available in '$caName'",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+    if($type eq "parsed") {
+        $ret = SCR::Read(".openca.X509.getParsed", "$CAM_ROOT/$caName/cacert.pem");
+        if(not defined $ret) {
+            return $self->setError(%{SCR::Error(".openca.X509")});
+        }
+    } else {
+        $ret = SCR::Read(".openca.X509.getTXT", "$CAM_ROOT/$caName/cacert.pem");
+        if(not defined $ret) {
+            return $self->setError(%{SCR::Error(".openca.X509")});
+        }
+    }
+    return $ret;
+}
 
 sub cleanCaInfrastructure {
     my $self     = shift || return undef;
