@@ -123,7 +123,7 @@ symbol handleDialogCATab (string dialog, map event) {
     symbol ret = nil;
     if (dialog == "CA")
     {
-	handleCATab (event);
+	ret = handleCATab (event);
     }
     else if (dialog == "Certificates")
     {
@@ -219,8 +219,12 @@ symbol runCADialog () {
 		UI::ChangeWidget (`id (`dumbtab), `CurrentItem, current_tab );
 	    }
 	    ret = handleDialogCATab (current_tab, event);
-	    if (ret != nil)
-		break;
+	    if (ret == `again)
+	    {
+		UI::ReplaceWidget (`tabContents, getDialogCATab (current_tab));
+		Wizard::RestoreHelp (getHelpText (current_tab));
+		initDialogCATab (current_tab);	    		
+	    }
 	}
     }
 

@@ -47,10 +47,10 @@
 	map aliases = $[
 	   "new_certinit"   	: ``(new_cert_init ("Server Certificate")),
 	   "new_certSaveDef"  	: ``(new_cert_save_default ()),		
-	   "new_cert1"  	 	: ``(new_cert1 ("Server Certificate")),
-	   "new_cert2"   		: ``(new_cert2 ("Server Certificate")),
-	   "new_cert3"   		: ``(new_cert3 ("Server Certificate")),
-	   "new_cert_advanced"   	: ``(new_cert_advanced (false)),
+	   "new_cert1"  	: ``(new_cert1 ("Server Certificate")),
+	   "new_cert2"   	: ``(new_cert2 ("Server Certificate")),
+	   "new_cert3"   	: ``(new_cert3 ("Server Certificate")),
+	   "new_cert_advanced"  : ``(new_cert_advanced (false)),
 	   ];
 
 	Wizard::CreateDialog();
@@ -72,9 +72,9 @@
           "new_certinit"   	: ``(new_cert_init ("Client Certificate")),
 	  "new_certSaveDef"  	: ``(new_cert_save_default ()),		
 	  "new_cert1"  	 	: ``(new_cert1 ("Client Certificate")),
-	  "new_cert2"   		: ``(new_cert2 ("Client Certificate")),
-	  "new_cert3"   		: ``(new_cert3 ("Client Certificate")),
-	  "new_cert_advanced"   	: ``(new_cert_advanced (false)),
+	  "new_cert2"   	: ``(new_cert2 ("Client Certificate")),
+	  "new_cert3"   	: ``(new_cert3 ("Client Certificate")),
+	  "new_cert_advanced"   : ``(new_cert_advanced (false)),
 	  ];
 
 	Wizard::CreateDialog();
@@ -394,7 +394,12 @@
      */
     symbol handleCertificateTab (map event) {
 	any ui = event["ID"]:nil;
-	
+
+	if (ui == `table)
+	{
+	    initCertificateTab ();
+	}
+	    
 	if (ui == `view)
 	{
 	    showLongCertDescription (CaMgm::currentCA,
@@ -456,12 +461,14 @@
 	if (ui == `addServer)
 	{
 	    newServerCertificateSequence ();
+	    ui = `again;			    
 	}
 	if (ui == `addClient)
 	{
 	    newClientCertificateSequence ();
+	    ui = `again;			    
 	}	    
-	return nil;	
+	return (symbol)ui;
     }
 
 }

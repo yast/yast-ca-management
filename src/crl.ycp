@@ -224,7 +224,8 @@
 	any ui = event["ID"]:nil;    
 	if (ui == `gererateCRL)
 	{
-	    ui = createCRL (CaMgm::currentCA);
+	    createCRL (CaMgm::currentCA);
+	    ui = `again;
 	}
 	if (ui == `view)
 	{
@@ -238,10 +239,7 @@
 	{
 	    exportCRLtoFile (CaMgm::currentCA); 
 	}
-	if (ui == `createSubCA)
-	{
-	}
-	return nil;	
+	return (symbol) ui;	
     }
 
 }
