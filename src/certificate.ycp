@@ -20,6 +20,8 @@
 
 
 {
+    textdomain "ca-management";
+    
     define list<string> certificateID = [];
 
     // help text 1/6

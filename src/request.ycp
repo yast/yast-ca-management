@@ -20,6 +20,8 @@
 
 
 {
+    textdomain "ca-management";
+    
     include "ca-management/signRequest.ycp";
     
     define list<string> requestID = [];
