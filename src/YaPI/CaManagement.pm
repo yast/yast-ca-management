@@ -1065,20 +1065,20 @@ In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
-* type (required; can be "plain" or "parsed")
+* type (required; can be "plain", "parsed", "extended")
 
 The return value is "undef" on an error.
 
 On success and type = "plain" the plain text view of the CA is returned.
 
-If the type = "parsed" a complex structure with the single values is returned.
+If the type = "parsed" or "extended" a complex structure with the single values is returned.
 
 
 EXAMPLE:
 
  use Data::Dumper;
 
- foreach my $type ("parsed", "plain") {
+ foreach my $type ("parsed", "plain", "extended") {
      my $data = {
                  'caName' => 'My_CA',
                  'type'   => $type
@@ -1116,7 +1116,7 @@ sub ReadCA {
     $caName = $data->{"caName"};
      
     if (! defined $data->{"type"} || 
-        !grep( ( $_ eq $data->{"type"}), ("parsed", "plain"))) {
+        !grep( ( $_ eq $data->{"type"}), ("parsed", "plain", "extended"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
@@ -1134,6 +1134,11 @@ sub ReadCA {
                };
     if ($type eq "parsed") {
         $ret = SCR->Read(".openssl.getParsedCert", $caName, $hash);
+        if (not defined $ret) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+    } elsif($type eq "extended") {
+        $ret = SCR->Read(".openssl.getExtendedParsedCert", $caName, $hash);
         if (not defined $ret) {
             return $self->SetError(%{SCR->Error(".openssl")});
         }
@@ -1994,7 +1999,7 @@ In I<$valueMap> you can define the following keys:
 
 * certificate (required - name without suffix)
 
-* type (required - allowed values: "parsed" or "plain") 
+* type (required - allowed values: "parsed", "extended" or "plain") 
 
 The syntax of these values are explained in the 
 B<COMMON PARAMETER> section.
@@ -2003,13 +2008,13 @@ The return value is "undef" on an error.
 
 On success and type = plain the plain text view of the Certificate is returned.
 
-If the type is "parsed" a complex structure with the single values is returned.
+If the type is "parsed" or "extended" a complex structure with the single values is returned.
 
 EXAMPLE:
 
  use Data::Dumper;
 
- foreach my $type ("parsed", "plain") {
+ foreach my $type ("parsed", "plain", "extended") {
      my $data = {
                  'caName'      => 'My_CA',
                  'type'        => $type,
@@ -2050,7 +2055,7 @@ sub ReadCertificate {
     $caName = $data->{"caName"};
     
     if (! defined $data->{"type"} || 
-        !grep( ( $_ eq $data->{"type"}), ("parsed", "plain"))) {
+        !grep( ( $_ eq $data->{"type"}), ("parsed", "plain", "extended"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
@@ -2077,6 +2082,11 @@ sub ReadCertificate {
                };
     if ($type eq "parsed") {
         $ret = SCR->Read(".openssl.getParsedCert", $caName, $hash);
+        if (not defined $ret) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+    } elsif($type eq "extended") {
+        $ret = SCR->Read(".openssl.getExtendedParsedCert", $caName, $hash);
         if (not defined $ret) {
             return $self->SetError(%{SCR->Error(".openssl")});
         }
@@ -2278,7 +2288,7 @@ In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
-* type (required - allowed values: "parsed" or "plain")
+* type (required - allowed values: "parsed", "extended" or "plain")
 
 The syntax of these values are explained in the 
 B<COMMON PARAMETER> section.
@@ -2287,13 +2297,13 @@ The return value is "undef" on an error.
 
 On success and type = plain the plain text view of the CRL is returned.
 
-If the type is "parsed" a complex structure with the single values is returned.
+If the type is "parsed" or "extended" a complex structure with the single values is returned.
 
 EXAMPLE:
 
  use Data::Dumper;
 
- foreach my $type ("parsed", "plain") {
+ foreach my $type ("parsed", "plain", "extended") {
      my $data = {
                  'caName' => 'My_CA',
                  'type'   => $type,
@@ -2332,7 +2342,7 @@ sub ReadCRL {
     $caName = $data->{"caName"};
     
     if (! defined $data->{"type"} || 
-        !grep( ($_ eq $data->{"type"}), ("parsed", "plain"))) {
+        !grep( ($_ eq $data->{"type"}), ("parsed", "plain", "extended"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
@@ -2351,6 +2361,11 @@ sub ReadCRL {
                };
     if ($type eq "parsed") {
         $ret = SCR->Read(".openssl.getParsedCRL", $caName, $hash);
+        if (not defined $ret) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+    } elsif($type eq "extended") {
+        $ret = SCR->Read(".openssl.getExtendedParsedCRL", $caName, $hash);
         if (not defined $ret) {
             return $self->SetError(%{SCR->Error(".openssl")});
         }
@@ -4992,9 +5007,9 @@ In I<$valueMap> you can define the following keys:
 
 * inFile (required)
 
-* type (required; can be "plain" or "parsed")
+* type (required; can be "plain", "parsed" or "extended")
 
-* datatype (can be "CERTIFICATE" or "CRL")
+* datatype (can be "CERTIFICATE", "REQUEST" or "CRL")
 
 * inForm (required; "PEM", "DER")
 
@@ -5002,13 +5017,13 @@ The return value is "undef" on an error.
 
 On success and type = "plain" the plain text view of the CA is returned.
 
-If the type = "parsed" a complex structure with the single values is returned.
+If the type = "parsed" or "extended" a complex structure with the single values is returned.
 
 EXAMPLE:
 
  use Data::Dumper;
 
- foreach my $type ("parsed", "plain") {
+ foreach my $type ("parsed", "plain", "extended") {
      my $data = {
                  'datatype' => "CERTIFICATE",
                  'inFile' => '/path/to/a/certificate.pem',
@@ -5047,7 +5062,7 @@ sub ReadFile {
         return $self->SetError(summary => "Missing parameter 'type'",
                                code => "PARAM_CHECK_FAILED");
     }
-    if(! grep( ($_ eq $data->{type}), ("parsed", "plain"))) {
+    if(! grep( ($_ eq $data->{type}), ("parsed", "plain", "extended"))) {
         return $self->SetError(summary => "Unknown value '".$data->{type}."' in 'type'",
                                code => "PARAM_CHECK_FAILED");
     }
@@ -5082,6 +5097,11 @@ sub ReadFile {
             if (not defined $ret) {
                 return $self->SetError(%{SCR->Error(".openssl")});
             }
+        } elsif($data->{type} eq "extended") {
+            $ret = SCR->Read(".openssl.getExtendedParsedCert", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
         } else {
             $ret = SCR->Read(".openssl.getTXTCert", "/", $hash);
             if (not defined $ret) {
@@ -5094,8 +5114,30 @@ sub ReadFile {
             if (not defined $ret) {
                 return $self->SetError(%{SCR->Error(".openssl")});
             }
+        } elsif($data->{type} eq "extended") {
+            $ret = SCR->Read(".openssl.getExtendedParsedCRL", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
         } else {
             $ret = SCR->Read(".openssl.getTXTCRL", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
+        }
+    } elsif($data->{datatype} eq "REQUEST") {
+        if ($data->{type} eq "parsed") {
+            $ret = SCR->Read(".openssl.getParsedREQ", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
+        } elsif($data->{type} eq "extended") {
+            $ret = SCR->Read(".openssl.getExtendedParsedREQ", "/", $hash);
+            if (not defined $ret) {
+                return $self->SetError(%{SCR->Error(".openssl")});
+            }
+        } else {
+            $ret = SCR->Read(".openssl.getTXTREQ", "/", $hash);
             if (not defined $ret) {
                 return $self->SetError(%{SCR->Error(".openssl")});
             }
@@ -5116,7 +5158,7 @@ In I<$valueMap> you can define the following keys:
 
 * request (required - name without suffix)
 
-* type (required - allowed values: "parsed" or "plain") 
+* type (required - allowed values: "parsed", "extended" or "plain") 
 
 The syntax of these values are explained in the 
 B<COMMON PARAMETER> section.
@@ -5125,13 +5167,13 @@ The return value is "undef" on an error.
 
 On success and type = plain the plain text view of the Certificate is returned.
 
-If the type is "parsed" a complex structure with the single values is returned.
+If the type is "parsed" or "extended" a complex structure with the single values is returned.
 
 EXAMPLE:
 
  use Data::Dumper;
 
- foreach my $type ("parsed", "plain") {
+ foreach my $type ("parsed", "plain", "extended") {
      my $data = {
                  'caName'      => 'My_CA',
                  'type'        => $type,
@@ -5172,7 +5214,7 @@ sub ReadRequest {
     $caName = $data->{"caName"};
     
     if (! defined $data->{"type"} || 
-        !grep( ( $_ eq $data->{"type"}), ("parsed", "plain"))) {
+        !grep( ( $_ eq $data->{"type"}), ("parsed", "plain", "extended"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
@@ -5199,6 +5241,11 @@ sub ReadRequest {
                };
     if ($type eq "parsed") {
         $ret = SCR->Read(".openssl.getParsedREQ", $caName, $hash);
+        if (not defined $ret) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+    } elsif($type eq "extended") {
+        $ret = SCR->Read(".openssl.getExtendedParsedREQ", $caName, $hash);
         if (not defined $ret) {
             return $self->SetError(%{SCR->Error(".openssl")});
         }
