@@ -21,9 +21,9 @@ my $exampleReq = "";
 my $exampleCert = "";
 
 sub run {
-    test_Interface();
+#    test_Interface();
 #    test_AddRootCA();
-#    test_ReadCAList();
+    test_ReadCAList();
 #    test_AddRootCA2();
 #    test_ReadCertificateDefaults();
 #    test_ReadCertificateDefaults2();
@@ -35,6 +35,7 @@ sub run {
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
 #    test_AddCRL();
+    test_ReadCRL();
 
     return 1;
 }
@@ -352,5 +353,27 @@ sub test_AddCRL {
         print STDERR "AddCRL successful\n";
     }
 }
+
+sub test_ReadCRL {
+
+    foreach my $type ("parsed", "plain") {
+        my $data = {
+                    'caName' => $exampleCA,
+                    'type'   => $type,
+                   };
+        print STDERR "trying to call YaST::caManagement->ReadCRL($type)\n";
+        print STDERR "with caName = '$exampleCA' \n";
+        
+        my $res = CaManagement->ReadCRL($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = CaManagement->Error();
+            printError($err);
+        } else {
+            print STDERR Data::Dumper->Dump([$res])."\n";
+        }
+    }
+}
+
 
 1;
