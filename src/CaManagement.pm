@@ -654,6 +654,7 @@ BEGIN { $TYPEINFO{ReadCertificateList} = ["function", "any", "any"]; }
 sub ReadCertificateList {
     my $self = shift;
     my $data = shift;
+    my $ret  = undef;
 
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
@@ -667,7 +668,7 @@ sub ReadCertificateList {
                                code    => "PARAM_CHECK_FAILED");
     }
     if( defined $data->{'caPasswd'} ) {    # needed only for UpdateDB
-        my $ret = $self->UpdateDB($data);
+        $ret = $self->UpdateDB($data);
         if ( not defined $ret ) {
             return undef;
         }
@@ -874,6 +875,48 @@ sub AddCRL {
     return 1;
 }
 
+BEGIN { $TYPEINFO{ReadCRL} = ["function", "any", "any"]; }
+sub ReadCRL {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $type   = "";
+    my $ret = undef;
+
+   # checking requires
+    if (not defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{"caName"};
+    
+    if (not defined $data->{"type"} || 
+        !$self->isOneOfList($data->{"type"}, ["parsed", "plain"])) 
+      {
+          return $self->SetError(summary => "Wrong value for parameter 'type'",
+                                 code => "PARAM_CHECK_FAILED");
+      }
+    $type = $data->{"type"};
+    
+    my $size = SCR::Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem");
+    if($size <= 0) {
+        return $self->SetError(summary => "CRL not available in '$caName'",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+    if($type eq "parsed") {
+        $ret = SCR::Read(".openca.CRL.getParsed", "$CAM_ROOT/$caName/crl/crl.pem");
+        if(not defined $ret) {
+            return $self->SetError(%{SCR::Error(".openca.CRL")});
+        }
+    } else {
+        $ret = SCR::Read(".openca.CRL.getTXT", "$CAM_ROOT/$caName/crl/crl.pem");
+        if(not defined $ret) {
+            return $self->SetError(%{SCR::Error(".openca.CRL")});
+        }
+    }
+    return $ret;
+}
 
 
 sub cleanCaInfrastructure {
