@@ -158,6 +158,85 @@
      */
     define boolean exportToLDAP(string kind, string CAname)``{
 
+	map kindmap = $["CA":"ca", "CRL":"crl", "CERT":"cert"];
+	string password = "";
+	string hostname = "";
+	string port = "";
+	string dn = "";
+	string binddn = "";
+	
+	
+	map default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+								    "caName":CAname]);
+
+	if (default == nil)
+	{
+	    // Error: Checking if there is have already a config has been established
+	    map<string,any> messageMap = YaPI::Error();
+	    y2milestone("ReadLDAPExportDefaults(%1) returns %2",
+			$["type":kindmap[kind]:"", "caName":CAname],
+			messageMap);
+			
+	    if (messageMap["code"]:"" == "LDAP_CONFIG_NEEDED")
+	    {
+		UI::OpenDialog (`opt(`decorated ),
+				`HBox( `HSpacing(2),
+				       `VBox (
+					      `VSpacing (1),
+					      // popup window header
+					      `Heading (_("LDAP Initialization")),
+					      `Label(_("LDAP has to initialize for the CA-Management")),
+					      `Label(_("Please give the concerning LDAP password.")),
+					      `VSpacing (1),
+					      `Password(  `id (`password), _("P&assword:")),
+ 					      `VSpacing (1),					  
+					      `HBox (  // push button label
+						     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+						     `HStretch(),
+						     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+						     ),
+					      `VSpacing (1)					  
+					      ),
+				       `HSpacing (2)
+				       )
+				);
+
+		UI::SetFocus (`id(`password));
+		symbol ui = nil;
+		repeat
+		{
+		    ui = (symbol) UI::UserInput ();
+		    password = (string) UI::QueryWidget(`id(`password), `Value);
+		    if ( ui == `ok )
+		    {
+			if (YaPI::CaManagement::InitLDAPcaManagement($["ldapPasswd":password]))
+			{
+			    default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+										    "caName":CAname]);
+			}
+			else
+			{
+			    Popup::Error(_("Cannot initialize LDAP for CA-Management."));
+			}
+		    }
+		}
+		until (contains ([`ok, `cancel], ui));
+		UI::CloseDialog ();
+	    }
+	}
+
+	if (default == nil)
+	{
+	    Popup::Error(_("Cannot read default settings from LDAP."));
+	}	
+	else
+	{
+	    hostname = default["ldapHostname"]:"";
+	    port = default["ldapPort"]:"";
+	    dn = default["destinationDN"]:"";
+	    binddn = default["BindDN"]:"";
+	}	    
+	
 	UI::OpenDialog (`opt(`decorated ),
 			`HBox( `HSpacing(2),
 			       `VBox (
@@ -188,11 +267,11 @@
  	{
 	    ui = (symbol) UI::UserInput ();
 	    
-	    string password = (string) UI::QueryWidget(`id(`password), `Value);
-	    string hostname = (string) UI::QueryWidget(`id(`hostname), `Value);
-	    string port = (string) UI::QueryWidget(`id(`port), `Value);
-	    string dn = (string) UI::QueryWidget(`id(`dn), `Value);
-	    string binddn = (string) UI::QueryWidget(`id(`binddn), `Value);	    
+	    password = (string) UI::QueryWidget(`id(`password), `Value);
+	    hostname = (string) UI::QueryWidget(`id(`hostname), `Value);
+	    port = (string) UI::QueryWidget(`id(`port), `Value);
+	    dn = (string) UI::QueryWidget(`id(`dn), `Value);
+	    binddn = (string) UI::QueryWidget(`id(`binddn), `Value);	    
 	    
 	    if (ui == `cancel)
 	    {
