@@ -29,7 +29,7 @@ sub cleanCaInfrastructure {
     if(!defined $CAM_ROOT || $CAM_ROOT !~ /^\/var\/lib\/YaST2/) {
         return undef;
     }
-    SCR::Execute(".target.bash", "rm -rf $CAM_ROOT/$caName");
+    SCR->Execute(".target.bash", "rm -rf $CAM_ROOT/$caName");
 }
 
 sub checkValueWithConfig {
@@ -43,22 +43,22 @@ sub checkValueWithConfig {
     my $caName   = $param->{'caName'};
 
     # check for limits
-    my $value = SCR::Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.$name"); 
+    my $value = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.$name"); 
     if(not defined $value) {
-        $value = SCR::Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.$name"); 
+        $value = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.$name"); 
         # $name is not in req_distinguished_name nor in req_attributes
         # this is an error
         if (not defined $value) {
             return $self->SetError( summary => "Can not find $name in config file",
                                    code => "PARAM_CHECK_FAILED");
         }
-        $min = SCR::Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_min");
-        $max = SCR::Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_max");
+        $min = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_min");
+        $max = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_max");
     } else {
-        $min = SCR::Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.".$name."_min");
-        $max = SCR::Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.".$name."_max");
+        $min = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.".$name."_min");
+        $max = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.".$name."_max");
     }
-    $policy = SCR::Read(".var.lib.YaST2.CAM.value.$caName.policy_server.$name");
+    $policy = SCR->Read(".var.lib.YaST2.CAM.value.$caName.policy_server.$name");
 
     if( defined $param->{$name} ) {
         if( (defined $min) && length($param->{$name}) < $min ) {
@@ -89,7 +89,7 @@ sub mergeToConfig {
   my $default  = shift || undef;
   my $caName = $param->{'caName'};
   
-  my $cfg_exists = SCR::Read(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name");
+  my $cfg_exists = SCR->Read(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name");
   
   if (defined $default && (not defined $param->{"$name"} or $param->{"$name"} eq "")) {
       if (defined $cfg_exists) {  # a default in the configfile is given
@@ -102,14 +102,14 @@ sub mergeToConfig {
   if ((not defined $param->{"$name"} ) && (defined $cfg_exists )) {
       # remove value from config
       y2debug("remove value from config (".$param->{"$name"}."/$name");
-      if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef)) {
+      if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef)) {
           return $self->SetError( summary => "Can not write to config file",
                                  code => "SCR_WRITE_FAILED");
       }
   } elsif (defined $param->{"$name"}) {
       # add or modify are the same here
       y2debug("modify value in config (".$param->{"$name"}."/$name");
-      if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", $param->{$name})) {
+      if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", $param->{$name})) {
           return $self->SetError( summary => "Can not write to config file",
                                  code => "SCR_WRITE_FAILED");
       }
@@ -290,12 +290,12 @@ sub checkCommonValues {
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*URI:(.+)\s*$/) {
-                    if (!defined $1 || !URL::Check($1)) {
+                    if (!defined $1 || !URL->Check($1)) {
                         return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*DNS:(.+)\s*$/) {
-                    if (!defined $1 || !Hostname::CheckDomain($1)) {
+                    if (!defined $1 || !Hostname->CheckDomain($1)) {
                         return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                               code    => "PARAM_CHECK_FAILED");
                     }
@@ -305,7 +305,7 @@ sub checkCommonValues {
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*IP:(.+)\s*$/) {
-                    if (!defined $1 || !(IP::Check4($1) || IP::Check6($1)) ) {
+                    if (!defined $1 || !(IP->Check4($1) || IP->Check6($1)) ) {
                         return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                               code    => "PARAM_CHECK_FAILED");
                     }
@@ -325,7 +325,7 @@ sub checkCommonValues {
                                       code => "PARAM_CHECK_FAILED");
             }
             $data->{$key} =~ /^\s*critical\s*,\s*(.*)/ ;
-            if (!URL::Check($1)) {
+            if (!URL->Check($1)) {
                 return $self->SetError(summary => "Wrong value'$1' for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
@@ -372,12 +372,12 @@ sub checkCommonValues {
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*URI:(.+)\s*$/) {
-                        if (!defined $1 || !URL::Check($1)) {
+                        if (!defined $1 || !URL->Check($1)) {
                             return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*DNS:(.+)\s*$/) {
-                        if (!defined $1 || !Hostname::CheckDomain($1)) {
+                        if (!defined $1 || !Hostname->CheckDomain($1)) {
                             return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                                   code    => "PARAM_CHECK_FAILED");
                         }
@@ -387,7 +387,7 @@ sub checkCommonValues {
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*IP:(.+)\s*$/) {
-                        if (!defined $1 || !(IP::Check4($1) || IP::Check6($1)) ) {
+                        if (!defined $1 || !(IP->Check4($1) || IP->Check6($1)) ) {
                             return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                                   code    => "PARAM_CHECK_FAILED");
                         }
@@ -410,7 +410,7 @@ sub checkCommonValues {
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
                 next if($p eq "critical");
                 if ($p =~ /^\s*URI:(.+)\s*$/) {
-                    if (!defined $1 || !URL::Check("$1")) {
+                    if (!defined $1 || !URL->Check("$1")) {
                         return $self->SetError(summary => "Wrong value'$1' for parameter '$key'.",
                                                code    => "PARAM_CHECK_FAILED");
                     }
