@@ -158,7 +158,7 @@
      */
     define boolean exportToLDAP(string kind, string CAname, string commonName, string email, string certificate)``{
 
-	map kindmap = $["CA":"ca", "CRL":"crl", "CERT":"certificates"];
+	map kindmap = $["CA":"ca", "CRL":"crl", "CERT":"certificate"];
 	string password = "";
 	string hostname = "";
 	string port = "";
@@ -175,8 +175,8 @@
 								    "caName":CAname,
 								    "commonName":commonName,
 								    "emailAddress":email]);
-	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("keyPasswd:")));
-	    passwordTerm = add (passwordTerm, `Password(  `id (`p12Passwd), _("p12Passwd:")));	    
+	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("key Password:")));
+	    passwordTerm = add (passwordTerm, `Password(  `id (`p12Passwd), _("p12 Password:")));	    
 	}
 	else
 	{
@@ -259,7 +259,9 @@
 	    port = default["ldapPort"]:"";
 	    dn = default["destinationDN"]:[];
 	    binddn = default["BindDN"]:"";
-	}	    
+	}
+
+	y2milestone("ReadLDAPExportDefaults() returned %1", default);
 	
 	UI::OpenDialog (`opt(`decorated ),
 			`HBox( `HSpacing(2),
