@@ -28,7 +28,8 @@ define symbol MainSequence() ``{
 
     map aliases = $[
         "startup"        	: ``(Startup()),
-        "new_certCAinit"   	: ``(new_cert_init ("ca")),	
+        "new_certCAinit"   	: ``(new_cert_init ("ca")),
+        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
         "new_certCA1"   	: ``(new_cert1 ("ca")),
         "new_certCA2"   	: ``(new_cert2 ("ca")),
         "new_certCA3"   	: ``(new_cert3 ("ca")),
@@ -43,9 +44,13 @@ define symbol MainSequence() ``{
 //                          `enter      : "ca_main",
                             ],
         "new_certCAinit"   : $[
+                            `next       : "new_certSaveDef",
+			    `abort	: "startup",
+                            ],
+        "new_certSaveDef"   : $[
                             `next       : "new_certCA1",
 			    `abort	: "startup",
-                            ],	
+                            ],		
         "new_certCA1"       : $[
                             `next       : "new_certCA2",
 			    `again 	: "new_certCA1",

@@ -393,21 +393,21 @@
 								  ],
 
 			    `expert_key_identifier : 		$["name" 	: "Key Identifier",
-								  "widget"	: `VBox ( `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_SubjectKeyIdentifier),
+								  "widget"	: `VBox ( `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_subjectKeyIdentifier),
 															      _("critical"),
-															      CaMgm::exp_cri_SubjectKeyIdentifier)),
-													     `TextEntry(`id(`id_exp_SubjectKeyIdentifier),
+															      CaMgm::exp_cri_subjectKeyIdentifier)),
+													     `TextEntry(`id(`id_exp_subjectKeyIdentifier),
 															"Subject Key Identifier",
-															CaMgm::exp_SubjectKeyIdentifier )
+															CaMgm::exp_subjectKeyIdentifier )
 													     )
 												  ),
 											  `VSpacing(1.5),
-											  `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_AuthorityKeyIdentifier),
+											  `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_authorityKeyIdentifier),
 															      _("critical"),
-															      CaMgm::exp_cri_AuthorityKeyIdentifier)),
-													     `TextEntry(`id(`id_exp_AuthorityKeyIdentifier),
+															      CaMgm::exp_cri_authorityKeyIdentifier)),
+													     `TextEntry(`id(`id_exp_authorityKeyIdentifier),
 															"Authority Key Identifier",
-															CaMgm::exp_AuthorityKeyIdentifier),
+															CaMgm::exp_authorityKeyIdentifier),
 													     `VSpacing(1.5)
 													     )
 												  )

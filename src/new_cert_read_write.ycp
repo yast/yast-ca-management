@@ -86,10 +86,10 @@
  	CaMgm::adv_copy_subject_alt_name = false;
 	CaMgm::adv_subject_alt_name_list = [];
 	CaMgm::adv_unstructured_name = "";
-	CaMgm::exp_cri_SubjectKeyIdentifier = false;
-	CaMgm::exp_SubjectKeyIdentifier = "";
-	CaMgm::exp_cri_AuthorityKeyIdentifier = false;
-	CaMgm::exp_AuthorityKeyIdentifier = "";
+	CaMgm::exp_cri_subjectKeyIdentifier = false;
+	CaMgm::exp_subjectKeyIdentifier = "";
+	CaMgm::exp_cri_authorityKeyIdentifier = false;
+	CaMgm::exp_authorityKeyIdentifier = "";
 	CaMgm::exp_cri_netscape_nsBaseUrl = false;
 	CaMgm::exp_netscape_nsBaseUrl = "";
  	CaMgm::exp_cri_netscape_nsRevocationUrl = false;
@@ -109,7 +109,7 @@
 	map ret = (map) CaManagement::ReadCertificateDefaults ($["certType":kind]);
 	if (ret == nil)
 	{
-	    Popup::Error (_("Cannot read default certificate."));
+	    showErrorCaManagement ();
 	    return `next;
 	}
 	
@@ -335,11 +335,11 @@
 	    entry = strip(entry);
 	    if (entry == "critical")
 	    {
-		CaMgm::exp_cri_SubjectKeyIdentifier = true;
+		CaMgm::exp_cri_subjectKeyIdentifier = true;
 	    }
 	    else
 	    {
-		CaMgm::exp_SubjectKeyIdentifier = entry;
+		CaMgm::exp_subjectKeyIdentifier = entry;
 	    }
 	});
 	
@@ -353,18 +353,18 @@
 	    
 	    if (ident == "critical")
 	    {
-		CaMgm::exp_cri_AuthorityKeyIdentifier = true;
+		CaMgm::exp_cri_authorityKeyIdentifier = true;
 	    }
 	    else
 	    {
 		if (counter == 0)
 		{
-		    CaMgm::exp_AuthorityKeyIdentifier = CaMgm::exp_AuthorityKeyIdentifier +
+		    CaMgm::exp_authorityKeyIdentifier = CaMgm::exp_authorityKeyIdentifier +
 			ident + ":" + value;
 		}
 		else
 		{
-		    CaMgm::exp_AuthorityKeyIdentifier = CaMgm::exp_AuthorityKeyIdentifier +
+		    CaMgm::exp_authorityKeyIdentifier = CaMgm::exp_authorityKeyIdentifier +
 			"," + ident + ":" + value;
 		}
 		counter = counter +1;
@@ -495,5 +495,437 @@
 	return `next;
     }
 
+
+    /**
+     * Creating CA/Certificate by calling the CaManagement module
+     * @return true ( success )
+     */
+    define boolean new_cert_write (string kind) ``{
+	map param = $[];
+
+	// fillup parameters
+
+	if (kind == "ca")
+	{
+	    param["caName"] =  CaMgm::CAName;
+	    param["keyPasswd"] = CaMgm::password;
+	    param["commonName"] = CaMgm::commonName;
+
+	    if (size (CaMgm::emailList) > 0)
+	    {
+		// taking standard EMAIL
+		foreach (map element, CaMgm::emailList, ``{
+		    if (element["default"]:false == true)
+		    {
+			param["emailAddress"] = element["name"]:"";
+		    }
+		});
+	    }
+
+	    param["keyLength"] = tostring (CaMgm::keyLength);
+	    param["days"] = tostring (CaMgm::validPeriod);
+	    if (size (CaMgm::country) > 0)
+	    {
+		param["countryName"] = CaMgm::country;
+	    }
+	    if (size (CaMgm::state) > 0)
+	    {
+		param["stateOrProvinceName"] = CaMgm::state;
+	    }
+	    if (size (CaMgm::locality) > 0)
+	    {
+		param["localityName"] = CaMgm::locality;
+	    }
+	    if (size (CaMgm::organisation) > 0)
+	    {
+		param["organizationName"] = CaMgm::organisation;
+	    }
+	    if (size (CaMgm::organisationUnit) > 0)
+	    {
+		param["organizationalUnitName"] = CaMgm::organisationUnit;
+	    }
+	    if (size (CaMgm::adv_challange_password) > 0)
+	    {
+		param["challengePassword"] = CaMgm::adv_challange_password;
+	    }
+	    if (size (CaMgm::adv_unstructured_name) > 0)
+	    {
+		param["unstructuredName"] = CaMgm::adv_unstructured_name;
+	    }
+	    if (CaMgm::adv_cri_ca)
+	    {
+		param["basicConstraints"] = "critical," + CaMgm::adv_ca;
+	    }
+	    else
+	    {
+		param["basicConstraints"] = CaMgm::adv_ca;		
+	    }
+	    if (CaMgm::adv_pathlen)
+	    {
+		param["basicConstraints"] = param["basicConstraints"]:"" +
+		    ", pathlen:" + tostring(CaMgm::adv_pathlenValue);
+	    }
+	    if (CaMgm::adv_cri_nsComment)
+	    {
+		param["nsComment"] = "critical," + CaMgm::adv_nsComment;
+	    }
+	    else
+	    {
+		param["nsComment"] = CaMgm::adv_nsComment;		
+	    }
+	    if (CaMgm::adv_client
+		|| CaMgm::adv_server
+		|| CaMgm::adv_sslCA
+		|| CaMgm::adv_email
+		|| CaMgm::adv_reserved
+		|| CaMgm::adv_emailCA
+		|| CaMgm::adv_objectSign
+		|| CaMgm::adv_objCA)
+	    {
+		boolean firstHit = false;
+		if (CaMgm::adv_client)
+		{
+		    param["nsCertType"] = "client";
+		    firstHit = true;
+		}
+		if (CaMgm::adv_server)
+		{
+		    if (firstHit)
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ ",server";
+		    }
+		    else
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ "server";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_sslCA)
+		{
+		    if (firstHit)
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ ",sslCA";
+		    }
+		    else
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ "sslCA";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_email)
+		{
+		    if (firstHit)
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ ",email";
+		    }
+		    else
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ "email";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_reserved)
+		{
+		    if (firstHit)
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ ",reserved";
+		    }
+		    else
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ "reserved";
+			firstHit = true;			
+		    }
+		}		
+		if (CaMgm::adv_emailCA)
+		{
+		    if (firstHit)
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ ",emailCA";
+		    }
+		    else
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ "emailCA";
+			firstHit = true;			
+		    }
+		}		
+		if (CaMgm::adv_objectSign)
+		{
+		    if (firstHit)
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ ",objectSign";
+		    }
+		    else
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ "objectSign";
+			firstHit = true;			
+		    }
+		}		
+		if (CaMgm::adv_objCA)
+		{
+		    if (firstHit)
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ ",objCA";
+		    }
+		    else
+		    {
+			param["nsCertType"] = param["nsCertType"]:""+ "objCA";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_cri_nsCertType)
+		{
+		    param["nsCertType"] = "critical," + param["nsCertType"]:"";
+		}
+	    }
+	    if (CaMgm::adv_digitalSignature
+		|| CaMgm::adv_nonRepudiation 
+		|| CaMgm::adv_cRLSign
+		|| CaMgm::adv_keyEncipherment
+		|| CaMgm::adv_dataEncipherment
+		|| CaMgm::adv_encipherOnly
+		|| CaMgm::adv_keyAgreement
+		|| CaMgm::adv_keyCertSign 
+		|| CaMgm::adv_decipherOnly)
+	    {
+		boolean firstHit = false;
+		if (CaMgm::adv_nonRepudiation)
+		{
+		    param["keyUsage"] = "nonRepudiation";
+		    firstHit = true;
+		}
+		if (CaMgm::adv_cRLSign)
+		{
+		    if (firstHit)
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ ",cRLSign";
+		    }
+		    else
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ "cRLSign";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_keyEncipherment)
+		{
+		    if (firstHit)
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ ",keyEncipherment";
+		    }
+		    else
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ "keyEncipherment";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_dataEncipherment)
+		{
+		    if (firstHit)
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ ",dataEncipherment";
+		    }
+		    else
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ "dataEncipherment";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_encipherOnly)
+		{
+		    if (firstHit)
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ ",encipherOnly";
+		    }
+		    else
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ "encipherOnly";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_keyAgreement)
+		{
+		    if (firstHit)
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ ",keyAgreement";
+		    }
+		    else
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ "keyAgreement";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_keyCertSign)
+		{
+		    if (firstHit)
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ ",keyCertSign";
+		    }
+		    else
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ "keyCertSign";
+			firstHit = true;			
+		    }
+		}
+		if (CaMgm::adv_decipherOnly)
+		{
+		    if (firstHit)
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ ",decipherOnly";
+		    }
+		    else
+		    {
+			param["keyUsage"] = param["keyUsage"]:""+ "decipherOnly";
+			firstHit = true;			
+		    }
+		}						
+		if (CaMgm::adv_cri_key_usage)
+		{
+		    param["keyUsage"] = "critical," + param["keyUsage"]:"";
+		}
+	    }
+	    if (size(CaMgm::exp_subjectKeyIdentifier) > 0)
+	    {
+		if (CaMgm::exp_cri_subjectKeyIdentifier)
+		{
+		    param["subjectKeyIdentifier"] = "critical," + CaMgm::exp_subjectKeyIdentifier;
+		}
+		else
+		{
+		    param["subjectKeyIdentifier"] = CaMgm::exp_subjectKeyIdentifier;   
+		}
+	    }
+	    if (size(CaMgm::exp_authorityKeyIdentifier) > 0)
+	    {
+		if (CaMgm::exp_cri_authorityKeyIdentifier)
+		{
+		    param["authorityKeyIdentifier"] = "critical," + CaMgm::exp_authorityKeyIdentifier;
+		}
+		else
+		{
+		    param["authorityKeyIdentifier"] = CaMgm::exp_authorityKeyIdentifier;   
+		}
+	    }
+	    if (size(CaMgm::adv_subject_alt_name_list) > 0
+		|| size(CaMgm::emailList) > 1 // without default entry
+		|| CaMgm::adv_copy_subject_alt_name )
+	    {
+		boolean prevFound = false;
+		if (CaMgm::adv_cri_subject_alt_name)
+		{
+		    param["subjectAltName"] = "critical";
+		    prevFound = true;
+		}
+		else
+		{
+		    param["subjectAltName"] = "";
+		}
+		// taking EMAIL
+		foreach (map element, CaMgm::emailList, ``{
+		    if (element["default"]:false == false)
+		    {
+			param["subjectAltName"] = param["subjectAltName"]:"" +
+			    (prevFound ? "," : "") +
+			    "email:" +
+			    element["name"]:"";
+			prevFound = true;
+		    }
+		});
+		foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
+		    param["subjectAltName"] = param["subjectAltName"]:"" +
+			(prevFound ? "," : "") +
+			element["kind"]:"" + ":" +
+			element["name"]:"";		    
+		    prevFound = true;
+		});				
+		if (CaMgm::adv_copy_subject_alt_name)
+		{
+		    param["subjectAltName"] = param["subjectAltName"]:"" +
+			(prevFound ? "," : "") +
+			"email:copy";
+		}
+	    }
+	    if (size(CaMgm::adv_issuer_alt_name_list) > 0
+		|| CaMgm::adv_copy_issuer_alt_name )
+	    {
+		boolean prevFound = false;
+		if (CaMgm::adv_cri_issuer_alt_name)
+		{
+		    param["issuerAltName"] = "critical";
+		    prevFound = true;
+		}
+		else
+		{
+		    param["issuerAltName"] = "";
+		}
+		foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+		    param["issuerAltName"] = param["issuerAltName"]:"" +
+			(prevFound ? "," : "") +
+			element["kind"]:"" + ":" +
+			element["name"]:"";		    
+		    prevFound = true;
+		});				
+		if (CaMgm::adv_copy_issuer_alt_name)
+		{
+		    param["issuerAltName"] = param["issuerAltName"]:"" +
+			(prevFound ? "," : "") +
+			"issuer:copy";
+		}
+	    }
+	    if (size(CaMgm::exp_netscape_nsBaseUrl) > 0)
+	    {
+		param["nsBaseUrl"] = CaMgm::exp_cri_netscape_nsBaseUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsBaseUrl;
+	    }
+	    if (size(CaMgm::exp_netscape_nsRevocationUrl) > 0)
+	    {
+		param["nsRevocationUrl"] = CaMgm::exp_cri_netscape_nsRevocationUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsRevocationUrl;
+	    }
+	    if (size(CaMgm::exp_netscape_nsCaRevocationUrl) > 0)
+	    {
+		param["nsCaRevocationUrl"] =
+		    CaMgm::exp_cri_netscape_nsCaRevocationUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsCaRevocationUrl;
+	    }
+	    if (size(CaMgm::exp_netscape_nsRenewalUrl) > 0)
+	    {
+		param["nsRenewalUrl"] =
+		    CaMgm::exp_cri_netscape_nsRenewalUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsRenewalUrl;
+	    }
+	    if (size(CaMgm::exp_netscape_nsCaPolicyUrl) > 0)
+	    {
+		param["nsCaPolicyUrl"] =
+		    CaMgm::exp_cri_netscape_nsCaPolicyUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsCaPolicyUrl;
+	    }
+	    if (size(CaMgm::adv_nsSslServerName) > 0)
+	    {
+		param["nsSslServerName"] =
+		    CaMgm::adv_cri_nsSslServerName ? "critical," : "" +
+		    CaMgm::adv_nsSslServerName;
+	    }
+	    if (size(CaMgm::exp_extendedKeyUsage) > 0)
+	    {
+		param["extendedKeyUsage"] =
+		    CaMgm::exp_cri_extendedKeyUsage ? "critical," : "" +
+		    CaMgm::exp_extendedKeyUsage;
+	    }
+	    if (size(CaMgm::exp_authorityInfoAccess) > 0)
+	    {
+		param["authorityInfoAccess"] =
+		    CaMgm::exp_cri_authorityInfoAccess ? "critical," : "" +
+		    CaMgm::exp_authorityInfoAccess;
+	    }
+	    if (size(CaMgm::adv_distribution_point) > 0)
+	    {
+		param["crlDistributionPoints"] =
+		    CaMgm::adv_cri_distribution_point ? "critical," : "" +
+		    CaMgm::adv_distribution_point;
+	    }
+	}
+
+	y2milestone("CaManagement::AddRootCA(%1)", param);	
+	return CaManagement::AddRootCA (param);
+    }    
 
 }
