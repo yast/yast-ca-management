@@ -354,7 +354,17 @@
 		CaMgm::currentCertificate = (string) certificateID[id]:"";
 		exportCertificateToFile (CaMgm::currentCA, CaMgm::currentCertificate);
 	    }
-
+	    if (ui == `exportLDAP)
+	    {	    
+		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+		CaMgm::currentCertificate = (string) certificateID[id]:"";		
+	    	term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+		exportToLDAP ("CERT",
+			      CaMgm::currentCA,
+			      (string) select(table_item, 2, ""), //common name
+			      (string) select(table_item, 3, ""), //EMAIL
+			      CaMgm::currentCertificate);
+	    }
         }
         until (contains ([`back, `again, `abort, `addServer, `addClient], ui));
 

@@ -174,7 +174,7 @@
 	    }
 	    if (ui == `exportLDAP)
 	    {
-		exportToLDAP ("CA", CaMgm::currentCA);
+		exportToLDAP ("CA", CaMgm::currentCA, "", "", "");
 	    }
 	    if (ui == `exportFile)
 	    {
