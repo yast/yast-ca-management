@@ -72,6 +72,7 @@ T41_CheckCRL1();
 T45_CheckCRL3();
 
 T46_ReadRequest();
+T47_ReadRequestList();
 
 sub printError {
     my $err = shift;
@@ -1691,5 +1692,25 @@ sub T46_ReadRequest {
             print "OK:\n";
             print STDERR Data::Dumper->Dump([$res])."\n";
         }
+    }
+}
+
+sub T47_ReadRequestList() {
+    print STDERR "------------------- T47_ReadRequestList ---------------------\n";
+    print "------------------- T47_ReadRequestList ---------------------\n";
+    use Time::HiRes qw( usleep ualarm gettimeofday tv_interval );
+    my $start = [gettimeofday];   
+    my $data = {
+                'caName' => 'Test2_SuSE_CA'
+               };
+    
+    my $res = YaPI::CaManagement->ReadRequestList($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK: time=".tv_interval($start)."\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
     }
 }
