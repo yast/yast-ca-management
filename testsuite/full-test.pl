@@ -824,5 +824,18 @@ sub T34_DeleteCertificate {
         print "OK\n";
         print STDERR Data::Dumper->Dump([$res])."\n";
     }
+
+    $data->{certificate} = "04:31c25358eb2e3e5c44f3ed307023fd06";
+    $res = YaPI::CaManagement->DeleteCertificate($data);
+    if( not defined $res ) {
+        # error
+        print "OK: false positive\n";
+        my $err = YaPI::CaManagement->Error();
+        print STDERR $err->{summary}."\n".$err->{description}."\n";
+    } else {
+        print STDERR "Fehler\n";
+        exit 1;
+    }
+
 }
 
