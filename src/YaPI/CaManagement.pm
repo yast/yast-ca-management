@@ -3643,7 +3643,7 @@ you have to call B<InitLDAPcaManagement()> first.
 
 In I<$valueMap> you can define the following keys:
 
-* type (required - allowed values are: "ca", "crl", "certificates")
+* type (required - allowed values are: "ca", "crl", "certificate")
 
 * caName (optional)
 
