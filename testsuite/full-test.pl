@@ -73,6 +73,7 @@ T45_CheckCRL3();
 
 T46_ReadRequest();
 T47_ReadRequestList();
+T48_ImportRequest();
 
 sub printError {
     my $err = shift;
@@ -1711,6 +1712,50 @@ sub T47_ReadRequestList() {
         printError($err);
     } else {
         print "OK: time=".tv_interval($start)."\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub T48_ImportRequest {
+    print STDERR "------------------- T48_ImportRequest ---------------------\n";
+    print "------------------- T48_ImportRequest ---------------------\n";
+
+    my $req1 = "
+-----BEGIN CERTIFICATE REQUEST-----
+MIIDeDCCAmACAQAwdDELMAkGA1UEBhMCREUxFjAUBgNVBAoTDVNVU0UgTElOVVgg
+QUcxEzARBgNVBAsTClJELUNPTS1BUFAxGTAXBgNVBAMTEEFkcmlhbiBTY2hyb2V0
+ZXIxHTAbBgkqhkiG9w0BCQEWDmFkcmlhbkBzdXNlLmRlMIIBIjANBgkqhkiG9w0B
+AQEFAAOCAQ8AMIIBCgKCAQEAyrHyX3xQtEO0VCbysNxvWclMrLUjCQ9jT1E8NzNz
+tuJkrK4g6jB5+0L0K7ch0kFeFLFtGJhTQNcRXK4XXXcFEdncBjg+/7xfS3Nfc70c
+JFxiJSD8FvU+/ms+z6p7tjid933W9qQlecQ8ZNBnh+ctyrv8/XXQXg3q5hocBzRl
+P5iD9M9Av0Cc5zLZKg4ZR67JyST2PgTe3vrqdCWCrlDBabrb5kJ2NbJmMaxvKvfg
+QnOwNLX88q/2i9fVZNbSAJyGAI6mm3/DW511lEAA6qxT0p7nOSaspwKYhamWzxEO
+nyyBxSe5NMUZ65ZwJ6AFkcBI7csvVbqATA6hllJm/tfKDwIDAQABoIG+MIG7Bgkq
+hkiG9w0BCQ4xga0wgaowHQYDVR0OBBYEFM+0QxOhgDNlKPnaOHo4yEkR+f4MMCwG
+A1UdEQQlMCOBEWFkcmlhbkBub3ZlbGwuY29tgQ5hZHJpYW5Ac3VzZS5kZTAwBglg
+hkgBhvhCAQ0EIxYhWWFTVCBHZW5lcmF0ZWQgQ2xpZW50IENlcnRpZmljYXRlMBEG
+CWCGSAGG+EIBAQQEAwIEsDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkqhkiG
+9w0BAQUFAAOCAQEAghco4Q/hR3+j8l23wLHseavJ6O9v5/MyexTeWo3qek5hLcKv
+yjSn1WDrH8ZlAoFXE3IAvheHxz6ZsDQWIN5pgrJK5PVV/CyUC7JEFqM5QjoAzvY+
+EOpuxGi4jEB6BCl7N8k172HmU8bmEX8GHTLocS2NUJwCuxy+Ua+9WjZhNK9DjdX1
+VOFmvsVH6RwrxuOJmBSLPW0gQeIne0ONxdbDxuMmHrrBt7Ay4pWWtonFjCt6/5ul
+nwR1IKGnTcEx4CkTLp4lTISAj/2tE8jMPmTnGEO7dnkX2wW7Eb0Z5gDsVTzGh580
+/NKGapmM80ejfdrgrMlBjdG23yaN4qTGRPgvWg==
+-----END CERTIFICATE REQUEST-----
+";
+
+    my $data = {
+                'caName' => 'Test1_SuSE_CA',
+                'data' => $req1
+               };
+    
+    my $res = YaPI::CaManagement->ImportRequest($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
         print STDERR Data::Dumper->Dump([$res])."\n";
     }
 }
