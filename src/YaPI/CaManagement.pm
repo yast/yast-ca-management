@@ -3634,6 +3634,7 @@ sub ExportCRLToLDAP {
     return 1;
 }
 
+
 =item *
 C<$defaultsMap = ReadLDAPExportDefaults($valueMap)>
 
@@ -3643,7 +3644,7 @@ you have to call B<InitLDAPcaManagement()> first.
 
 In I<$valueMap> you can define the following keys: 
 
-* type (required; allowed values are: "ca", "crl", "certificates")
+* type (required - allowed values are: "ca", "crl", "certificates")
 
 * caName (optional)
 
@@ -3709,10 +3710,18 @@ sub ReadLDAPExportDefaults {
 
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
+        if(defined $ldapMap->{'ldap_server'} && $ldapMap->{'ldap_server'} ne "") {
+            my $dummy = $ldapMap->{'ldap_server'};
+            $ldapMap->{'ldap_server'} = Ldap->GetFirstServer("$dummy");
+            $ldapMap->{'ldap_port'} = Ldap->GetFirstPort("$dummy");
+        } else {
+            return $self->SetError( summary => "No LDAP Server configured",
+                                    code => "HOST_NOT_FOUND");
+        } 
     }
     
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_server'},
-                                 "port"     => 389})) {
+                                 "port"     => $ldapMap->{'ldap_port'}})) {
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
@@ -3771,7 +3780,7 @@ sub ReadLDAPExportDefaults {
     }
     
     $retMap->{'ldapHostname'} = $ldapMap->{'ldap_server'};
-    $retMap->{'ldapPort'} = 389;
+    $retMap->{'ldapPort'} = $ldapMap->{'ldap_port'};
     $retMap->{'BindDN'} = $ldapMap->{'bind_dn'};
 
     return $retMap;
@@ -3820,10 +3829,18 @@ sub InitLDAPcaManagement {
 
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
+        if(defined $ldapMap->{'ldap_server'} && $ldapMap->{'ldap_server'} ne "") {
+            my $dummy = $ldapMap->{'ldap_server'};
+            $ldapMap->{'ldap_server'} = Ldap->GetFirstServer("$dummy");
+            $ldapMap->{'ldap_port'} = Ldap->GetFirstPort("$dummy");
+        } else {
+            return $self->SetError( summary => "No LDAP Server configured",
+                                    code => "HOST_NOT_FOUND");
+        } 
     }
     
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_server'},
-                                 "port"     => 389})) {
+                                 "port"     => $ldapMap->{'ldap_port'}})) {
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
