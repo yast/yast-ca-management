@@ -27,25 +27,29 @@
 define symbol MainSequence() ``{
 
     map aliases = $[
-        "startup"        : ``(Startup()),
-        "new_certCA1"   	 : ``(new_cert1 ("CA")),
-        "new_certCA2"   	 : ``(new_cert2 ("CA")),
-        "new_certCA3"   	 : ``(new_cert3 ("CA")),
-        "new_cert_advanced"   : ``(new_cert_advanced ()),
+        "startup"        	: ``(Startup()),
+        "new_certCAinit"   	: ``(new_cert_init ("ca")),	
+        "new_certCA1"   	: ``(new_cert1 ("ca")),
+        "new_certCA2"   	: ``(new_cert2 ("ca")),
+        "new_certCA3"   	: ``(new_cert3 ("ca")),
+        "new_cert_advanced"   	: ``(new_cert_advanced ()),
         ];
 
     map sequence = $[
-        "ws_start"      : "startup",
-        "startup"       : $[
+        "ws_start"         : "startup",
+        "startup"          : $[
                             `next       : `abort,
-			    `createRoot : "new_certCA1",
+			    `createRoot : "new_certCAinit",
 //                          `enter      : "ca_main",
                             ],
+        "new_certCAinit"   : $[
+                            `next       : "new_certCA1",
+			    `abort	: "startup",
+                            ],	
         "new_certCA1"       : $[
                             `next       : "new_certCA2",
 			    `again 	: "new_certCA1",
 			    `abort	: "startup",
-			    `back	: "startup"
                             ],
         "new_certCA2"       : $[
                             `next       : "new_certCA3",

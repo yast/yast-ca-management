@@ -90,14 +90,12 @@
     define void get_advanced_challange_password() ``{
 	y2milestone("calling get_advanced_challange_password");
 	
-	UI::ChangeWidget(`id(`id_adv_cri_challange_password), `Value, CaMgm::adv_cri_challange_password);
 	UI::ChangeWidget(`id(`id_adv_challange_password), `Value, CaMgm::adv_challange_password);
     }
     define string set_advanced_challange_password() ``{
 	y2milestone("calling set_advanced_challange_password");
 	string error = "";
 
-	CaMgm::adv_cri_challange_password = (boolean) UI::QueryWidget(`id(`id_adv_cri_challange_password), `Value);
 	CaMgm::adv_challange_password = (string) UI::QueryWidget(`id(`id_adv_challange_password), `Value);
 	
 	return error;
@@ -134,7 +132,7 @@
 					    `HSpacing(10),
 					    `RadioButtonGroup(`id(`rb), 
 							      `HBox(
-								    `RadioButton(`id("EMAIL"), `opt(`notify), "EMAIL", true),
+								    `RadioButton(`id("email"), `opt(`notify), "email", true),
 								    `RadioButton(`id("URI"), `opt(`notify), "URI"),
 								    `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
 								    `RadioButton(`id("IP"), `opt(`notify), "IP"),
@@ -316,15 +314,15 @@
     define void get_advanced_netscape_nsComment() ``{
 	y2milestone("calling get_advanced_netscape_nsComment");
 
-	UI::ChangeWidget(`id(`id_adv_cri_NsComment), `Value, CaMgm::adv_cri_NsComment);
-	UI::ChangeWidget(`id(`id_adv_NsComment), `Value, CaMgm::adv_NsComment);		
+	UI::ChangeWidget(`id(`id_adv_cri_nsComment), `Value, CaMgm::adv_cri_nsComment);
+	UI::ChangeWidget(`id(`id_adv_nsComment), `Value, CaMgm::adv_nsComment);		
     }
     define string set_advanced_netscape_nsComment() ``{
 	y2milestone("calling set_advanced_netscape_nsComment");
 	string error = "";
 
-	CaMgm::adv_cri_NsComment = (boolean) UI::QueryWidget(`id(`id_adv_cri_NsComment), `Value);
-	CaMgm::adv_NsComment = (string) UI::QueryWidget(`id(`id_adv_NsComment), `Value);		
+	CaMgm::adv_cri_nsComment = (boolean) UI::QueryWidget(`id(`id_adv_cri_nsComment), `Value);
+	CaMgm::adv_nsComment = (string) UI::QueryWidget(`id(`id_adv_nsComment), `Value);		
 	
 	return error;
     }	
@@ -333,7 +331,7 @@
     define void get_advanced_netscape_nsCertType() ``{
 	y2milestone("calling get_advanced_netscape_nsCertType");
 
-	UI::ChangeWidget(`id(`id_adv_cri_NsCertType), `Value, CaMgm::adv_cri_NsCertType);
+	UI::ChangeWidget(`id(`id_adv_cri_nsCertType), `Value, CaMgm::adv_cri_nsCertType);
 	UI::ChangeWidget(`id(`client), `Value, CaMgm::adv_client);
 	UI::ChangeWidget(`id(`server), `Value, CaMgm::adv_server);
 	UI::ChangeWidget(`id(`sslCA), `Value, CaMgm::adv_sslCA);
@@ -347,7 +345,7 @@
 	y2milestone("calling set_advanced_netscape_nsCertType");
 	string error = "";
 
-	CaMgm::adv_cri_NsCertType = (boolean) UI::QueryWidget(`id(`id_adv_cri_NsCertType), `Value);
+	CaMgm::adv_cri_nsCertType = (boolean) UI::QueryWidget(`id(`id_adv_cri_nsCertType), `Value);
 	CaMgm::adv_client = (boolean) UI::QueryWidget(`id(`client), `Value);
 	CaMgm::adv_server = (boolean) UI::QueryWidget(`id(`server), `Value);
 	CaMgm::adv_sslCA = (boolean) UI::QueryWidget(`id(`sslCA), `Value);
@@ -555,14 +553,12 @@
     define void get_advanced_unstructured_name() ``{
 	y2milestone("calling get_advanced_unstructured_name");
 
-	UI::ChangeWidget(`id(`id_adv_cri_unstructured_name), `Value, CaMgm::adv_cri_unstructured_name);
 	UI::ChangeWidget(`id(`id_adv_unstructured_name), `Value, CaMgm::adv_unstructured_name);		
     }
     define string set_advanced_unstructured_name() ``{
 	y2milestone("calling set_advanced_unstructured_name");
 	string error = "";
 
-	CaMgm::adv_cri_unstructured_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_unstructured_name), `Value);
 	CaMgm::adv_unstructured_name = (string) UI::QueryWidget(`id(`id_adv_unstructured_name), `Value);		
 	
 	return error;
@@ -641,18 +637,18 @@
     }	
 
     
-    define void get_expert_netscape_nsRenewallUrl() ``{
-	y2milestone("calling get_expert_netscape_nsRenewallUrl");
+    define void get_expert_netscape_nsRenewalUrl() ``{
+	y2milestone("calling get_expert_netscape_nsRenewalUrl");
 	
-	UI::ChangeWidget(`id(`id_exp_cri_netscape_nsRenewallUrl), `Value, CaMgm::exp_cri_netscape_nsRenewallUrl);
-	UI::ChangeWidget(`id(`id_exp_netscape_nsRenewallUrl), `Value, CaMgm::exp_netscape_nsRenewallUrl);		
+	UI::ChangeWidget(`id(`id_exp_cri_netscape_nsRenewalUrl), `Value, CaMgm::exp_cri_netscape_nsRenewalUrl);
+	UI::ChangeWidget(`id(`id_exp_netscape_nsRenewalUrl), `Value, CaMgm::exp_netscape_nsRenewalUrl);		
     }
-    define string set_expert_netscape_nsRenewallUrl() ``{
-	y2milestone("calling set_expert_netscape_nsRenewallUrl");
+    define string set_expert_netscape_nsRenewalUrl() ``{
+	y2milestone("calling set_expert_netscape_nsRenewalUrl");
 	string error = "";
 
-	CaMgm::exp_cri_netscape_nsRenewallUrl = (boolean) UI::QueryWidget(`id(`id_exp_cri_netscape_nsRenewallUrl), `Value);
-	CaMgm::exp_netscape_nsRenewallUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsRenewallUrl), `Value);		
+	CaMgm::exp_cri_netscape_nsRenewalUrl = (boolean) UI::QueryWidget(`id(`id_exp_cri_netscape_nsRenewalUrl), `Value);
+	CaMgm::exp_netscape_nsRenewalUrl = (string) UI::QueryWidget(`id(`id_exp_netscape_nsRenewalUrl), `Value);		
 	
 	return error;
     }	

@@ -44,8 +44,8 @@
 	      `item(`id(`advanced_key_usage),"Key Usage"),
 	      `item(`id(`advanced_netscape_settings),"Netscape Settings", true,
 		    [
-		     `item(`id(`advanced_netscape_nsComment),"NsComment"),
-		     `item(`id(`advanced_netscape_nsCertType),"NsCertType"),
+		     `item(`id(`advanced_netscape_nsComment),"nsComment"),
+		     `item(`id(`advanced_netscape_nsCertType),"nsCertType"),
 		     `item(`id(`advanced_netscape_nsSslServerName),"nsSslServerName"),
 		     ]
 		    ),
@@ -61,7 +61,7 @@
 		     `item(`id(`expert_netscape_nsBaseUrl),"nsBaseUrl"),
 		     `item(`id(`expert_netscape_nsRevocationUrl),"nsRevocationUrl"),
 		     `item(`id(`expert_netscape_nsCaRevocationUrl),"nsCaRevocationUrl"),
-		     `item(`id(`expert_netscape_nsRenewallUrl),"nsRenewallUrl"),
+		     `item(`id(`expert_netscape_nsRenewalUrl),"nsRenewalUrl"),
 		     `item(`id(`expert_netscape_nsCaPolicyUrl),"nsCaPolicyUrl")
 		     ]
 		    ),
@@ -127,9 +127,7 @@
 								  ],
 
 			    `advanced_challange_password : 	$["name" : "Challange Password",
-								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_challange_password),
-														      _("critical"),
-														      CaMgm::adv_cri_challange_password)),
+								  "widget"	: `Frame ("", `VBox (
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_adv_challange_password),
 														"Challage Password",
@@ -246,15 +244,15 @@
 								  "default"    	: false,
 								  ],
 
-			    `advanced_netscape_nsComment : 	$["name" 	: "NsComment",
-								  "widget"	: `Frame ("",`VBox (`Left (`CheckBox(`id(`id_adv_cri_NsComment),
+			    `advanced_netscape_nsComment : 	$["name" 	: "nsComment",
+								  "widget"	: `Frame ("",`VBox (`Left (`CheckBox(`id(`id_adv_cri_nsComment),
 														     _("critical"),
-														     CaMgm::adv_cri_NsComment
+														     CaMgm::adv_cri_nsComment
 														     )),
 												    `VSpacing(1.5),
-												    `TextEntry(`id(`id_adv_NsComment),
-													       "NsComment",
-													       CaMgm::adv_NsComment),
+												    `TextEntry(`id(`id_adv_nsComment),
+													       "nsComment",
+													       CaMgm::adv_nsComment),
 												    `VSpacing(1.5)
 												    )
 											 ),
@@ -263,13 +261,13 @@
 								  "setCallback" : ``(set_advanced_netscape_nsComment()),
 								  ],
 
-			    `advanced_netscape_nsCertType : 	$["name" 	: "NsCertType",
-								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_NsCertType), 
+			    `advanced_netscape_nsCertType : 	$["name" 	: "nsCertType",
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_adv_cri_nsCertType), 
 														      _("critical"),
-														      CaMgm::adv_cri_NsCertType)),
+														      CaMgm::adv_cri_nsCertType)),
 												     `VSpacing(1.5),
 												     `HBox( `HSpacing( 1 ),
-													    `Frame( "NsCertTyp:",
+													    `Frame( "nsCertTyp:",
 														    `HBox( `VBox(
 																`Left (`CheckBox( `id(`client),
 																		  "client",
@@ -376,10 +374,7 @@
 								  ],
 
 			    `advanced_unstructured_name : 	$["name" 	: "Unstructured Name",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_adv_cri_unstructured_name),
-														       _("critical"),
-														       CaMgm::adv_cri_unstructured_name)
-													     ),
+								  "widget"	: `Frame ("", `VBox ( 
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_adv_unstructured_name),
 														"Unstructured Named",
@@ -475,20 +470,20 @@
 								  "setCallback" : ``(set_expert_netscape_nsCaRevocationUrl()),
 								  ],
 
-			    `expert_netscape_nsRenewallUrl : 	$["name" 	: "nsRenewallUrl",
-								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRenewallUrl),
+			    `expert_netscape_nsRenewalUrl : 	$["name" 	: "nsRenewalUrl",
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_netscape_nsRenewalUrl),
 														       _("critical"),
-														       CaMgm::exp_cri_netscape_nsRenewallUrl)),
+														       CaMgm::exp_cri_netscape_nsRenewalUrl)),
 												     `VSpacing(1.5),
-												     `TextEntry(`id(`id_exp_netscape_nsRenewallUrl),
-														"nsRenewallUrl",
-														CaMgm::exp_netscape_nsRenewallUrl),
+												     `TextEntry(`id(`id_exp_netscape_nsRenewalUrl),
+														"nsRenewalUrl",
+														CaMgm::exp_netscape_nsRenewalUrl),
 												     `VSpacing(1.5)
 												     )
 											 ),
 								  "default"    	: true,
-								  "getCallback" : ``(get_expert_netscape_nsRenewallUrl()),
-								  "setCallback" : ``(set_expert_netscape_nsRenewallUrl()),
+								  "getCallback" : ``(get_expert_netscape_nsRenewalUrl()),
+								  "setCallback" : ``(set_expert_netscape_nsRenewalUrl()),
 								  ],
 
 			    `expert_netscape_nsCaPolicyUrl : 	$["name" 	: "nsCaPolicyUrl",

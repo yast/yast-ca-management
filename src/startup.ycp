@@ -37,7 +37,7 @@
         list<term> result = [];
         integer i = 0;
 
-        list<string> CAList = (list<string>) CaManagement::ReadCAList(); //[ "CA1", "CA2", "CA3" ];
+        list<string> CAList = (list<string>) CaManagement::ReadCAList(); 
 	y2milestone("Output of ReadCAList: %1", CAList);
 	if (CAList == nil)
 	{
