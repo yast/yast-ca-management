@@ -30,6 +30,7 @@
     import "CaManagement";
 
     include "ca-management/util.ycp";
+    include "ca-management/new_cert.ycp";    
 
     /**
      * Creates certikficate items
@@ -111,8 +112,8 @@
         buttons = add (buttons, `MenuButton(`id(`export),
 					    _("Export"),
                                               [
-                                               `item(`id(`exportFile), _("Add Server Certificate") ),
-                                               `item(`id(`addClie), _("Add Client Certificate") )
+                                               `item(`id(`exportFile), _("Export to File") ),
+                                               `item(`id(`exportLDAP), _("Export to LDAP") )
                                                ]
                                               ));
         term contents = `VBox ();
@@ -127,8 +128,8 @@
 						certTermList)
 			);
 	
-	contents = add (contents, buttons);
 	contents = add (contents, `RichText(`id(`textinfo),""));
+	contents = add (contents, buttons);
 
         Wizard::SetContents (  _("Certificates of CA: ") + CaMgm::currentCA, contents, helptext, true, false);
 
@@ -145,7 +146,7 @@
             ui = (symbol) UI::UserInput ();
 
 
-	    if (ui == `deleteEmail)
+	    if (ui == `delete)
 	    {
 		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
 		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
@@ -164,8 +165,14 @@
 
 		    ui = `again;
 	    }
+	    if (ui == `revoke)
+	    {
+	    }
+	    if (ui == `view)
+	    {
+	    }
         }
-        until (contains ([`back, `again, `abort], ui));
+        until (contains ([`back, `again, `abort, `addServer, `addClient], ui));
 
         return ui;
     }	

@@ -20,7 +20,111 @@
     include "ca-management/util.ycp";
     include "ca-management/new_cert_advanced.ycp";
     include "ca-management/ca.ycp";
-    include "ca-management/certificate.ycp";        
+    include "ca-management/certificate.ycp";
+
+
+define  map certificateSequence = $[
+	"ws_start"	    : "new_certinit",
+        "new_certinit"      : $[
+                            `next       	: "new_certSaveDef",
+			    `abort		: `abort,
+                            ],
+        "new_certSaveDef"   : $[
+                            `next       	: "new_cert1",
+			    `abort		: `abort
+                            ],		
+        "new_cert1"         : $[
+                            `next       	: "new_cert2",
+			    `again 		: "new_cert1",
+			    `abort		: `abort,
+                            ],
+        "new_cert2"         : $[
+                            `next       	: "new_cert3",
+			    `abort		: `abort,
+			    `back		: "new_cert1",
+			    `advancedOptions 	: "new_cert_advanced",
+	                    ],
+        "new_cert3"         : $[
+                            `next       	: `abort,
+			    `abort		: `abort,
+			    `back		: "new_cert2"
+                            ],
+        "new_cert_advanced"  : $[
+			    `abort		: `abort,
+			    `back		: "new_cert3"
+	                    ],	
+    ];
+    
+/**
+ * Creating new Root CA sequence
+ * @return sequence result
+ */
+define symbol newCASequence() ``{
+
+    map aliases = $[
+        "new_certinit"   	: ``(new_cert_init ("Root CA")),
+        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+        "new_cert1"  	 	: ``(new_cert1 ("Root CA")),
+        "new_cert2"   		: ``(new_cert2 ("Root CA")),
+        "new_cert3"   		: ``(new_cert3 ("Root CA")),
+        "new_cert_advanced"   	: ``(new_cert_advanced ()),		    
+    ];
+
+    Wizard::CreateDialog();
+    symbol ret = WizardSequencer(aliases, certificateSequence);
+
+    UI::CloseDialog();
+
+    return ret;
+}
+
+/**
+ * Creating new Server Certificate sequence
+ * @return sequence result
+ */
+define symbol newServerCertificateSequence() ``{
+
+    map aliases = $[
+        "new_certinit"   	: ``(new_cert_init ("Server Certificate")),
+        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+        "new_cert1"  	 	: ``(new_cert1 ("Server Certificate")),
+        "new_cert2"   		: ``(new_cert2 ("Server Certificate")),
+        "new_cert3"   		: ``(new_cert3 ("Server Certificate")),
+        "new_cert_advanced"   	: ``(new_cert_advanced ()),		    
+    ];
+
+    Wizard::CreateDialog();
+    symbol ret = WizardSequencer(aliases, certificateSequence);
+
+    UI::CloseDialog();
+
+    return ret;
+}
+
+/**
+ * Creating new Client Certificate sequence
+ * @return sequence result
+ */
+define symbol newClientCertificateSequence() ``{
+
+    map aliases = $[
+        "new_certinit"   	: ``(new_cert_init ("Client Certificate")),
+        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+        "new_cert1"  	 	: ``(new_cert1 ("Client Certificate")),
+        "new_cert2"   		: ``(new_cert2 ("Client Certificate")),
+        "new_cert3"   		: ``(new_cert3 ("Client Certificate")),
+        "new_cert_advanced"   	: ``(new_cert_advanced ()),		    
+    ];
+
+    Wizard::CreateDialog();
+    symbol ret = WizardSequencer(aliases, certificateSequence);
+
+    UI::CloseDialog();
+
+    return ret;
+}
+
+    
 
 /**
  * Main workflow of the CA management configuration
@@ -30,59 +134,44 @@ define symbol MainSequence() ``{
 
     map aliases = $[
         "startup"        	: ``(Startup()),
-        "new_certCAinit"   	: ``(new_cert_init ("Root CA")),
-        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
-        "new_certCA1"   	: ``(new_cert1 ("Root CA")),
-        "new_certCA2"   	: ``(new_cert2 ("Root CA")),
-        "new_certCA3"   	: ``(new_cert3 ("Root CA")),
-        "new_cert_advanced"   	: ``(new_cert_advanced ()),
+	"new_certCA"		: ``(newCASequence()),
+	"new_certServer"	: ``(newServerCertificateSequence()),
+	"new_certClient"	: ``(newClientCertificateSequence()),		
         "ca_main"  	 	: ``(ca ()),
         "certificate"  	 	: ``(certificate ()),		
         ];
 
     map sequence = $[
-        "ws_start"         : "startup",
-        "startup"          : $[
-                            `next       	: `abort,
-			    `createRoot 	: "new_certCAinit",
-			    `enter      	: "ca_main",
+        "ws_start"          : "startup",
+        "startup"           : $[
+				`next       	: `abort,
+				`createRoot 	: "new_certCA",
+				`enter      	: "ca_main",
                             ],
-        "new_certCAinit"   : $[
-                            `next       	: "new_certSaveDef",
-			    `abort		: "startup",
+        "new_certCA"        : $[
+				`next       	: "startup",
+				`abort		: "startup",
                             ],
-        "new_certSaveDef"   : $[
-                            `next       	: "new_certCA1",
-			    `abort		: "startup",
-                            ],		
-        "new_certCA1"       : $[
-                            `next       	: "new_certCA2",
-			    `again 		: "new_certCA1",
-			    `abort		: "startup",
+        "ca_main"	    : $[
+				`back 		: "startup",
+				`abort		: "startup",
+				`certificates 	: "certificate",
                             ],
-        "new_certCA2"       : $[
-                            `next       	: "new_certCA3",
-			    `abort		: "startup",
-			    `back		: "startup",
-			    `advancedOptions 	: "new_cert_advanced",
-	                    ],
-        "new_certCA3"       : $[
-                            `next       	: "startup",
-			    `abort		: "startup",
-			    `back		: "new_certCA2"
+        "certificate"	    : $[
+				`back 		: "ca_main",
+				`abort		: "startup",
+				`again		: "certificate",
+				`next		: "certificate",				
+				`addServer 	: "new_certServer",
+				`addClient 	: "new_certClient",				
                             ],
-        "new_cert_advanced"  : $[
-			    `abort		: "startup",
-			    `back		: "new_certCA3"
-	                    ],
-        "ca_main"	     : $[
-			    `back 		: "startup",
-			    `abort		: "startup",
-			    `certificates 	: "certificate",
+        "new_certServer"    : $[
+				`next       	: "certificate",
+				`abort		: "certificate",
                             ],
-        "certificate"	     : $[
-			    `back 		: "ca_main",
-			    `abort		: "startup",
+        "new_certClient"    : $[
+				`next       	: "certificate",
+				`abort		: "certificate",
                             ],		
         ];
 
@@ -93,8 +182,6 @@ define symbol MainSequence() ``{
 
     return ret;
 }
-
-
 
 /* EOF */
 }

@@ -83,8 +83,9 @@
      * @return string password
      */
     define string getPassword(string CAname)``{
-	string password = CaMgm::passwdMap[CAname]:"";
-	if (password == "")
+	string password = nil;
+	
+	if (!haskey(CaMgm::passwdMap, CAname))
 	{
 	    // asking user
 	    UI::OpenDialog (`opt(`decorated ),
@@ -94,7 +95,7 @@
 					  // popup window header
 					  `Heading (_("Enter CA Password")),
 					  `VSpacing (1),
-					  `Password( `id (`entry), _("&Password:"), password ),
+					  `Password( `id (`entry), _("&Password:")),
 					  `VSpacing (1),					  
 					  `HBox (  // push button label
 						 `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
@@ -138,6 +139,11 @@
 	    }
 	    until (contains ([`ok, `cancel], ui));
 	    UI::CloseDialog ();
+	}
+	else
+	{
+	    // already available
+	    password = CaMgm::passwdMap[CAname]:"";
 	}
 	
 	return password;
