@@ -138,17 +138,17 @@ sub checkCommonValues {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                                      code    => "PARAM_CHECK_FAILED");
+                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "request") {
             if (! defined $data->{$key} ||
-                $data->{$key} !~ /^[A-Za-z0-9\/=+]+$/) {
+                $data->{$key} !~ /^[[:xdigit:]]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                                      code    => "PARAM_CHECK_FAILED");
+                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "certificate") {
             if (! defined $data->{$key} ||
-                $data->{$key} !~ /^[:A-Za-z0-9\/=+]+$/) {
+                $data->{$key} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
