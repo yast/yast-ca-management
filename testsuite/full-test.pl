@@ -76,6 +76,8 @@ T47_ReadRequestList();
 T48_ImportRequest();
 T49_DeleteRequest();
 
+T50_ImportCA();
+
 sub printError {
     my $err = shift;
     foreach my $k (keys %$err) {
@@ -114,6 +116,11 @@ sub init_testsetup {
         system("rm -r /var/lib/CAM/Test3_SuSE_CA");
         unlink("/var/lib/CAM/.cas/Test3_SuSE_CA.pem");
         unlink("/var/lib/CAM/.cas/crl_Test3_SuSE_CA.pem");
+    }
+    if( -d "$CAM_ROOT/Test4_SuSE_CA") {
+        system("rm -r /var/lib/CAM/Test4_SuSE_CA");
+        unlink("/var/lib/CAM/.cas/Test4_SuSE_CA.pem");
+        unlink("/var/lib/CAM/.cas/crl_Test4_SuSE_CA.pem");
     }
     system("c_rehash /var/lib/CAM/.cas/");
 }
@@ -1772,6 +1779,27 @@ sub T49_DeleteRequest {
                };
     
     my $res = YaPI::CaManagement->DeleteRequest($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub T50_ImportCA {
+    print STDERR "------------------- T50_ImportCA ---------------------\n";
+    print "------------------- T50_ImportCA ---------------------\n";
+
+    my $data = {
+                'caName'       => 'Test4_SuSE_CA',
+                'caCertificate'=> "/var/lib/CAM/Test1_SuSE_CA/cacert.pem",
+                'caKey'        => '/var/lib/CAM/Test1_SuSE_CA/cacert.key'
+               };
+    
+    my $res = YaPI::CaManagement->ImportCA($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
         my $err = YaPI::CaManagement->Error();
