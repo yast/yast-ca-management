@@ -94,7 +94,11 @@ Here, change these <b>default settings</b>.
 			       `HBox(`HWeight (1,`Password(`id(`pw1), _("&Password:"), CaMgm::prop_password)),
 				     `HSpacing(2), 
 				     `HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password:"), confirmPassword))
-				     )
+                                    ),
+			       `HBox(`HWeight (1,`TextEntry(`id(`email), _("Email:"), CaMgm::prop_email)),
+				     `HSpacing(2), 
+				     `HWeight (1,`Empty())
+                                     )
 			       );
 
 	// Screen title for the first interactive dialog
@@ -145,6 +149,19 @@ Here, change these <b>default settings</b>.
 			{
 			    CaMgm::prop_country = (string) UI::QueryWidget(`id(`id_country), `Value);
 			    CaMgm::prop_countryChanged = true;
+			}
+			if (CaMgm::prop_email != (string) UI::QueryWidget(`id(`email), `Value))
+			{
+			    if (check_mail_address((string) UI::QueryWidget(`id(`email), `Value)))
+			    {
+				CaMgm::prop_email = (string) UI::QueryWidget(`id(`email), `Value);
+				CaMgm::prop_emailChanged = true;
+			    }
+			    else
+			    {
+				Popup::Error(_("Invalid e-mail format."));
+				ret = `again;
+			    }
 			}
 
 			CaMgm::prop_organisation = (string) UI::QueryWidget(`id(`id_organisation), `Value);

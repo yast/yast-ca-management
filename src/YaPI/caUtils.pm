@@ -208,7 +208,7 @@ sub checkCommonValues {
                                        code    => "PARAM_CHECK_FAILED");
             }
             if($key eq "emailAddress") {
-                if (!defined $data->{$key} || $data->{$key} !~ /^[^@]+@[^@]+\.[^@]+$/) {
+                if (!defined $data->{$key} || $data->{$key} !~ /^[^@]+@[^@]+$/) {
                     return $self->SetError(summary => sprintf(
                                                               __("Invalid value'%s' for parameter '%s'."),
                                                               $data->{$key}, $key),
@@ -314,7 +314,7 @@ sub checkCommonValues {
                 next if($p eq "email:copy" && $key eq "subjectAltName");
                 next if($p eq "issuer:copy" && $key eq "issuerAltName");
                 if ($p =~ /^\s*email:(.+)\s*$/) {
-                    if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]+$/) {
+                    if (!defined $1 || $1 !~ /^[^@]+@[^@]+$/) {
                         return $self->SetError(summary => sprintf(
                                                            __("Invalid value'%s' for parameter '%s'."),
                                                             $p, $key),
@@ -412,7 +412,7 @@ sub checkCommonValues {
                 if ( $accessOID eq "OCSP" || $accessOID eq "caIssuers" ||
                      $accessOID =~ /^(\d+\.)+\d+$/ ) {
                     if ($location =~ /^\s*email:(.+)\s*$/) {
-                        if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]+$/) {
+                        if (!defined $1 || $1 !~ /^[^@]+@[^@]+$/) {
                             return $self->SetError(summary => sprintf(
                                                           __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key),
