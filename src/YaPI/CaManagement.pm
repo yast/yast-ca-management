@@ -3242,7 +3242,8 @@ In I<$valueMap> you can define the following keys:
 The syntax of these values are explained in the 
 B<COMMON PARAMETER> section.
 
-The return value is "undef" on an error and "1" on success.
+The return value is "undef" on an the 
+filename(without suffix) of the certificate on success.
 
 EXAMPLE:
 
@@ -3266,7 +3267,7 @@ EXAMPLE:
  if( not defined $res ) {
      # error    
  } else {
-     print "OK\n";
+     print "OK '$res'\n";
  }
 
 =cut
@@ -3373,7 +3374,7 @@ sub AddSubCA {
                                 code => "C_REHASH_FAILED");
     }
     
-    return 1;
+    return $certificate;
 }
 
 =item *
