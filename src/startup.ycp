@@ -53,6 +53,43 @@
         return result;
     }
 
+    /**
+     * Deleting current CA
+     */
+    define void deleteCurrentCA () ``{
+	y2milestone("deleting CA: %1", CaMgm::currentCA );
+
+	string message = sformat(_("Do you realy want to delete CA %1 ?"), CaMgm::currentCA );
+
+	if (Popup::YesNoHeadline (_("Delete"),
+				  message)
+	    && getPassword(CaMgm::currentCA) != nil)
+	{
+	    if (YaPI::CaManagement::DeleteCA ($[ "caName":CaMgm::currentCA,
+						 "caPasswd":getPassword(CaMgm::currentCA)]) == nil)
+	    {
+		map<string,any> messageMap = YaPI::Error();
+		if (messageMap["code"]:"" == "CA_STILL_IN_USE")
+		{
+		    if (Popup::YesNoHeadline (_("Force Delete"),
+					      _("This CA is still in use. Deleting ?")))
+		    {
+			if (YaPI::CaManagement::DeleteCA ($["caName":CaMgm::currentCA,
+							    "caPasswd":getPassword(CaMgm::currentCA),
+							    "force":"1"]) == nil)
+			{
+			    showErrorCaManagement ();			    			
+			}
+		    }
+		}
+		else
+		{
+		    showErrorCaManagement ();			    		    
+		}
+	    }
+	}
+     }
+
 
     /**
      * startup dialog
@@ -70,6 +107,7 @@
         term buttons = `VBox ();
                                 // To translators: pushbutton label
         buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`enter), `opt (`key_F4), _("&Enter CA")))));
+        buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`delete), `opt (`key_F5), _("&Delete CA")))));
         buttons = add (buttons, `VStretch());
                                 // To translators: pushbutton label
         buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`createRoot), `opt (`key_F3), _("&Create Root CA")))));
@@ -102,7 +140,7 @@
             UI::SetFocus (`id (`table));
 
             ui = (symbol) UI::UserInput ();
-            if (contains ([`enter,`import], ui))
+            if (contains ([`enter,`import,`delete], ui))
             {
                 string id = (string) UI::QueryWidget (`id (`table), `CurrentItem);
 		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
@@ -127,10 +165,14 @@
 		if (ui == `import)
 		{
 		    importCAFromDisk();  
-		}		
+		}
+		if (ui == `delete)
+		{
+		    deleteCurrentCA ();
+		}
             }
         }
-        until (contains ([`createRoot, `enter, `next, `import], ui));
+        until (contains ([`createRoot, `enter, `next, `import, `delete], ui));
 
         return ui;
     }
