@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Aug 19 17:08:12 CEST 2004 - schubi@suse.de
+
+- Checking for KDE session before starting kfiledialog
+
+-------------------------------------------------------------------
 Thu Aug 12 16:19:04 CEST 2004 - schubi@suse.de
 
 - translation flags added 

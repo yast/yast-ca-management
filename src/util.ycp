@@ -21,6 +21,21 @@
     include "ca-management/popup.ycp";
 
     /**
+     * Get contents of environment variable.
+     * @param environment name of requested variable
+     * @return environment variable contents
+     */
+    define string getenv(string environment) ``{
+	string command = sformat("echo $%1", environment);
+	map result     = (map) SCR::Execute(.target.bash_output, command, []);
+	if(result["stdout"]:"" == "") {
+	    return nil;
+	} else {
+	    return (string) (result["stdout"]:"");
+	}
+    }
+
+    /**
       * returns true if char is blank (newline, tab or space)
       * @param s single char string
       * @return boolean blank/non blank
@@ -76,6 +91,7 @@
 	string ret = "";
 	
 	if (SCR::Read (.target.size, "/opt/kde3/bin/kfiledialog") > 0
+	    && strip (getenv ("KDE_FULL_SESSION")) == "true"
 	    && !display["TextMode"]:false)
 	{
 	    // using kfiledialog
