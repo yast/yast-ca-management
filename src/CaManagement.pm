@@ -361,6 +361,7 @@ sub AddRequest {
     foreach my $DN_Part (@DN_Values) {
         my $ret = $self->checkValueWithConfig($DN_Part, $data);
         if(not defined $ret ) {
+            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return undef;
         }
         push @dn, $data->{$DN_Part};
@@ -368,6 +369,7 @@ sub AddRequest {
 
     if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.req.req_extensions", "v3_req"))
     { 
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
@@ -390,12 +392,17 @@ sub AddRequest {
                 );
 
     foreach my $extName ( keys %v3ext) {
-        $self->mergeToConfig($extName, 'v3_req',
-                             $data, $v3ext{$extName});
+        if(not defined $self->mergeToConfig($extName, 'v3_req',
+                                            $data, $v3ext{$extName}))
+        {
+            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+            return undef;
+        }
     }
 
     if(not SCR::Write(".var.lib.YaST2.CAM", undef)) 
     {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
@@ -407,6 +414,7 @@ sub AddRequest {
     my $ret = SCR::Execute( ".openca.openssl.genKey", $caName, $hash);
 
     if (not defined $ret) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
     
@@ -417,9 +425,12 @@ sub AddRequest {
              DN      => \@dn };
     $ret = SCR::Execute( ".openca.openssl.genReq", $caName, $hash);
     if (not defined $ret) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
         return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
 
+    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
     return $request;
 }
 
@@ -469,15 +480,35 @@ sub IssueCertificate {
                                code => "FILE_DOES_NOT_EXIST");
     }
 
+    # get next serial number and built the certificate file name
+    my $serial = SCR::Read(".caTools.nextSerial", $caName);
+    if(not defined $serial) {
+        return $self->SetError(%{SCR::Error(".caTools")});
+    }
+    $certificate = $serial.":".$request;
+
+    # create the configuration file
+    my $retCode = SCR::Execute(".target.bash",
+                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+    if(not defined $retCode || $retCode != 0) {
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+                                code => "COPY_FAILED");
+    }
+
     # check time period of the CA against DAYS to sign this cert
     my $caP = $self->ReadCA({caName => $caName, type => 'parsed'});
     if(not defined $caP) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return undef;
     }
     my $notafter = SCR::Execute(".openca.openssl.getNumericDate", $caName, $caP->{'NOTAFTER'});
-
+    if(not defined $notafter) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
+    }
     #                     year    month  day  hour   min  sec
     if( $notafter !~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not parse CA date string '$notafter'",
                                 code    => "PARSE_ERROR");
     }
@@ -490,28 +521,16 @@ sub IssueCertificate {
     if($expireCertTime > $expireCATime) {
         my $caStr = sprintf("%s-%s-%s %s:%s:%s", @expireCA);
         my $certStr = sprintf("%s-%s-%s %s:%s:%s", @expireCertDate);
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "CA expires before the certificate should expire. ".
                                 "CA expires:'$caStr', Cert should expire:'$certStr'",
                                 code  => 'PARAM_CHECK_FAILED');
     }
 
-    # get next serial number and built the certificate file name
-    my $serial = SCR::Read(".caTools.nextSerial", $caName);
-    if(not defined $serial) {
-        return $self->SetError(%{SCR::Error(".caTools")});
-    }
-    $certificate = $serial.":".$request;
-
-    my $retCode = SCR::Execute(".target.bash",
-                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if(not defined $retCode || $retCode != 0) {
-        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
-
     if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.".$certType."_cert.x509_extensions", 
                       "v3_".$certType))
     { 
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
@@ -542,12 +561,17 @@ sub IssueCertificate {
                 );
 
     foreach my $extName ( keys %v3ext) {
-        $self->mergeToConfig($extName, 'v3_'.$certType,
-                             $data, $v3ext{$extName});
+        if(not defined $self->mergeToConfig($extName, 'v3_'.$certType,
+                                            $data, $v3ext{$extName}))
+        {
+            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+            return undef;
+        }
     }
 
     if(not SCR::Write(".var.lib.YaST2.CAM", undef)) 
     {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
@@ -564,9 +588,11 @@ sub IssueCertificate {
     my $ret = SCR::Execute( ".openca.openssl.issueCert", $caName, $hash);
 
     if (not defined $ret) {
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
     
+    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
     return $certificate;
 }
 
@@ -581,7 +607,10 @@ sub AddCertificate {
     }
     $data->{'request'} = $request;
     my $certificate = $self->IssueCertificate($data);
-    if(not defined $request) {
+    if(not defined $certificate) {
+        my $caName = $data->{'caName'};
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
+        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/req/".$request.".req");
         return undef;
     }
 
@@ -671,11 +700,17 @@ sub mergeToConfig {
   if ((not defined $param->{"$name"} ) && (defined $cfg_exists )) {
       # remove value from config
       y2debug("remove value from config (".$param->{"$name"}."/$name");
-      SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef);
+      if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef)) {
+          return $self->SetError( summary => "Can not write to config file",
+                                  code => "SCR_WRITE_FAILED");
+      }
   } elsif (defined $param->{"$name"}) {
       # add or modify are the same here
       y2debug("modify value in config (".$param->{"$name"}."/$name");
-      SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", $param->{$name});
+      if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", $param->{$name})) {
+          return $self->SetError( summary => "Can not write to config file",
+                                  code => "SCR_WRITE_FAILED");
+      }
   } # else do nothing: $param->{"$name"} is not defined and not in the config file
   return 1;
 }
