@@ -55,8 +55,8 @@ sub run {
 #    test_ReadLDAPExportDefaults();
 #    test_ReadLDAPExportDefaults2();
 #    test_InitLDAPcaManagement();
-    test_ExportCertificateToLDAP();
-
+#    test_ExportCertificateToLDAP();
+    test_DeleteCertificate();
 # dummy_test();
     return 1;
 }
@@ -860,6 +860,25 @@ sub test_ExportCertificateToLDAP {
             };
 
     my $res = YaPI::CaManagement->ExportCertificateToLDAP($data);
+    if( not defined $res ) {
+        # error
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK\n";
+    }
+}
+
+sub test_DeleteCertificate {
+
+    my $data = {
+                caName        => $exampleCA,
+                certificate   => $exampleCert,
+                caPasswd      => 'system'
+               };
+    
+    my $res = YaPI::CaManagement->DeleteCertificate($data);
     if( not defined $res ) {
         # error
         print STDERR "Fehler\n";
