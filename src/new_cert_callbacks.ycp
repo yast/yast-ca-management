@@ -257,7 +257,7 @@
 	CaMgm::adv_ca = sav_adv_ca;
 	CaMgm::adv_pathlen = sav_adv_pathlen;
 	CaMgm::adv_pathlenValue = sav_adv_pathlenValue;
-	resetAcceptRequestExtention("X509v3 Basic Constraints");	
+	resetAcceptRequestExtention("basicConstraints");	
     }
 
     
@@ -281,6 +281,7 @@
 
 	CaMgm::adv_cri_distribution_point = sav_adv_cri_distribution_point;
 	CaMgm::adv_distribution_point = sav_adv_distribution_point;
+	resetAcceptRequestExtention("crlDistributionPoints");		
     }
     
     
@@ -333,6 +334,7 @@
 
 	CaMgm::adv_cri_issuer_alt_name = sav_adv_cri_issuer_alt_name;
 	CaMgm::adv_copy_issuer_alt_name = sav_adv_copy_issuer_alt_name;
+	resetAcceptRequestExtention ("issuserAltName");
     }
     
 
@@ -531,7 +533,7 @@
 	CaMgm::adv_keyAgreement = sav_adv_keyAgreement;
 	CaMgm::adv_keyCertSign = sav_adv_keyCertSign;
 	CaMgm::adv_decipherOnly = sav_adv_decipherOnly;
-	resetAcceptRequestExtention("X509v3 Key Usage");		
+	resetAcceptRequestExtention("keyUsage");		
     }    
 
     
@@ -555,7 +557,7 @@
 
 	CaMgm::adv_cri_nsComment = sav_adv_cri_nsComment;
 	CaMgm::adv_nsComment = sav_adv_nsComment;
-	resetAcceptRequestExtention("Netscape Comment");		
+	resetAcceptRequestExtention("nsComment");		
     }
     
     
@@ -601,7 +603,7 @@
 	CaMgm::adv_objsign = sav_adv_objsign;
 	CaMgm::adv_objCA = sav_adv_objCA;
 
-	resetAcceptRequestExtention("Netscape Cert Type");	
+	resetAcceptRequestExtention("nsCertType");	
     }
 
     
@@ -625,6 +627,7 @@
 
 	CaMgm::adv_cri_nsSslServerName = sav_adv_cri_nsSslServerName;
 	CaMgm::adv_nsSslServerName = sav_adv_nsSslServerName;
+	resetAcceptRequestExtention ("nsSslServerName");
     }
 
     
@@ -657,7 +660,7 @@
 
 	CaMgm::adv_cri_subject_alt_name = sav_adv_cri_subject_alt_name;
 	CaMgm::adv_copy_subject_alt_name = sav_adv_copy_subject_alt_name;
-	resetAcceptRequestExtention("X509v3 Subject Alternative Name");	
+	resetAcceptRequestExtention("subjectAltName");	
     }
     
 
@@ -856,10 +859,32 @@
 	CaMgm::exp_subjectKeyIdentifier = sav_exp_subjectKeyIdentifier;
 	CaMgm::exp_cri_authorityKeyIdentifier = sav_exp_cri_authorityKeyIdentifier;
 	CaMgm::exp_authorityKeyIdentifier = sav_exp_authorityKeyIdentifier;
-	resetAcceptRequestExtention("X509v3 Subject Key Identifier");
-	resetAcceptRequestExtention("Authority Information Access");
-    }	    
+	resetAcceptRequestExtention("subjectKeyIdentifier");
+	resetAcceptRequestExtention("authorityInfoAccess");
+    }
 
+    define void get_expert_subject_key_identifier() ``{
+	y2debug("calling get_expert_subject_key_identifier");
+
+	UI::ChangeWidget(`id(`id_exp_cri_subjectKeyIdentifier), `Value, CaMgm::exp_cri_subjectKeyIdentifier);
+	UI::ChangeWidget(`id(`id_exp_subjectKeyIdentifier), `Value, CaMgm::exp_subjectKeyIdentifier);		
+    }
+    define string set_expert_subject_key_identifier() ``{
+	y2debug("calling set_expert_subject_key_identifier");
+	string error = "";
+
+	CaMgm::exp_cri_subjectKeyIdentifier = (boolean) UI::QueryWidget(`id(`id_exp_cri_subjectKeyIdentifier), `Value);
+	CaMgm::exp_subjectKeyIdentifier = (string) UI::QueryWidget(`id(`id_exp_subjectKeyIdentifier), `Value);		
+
+	return error;
+    }
+    define void default_expert_subject_key_identifier() ``{
+	y2debug("calling default_expert_subject_key_identifier");
+
+	CaMgm::exp_cri_subjectKeyIdentifier = sav_exp_cri_subjectKeyIdentifier;
+	CaMgm::exp_subjectKeyIdentifier = sav_exp_subjectKeyIdentifier;
+	resetAcceptRequestExtention ("subjectKeyIdentifier");	
+    }	        
     
     define void get_expert_netscape_nsBaseUrl() ``{
 	y2debug("calling get_expert_netscape_nsBaseUrl");
@@ -881,6 +906,7 @@
 
 	CaMgm::exp_cri_netscape_nsBaseUrl = sav_exp_cri_netscape_nsBaseUrl;
 	CaMgm::exp_netscape_nsBaseUrl = sav_exp_netscape_nsBaseUrl;
+	resetAcceptRequestExtention ("nsBaseUrl");		
     }
     
     
@@ -904,6 +930,7 @@
 
 	CaMgm::exp_cri_netscape_nsRevocationUrl = sav_exp_cri_netscape_nsRevocationUrl;
 	CaMgm::exp_netscape_nsRevocationUrl = sav_exp_netscape_nsRevocationUrl;
+	resetAcceptRequestExtention ("nsRevocationUrl");	
     }	    
 
     
@@ -927,6 +954,7 @@
 
 	CaMgm::exp_cri_netscape_nsCaRevocationUrl = sav_exp_cri_netscape_nsCaRevocationUrl;
 	CaMgm::exp_netscape_nsCaRevocationUrl = sav_exp_netscape_nsCaRevocationUrl;
+	resetAcceptRequestExtention ("nsCaRevocationUrl");	
     }	
 
     
@@ -950,6 +978,7 @@
 
 	CaMgm::exp_cri_netscape_nsRenewalUrl = sav_exp_cri_netscape_nsRenewalUrl;
 	CaMgm::exp_netscape_nsRenewalUrl = sav_exp_netscape_nsRenewalUrl;
+	resetAcceptRequestExtention ("nsRenewalUrl");	
     }	    
 
     
@@ -973,6 +1002,7 @@
 	
 	CaMgm::exp_cri_netscape_nsCaPolicyUrl = sav_exp_cri_netscape_nsCaPolicyUrl;
 	CaMgm::exp_netscape_nsCaPolicyUrl = sav_exp_netscape_nsCaPolicyUrl;
+	resetAcceptRequestExtention ("nsCaPolicyUrl");		
     }
     
     
@@ -996,6 +1026,7 @@
 
 	CaMgm::exp_cri_authorityInfoAccess = sav_exp_cri_authorityInfoAccess;
 	CaMgm::exp_authorityInfoAccess = sav_exp_authorityInfoAccess;
+	resetAcceptRequestExtention ("authorityInfoAccess");	
     }	    
 
     
@@ -1019,7 +1050,7 @@
 
 	CaMgm::exp_cri_extendedKeyUsage = sav_exp_cri_extendedKeyUsage;
 	CaMgm::exp_extendedKeyUsage = sav_exp_extendedKeyUsage;
-	resetAcceptRequestExtention("X509v3 Extended Key Usage");		
+	resetAcceptRequestExtention("extendedKeyUsage");		
     }    
 
     

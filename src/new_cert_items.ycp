@@ -91,7 +91,7 @@
 	     ),
        `item(`id(`expert), _("Expert Settings"), true,
 	     [
-	      `item(`id(`expert_key_identifier),"Key Identifier"),
+	      `item(`id(`expert_subject_key_identifier),"Subject Key Identifier"),
 	      `item(`id(`expert_authorityInfoAccess),"authorityInfoAccess"),
 	      `item(`id(`expert_extendedKeyUsage),"extendedKeyUsage"),
 	      ]
@@ -444,6 +444,19 @@
 								  "getCallback" : ``(get_expert_key_identifier()),
 								  "setCallback" : ``(set_expert_key_identifier()),
 								  ],
+			    `expert_subject_key_identifier : 	$["name" 	: "Subject Key Identifier",
+								  "widget"	: `Frame ("", `VBox (`Left (`CheckBox(`id(`id_exp_cri_subjectKeyIdentifier),
+															      _("critical"),
+															      CaMgm::exp_cri_subjectKeyIdentifier)),
+													     `TextEntry(`id(`id_exp_subjectKeyIdentifier),
+															"Subject Key Identifier",
+															CaMgm::exp_subjectKeyIdentifier )
+													     )
+											  ),
+								  "default"    	: ``(default_expert_subject_key_identifier()),
+								  "getCallback" : ``(get_expert_subject_key_identifier()),
+								  "setCallback" : ``(set_expert_subject_key_identifier()),
+								  ],			    
 
 			    `expert_netscape_settings : 	$["name" 	: "Netscape Settings",
 								  "widget"	: `Empty(),

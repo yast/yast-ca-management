@@ -542,6 +542,11 @@
 	{
 	    param["caName"] =  CaMgm::CAName;
 	}
+	if (kind == "Server Request"
+	    ||kind == "Client Request")
+	{
+	    param["caName"] =  CaMgm::currentCA;	    
+	}
 	if (kind == "Server Certificate")
 	{
 	    param["caName"] =  CaMgm::currentCA;
@@ -1058,7 +1063,7 @@
 	if (kind == "Server Request"
 	    ||kind == "Client Request")
 	{
-//	    y2milestone("CaManagement::AddRequest(%1)", param);	
+	    y2milestone("CaManagement::AddRequest(%1)", param);	
 	    return YaPI::CaManagement::AddRequest (param) == nil ? false:true;	    	    
 	}
     }
