@@ -1263,10 +1263,9 @@ sub AddRequest {
     }
     $caName = $data->{"caName"};
 
-    if (!defined $data->{"keyPasswd"} || $data->{"keyPasswd"} eq "" ||
-        length($data->{"keyPasswd"}) <= 4) {
+    if (!defined $data->{"keyPasswd"}) {
                                            # parameter check failed
-        return $self->SetError( summary => __("Missing value 'keyPasswd' or password is too short."),
+        return $self->SetError( summary => __("Missing value 'keyPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
     }
     if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
@@ -3971,6 +3970,8 @@ In I<$valueMap> you can define the following keys:
 
 * emailAddress (optional - only if 'type' is 'certificate')
 
+* subjectAltName (optional - only if 'type' is 'certificate')
+
 The return value is "undef" on an error.
 
 On success a map is returned with the following keys:
@@ -4016,7 +4017,11 @@ sub ReadLDAPExportDefaults {
     my $retMap = {};
     my $ldapret = undef;
     my $commonName = undef;
-    my $emailAddress = undef;
+    my @emailAddresses = ();
+
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
 
     if (defined $data->{'caName'} ) {
         if($data->{'caName'} =~ /^[A-Za-z0-9-_]+$/) {
@@ -4049,8 +4054,20 @@ sub ReadLDAPExportDefaults {
         }
         $commonName = $data->{'commonName'};
         if(defined $data->{'emailAddress'} && $data->{'emailAddress'} ne "") {
-            $emailAddress = $data->{'emailAddress'};
+            push(@emailAddresses, $data->{'emailAddress'});
         }
+        
+        # get other email addresses from subject alt name
+        if(defined $data->{'subjectAltName'} && 
+           $data->{'subjectAltName'} =~ /email/)
+          {
+              my @eaddr = split(/\s*,\s*/, $data->{'subjectAltName'});
+              foreach my $item (@eaddr) {
+                  if($item =~ /email:([^@]+@[^@]+)/ && defined $1 && $1 ne "") {
+                      push(@emailAddresses, $1);
+                  }
+              }
+          }
     }
 
     # default is try; disable only, if ldap client says no
@@ -4148,8 +4165,15 @@ sub ReadLDAPExportDefaults {
         # type is certificate
         
         my $filter = undef;
-        if(defined $emailAddress) {
-            $filter =  "(& (objectclass=inetOrgPerson) (| (cn=$commonName) (mail=$emailAddress)))";
+
+        if(defined $emailAddresses[0]) {
+
+            $filter =  "(& (objectclass=inetOrgPerson) (| (cn=$commonName) ";
+            foreach my $em (@emailAddresses) {
+                $filter .= "(mail=$em) ";
+            }
+            $filter .= "))";
+
         } else {
             $filter =  "(& (objectclass=inetOrgPerson) (cn=$commonName))";
         }
