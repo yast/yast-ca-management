@@ -1,0 +1,138 @@
+/**
+ *
+ * File:
+ *   ca.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Overview ( main window ) of a selected CA
+ *
+ */
+
+
+{
+
+    textdomain "ca-management";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    import "CaManagement";
+
+    include "ca-management/util.ycp";
+
+    /**
+     * getDescription - description of a CA
+     * @param CA name
+     * @return a string with the CA description
+     */
+    define string getDescription (string CAname) ``{
+	string text = _("<br><h3>CA description</h3>");
+
+	map ret = (map) CaManagement::ReadCA ($["caName":CAname, "type":"parsed"]);
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+            return _("<br>CA not found");
+        }
+	y2milestone("ReadCA(%1): %2", CAname, ret);
+
+	map dn = ret["DN_HASH"]:$[];
+	if (size (dn) > 0)
+	{
+	    text = text + _("<h4>Issued for:</h4>");
+	    text = text + "<pre>";
+	    text = text + "Common Name:  " + ((list)dn["CN"]:[])[0]:"";
+	    text = text + "<br>Organization: " + ((list)dn["O"]:[])[0]:"";
+	    text = text + "<br>Location:     " + ((list)dn["L"]:[])[0]:"";	    
+	    text = text + "<br>State:        " + ((list)dn["ST"]:[])[0]:"";
+	    text = text + "<br>Country:      " + ((list)dn["C"]:[])[0]:"";
+	    text = text + "<br>EMAIL:        " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
+	    text = text + "</pre>";	    
+	}
+
+	map issuer = ret["ISSUER_HASH"]:$[];
+	if (size (issuer) > 0)
+	{
+	    text = text + _("<h4>Issued by:</h4>");
+	    text = text + "<pre>";	    
+	    text = text + "Common Name:  " + ((list)issuer["CN"]:[])[0]:"";
+	    text = text + "<br>Organization: " + ((list)issuer["O"]:[])[0]:"";
+	    text = text + "<br>Location:     " + ((list)issuer["L"]:[])[0]:"";	    
+	    text = text + "<br>State:        " + ((list)issuer["ST"]:[])[0]:"";
+	    text = text + "<br>Country:      " + ((list)issuer["C"]:[])[0]:"";
+	    text = text + "<br>EMAIL:        " + ((list)issuer["EMAILADDRESS"]:[])[0]:"";
+	    text = text + "</pre>";	    
+	}
+
+	text = text + _("<br>Valid from: ") + ret["NOTBEFORE"]:"";
+	text = text + _("<br>Valid to: ") + ret["NOTAFTER"]:"";
+	text = text + "<br><br>Fingerprint: " + ret["FINGERPRINT"]:"";
+
+	return text;
+	
+    }
+
+    /**
+     * CA Overview ( Main Window )
+     * @return  'back, 'abort
+     */
+    define symbol ca () ``{
+
+	integer i = 0;
+	
+        // help text 1/2
+        string helptext = _("<p>Here you can see the most important values of the CA.</p>");
+        // help text 2/2
+        helptext = helptext + _("<p>Special information about the current CA are given by the buttons <b>Certificates</b>,<b>Requests</b>,<b>CRL</b> and <b>Advanced</b>.</p>");
+
+
+        term contents = `VBox ();
+        contents = add (contents, `RichText(`id(`textinfo),""));
+        term buttons = `HBox ();
+        // To translators: pushbutton label
+        buttons = add (buttons,  `PushButton (`id (`certificates), _("&Certificates...")));
+        buttons = add (buttons,  `PushButton (`id (`requests), _("&Requests...")));
+	buttons = add (buttons,  `PushButton (`id (`crl), _("CR&L...")));
+	buttons = add (buttons,  `MenuButton( _("&Advanced..."),
+					      [
+					       `item(`id(`information), _("&Show information") ),
+					       `item(`id(`createSubCA), _("C&reate SubCA")),					       
+					       `menu( _("Export"),
+						      [
+						       `item(`id(`exportFile),   _("to &File")   ),
+						       `item(`id(`exportLDAP),   _("to &LDAP")   )
+						       ]
+						      )
+					       ]
+					      ));
+	contents = add (contents, buttons);
+
+                                // To translators: dialog label
+        Wizard::SetContents ( _("CA name: ") + CaMgm::currentCA, contents, helptext, true, false);
+        UI::ChangeWidget( `id(`textinfo), `Value, getDescription (CaMgm::currentCA));
+
+        symbol ui = nil;
+
+        repeat
+        {
+            ui = (symbol) UI::UserInput ();
+
+
+        }
+        until (contains ([`back, `abort], ui));
+
+        return ui;
+    }
+
+}
