@@ -223,7 +223,21 @@
 		    CaMgm::emailList = dummy_map;
 
 		    ui = `again;
-		}		
+		}
+		if (ui == `next)
+		{
+		    if (kind == "ca"
+			&& size (CaMgm::CAName) <= 0)
+		    {
+			Popup::Error(_("CA Name required"));
+			ui = `again;
+		    }
+		    if (size (CaMgm::commonName) <= 0)
+		    {
+			Popup::Error(_("Common Name required"));
+			ui = `again;
+		    }
+		}
 	    }
         }
         until (contains ([`back, `again, `next, `abort], ui));
@@ -257,7 +271,7 @@
         contents = add (contents, `Password( `id (`id_password), _("&Password:"), CaMgm::password));
         contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password:"), CaMgm::verifyPassword));
         contents = add (contents, `Password( `id (`id_caPassword), _("&CA Password:"), CaMgm::CAPassword));
-	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 1, 10000, CaMgm::keyLength));
+	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 100, 9999, CaMgm::keyLength));
 	contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
         contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
 
@@ -285,6 +299,14 @@
 		    Popup::Error(_("Passwords are different."));
 		    ui = `again;
 		}
+		if (ui == `next)
+		{
+		    if (size (CaMgm::password) <= 0)
+		    {
+			Popup::Error(_("Password required"));
+			ui = `again;
+		    }
+		}		
 	    }
         }
         until (contains ([`back, `next, `abort, `advancedOptions ], ui));
@@ -708,15 +730,15 @@
 	{	
 	    text = text +   "Unstructured Name:        "  + CaMgm::adv_unstructured_name +"\n";
 	}
- 	if (size (CaMgm::exp_SubjectKeyIdentifier) > 0)
+ 	if (size (CaMgm::exp_subjectKeyIdentifier) > 0)
 	{	
-	    text = text +   "Subject Key Identifier:   "  + CaMgm::exp_SubjectKeyIdentifier
-		+ (CaMgm::exp_cri_SubjectKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
+	    text = text +   "Subject Key Identifier:   "  + CaMgm::exp_subjectKeyIdentifier
+		+ (CaMgm::exp_cri_subjectKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
 	}
- 	if (size (CaMgm::exp_AuthorityKeyIdentifier) > 0)
+ 	if (size (CaMgm::exp_authorityKeyIdentifier) > 0)
 	{	
-	    text = text +   "Authority Key Identifier: "  + CaMgm::exp_AuthorityKeyIdentifier
-		+ (CaMgm::exp_cri_AuthorityKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
+	    text = text +   "Authority Key Identifier: "  + CaMgm::exp_authorityKeyIdentifier
+		+ (CaMgm::exp_cri_authorityKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
 	}
  	if (size (CaMgm::exp_netscape_nsBaseUrl) > 0)
 	{	
@@ -772,7 +794,11 @@
             if (ui == `next)
             {
 		//creating new certificate
-
+		if (!new_cert_write (kind))
+		{
+		    showErrorCaManagement ();
+		    ui = `again;
+		}
 	    }
         }
         until (contains ([`back, `next, `abort], ui));

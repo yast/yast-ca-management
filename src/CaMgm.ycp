@@ -92,10 +92,10 @@ global list<map> adv_subject_alt_name_list = [];
 
 global string	adv_unstructured_name = "";
 
-global boolean	exp_cri_SubjectKeyIdentifier = false;
-global string	exp_SubjectKeyIdentifier = "";
-global boolean	exp_cri_AuthorityKeyIdentifier = false;
-global string	exp_AuthorityKeyIdentifier = "";
+global boolean	exp_cri_subjectKeyIdentifier = false;
+global string	exp_subjectKeyIdentifier = "";
+global boolean	exp_cri_authorityKeyIdentifier = false;
+global string	exp_authorityKeyIdentifier = "";
 
 global boolean	exp_cri_netscape_nsBaseUrl = false;
 global string	exp_netscape_nsBaseUrl = "";
@@ -117,6 +117,7 @@ global string	exp_authorityInfoAccess = "";
 
 global boolean	exp_cri_extendedKeyUsage = false;
 global string	exp_extendedKeyUsage = "";
+
 
 
 /* EOF */
