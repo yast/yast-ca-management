@@ -31,25 +31,42 @@
 
     include "ca-management/util.ycp";    
 
+    list<list> CAList = []; // CA list tree
+    
     /**
      * Creates CA items
-     * @return a list of CA items formated for a UI table
+     * @param subCA - name ob the sub CA or empty if root
+     * @return a list of CA items of the sub CA, formated for a UI tree
      */
-    define list<term> getCAList () ``{
+    define list<term> getCAList (string subCA) ``{
         list<term> result = [];
 
-        list<string> CAList = (list<string>) YaPI::CaManagement::ReadCAList(); 
-	y2milestone("Output of ReadCAList: %1", CAList);
-	if (CAList == nil)
+	if (size (subCA) <= 0)
 	{
-	    showErrorCaManagement ();
+	    CAList = (list<list>) YaPI::CaManagement::ReadCATree(); 
+	    y2milestone("Output of ReadCATree: %1", CAList);
+	    if (CAList == nil)
+	    {
+		showErrorCaManagement ();
+		return result;
+	    }
 	}
-	else
-	{
-	    foreach (string element, CAList, ``{
-		result = add (result, `item (`id (element), element ) );
-	    });
-	}
+	foreach (list elementList, CAList, ``{
+	    if (elementList[1]:"" == subCA)
+	    {
+		list<term> subCA = getCAList(elementList[0]:"");
+		if (size(subCA) > 0)
+		{
+		    result = add (result, `item (`id (elementList[0]:""), elementList[0]:"",true,
+						 subCA));
+		}
+		else
+		{
+		    result = add (result, `item (`id (elementList[0]:""), elementList[0]:""));
+		}
+	    }
+	});
+
         return result;
     }
 
@@ -102,7 +119,7 @@
         // help text 2/2
         helptext = helptext + _("<p><b>Create Root CA</b> generates a new root certificate authority.</p>");
 
-        list<term> termList = getCAList ();
+        list<term> termList = getCAList ("");
 
         term buttons = `VBox ();
                                 // To translators: pushbutton label
@@ -115,10 +132,9 @@
         buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`import), _("&Import CA")))));	
 
         term contents = `HBox ();
-        contents = add (contents, `HWeight (9,`Table (`id (`table), `opt (`notify, `immediate),
-                                          `header (
-                                              // To translators: table headers
-                                              _("CA List")),
+        contents = add (contents, `HWeight (9,`Tree(`id(`tree), `opt(`notify, `vstretch),
+                                           // To translators: tree headers
+                                              _("CA Tree"),
                                           termList)));
         contents = add (contents, `HWeight (4, buttons));
 
@@ -127,33 +143,25 @@
         Wizard::SetContents (_("CA Selection"), contents, helptext, false, true);
         Wizard::SetNextButton(`next, Label::FinishButton() );
 	UI::ChangeWidget (`id (`abort), `Enabled, false);
-	UI::ChangeWidget (`id (`table), `CurrentItem, CaMgm::currentCA);
+
+	list<string> firstEntry = (list<string>) CAList[0]:["",""];
+	CaMgm::currentCA = firstEntry[0]:"";
+					  
+	UI::ChangeWidget (`id (`tree), `CurrentItem, CaMgm::currentCA);
 			  
         symbol ui = nil;
 
         repeat
         {
-            boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
+            boolean anyitems = UI::QueryWidget (`id (`tree), `CurrentItem) != nil;
             UI::ChangeWidget (`id (`enter), `Enabled, anyitems);
-
-            // Kludge, because a `Table still does not have a shortcut. #16116
-            UI::SetFocus (`id (`table));
+            UI::ChangeWidget (`id (`delete), `Enabled, anyitems);	    
 
             ui = (symbol) UI::UserInput ();
-            if (contains ([`enter,`import,`delete], ui))
+            if (contains ([`enter,`delete], ui)
+		&& anyitems)
             {
-                string id = (string) UI::QueryWidget (`id (`table), `CurrentItem);
-		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
-
-		if (table_item == nil)
-		{
-		    Popup::Error (_("No item has been selected."));
-		    ui = `again;
-		}
-		else
-		{
-		    CaMgm::currentCA = (string) table_item[1]:"";
-		}
+                CaMgm::currentCA = (string) UI::QueryWidget (`id (`tree), `CurrentItem);
 		if (ui == `enter)
 		{
 		    // checking password
@@ -162,15 +170,15 @@
 			ui = `again;
 		    }
 		}
-		if (ui == `import)
-		{
-		    importCAFromDisk();  
-		}
 		if (ui == `delete)
 		{
 		    deleteCurrentCA ();
 		}
             }
+	    if (ui == `import)
+	    {
+		importCAFromDisk();  
+	    }	    
         }
         until (contains ([`createRoot, `enter, `next, `import, `delete], ui));
 

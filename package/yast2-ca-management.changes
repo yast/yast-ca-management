@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 30 15:45:04 CEST 2005 - schubi@suse.de
+
+- Bug 63125 - yast2-ca-mgm: hierarchical display of CAs would be 
+  appreciated 
+
+-------------------------------------------------------------------
 Wed Mar 30 10:26:00 CEST 2005 - schubi@suse.de
 
 - Bug 62544 - CA Management: search for more then one eMailAddress 
