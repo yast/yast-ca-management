@@ -29,46 +29,50 @@
     /**
      * editDefaultEntries() - changing Entries
      */
-    define void editDefaultEntries () ``{
+    define any editDefaultEntries () ``{
 
-	define string confirmPassword = "";
+	Wizard::CreateDialog();
+	Wizard::SetDesktopIcon("ca_mgm");    
+	string help_text = _("<p>
+YaST generates a <b>default CA/Certificate</b> automatically. This CA/Certificate
+will be used for communicating with the <b>Apache Server</b>.
+At this frame you can change these <b>default settings</b>.
+</p>
+");	
+	define string confirmPassword = CaMgm::prop_password;
 
-	UI::OpenDialog (`opt(`decorated ),
-			`HBox( `VSpacing(16),
-			       `VBox (
-				      `HSpacing (100),
-				      // popup window header
-				      `Heading (_("Edit Default Settings")),
-				      `VSpacing (0.5),
-				      `TextEntry( `id (`id_CAName), _("&CA Name:"), CaMgm::prop_CAName ),
-				      `TextEntry( `id (`id_commonName), _("&Common Name:"), CaMgm::prop_ca_commonName ),
-				      `TextEntry( `id (`id_serverName), _("&Server Name:"), CaMgm::prop_server_commonName ),
-				      `VBox(
-					    `HBox(`TextEntry( `id (`id_organisation), _("O&rgansisation:"),
-							      CaMgm::prop_organisation ),
-						  `TextEntry( `id (`id_organisationUnit), _("Or&gansisation Unit:"),
-							      CaMgm::prop_organisationUnit )
-						  ),
-					    `HBox(`TextEntry( `id (`id_locality), _("Loca&lity:"),
-							      CaMgm::prop_locality ),
-						  `TextEntry( `id (`id_state), _("&State:"),
-							      CaMgm::prop_state ))
-					    ),
-				      `HBox (`HWeight(1,`ComboBox( `id (`id_country), _("C&ountry:"), getCountryList()))),
-				      `Password(`id(`pw1), _("Password:"), CaMgm::prop_password),
-				      `Password(`id(`pw2), _("Confirm password:"), confirmPassword),
-				      `VSpacing (1.5),
-				      // push button label
-				      `HBox(
-					    `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
-					    `HStretch(),
-					    `PushButton (`id(`abort), `opt(`default, `key_F9), Label::CancelButton())
-					    )
-				      )
-			       )
-			);
+	term contents = `VBox (
+			       `Heading (_("Edit Default Settings")),
+			       `VBox(
 
-	UI::SetFocus (`id(`ok));
+				     `HBox(`TextEntry( `id (`id_CAName), _("&CA Name:"),
+						       CaMgm::prop_CAName ),
+					   `TextEntry( `id (`id_commonName), _("&Common Name:"),
+						       CaMgm::prop_ca_commonName )
+					   ),
+				     `HBox(`TextEntry( `id (`id_serverName), _("&Server Name:"),
+						       CaMgm::prop_server_commonName ),
+					   `ComboBox( `id (`id_country), _("C&ountry:"), getCountryList())
+					   ),				     
+				     `HBox(`TextEntry( `id (`id_organisation), _("O&rgansisation:"),
+						       CaMgm::prop_organisation ),
+					   `TextEntry( `id (`id_organisationUnit), _("Or&gansisation Unit:"),
+						       CaMgm::prop_organisationUnit )
+					   ),
+				     `HBox(`TextEntry( `id (`id_locality), _("Loca&lity:"),
+						       CaMgm::prop_locality ),
+					   `TextEntry( `id (`id_state), _("&State:"),
+						       CaMgm::prop_state )),
+				     `HBox(`Password(`id(`pw1), _("Password:"), CaMgm::prop_password),
+					   `Password(`id(`pw2), _("Confirm Password:"), confirmPassword)
+					   )
+				     )
+			       );
+
+	// Screen title for the first interactive dialog
+	Wizard::SetContentsButtons("", contents, help_text,
+				   Label::BackButton(), Label::FinishButton());
+
 	// Get the user input.
 	//
 	any ret = nil;
@@ -77,7 +81,7 @@
 	    {
 		ret = Wizard::UserInput();
 
-		if (ret == `ok)
+		if (ret == `next)
 		{
 		    confirmPassword = (string) UI::QueryWidget(`id(`pw2), `Value);
 		    if ((string) UI::QueryWidget(`id(`pw1), `Value) != confirmPassword)
@@ -99,10 +103,12 @@
 		    }
 		}
 	    }
-	until ( ret == `ok
-		|| ret == `abort );
+	until ( ret == `next
+		|| ret == `abort
+		|| ret == `back);
 	
-	UI::CloseDialog ();	    
+	UI::CloseDialog ();
+	return ret;
     };
 
 
@@ -172,7 +178,11 @@ while completing the installation
 	}
 	if (ret == `change)
 	{
-	    editDefaultEntries ();
+	    ret = editDefaultEntries ();
+	    if (ret != `abort)
+	    {
+		ret = `again;
+	    }
 	}
     }
     until ( ret == `next
