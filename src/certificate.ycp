@@ -41,7 +41,7 @@
     define list<term> getCertificateList ( string currentCA, string password) ``{
         list<term> result = [];
         integer i = 0;
-	list ret = (list) YaPI::CaManagement::ReadCertificateList ($["caName":currentCA, "caPasswd":password]);
+	list<map> ret = (list<map>) YaPI::CaManagement::ReadCertificateList ($["caName":currentCA, "caPasswd":password]);
         if (ret == nil)
         {
             showErrorCaManagement ();

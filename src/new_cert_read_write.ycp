@@ -130,7 +130,7 @@
  	CaMgm::keyLength = tointeger(ret["keyLength"]:"");
  	CaMgm::validPeriod = tointeger(ret["days"]:"");
 	
-	list dummy = splitstring (ret["basicConstraints"]:"", ",");
+	list<string> dummy = splitstring (ret["basicConstraints"]:"", ",");
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    list valuelist = splitstring (entry,":");
@@ -521,7 +521,7 @@
      * @return true ( success )
      */
     define boolean new_cert_write (string kind) ``{
-	map param = $[];
+	map<string, any> param = $[];
 
 	// fillup parameters depending on kind
 	
