@@ -131,7 +131,7 @@
 
         Wizard::SetContents ( _("Create new ") + kind + _(" (step 1/3)"), contents, helptext, true, true);
 	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());
-	UI::ChangeWidget (`id (`back), `Enabled, false);	
+	Wizard::DisableBackButton();	
 
         symbol ui = nil;
 
