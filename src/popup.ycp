@@ -70,7 +70,7 @@
 					 _("Details"),
 					 `focus ))
 		{
-		    Popup::Error (description);
+		    Popup::Error (message + "\n\n" + description);
 		}
 	    }
 	    else
