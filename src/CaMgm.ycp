@@ -46,7 +46,6 @@ global string 	country = "GB";
 
 global string 	password = "";
 global string 	verifyPassword = "";
-global string 	CAPassword = "";
 global integer 	keyLength = 1024;
 global integer 	validPeriod = 365;
 
