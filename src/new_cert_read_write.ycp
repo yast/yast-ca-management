@@ -525,11 +525,11 @@
 
 
     /**
-     * Creating CA/Certificate by calling the CaManagement module
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate")     
+     * Creating CA/Certificate or signing a request by calling the CaManagement module
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate", "signRequest")     
      * @return true ( success )
      */
-    define boolean new_cert_write (string kind) ``{
+    define boolean cert_write (string kind) ``{
 	map<string, any> param = $[];
 
 	// fillup parameters depending on kind
@@ -557,53 +557,68 @@
 	    param["newCaName"] =  CaMgm::CAName;	    
 	    param["caPasswd"] =  getPassword(CaMgm::currentCA);	    
 	}
+
+	if (kind == "signRequest")
+	{
+	    param["caName"] =  CaMgm::currentCA;
+	    param["request"] =  CaMgm::currentRequest;
+	    param["certType"] =  CaMgm::requestKind;
+	    param["caPasswd"] = getPassword(CaMgm::currentCA);	    
+	}
+
+	if (kind != "signRequest")
+	{
+	    param["keyPasswd"] = CaMgm::password;
+	    param["commonName"] = CaMgm::commonName;
+	    
+	    if (size (CaMgm::emailList) > 0)
+	    {
+		// taking standard EMAIL
+		foreach (map element, CaMgm::emailList, ``{
+		    if (element["default"]:false == true)
+		    {
+			param["emailAddress"] = element["name"]:"";
+		    }
+		});
+	    }
+	    
+	    param["keyLength"] = tostring (CaMgm::keyLength);
+	    if (size (CaMgm::country) > 0)
+	    {
+		param["countryName"] = CaMgm::country;
+	    }
+	    if (size (CaMgm::state) > 0)
+	    {
+		param["stateOrProvinceName"] = CaMgm::state;
+	    }
+	    if (size (CaMgm::locality) > 0)
+	    {
+		param["localityName"] = CaMgm::locality;
+	    }
+	    if (size (CaMgm::organisation) > 0)
+	    {
+		param["organizationName"] = CaMgm::organisation;
+	    }
+	    if (size (CaMgm::organisationUnit) > 0)
+	    {
+		param["organizationalUnitName"] = CaMgm::organisationUnit;
+	    }
+	    if (size (CaMgm::adv_challenge_password) > 0)
+	    {
+		param["challengePassword"] = CaMgm::adv_challenge_password;
+	    }
+	    if (size (CaMgm::adv_unstructured_name) > 0)
+	    {
+		param["unstructuredName"] = CaMgm::adv_unstructured_name;
+	    }
+	}
 	
 	// fillup parameters which are equal
 	
-	param["keyPasswd"] = CaMgm::password;
-	param["commonName"] = CaMgm::commonName;
 
-	if (size (CaMgm::emailList) > 0)
-	{
-	    // taking standard EMAIL
-	    foreach (map element, CaMgm::emailList, ``{
-		if (element["default"]:false == true)
-		{
-		    param["emailAddress"] = element["name"]:"";
-		}
-	    });
-	}
-
-	param["keyLength"] = tostring (CaMgm::keyLength);
 	param["days"] = tostring (CaMgm::validPeriod);
-	if (size (CaMgm::country) > 0)
-	{
-	    param["countryName"] = CaMgm::country;
-	}
-	if (size (CaMgm::state) > 0)
-	{
-	    param["stateOrProvinceName"] = CaMgm::state;
-	}
-	if (size (CaMgm::locality) > 0)
-	{
-	    param["localityName"] = CaMgm::locality;
-	}
-	if (size (CaMgm::organisation) > 0)
-	{
-	    param["organizationName"] = CaMgm::organisation;
-	}
-	if (size (CaMgm::organisationUnit) > 0)
-	{
-	    param["organizationalUnitName"] = CaMgm::organisationUnit;
-	}
-	if (size (CaMgm::adv_challenge_password) > 0)
-	{
-	    param["challengePassword"] = CaMgm::adv_challenge_password;
-	}
-	if (size (CaMgm::adv_unstructured_name) > 0)
-	{
-	    param["unstructuredName"] = CaMgm::adv_unstructured_name;
-	}
+
+
 	if (CaMgm::adv_ca != "none")
 	{
 	    if (CaMgm::adv_cri_ca)
@@ -1022,6 +1037,11 @@
 	{
 //	    y2milestone("CaManagement::AddSubCA(%1)", param);	
 	    return YaPI::CaManagement::AddSubCA (param) == nil ? false:true;
+	}
+	if (kind == "signRequest")
+	{
+	    y2milestone("CaManagement::IssueCertificate(%1)", param);	
+	    return YaPI::CaManagement::IssueCertificate (param) == nil ? false:true;	    
 	}	
     }
 
@@ -1462,7 +1482,7 @@
  	CaMgm::password = CaMgm::prop_password;
 
 	y2milestone("Creating default Root CA");
-	if (new_cert_write ("Root CA"))
+	if (cert_write ("Root CA"))
 	{
 	    // saving password for the generated CA
 	    CaMgm::passwdMap[CaMgm::prop_CAName] = CaMgm::prop_password;
@@ -1485,7 +1505,7 @@
 
 	    y2milestone("Creating default Server Certificate");	    
 	    
-	    if (!new_cert_write ("Server Certificate"))
+	    if (!cert_write ("Server Certificate"))
 	    {
 		UI::CloseDialog();
 		showErrorCaManagement ();

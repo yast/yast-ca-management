@@ -468,7 +468,7 @@
 	else
 	{
 	    //Ask user for the kind of certificate
-	    if (Popup::YesNo(_("Is this a request of a server certificate ?")))
+	    if (Popup::YesNo(_("Is this request used as server certificate ?")))
 	    {
 		new_cert_init("Server Certificate");
 		CaMgm::requestKind = "server";		
@@ -518,7 +518,7 @@
         // help text 2/3 
         helptext = helptext + _("<p>The request has special <b>request extentions</b> which you can accept.</p>");
         // help text 3/3
-	helptext = helptext + _("<p>If you reject these extentions the default value will be taken instead.</p>");
+	helptext = helptext + _("<p>If you reject these extentions the default values will be taken instead.</p>");
 
         term contents = `VBox (
 			       `Left(`Label(_("Subject:"))),
@@ -569,8 +569,8 @@
 
 	string text = _("\n<b>Summary</b>");
 	text = text + "<br><pre>";
-	text = text + "Subject:                  "  + CaMgm::requestExtentionValue["subject"]:"" + "\n";
-	text = text + "Attributes:               "  + CaMgm::requestExtentionValue["attributes"]:"" + "\n";
+	text = text + "Subject:                  "  + CaMgm::requestSubject;
+	text = text + "Attributes:               "  + CaMgm::requestAttributes;
 	text = text + "Valid Period:             " + CaMgm::validPeriod + _(" days\n");
 	text = text + "Basic Constaints:         " + CaMgm::adv_ca
 	    + (CaMgm::adv_cri_ca ? _(" (critical)\n") : "\n") ;
@@ -961,11 +961,15 @@
             if (ui == `next)
             {
 		//signing request
-//		if (!sign_request())
-//		{
-//		    showErrorCaManagement ();
-//		    ui = `again;
-//		}
+		if (!cert_write("signRequest"))
+		{
+		    showErrorCaManagement ();
+		    ui = `again;
+		}
+		else
+		{
+		    Popup::Message(_("Request has been signed."));
+		}
 	    }
         }
         until (contains ([`back, `next, `abort, `edit], ui));

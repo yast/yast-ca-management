@@ -839,7 +839,7 @@
             if (ui == `next)
             {
 		//creating new certificate
-		if (!new_cert_write (kind))
+		if (!cert_write (kind))
 		{
 		    showErrorCaManagement ();
 		    ui = `again;
