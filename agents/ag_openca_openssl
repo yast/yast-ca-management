@@ -9,6 +9,10 @@ use OpenCA::OpenSSL;
 
 my $openssl = undef;
 
+my $tmpdir = undef;
+my $err = undef;
+
+
 sub check_initialized ()
 {
     if (not defined $openssl)
@@ -29,14 +33,32 @@ sub OtherCommand () {
         if( not defined $openssl ) {
             y2error ("Can not initialize OpenCA::OpenSSL");
         }
-        $openssl->setParams(TMPDIR=>$config->{"tmpdir"},
-                            STDERR=>$config->{"stderr"}
+        $tmpdir = $config->{"tmpdir"};
+        $err = $config->{"stderr"};
+        y2error("STDERR = $err");
+        $openssl->setParams(TMPDIR=>$tmpdir,
+                            STDERR=>$err,
+                            DEBUG=>1
                            );
     }
     
     return undef;
 }
 
+sub setConfig {
+    my $caName = shift;
+
+    my $CAM_ROOT = "/var/lib/YaST2/CAM/";
+
+    check_initialized || return 0;
+    if( ! -e "$CAM_ROOT/$caName/openssl.cnf" ) {
+        y2error("config does not exist!");
+        return 0;
+    }
+    $openssl->setParams(
+                        CONFIG=>"$CAM_ROOT/$caName/openssl.cnf"
+                       );
+}
 
 sub Read { 
     return 1;
@@ -49,16 +71,22 @@ sub Write {
 
 sub Execute {
     my $class = shift;
-    my ($path, $hash) = @_;
-    #y2error("enter execute");
+    my ($path, $caName, $hash) = @_;
+    y2error("enter execute");
     check_initialized || return 0;
     
+    setConfig($caName);
+
+#    foreach (keys %{$hash}) {
+#        y2error("=>=> $_ = $hash->{$_}");
+#    }
+
     if($path eq ".genKey") {
         $openssl->genKey( %{$hash} );
         if($openssl->errno() != 0) {
             y2error("OpenCA::OpenSSL::genKey failed! (".
                     $openssl->errno()."/".$openssl->errval().")");
-            return 0;
+            return undef;
         }
         return 1;
     } elsif($path eq ".genReq") {
@@ -66,7 +94,7 @@ sub Execute {
         if($openssl->errno() != 0) {
             y2error("OpenCA::OpenSSL::genReq failed! (".
                     $openssl->errno()."/".$openssl->errval().")");
-            return 0;
+            return undef;
         }
         return 1;
     } elsif($path eq ".genCert") {
@@ -74,12 +102,12 @@ sub Execute {
         if($openssl->errno() != 0) {
             y2error("OpenCA::OpenSSL::genCert failed! (".
                     $openssl->errno()."/".$openssl->errval().")");
-            return 0;
+            return undef;
         }
         return 1;
     } else {
         y2error("Wrong path '$path' ");
-        return 0;
+        return undef;
     }
 }
   
