@@ -128,8 +128,26 @@ sub Execute {
     } elsif($path eq ".updateDB") {
         my $hash = shift;
         $openssl->updateDB(%{$hash});
-        if($openssl->errno() != 0 || not defined $ret) {
+        if($openssl->errno() != 0 ) {
             return $class->SetError(summary => "OpenCA::OpenSSL::updateDB failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".revoke") {
+        my $hash = shift;
+        $openssl->revoke(%{$hash});
+        if($openssl->errno() != 0) {
+            return $class->SetError(summary => "OpenCA::OpenSSL::revoke failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".issueCrl") {
+        my $hash = shift;
+        $openssl->issueCrl(%{$hash});
+        if($openssl->errno() != 0) {
+            return $class->SetError(summary => "OpenCA::OpenSSL::issueCrl failed! (".
                                     $openssl->errno()."/".$openssl->errval().")",
                                     code => "SCR_EXECUTE_FAILED");
         }
