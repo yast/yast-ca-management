@@ -1,0 +1,66 @@
+/**
+ * File:        include/ca_mgm/wizards.ycp
+ * Package:     Configuration of CAs
+ * Summary:     Wizards definitions
+ * Authors:     Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ */
+
+{
+    textdomain "ca_mgm";
+
+    import "Wizard";
+    import "Label";
+    include "wizard/sequencer.ycp";
+
+    include "ca-management/popup.ycp";
+    include "ca-management/startup.ycp";    
+
+/**
+ * Main workflow of the CA management configuration
+ * @return sequence result
+ */
+define symbol MainSequence() ``{
+
+    map aliases = $[
+        "startup"        : ``(Startup()),
+//      "createRootCA"   : ``(createRootCA ()),
+//        "ca_main"        : ``(CAMain ()),
+//        "ca_certificate" : ``(CACertificate ()),
+//        "ca_crl"         : ``(CACrl ()),
+        ];
+
+    map sequence = $[
+        "ws_start"      : "startup",
+        "startup"       : $[
+                            `next       : `abort,
+//                          `createRoot : "createRootCA",                   
+//                          `enter      : "ca_main",
+                            ],
+//        "ca_main"       : $[
+//                            `certificate: "ca_certificate",
+//                            `crl        : "ca_crl",
+//                            `back       : "startup",
+//                            ],
+//        "ca_certificate": $[
+//                            `back    : "ca_main",
+//                            ],
+//        
+//        "ca_crl"        : $[
+//                            `back    : "ca_main",
+//                            ],
+        ];
+
+    Wizard::CreateDialog();
+    symbol ret = WizardSequencer(aliases, sequence);
+
+    UI::CloseDialog();
+    
+    return ret;
+}
+
+
+
+/* EOF */
+}

@@ -1,21 +1,32 @@
-#
-# Makefile.am for y2c_mail/src
-#
-# $Id$
-#
+# Makefile.am for source/ca_management/src
 
-yncludedir = @yncludedir@/ca-management
+myincludedir = @yncludedir@/ca-management
 
-#client_DATA =			
+myinclude_DATA =		\
+	popup.ycp		\
+	startup.ycp		\
+	wizards.ycp
 
-#ynclude_DATA =		
+module_DATA = 	CaMgm.ycp	\
+		CaManagement.pm
 
-#desktop_DATA =			
+client_DATA = 		\
+	ca_mgm.ycp	\
+	ca-mgm.ycp
 
-module_DATA =			\
-	CaManagement.pm
+desktop_DATA = ca_mgm.desktop
 
+EXTRA_DIST =		\
+	$(module_DATA)	\
+	$(client_DATA)	\
+        $(desktop_DATA)	\
+	$(myinclude_DATA)
 
-EXTRA_DIST = $(module_DATA)
+ca_mgm:
+	ln -sf . ca_mgm
+
+ycpchook = ca_mgm
+
+YCPCFLAGS=-I.
 
 include $(top_srcdir)/Makefile.am.common

@@ -1,0 +1,37 @@
+/**
+ * File:        clients/ca_mgm.ycp
+ * Package:     CA Management
+ * Summary:     Main file
+ * Authors:     Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Main file for CA Management. Uses all other files.
+ */
+
+{
+
+/***
+ * <h3>CA Management</h3>
+ */
+
+textdomain "ca_mgm";
+
+/* The main () */
+y2milestone ("----------------------------------------");
+y2milestone ("CaMgm module started");
+
+include "ca-management/wizards.ycp";
+
+/* main ui function */
+any ret = MainSequence();
+y2debug("ret=%1", ret);
+
+/* Finish */
+y2milestone("CaMgm module finished");
+y2milestone("----------------------------------------");
+
+return ret;
+
+/* EOF */
+}

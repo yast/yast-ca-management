@@ -1,0 +1,85 @@
+/**
+ * File:        include/ca_mgm/popup.ycp
+ * Package:     Configuration of CAs
+ * Summary:     Popup definitions
+ * Authors:     Stefan Schubert
+ *
+ * $Id$
+ */
+
+{
+    textdomain "ca_mgm";
+
+    import "CaMgm";
+    import "Require";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+
+
+    /**
+     * Popup to confirm after finish is pressed
+     * @return `yes or `back
+     */
+    define symbol FinishPopup () ``{
+        if (Popup::ContinueCancelHeadline (
+                // To translators: ContinueCancel Popup headline
+                _("Finish"),
+                // To translators: ContinueCancel Popup
+                _("Really save configuration ?")))
+        {
+            return `yes;
+        }
+        return `back;
+    }
+
+    /**
+     * Popup to confirm vhen exitting without saving
+     * @return `exit or `back
+     */
+    define symbol ExitPopup () ``{
+        if (Popup::YesNoHeadline (
+                // To translators: YesNo Popup headline
+                _("Exit"),
+                // To translators: YesNo Popup
+                _("Really exit configuration without saving ?")))
+        {
+            return `exit;
+        }
+        return `back;
+    }
+
+    /**
+     * Popup with details error
+     * @return `ok
+     */
+    define symbol DetailsPopup () ``{
+
+                                // To translators: popup label
+        Popup::LongText (_("Error details"), `RichText (CaMgm::error_details), 50, 20 );
+        return `ok;
+    }
+
+    /**
+     * Popup displaying configuration result
+     * @return `ok or `details
+     */
+    define symbol ResultPopup () ``{
+
+        string message = "";
+        if (size (CaMgm::error_msg) > 0)
+        {
+                                // To translators: popup label
+            message = sformat (_("Error during configuration:\n%1"),
+                               CaMgm::error_msg);
+
+                                // To translators: Error popup
+            return Popup::AnyQuestion (Label::ErrorMsg(), message, Label::OKButton(), _("&Details"), `focus_yes) ? `ok : `details;
+            //Popup::Error (message);
+        }
+
+        return `ok;
+    }
+
+
+}

@@ -1,0 +1,144 @@
+/**
+ *
+ * File:
+ *   ca_main.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   CA Main Frame
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * CA Management - CA Main module
+ *
+ */
+
+
+{
+
+    textdomain "ca_mgm";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+
+    /**
+     * Creates CA items
+     * @return a list of CA items formated for a UI table
+     */
+    define list<term> getCAList () ``{
+        list<term> result = [];
+        integer i = 0;
+        list<string> CAList = [ "CA1", "CA2", "CA3" ];
+        foreach (string element, CAList, ``{
+            result = add (result, `item (`id (i), element ) );
+            i = i + 1;
+        });
+        return result;
+    }
+
+
+    /**
+     * CA-Main dialog
+     * @return `back, `certificate , 'requests, 'crl
+     */
+    define symbol CAMain () ``{
+
+        // help text 1/4
+        string helptext = _("<p>Please select on CA and press <b>Enter CA </b>.</p>");
+        // help text 2/4
+        helptext = helptext + _("<p><b>Create Root CA</b> generate a new CA");
+
+        list<term> termList = getCAList ();
+
+        term buttons = `VBox ();
+                                // To translators: pushbutton label
+        buttons = add (buttons, `PushButton (`id (`), `opt (`key_F3), _("A&dd")));
+                                // To translators: pushbutton label
+        buttons = add (buttons, `PushButton (`id (`edit), `opt (`key_F4), _("&Edit")));
+                                // To translators: pushbutton label
+        buttons = add (buttons, `PushButton (`id (`delete), `opt (`key_F5), _("De&lete")));
+
+        term contents = `HBox ();
+        contents = add (contents, `Table (`id (`table), `opt (`notify, `immediate),
+                                          `header (
+                                              // To translators: table headers
+                                              _("Netmask"),
+                                              // To translators: table headers
+                                              _("Network")),
+                                          allow_query));
+        contents = add (contents, buttons);
+
+
+                                // To translators: dialog label
+        Wizard::SetContents (_("NIS Server Query Hosts Setup"), contents, helptext, true, true);
+        UI::ChangeWidget (`id (`next), `Label, Label::FinishButton());
+
+        symbol ui = nil;
+
+        repeat
+        {
+            boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
+            UI::ChangeWidget (`id (`edit), `Enabled, anyitems);
+            UI::ChangeWidget (`id (`delete), `Enabled, anyitems);
+
+            // Kludge, because a `Table still does not have a shortcut. #16116
+            UI::SetFocus (`id (`table));
+
+            ui = (symbol) UI::UserInput ();
+            if (ui == `cancel)
+            {
+                ui = `abort;
+            }
+
+            if (ui == `delete)
+            {
+                integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+                allow_query = filter(term e, allow_query, ``(id != select (select (e, 0, []), 0, -1)));
+                UI::ChangeWidget(`id(`table), `Items, allow_query);
+            }
+
+            else if (ui == `edit)
+            {
+                integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+                term item  = find (term e, allow_query, ``(id == select (select (e, 0, []), 0, -1)));
+                item = NetsEditPopup (id, select (item, 1, ""), select (item, 2,""));
+                if (item != nil)
+                {
+                    allow_query = maplist (term e, allow_query, ``{
+                        return select (select (e, 0, []), 0, -1) == id ? item : e;
+                    });
+                    UI::ChangeWidget (`id (`table), `Items, allow_query);
+                }
+            }
+
+            else if (ui == `add)
+            {
+                term new_item = NetsEditPopup (n_items, "", "");
+                if (new_item != nil)
+                {
+                    n_items = n_items + 1;
+                    allow_query = add (allow_query, new_item);
+                    UI::ChangeWidget (`id (`table), `Items, allow_query);
+                }
+            }
+
+            if (ui == `abort && !Popup::ReallyAbort (true)) continue;
+        }
+        until (contains ([`back, `next, `abort], ui));
+
+        if (ui == `back) UI::ChangeWidget (`id (`next), `Label, Label::NextButton());
+
+        // and finally merge
+        NisServer::securenets = MergeNetsEntries (NisServer::securenets, allow_query);
+
+        return ui;
+    }
+
+}
