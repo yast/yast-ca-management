@@ -46,8 +46,11 @@ sub run {
 
 #    test_AddSubCA();
 #    test_ExportCAToLDAP();
-    test_UpdateDB();
-
+#    test_UpdateDB();
+#    test_CreateManyCerts();
+#    test_ListManyCerts('215152321042820');
+    test_WriteCertificateDefaults();
+    
     return 1;
 }
 
@@ -100,6 +103,7 @@ sub test_AddRootCA {
                 'countryName'           => 'DE',
                 'localityName'          => 'Nuernberg',
                 'organizationName'      => 'My GmbH',
+                'basicConstraints'      => 'critical, CA:true',
                 'crlDistributionPoints' => 'URI:http://my.linux.tux/',
                };
     print STDERR "trying to call YaPI::CaManagement->AddRootCA with caName = '$caName'\n";
@@ -126,6 +130,7 @@ sub test_AddRootCA2 {
                 'countryName'           => 'US',
                 'localityName'          => 'Nuernberg',
                 'organizationName'      => 'My GmbH',
+                'basicConstraints'      => 'critical, CA:true',
                 'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
                 'nsComment'             => "\"trulla die waldfee\""
                };
@@ -260,7 +265,7 @@ sub test_AddCertificate {
                 'certType'              => 'client',
                 'keyPasswd'             => 'system',
                 'caPasswd'              => 'system',
-                'commonName'            => 'My Request new ',
+                'commonName'            => 'My Request new1',
                 'emailAddress'          => 'my@linux.tux',
                 'keyLength'             => '2048',
                 'days'                  => '365',
@@ -528,7 +533,7 @@ sub test_AddSubCA {
                 'commonName'            => 'My CA New Sub CA',
                 'emailAddress'          => 'my@linux.tux',
                 'keyLength'             => '2048',
-                'days'                  => '3650',
+                'days'                  => '3600',
                 'countryName'           => 'DE',
                 'localityName'          => 'Nuernberg',
                 'organizationName'      => 'My GmbH',
@@ -590,6 +595,110 @@ sub test_UpdateDB {
         }
     }
 }
+
+
+sub test_CreateManyCerts {
+    my $caName = join("", localtime(time));
+    my $data = {
+                'caName'                => $caName,
+                'keyPasswd'             => 'system',
+                'commonName'            => 'My CA',
+                'emailAddress'          => 'my@linux.tux',
+                'keyLength'             => '2048',
+                'days'                  => '3650',
+                'countryName'           => 'DE',
+                'localityName'          => 'Nuernberg',
+                'organizationName'      => 'My GmbH',
+                'basicConstraints'      => 'critical, CA:true',
+                'crlDistributionPoints' => 'URI:http://my.linux.tux/',
+               };
+    print STDERR "trying to call YaPI::CaManagement->AddRootCA with caName = '$caName'\n";
+    
+    my $res = YaPI::CaManagement->AddRootCA($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK\n";
+    }
+    
+    for(my $i = 0; $i < 200; $i++) {
+        
+        my $data = {
+                    'caName'                => $caName,
+                    'certType'              => 'client', 
+                    'keyPasswd'             => 'system',
+                    'caPasswd'              => 'system',
+                    'commonName'            => "My Request $i",
+                    'emailAddress'          => 'my@linux.tux',
+                    'keyLength'             => '1024',
+                    'days'                  => '365', 
+                    'countryName'           => 'DE',
+                    'localityName'          => 'Nuremberg',
+                    'stateOrProvinceName'   => 'Bavaria',
+                    'organizationalUnitName'=> 'IT Abteilung',
+                    'organizationName'      => 'My Linux Tux GmbH',
+                    'days'                  => '365',
+                   };
+        print STDERR "trying to call YaPI::CaManagement->AddCertificate with caName = '$caName'\n";
+        
+        my $res = YaPI::CaManagement->AddCertificate($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = YaPI::CaManagement->Error();
+            printError($err);
+        } else {
+            print STDERR "OK: '$res'\n";
+        }
+    } 
+}
+
+sub test_ListManyCerts {
+    my $caName = shift;
+
+    use Time::HiRes qw( usleep ualarm gettimeofday tv_interval );
+    $start = [gettimeofday];   
+    my $data = {
+                caName => $caName,
+                caPasswd => "system"
+               };
+    
+    print STDERR "trying to call YaPI::CaManagement->ReadCertificateList()\n";
+    print STDERR "with caName = '$exampleCA'\n";
+    
+    my $res = YaPI::CaManagement->ReadCertificateList($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "time=".tv_interval($start)."\n";
+        #print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub test_WriteCertificateDefaults {
+
+    my $data = {
+                'caName'                => $exampleCA,
+                'certType'              => 'server',
+                'basicConstraints'      => 'critical, CA:FALSE',
+                'nsComment'             => '"SuSE Certificate"',
+                'crlDistributionPoints' => 'URI:http://www.suse.de/CA/crl.pem',
+               };
+    print STDERR "trying to call YaPI::CaManagement->WriteCertificateDefaults with caName = '$exampleCA'\n";
+    
+    my $res = YaPI::CaManagement->WriteCertificateDefaults($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK\n";
+    }
+}
+
 
 1;
 
