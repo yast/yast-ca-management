@@ -74,7 +74,8 @@
         // help text 2/6 
         helptext = helptext + _("<p>It depends on the policy defined in the configuration file.</p>");
         // help text 3b/6 ( optional )
-	if (kind == "Root CA")
+	if (kind == "Root CA"
+	    || kind == "Sub CA")
 	{
 	    helptext = helptext + _("<p><b>CA Name</b> is the name of a CA certificate.</p>");
 	}
@@ -113,7 +114,8 @@
         emails = add (emails, `HWeight (1, buttons));
 
         term contents = `VBox ();
-	if (kind == "Root CA")
+	if (kind == "Root CA"
+	    || kind == "Sub CA")
 	{
 	    contents = add (contents, `TextEntry( `id (`id_CAName), _("&CA Name:"), CaMgm::CAName ));	    
 	}
@@ -329,7 +331,8 @@
 
 	string text = _("<br><h3>Summary</h3>");
 	text = text + "<pre>";
-	if (kind == "Root CA"
+	if ( (kind == "Root CA"
+	      || kind == "Sub CA")
 	    && size (CaMgm::CAName) > 0)
 	{
 	    text = text + _("CA Name:                  ")  + CaMgm::CAName + "\n";
