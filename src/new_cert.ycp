@@ -69,22 +69,22 @@
      */
     define symbol new_cert1 (string kind) ``{
    
-        // help text 1/5
+        // help text 1/6
         string helptext = _("<p>In order to generate a new ceritficate or CA some entries are needed.</p>");
-        // help text 2/5 
+        // help text 2/6 
         helptext = helptext + _("<p>It depends on the policy defined in the configuration file.</p>");
-        // help text 3b/5 ( optional )
+        // help text 3b/6 ( optional )
 	if (kind == "Root CA")
 	{
 	    helptext = helptext + _("<p><b>CA Name</b> is the name of a CA certificate.</p>");
 	}
-        // help text 3/5
+        // help text 3/6
         helptext = helptext + _("<p><b>Common Name</b> is the name of the User/Admistrator/Server.</p>");
-        // help text 4/5
+        // help text 4/6
         helptext = helptext + _("<p><b>E-Mail Address(es)</b> are valid E-Mail addresses of the User or Server-Admistrator.</p>");
-        // help text 5/5
+        // help text 5/6
         helptext = helptext + _("<p><b>Organisation</b>, <b>Organisational Unit</b>, <b>Locality</b> and <b>State</p> are often optional.</p>");
-        // help text 6/5
+        // help text 6/6
         helptext = helptext + _("<p><b>Country</b> is the ISO signature of a country.</p>");
 
 

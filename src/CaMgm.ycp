@@ -26,6 +26,11 @@ import "Summary";
  */
 global string currentCA = "";
 
+/**
+ * Password map for CA
+ */
+global map passwdMap = $[];
+
 
 /**
  * variables for new CA/Certificate

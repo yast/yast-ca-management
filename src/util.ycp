@@ -76,5 +76,54 @@
         return "";
     }
 
+    /**
+     * Dialog for asking a CA password. Returns the password
+     *   without asking if is has already input before.
+     * @param CAname 
+     * @return string password
+     */
+    define string getPassword(string CAname)``{
+	string password = CaMgm::passwdMap[CAname]:"";
+	if (password == "")
+	{
+	    // asking user
+	    UI::OpenDialog (`opt(`decorated ),
+			    `HBox( `VSpacing(16),
+				   `VBox (
+					  `HSpacing (60),
+					  // popup window header
+					  `Heading (_("Enter CA Password")),
+					  `VSpacing (0.5),
+					  `TextEntry( `id (`entry), _("&Password:"), password ),
+					  `HBox (  // push button label
+						 `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+						 `HStretch(),
+						 `PushButton (`id(`cancel), `opt(`default, `key_F10), Label::CancelButton())
+						 )
+					  ),
+				   `VSpacing (1.5)
+				   )
+			    );
 
+	    UI::SetFocus (`id(`entry));
+	    symbol ui = nil;
+	    repeat
+ 	    {
+		ui = (symbol) UI::UserInput ();
+		password = (string) UI::QueryWidget(`id(`entry), `Value);
+		if (ui == `cancel)
+		{
+		    password = nil;
+		}
+		else
+		{
+		    CaMgm::passwdMap[CAname] = password;
+		}
+	    }
+	    until (contains ([`ok, `cancel], ui));
+	    UI::CloseDialog ();
+	}
+	
+	return password;
+    }
 }
