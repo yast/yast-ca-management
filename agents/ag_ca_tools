@@ -127,6 +127,53 @@ sub Read {
         my $certificate = shift || return $class->SetError(summary =>"Parameter 'certificate' missing",
                                                            code => "PARAM_CHECK_FAILED");
         return $class->status($caName, $certificate);
+    } elsif($path eq ".checkKey") {
+        my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
+                                                      code => "PARAM_CHECK_FAILED");
+        my $data = shift || return $class->SetError(summary =>"Parameter 'data' missing",
+                                                    code => "PARAM_CHECK_FAILED");
+        
+        if(not defined $data->{'PASSWORD'}) {
+            return $class->SetError(summary =>"Parameter 'PASSWORD' missing",
+                                    code => "PARAM_CHECK_FAILED");
+        }
+        $ENV{'PASSWORD'} = $data->{'PASSWORD'};
+        if(defined $data->{'CACERT'}) {
+            my $command ="openssl rsa -noout -in ";
+            $command .= "$CAM_ROOT/$caName/cacert.key ";
+            $command .= "-passin env:PASSWORD ";
+            my $ret = `$command 2>/dev/null`;
+            if($? != 0) {
+                delete( $ENV{'PASSWORD'} );
+                return $class->SetError(summary =>"Wrong password",
+                                        code => "PARAM_CHECK_FAILED");
+            } else {
+                delete( $ENV{'PASSWORD'} );
+                return 1;
+            }
+        } elsif(defined $data->{'CERT'}) {
+            if(!-e "$CAM_ROOT/$caName/keys/".$data->{'CERT'}.".key") {
+                delete( $ENV{'PASSWORD'} );
+                return $class->SetError(summary =>"Key '".$data->{'CERT'}.".key' does not exist in CA '$caName'",
+                                        code => "PARAM_CHECK_FAILED");
+            }
+            my $command ="openssl rsa -noout -in ";
+            $command .= "$CAM_ROOT/$caName/keys/".$data->{'CERT'}.".key ";
+            $command .= "-passin env:PASSWORD ";
+            my $ret = `$command 2>/dev/null`;
+            if($? != 0) {
+                delete( $ENV{'PASSWORD'} );
+                return $class->SetError(summary =>"Wrong password",
+                                        code => "PARAM_CHECK_FAILED");
+            } else {
+                delete( $ENV{'PASSWORD'} );
+                return 1;
+            }
+        } else {
+            return $class->SetError(summary =>"Missing 'CACERT' or 'CERT' parameter",
+                                    code => "PARAM_CHECK_FAILED");
+        }
+
     } else {
         return $class->SetError(summary => "Wrong path '$path' ",
                                 code => "SCR_WRONG_PATH");
