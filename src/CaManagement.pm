@@ -16,7 +16,7 @@ our %TYPEINFO;
 
 my $CAM_ROOT = "/var/lib/YaST2/CAM";
 
-BEGIN { $TYPEINFO{ReadCAList} = ["function", ["list", "string"]]; }
+BEGIN { $TYPEINFO{ReadCAList} = ["function", "any"]; }
 sub ReadCAList {
     my $self   = shift;
     my $caList = undef;
@@ -25,15 +25,15 @@ sub ReadCAList {
     if ( not defined $ret ) {
         return $self->SetError(%{SCR::Error(".caTools.caList")});
     }
-    return @$ret;
+    return $ret;
 }
 
 
-BEGIN { $TYPEINFO{AddRootCA} = ["function", "boolean", [ "map", "string", "any" ] ]; }
+BEGIN { $TYPEINFO{AddRootCA} = ["function", "boolean", "any" ]; }
 sub AddRootCA {
     my $self = shift;
     my $data = shift;
-    my @dn       = ();
+    my @dn   = ();
     my $caName  = "";
 
     return undef if(not defined $self->checkCommonValues($data));
@@ -55,22 +55,6 @@ sub AddRootCA {
         return $self->SetError( summary => "Missing value 'commonName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
-#    if (!-d "$CAM_ROOT/$caName") {
-#        return $self->SetError( summary => "'$CAM_ROOT/$caName' does not exist!",
-#                         code    => "DIR_DOES_NOT_EXIST");
-#    }
-#    if (!-e "$CAM_ROOT/$caName/openssl.cnf") {
-#        #return $self->SetError( summary => "'$CAM_ROOT/$caName/openssl.cnf' does not exist!",
-#        #                       code    => -121)];
-#        return undef;
-#    }
-#    if (-e "$CAM_ROOT/$caName/cacert.key" or -e "$CAM_ROOT/$caName/cacert.req" or
-#        -e "$CAM_ROOT/$caName/cacert.pem" ) {
-#        #return $self->SetError( summary => "CA '$caName' already exists in '$CAM_ROOT'",
-#        #                       code    => -122)];
-#        return undef;
-#    }
-
 
     # Set default values, if the values are not set and modify the
     # config with this values.
@@ -187,6 +171,83 @@ sub AddRootCA {
     
     return 1;
 }
+
+BEGIN { $TYPEINFO{ReadCertificateDefaults} = ["function", "any", "any"]; }
+sub ReadCertificateDefaults {
+    my $self = shift;
+    my $data = shift;
+    my $caName   = "";
+    my $certType = "";
+    my $ret = {};
+
+    return undef if(not defined $self->checkCommonValues($data));
+
+    # checking requires
+    if (defined $data->{"caName"}) {
+        $caName = $data->{"caName"};
+    } 
+    if (defined $data->{"certType"}) {
+        $certType = $data->{"certType"};
+    } else {
+        return $self->SetError(summary => "Missing parameter 'certType'",
+                               code => "PARAM_CHECK_FAILED");
+    }
+
+    $ret = {
+            'basicConstraints'       => undef,
+            'nsComment'              => undef,
+            'nsCertType'             => undef,
+            'keyUsage'               => undef,
+            'subjectKeyIdentifier'   => undef,
+            'authorityKeyIdentifier' => undef,
+            'subjectAltName'         => undef,
+            'issuerAltName'          => undef,
+            'nsBaseUrl'              => undef,
+            'nsRevocationUrl'        => undef,
+            'nsCaRevocationUrl'      => undef,
+            'nsRenewalUrl'           => undef,
+            'nsCaPolicyUrl'          => undef,
+            'nsSslServerName'        => undef,
+            'extendedKeyUsage'       => undef,
+            'authorityInfoAccess'    => undef,
+            'crlDistributionPoints'  => undef
+           };
+
+    foreach my $extName ( keys %{$ret}) {
+        if(defined $caName && $caName ne "") {
+            $ret->{$extName} = SCR::Read(".openssl.tmpl.value.$caName.v3_$certType.$extName");
+            if(not defined $ret->{$extName}) {
+                delete $ret->{$extName};
+            }
+        } else {
+            $ret->{$extName} = SCR::Read(".opensslroot.tmpl.value.v3_$certType.$extName");
+            if(not defined $ret->{$extName}) {
+                delete $ret->{$extName};
+            }
+        }
+    }
+    if(defined $caName && $caName ne "") {
+        $ret->{'keyLength'} = SCR::Read(".openssl.tmpl.value.$caName.req.default_bits");
+        if($certType ne "ca") {
+            $ret->{'days'} = SCR::Read(".openssl.tmpl.value.$caName.".$certType."_cert.default_days");
+        } else {
+            $ret->{'days'} = SCR::Read(".openssl.tmpl.value.$caName.ca.default_days");
+        }
+    } else {
+        $ret->{'keyLength'} = SCR::Read(".opensslroot.tmpl.value.req.default_bits");
+        if($certType ne "ca") {
+            $ret->{'days'} = SCR::Read(".opensslroot.tmpl.value.".$certType."_cert.default_days");
+        } else {
+            $ret->{'days'} = SCR::Read(".opensslroot.tmpl.value.ca.default_days");
+        }
+        
+    }    
+    delete $ret->{'keyLength'} if(not defined $ret->{'keyLength'});
+    delete $ret->{'days'} if(not defined $ret->{'days'});
+    
+    return $ret;
+}
+
 
 sub cleanCaInfrastructure {
     my $self     = shift || return undef;
