@@ -89,6 +89,8 @@ T51_DeleteCA();
 T52_ReadCRLDefaults();
 T53_WriteCRLDefaults();
 
+T54_AddRequest();
+
 sub printError {
     my $err = shift;
     foreach my $k (keys %$err) {
@@ -1940,5 +1942,34 @@ sub T53_WriteCRLDefaults {
     } else {
         print "OK:\n";
         print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub T54_AddRequest {
+    print STDERR "------------------- T54_AddRequest ---------------------\n";
+    print "------------------- T54_AddRequest ---------------------\n";
+    my $data = {
+                'caName'                => 'Test1_SuSE_CA',
+                'keyPasswd'             => '1234',
+                'commonName'            => 'My Request54',
+                'emailAddress'          => 'my@tait.linux.tux',
+                'keyLength'             => '2048',
+                'days'                  => '365',
+                'countryName'           => 'DE',
+                'localityName'          => 'Nuremberg',
+                'stateOrProvinceName'   => 'Bavaria',
+                'organizationalUnitName'=> 'IT Abteilung',
+                'organizationName'      => 'My Linux, Inc.'
+               };
+    
+    my $res = YaPI::CaManagement->AddRequest($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK: \n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+        $req1 = $res;
     }
 }
