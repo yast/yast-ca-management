@@ -3351,9 +3351,20 @@ sub ExportCAToLDAP {
         return $self->SetError(summary => "Can not parse the CA certificate",
                                code => "PARSE_ERROR");
     }
+    
+    # default is try; disable only, if ldap client says no
+    my $use_tls = "try";
+
+    if(Ldap->Read()) {
+        my $ldapMap = Ldap->Export();
+        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
+            $use_tls = "no"
+        }
+    }
 
     if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
-                                 "port"     => $data->{'ldapPort'}})) {
+                                 "port"     => $data->{'ldapPort'},
+                                 "use_tls"  => $use_tls })) {
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
@@ -3549,8 +3560,19 @@ sub ExportCRLToLDAP {
                                code => "PARSE_ERROR");
     }
 
+    # default is try; disable only, if ldap client says no
+    my $use_tls = "try";
+
+    if(Ldap->Read()) {
+        my $ldapMap = Ldap->Export();
+        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
+            $use_tls = "no"
+        }
+    }
+
     if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
-                                 "port"     => $data->{'ldapPort'}})) {
+                                 "port"     => $data->{'ldapPort'},
+                                 "use_tls"  => $use_tls })) {
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
@@ -3774,6 +3796,9 @@ sub ReadLDAPExportDefaults {
         }
     }
 
+    # default is try; disable only, if ldap client says no
+    my $use_tls = "try";
+
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
         if(defined $ldapMap->{'ldap_server'} && $ldapMap->{'ldap_server'} ne "") {
@@ -3784,19 +3809,17 @@ sub ReadLDAPExportDefaults {
             return $self->SetError( summary => "No LDAP Server configured",
                                     code => "HOST_NOT_FOUND");
         } 
+        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
+            $use_tls = "no"
+        }
     }
-    
+
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_server'},
-                                 "port"     => $ldapMap->{'ldap_port'}})) {
+                                 "port"     => $ldapMap->{'ldap_port'},
+                                 "use_tls"  => $use_tls })) {
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
-#    if(not defined SCR->Execute(".ldap.start_tls") ) {
-#        my $ldapERR = SCR->Read(".ldap.error");
-#        return $self->SetError(summary => "LDAP start_tls failed",
-#                               description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'} ,
-#                               code => "SCR_INIT_FAILED");
-#    }
     
     # anonymous bind
     if (! SCR->Execute(".ldap.bind", {}) ) {
@@ -3928,6 +3951,9 @@ sub InitLDAPcaManagement {
                                 code => "PARAM_CHECK_FAILED");
     }
 
+    # default is try; disable only, if ldap client says no
+    my $use_tls = "try";
+
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
         if(defined $ldapMap->{'ldap_server'} && $ldapMap->{'ldap_server'} ne "") {
@@ -3938,10 +3964,15 @@ sub InitLDAPcaManagement {
             return $self->SetError( summary => "No LDAP Server configured",
                                     code => "HOST_NOT_FOUND");
         } 
+        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
+            $use_tls = "no"
+        }
     }
     
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_server'},
-                                 "port"     => $ldapMap->{'ldap_port'}})) {
+                                 "port"     => $ldapMap->{'ldap_port'},
+                                 "use_tls"  => $use_tls
+                                })) {
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
@@ -4251,8 +4282,19 @@ sub ExportCertificateToLDAP {
                                code => "PARSE_ERROR");
     }
 
+    # default is try; disable only, if ldap client says no
+    my $use_tls = "try";
+
+    if(Ldap->Read()) {
+        my $ldapMap = Ldap->Export();
+        if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
+            $use_tls = "no"
+        }
+    }
+
     if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
-                                 "port"     => $data->{'ldapPort'}})) {
+                                 "port"     => $data->{'ldapPort'},
+                                 "use_tls"  => $use_tls })) {
         return $self->SetError(summary => "LDAP init failed",
                                code => "SCR_INIT_FAILED");
     }
