@@ -43,6 +43,8 @@
     // help text 6/6
     certificateHelptext = certificateHelptext + _("<p>In the area below, see the most important values of the selected certificate.</p>");
 
+    string currentSubjectAltName = "";
+
 
     /**
      * Creating new Server Certificate sequence
@@ -381,7 +383,26 @@
 	    UI::ChangeWidget (`id (`revoke), `Enabled, valid);
 	    // do not export certificates which are a CA or revoked certificate
 	    UI::ChangeWidget (`id (`export), `Enabled, valid && ret["IS_CA"]:"" != "1" );
-	}	    
+	    
+	    map<string,list> opensslExtentions = ret["OPENSSL_EXTENSIONS"]:$[];
+	    boolean first = true;
+	    currentSubjectAltName = "";
+	    foreach (string entry, (list<string>) opensslExtentions["X509v3 Subject Alternative Name"]:[], ``{
+		if (first)
+		{
+		    currentSubjectAltName = entry;
+		    first = false;
+		}
+		else
+		{
+		    currentSubjectAltName = currentSubjectAltName + "," + entry;		    
+		}
+	    });		
+	}
+	else
+	{
+	    currentSubjectAltName = "";
+	}
     }
 
 
@@ -440,7 +461,8 @@
 			  CaMgm::currentCA,
 			  (string) table_item[2]:"", //common name
 			  (string) table_item[3]:"", //EMAIL
-			  CaMgm::currentCertificate);
+			  CaMgm::currentCertificate,
+			  currentSubjectAltName);
 	}	
 	if (ui == `exportCommon)
 	{

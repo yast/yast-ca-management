@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 30 10:26:00 CEST 2005 - schubi@suse.de
+
+- Bug 62544 - CA Management: search for more then one eMailAddress 
+  in ReadLDAPExportDefaults 
+
+-------------------------------------------------------------------
 Tue Mar 29 10:41:12 CEST 2005 - schubi@suse.de
 
 - Add autoyast functions
