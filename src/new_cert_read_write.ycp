@@ -974,7 +974,9 @@
 	}
 	if (size(CaMgm::adv_subject_alt_name_list) > 0
 	    || size(CaMgm::emailList) > 1 // without default entry
-	    || CaMgm::adv_copy_subject_alt_name )
+	    || (CaMgm::adv_copy_subject_alt_name
+		&& size(CaMgm::emailList) > 0)
+	    )
 	{
 	    boolean prevFound = false;
 	    if (CaMgm::adv_cri_subject_alt_name)
