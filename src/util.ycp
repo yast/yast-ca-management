@@ -239,10 +239,10 @@
     /**
      * Dialog for exporting CA/Certificate/CRL to LDAP
      *   
-     * @param "CA" "CRL" "CERT"
+     * @param "CA" "CRL" "CERT" "subjectAltName"
      * @return true ( success )
      */
-    define boolean exportToLDAP(string kind, string CAname, string commonName, string email, string certificate)``{
+    define boolean exportToLDAP(string kind, string CAname, string commonName, string email, string certificate, string subjectAltName)``{
 
 	map kindmap = $["CA":"ca", "CRL":"crl", "CERT":"certificate"];
 	string password = "";
@@ -252,15 +252,29 @@
 	string binddn = "";
 	map default = nil;
 	term passwordTerm = `VBox();
+
+	y2milestone ("exportToLDAP type: %1; CAname: %2, commonName: %3, email: %4, certificate: %5, subjectAltName: %6",
+		     kind,CAname,commonName,email,certificate,subjectAltName);
 	
 	passwordTerm = add (passwordTerm, `Password(  `id (`password), _("LDAP P&assword:")));	
 	
 	if (kind == "CERT")
-	{	
-	    default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
-								    "caName":CAname,
-								    "commonName":commonName,
-								    "emailAddress":email]);
+	{
+	    if (size (subjectAltName) > 0)
+	    {
+		default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+									"caName":CAname,
+									"commonName":commonName,
+									"emailAddress":email,
+									"subjectAltName":subjectAltName]);
+	    }
+	    else
+	    {
+		default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+									"caName":CAname,
+									"commonName":commonName,
+									"emailAddress":email]);
+	    }		
 	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("Certificate &Password:")));
 	    passwordTerm = add (passwordTerm, `HBox(
 						    `Password(  `id (`p12Passwd), _("&New Password:")),
@@ -278,9 +292,22 @@
 	{
 	    // Error: Checking if there is have already a config has been established
 	    map<string,any> messageMap = YaPI::Error();
-	    y2milestone("ReadLDAPExportDefaults(%1) returns %2",
-			$["type":kindmap[kind]:"", "caName":CAname],
-			messageMap);
+	    if (kind == "CERT")
+	    {
+		y2milestone("ReadLDAPExportDefaults(%1) returns %2",
+			    $["type":kindmap[kind]:"",
+			      "caName":CAname,
+			      "commonName":commonName,
+			      "emailAddress":email,
+			      "subjectAltName":subjectAltName],
+			    messageMap);		
+	    }
+	    else
+	    {
+		y2milestone("ReadLDAPExportDefaults(%1) returns %2",
+			    $["type":kindmap[kind]:"", "caName":CAname],
+			    messageMap);
+	    }
 			
 	    if (messageMap["code"]:"" == "LDAP_CONFIG_NEEDED")
 	    {
@@ -1029,6 +1056,24 @@ Certificate password</p>
     define boolean exportCommonServerCertificate (string CAname, string certificate, string commonName) ``{
 	
 	boolean success = false;
+	boolean check = YaPI::CaManagement::Verify ($["caName": CAname,
+					  "certificate" : certificate,
+					  "disableCRLcheck" : "1", 
+					  "purpose" : "sslserver"
+						    ]);
+	// Checking, if the certificate is a server certificate
+	if ( check == nil
+	     || !check)
+	{
+	    if (!Popup::ContinueCancelHeadline (
+					       // To translators: ContinueCancel Popup headline
+					       _("Common Server Certificate"),
+					       // To translators: ContinueCancel Popup
+					       _("This is not a server certificate. Do you want to continue ?")))
+	    {
+		return true;
+	    }
+	}
 	
 	// evaluate if the common name of the server certificate is the hostname
 	map retmap = (map) SCR::Execute (.target.bash_output,

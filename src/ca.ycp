@@ -242,7 +242,7 @@
 	}
 	if (ret == `exportLDAP)
 	{
-	    exportToLDAP ("CA", CaMgm::currentCA, "", "", "");
+	    exportToLDAP ("CA", CaMgm::currentCA, "", "", "", "");
 	}
 	if (ret == `exportFile)
 	{
