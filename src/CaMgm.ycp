@@ -20,6 +20,13 @@ import "Report";
 import "Summary";
 
 /**
+ * AutoYaST Settings Map
+ */
+global map autoYaSTSettings = $[];
+global boolean autoYaSTModified = false;
+
+
+/**
  * sequence for creating CA and certificates
  */
 global  map certificateSequence = $[

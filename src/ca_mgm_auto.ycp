@@ -1,0 +1,341 @@
+/**
+ * File:	clients/ca-management_auto.ycp
+ * Package:	Configuration of ca-management
+ * Summary:	Client for autoinstallation
+ * Authors:	Ryan Partridge <rpartridge@novell.com>
+ *
+ * $Id$
+ *
+ * This is a client for autoinstallation. It takes its arguments,
+ * goes through the configuration and return the setting.
+ * Does not do any changes to the configuration.
+ */
+
+/**
+ * @param function to execute
+ * @param map/list of ca-management settings
+ * @return map edited settings, Summary or boolean on success depending on called function
+ * @example map mm = $[ "FAIL_DELAY" : "77" ];
+ * @example map ret = WFM::CallFunction ("ca-management_auto", [ "Summary", mm ]);
+ */
+
+{
+
+textdomain "ca-management";
+
+import "Progress";
+import "Report";
+import "Users";
+import "CaMgm";
+
+include "ca-management/new_cert_read_write.ycp";
+
+
+/**
+ * Autoyast configuration of ca-management
+ * For use with autoinstallation.
+ * @return sequence result
+ */
+any caAutoSequence() {
+
+    string caption = _("CA Configuration");
+    string confirmPassword = "";
+    	string help_text = _("<p>
+YaST generates a <b>default CA and certificate</b> automatically. This CA and certificate
+is used for communicating with the <b>Apache server</b>.
+Here, change the <b>password</b> of this CA/certificate.
+</p>
+");
+	
+    /* Initialization dialog contents */
+    Wizard::CreateDialog();
+
+    confirmPassword = CaMgm::autoYaSTSettings["password"]:"";
+
+    term contents = `VBox (
+			   `Left(`CheckBox(`id(`rootPassword), `opt(`notify),
+					   _("Take root password"),CaMgm::autoYaSTSettings["takeRootPassword"]:true)),
+			   `Password(`id(`pw1), _("Password:"), CaMgm::autoYaSTSettings["password"]:""),
+	                   `Password(`id(`pw2), _("Confirm Password:"), confirmPassword)
+			   );
+    Wizard::SetContents (caption, contents, help_text, false, true);
+    Wizard::SetNextButton(`next, Label::FinishButton() );
+
+    // Get the user input.
+    //
+    any ret = nil;
+
+    repeat
+    {
+	if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+	{
+	    UI::ChangeWidget (`id (`pw1), `Enabled, false);
+	    UI::ChangeWidget (`id (`pw2), `Enabled, false);
+	}
+	else
+	{
+	    UI::ChangeWidget (`id (`pw1), `Enabled, true);
+	    UI::ChangeWidget (`id (`pw2), `Enabled, true);
+	}	    
+	
+	ret = Wizard::UserInput();
+
+	CaMgm::autoYaSTSettings["takeRootPassword"] = (boolean) UI::QueryWidget(`id(`rootPassword), `Value);
+
+	if (ret == `next
+	    ||ret == `back)
+	{
+	    if (!CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+	    {
+		
+		confirmPassword = (string) UI::QueryWidget(`id(`pw2), `Value);
+		if ((string) UI::QueryWidget(`id(`pw1), `Value) != confirmPassword)
+		{
+		    Popup::Error(_("New passwords do not match."));
+		    ret = `again;
+		}
+		else if ( size(confirmPassword) < 4)
+		{
+		    Popup::Error(_("Password lenght should be greater than 3 characters."));
+		    ret = `again;
+		}
+		else
+		{
+		    CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw1), `Value);
+		}
+	    }
+	}
+    }
+    until ( ret == `next
+	    || ret == `abort
+	    || ret == `back);
+
+
+    UI::CloseDialog();
+    return ret;
+}
+
+/**
+ * Get all ca-management settings from the first parameter
+ * (For use by autoinstallation.)
+ * @param settings The YCP structure to be imported.
+ * @return boolean True on success
+ */
+boolean Import (map settings) {
+    CaMgm::autoYaSTSettings["takeRootPassword"] = settings["takeRootPassword"]:true;
+    if (settings["takeRootPassword"]:true )
+    {
+	CaMgm::autoYaSTSettings["password"] =  Users::GetRootPassword();
+    }
+    else
+    {
+	CaMgm::autoYaSTSettings["password"] = settings["password"]:"";
+    }
+    return true;
+}
+
+/**
+ * Dump the ca-management settings to a single map
+ * (For use by autoinstallation.)
+ * @return map Dumped settings (later acceptable by Import ())
+ */
+map Export () {
+    return CaMgm::autoYaSTSettings;
+}
+
+/**
+ * Return packages needed to be installed and removed during
+ * Autoinstallation to insure module has all needed software
+ * installed.
+ * @return map with 2 lists.
+ */
+map AutoPackages() {
+    return $[ "install":["openssl"], "remove":[] ];
+}
+
+/**
+ * Create a textual summary and a list of unconfigured cards
+ * @return summary of the current configuration
+ */
+string Summary() {
+    /* Configuration summary text for autoyast */
+    string label = _("Password: ");
+    if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+    {
+	label = label + _("[root password]");
+    }
+    else
+    {
+	label = label + _("[manually set]");
+    }
+    return label;
+}
+
+
+/**
+ * Write all ca-management settings
+ * @return true on success
+ */
+boolean Write() {
+    boolean success = true;
+    string caption = _("Generating Common Server Certificate");
+    integer steps = 2;
+    integer sl = 500;
+
+    Report::DisplayErrors(true, 5);
+    Report::DisplayMessages(true, 5);
+    
+    // We do not set help text here, because it was set outside
+    Progress::New(caption, " ", steps, [
+	    /* Progress stage 1/2 */
+	    _("Read Server Information..."),
+	    /* Progress stage 2/2 */
+	    _("Creating the Default CA and Server Certificate")
+	], [
+	    /* Progress stage 1/2 */
+	    _("Read Server Information..."),
+	    /* Progress step 2/2 */
+	    _("Creating the Default CA and Server Certificate..."),
+	    /* Progress finished */
+	    _("Finished")
+	],
+	""
+    );
+
+    // Read server information
+        
+    Progress::NextStage();
+
+    map retmap = (map) SCR::Execute (.target.bash_output,
+				     "/bin/hostname --long",
+				     $[] );
+
+    y2milestone("Hostname :%1", retmap);
+    if (retmap["exit"]:0 != 0)
+    {
+	Report::Error(_("Cannot evaluate the name of the local machine"));
+	success = false;
+    }
+	
+    string longhostname = strip(retmap["stdout"]:"");
+    string hostname = ((list<string>) splitstring (longhostname, "."))[0]:"";
+    string domain = substring (longhostname, findfirstof(longhostname,".")+1);
+
+    if (size (domain) <= 0)
+    {
+	domain = longhostname;
+    }
+    
+    CaMgm::prop_selection = `def;
+    CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";	    
+    CaMgm::prop_CAName = "YaST_Default_CA";
+    CaMgm::prop_country = Language::GetLanguageCountry ();
+    CaMgm::prop_password = Users::GetRootPassword();
+    CaMgm::prop_email = "postmaster@" + domain;
+    CaMgm::prop_server_commonName = longhostname;
+    if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+    {
+	CaMgm::prop_password = Users::GetRootPassword();
+    }
+    else
+    {
+	CaMgm::prop_password = CaMgm::autoYaSTSettings["password"]:Users::GetRootPassword();
+    }
+
+    Progress::NextStage();
+    
+    // write settings
+    
+    success = create_default_CA_certificate();	
+    if (!success)
+    {
+	/* Error message */
+	Report::Error (_("Cannot create certificates."));
+    }
+
+    sleep(sl);
+
+    /* Progress finished */
+    Progress::NextStage();
+    sleep(sl);
+
+    return success;
+}
+
+
+
+//---------------------------------------------------------------------------
+// MAIN
+//---------------------------------------------------------------------------
+
+y2milestone("----------------------------------------");
+y2milestone("ca-management auto started");
+
+import "CaMgm";
+include "ca-management/wizards.ycp";
+
+any ret = nil;
+string func = "";
+map param = $[];
+
+/* Check arguments */
+if(size(WFM::Args()) > 0 && is(WFM::Args(0), string)) {
+    func = (string)WFM::Args(0);
+    if(size(WFM::Args()) > 1 && is(WFM::Args(1), map))
+	param = (map) WFM::Args(1);
+}
+y2milestone("func=%1", func);
+y2milestone("param=%1", param);
+
+/* Create a summary*/
+if(func == "Summary") {
+    ret = Summary();
+}
+/* Reset configuration */
+else if (func == "Reset") {
+    Import($[]);
+    ret = $[];
+}
+/* Change configuration (run AutoSequence) */
+else if (func == "Change") {
+    ret = caAutoSequence();
+}
+/* Import configuration */
+else if (func == "Import") {
+    ret = Import(param);
+}
+/* Return actual state */
+else if (func == "Export") {
+    ret = Export();
+}
+/* Return needed packages */
+else if (func == "Packages") {
+    ret = AutoPackages();
+}
+/* Write given settings */
+else if (func == "Write") {
+    import "Progress";
+    Progress::off();
+    ret = Write();
+    Progress::on();
+}
+else if (func == "GetModified") {
+    ret =  CaMgm::autoYaSTModified;
+}
+else if (func == "SetModified") {
+    CaMgm::autoYaSTModified = true;
+}
+/* Unknown function */
+else {
+    y2error("Unknown function: %1", func);
+    ret = false;
+}
+
+y2milestone("ret=%1", ret);
+y2milestone("ca-management auto finished");
+y2milestone("----------------------------------------");
+
+return ret;
+
+/* EOF */
+}

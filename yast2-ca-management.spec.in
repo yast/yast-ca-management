@@ -34,6 +34,7 @@ Summary:	CA Management
 @clientdir@/ca_select_proposal.ycp
 @clientdir@/common-cert.ycp
 @clientdir@/common_cert.ycp
+@clientdir@/ca_mgm_auto.ycp
 @moduledir@/CaMgm.y*
 @moduledir@/YaPI/CaManagement.pm
 @moduledir@/YaST/caUtils.pm
