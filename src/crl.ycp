@@ -100,7 +100,6 @@
             return _("<br>CRL not found");
         }
 	y2milestone("ReadCRL(%1): %2", CAname, ret);
-	SCR::Write (.target.ycp, "/tmp/stefan13", ret)	;
 
 	string text = _("<h4>Certificate Revocation List (CRL):</h4>");
 	text = text + "<pre>";
