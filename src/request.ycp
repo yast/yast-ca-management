@@ -34,7 +34,7 @@
     // help text 4/6
     requestHelptext = requestHelptext + _("<p>Furthermore, you can <b>Sign</b>, <b>Delete</b> or <b>Export</b> a request.</p>");
     // help text 5/6
-    requestHelptext = requestHelptext + _("<p>With <b>Import</b>, reading a new request.</p>");
+    requestHelptext = requestHelptext + _("<p>With <b>Import</b>, reading a new request and with <b>Add</b>, generating a new request.</p>");
     // help text 6/6
     requestHelptext = requestHelptext + _("<p>In the area below, see the most important values of the selected request.</p>");
 
@@ -85,7 +85,31 @@
 	UI::CloseDialog();
 
 	return ret;
-    }        
+    }
+
+    /**
+     * Creating new CA Request sequence
+     * @return sequence result
+     */
+    define symbol newCARequestSequence() ``{
+
+	map aliases = $[
+          "new_certinit"   	: ``(new_cert_init ("Sub CA Request")),
+	  "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+	  "new_cert1"  	 	: ``(new_cert1 ("Sub CA Request")),
+	  "new_cert2"   	: ``(new_cert2 ("Sub CA Request")),
+	  "new_cert3"   	: ``(new_cert3 ("Sub CA Request")),
+	  "new_cert_advanced"   : ``(new_cert_advanced (false, "Sub-CA Request")),
+	  ];
+
+	Wizard::CreateDialog();
+	Wizard::SetDesktopIcon("ca-management");
+	symbol ret = WizardSequencer(aliases, CaMgm::certificateSequence);
+
+	UI::CloseDialog();
+
+	return ret;
+    }            
 
     
     /**
@@ -289,6 +313,7 @@
 				      `HSpacing (1),
 				      `MenuButton( _("Add"),
 						   [
+						    `item(`id(`addCARequest), _("Add Sub-CA Request") ),						    
 						    `item(`id(`addServerRequest), _("Add Server Request") ),
 						    `item(`id(`addClientRequest), _("Add Client Request") )
 						    ]
@@ -396,6 +421,11 @@
 	    importRequestFromDisk (CaMgm::currentCA);
 	    ui = `again;	    
 	}
+	if (ui == `addCARequest)
+	{
+	    newCARequestSequence ();
+	    ui = `again;			    
+	}	
 	if (ui == `addServerRequest)
 	{
 	    newServerRequestSequence ();
