@@ -152,13 +152,20 @@ sub Read {
                 return 1;
             }
         } elsif(defined $data->{'CERT'}) {
-            if(!-e "$CAM_ROOT/$caName/keys/".$data->{'CERT'}.".key") {
+            $data->{'CERT'} =~ /^[[:xdigit:]]+:([A-Za-z0-9\/=+]+)$/;
+            if(not defined $1) {
+                return $self->SetError(summary => "Can not parse certificate name",
+                                       code => "PARSING_ERROR");
+            }
+            my $keyname = $1;
+            
+            if(!-e "$CAM_ROOT/$caName/keys/".$keyname.".key") {
                 delete( $ENV{'PASSWORD'} );
-                return $class->SetError(summary =>"Key '".$data->{'CERT'}.".key' does not exist in CA '$caName'",
+                return $class->SetError(summary =>"Key '".$keyname.".key' does not exist in CA '$caName'",
                                         code => "PARAM_CHECK_FAILED");
             }
             my $command ="openssl rsa -noout -in ";
-            $command .= "$CAM_ROOT/$caName/keys/".$data->{'CERT'}.".key ";
+            $command .= "$CAM_ROOT/$caName/keys/".$keyname.".key ";
             $command .= "-passin env:PASSWORD ";
             my $ret = `$command 2>/dev/null`;
             if($? != 0) {
