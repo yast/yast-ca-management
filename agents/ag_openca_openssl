@@ -1,0 +1,89 @@
+#! /usr/bin/perl
+
+package ag_openca_openssl;
+use YaST::SCRAgent;
+use ycp;
+our @ISA = ("YaST::SCRAgent");
+
+use OpenCA::OpenSSL;
+
+my $openssl = undef;
+
+sub check_initialized ()
+{
+    if (not defined $openssl)
+    {
+        y2error ("Agent not initialized yet");
+    }
+    return !!$openssl;
+}
+
+sub OtherCommand () {
+    my $class = shift;
+    my ($symbol, $config, @rest) = @_;
+    
+    if ($symbol ne "OpenSSL") {
+        y2error ("The first command must be the configuration.(Seen '$_')");
+    } else {
+        $openssl = OpenCA::OpenSSL->new( SHELL => $config->{"path"} );
+        if( not defined $openssl ) {
+            y2error ("Can not initialize OpenCA::OpenSSL");
+        }
+        $openssl->setParams(TMPDIR=>$config->{"tmpdir"},
+                            STDERR=>$config->{"stderr"}
+                           );
+    }
+    
+    return undef;
+}
+
+
+sub Read { 
+    return 1;
+}
+
+sub Write { 
+    #y2error("enter Write");
+    return 1; 
+}
+
+sub Execute {
+    my $class = shift;
+    my ($path, $hash) = @_;
+    #y2error("enter execute");
+    check_initialized || return 0;
+    
+    if($path eq ".genKey") {
+        $openssl->genKey( %{$hash} );
+        if($openssl->errno() != 0) {
+            y2error("OpenCA::OpenSSL::genKey failed! (".
+                    $openssl->errno()."/".$openssl->errval().")");
+            return 0;
+        }
+        return 1;
+    } elsif($path eq ".genReq") {
+        $openssl->genReq( %{$hash} );
+        if($openssl->errno() != 0) {
+            y2error("OpenCA::OpenSSL::genReq failed! (".
+                    $openssl->errno()."/".$openssl->errval().")");
+            return 0;
+        }
+        return 1;
+    } elsif($path eq ".genCert") {
+        $openssl->genCert( %{$hash} );
+        if($openssl->errno() != 0) {
+            y2error("OpenCA::OpenSSL::genCert failed! (".
+                    $openssl->errno()."/".$openssl->errval().")");
+            return 0;
+        }
+        return 1;
+    } else {
+        y2error("Wrong path '$path' ");
+        return 0;
+    }
+}
+  
+
+package main;
+ag_openca_openssl->Run;
+
