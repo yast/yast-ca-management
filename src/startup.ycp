@@ -37,7 +37,7 @@
         list<term> result = [];
         integer i = 0;
 
-        list<string> CAList = CaManagement::ReadCAList(); //[ "CA1", "CA2", "CA3" ];
+        list<string> CAList = (list<string>) CaManagement::ReadCAList(); //[ "CA1", "CA2", "CA3" ];
 	y2milestone("Output of ReadCAList: %1", CAList);
 	if (CAList == nil)
 	{
@@ -63,7 +63,7 @@
         // help text 1/2
         string helptext = _("<p>Please select on CA and press <b>Enter CA </b>.</p>");
         // help text 2/2
-        helptext = helptext + _("<p><b>Create Root CA</b> generates a new CA");
+        helptext = helptext + _("<p><b>Create Root CA</b> generates a new root Certificate Authority.");
 
         list<term> termList = getCAList ();
 
