@@ -104,11 +104,11 @@
 	string text = _("<h4>Certificate Revocation List (CRL):</h4>");
 	text = text + "<pre>";
 	text = text + "<br>Version: " + ret["VERSION"]:"";
-	text = text + "<br>Signature Algorithmus: " + ret["ALGORITHM"]:"";
+	text = text + "<br>Signature Algorithmus: " + ret["SIGNATURE_ALGORITHM"]:"";
 	text = text + "<br>Issuer: " + ret["ISSUER"]:"";
 	text = text + "<br>Flag export state: " + ret["FLAG_EXPORT_STATE"]:"";	
-	text = text + _("<br>Last Update: ") + ret["LAST_UPDATE"]:"";
-	text = text + _("<br>Next Update: ") + ret["NEXT_UPDATE"]:"";
+	text = text + _("<br>Last Update: ") + ret["LASTUPDATE"]:"";
+	text = text + _("<br>Next Update: ") + ret["NEXTUPDATE"]:"";
 	
 	return text;
 	

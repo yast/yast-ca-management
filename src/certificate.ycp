@@ -48,7 +48,7 @@
 	    CaMgm::passwdMap = remove (CaMgm::passwdMap, currentCA);
 	    return nil;
         }
-        y2milestone("ReadCertificate(%1): %2", currentCA, ret);
+        y2milestone("ReadCertificateList(%1): %2", currentCA, ret);
 	
 
 	foreach (map element, ret, ``{
@@ -59,7 +59,7 @@
 					 element["organizationalUnitName"]:"",
 					 element["localityName"]:"",
 					 element["stateOrProvinceName"]:"",
-					 element["countryName"]:"" ) );
+					 element["country"]:"" ) );
 	    i = i + 1;
 	});
         return result;
