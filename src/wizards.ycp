@@ -21,7 +21,7 @@
     include "ca-management/new_cert_advanced.ycp";
     include "ca-management/ca.ycp";
     include "ca-management/crl.ycp";
-//    include "ca-management/default.ycp";        
+    include "ca-management/default.ycp";        
     include "ca-management/certificate.ycp";
 
 
@@ -52,9 +52,9 @@
     define symbol editDefaultSequence() ``{
 
 	map aliases = $[
-//			"new_default1"  	: ``(new_default1 (),
-//			"new_default2"   	: ``(new_cert_advanced ()),	    
-//			"new_default3"   	: ``(new_default2 ())
+			"new_default1"  	: ``(edit_default1 ()),
+			"new_default2"   	: ``(new_cert_advanced (true)),
+			"new_default3"   	: ``(edit_default2 ())
 			];
 
 	Wizard::CreateDialog();
@@ -111,7 +111,7 @@ define symbol newCASequence() ``{
         "new_cert1"  	 	: ``(new_cert1 ("Root CA")),
         "new_cert2"   		: ``(new_cert2 ("Root CA")),
         "new_cert3"   		: ``(new_cert3 ("Root CA")),
-        "new_cert_advanced"   	: ``(new_cert_advanced ()),		    
+        "new_cert_advanced"   	: ``(new_cert_advanced (false)),
     ];
 
     Wizard::CreateDialog();
@@ -135,7 +135,7 @@ define symbol newServerCertificateSequence() ``{
         "new_cert1"  	 	: ``(new_cert1 ("Server Certificate")),
         "new_cert2"   		: ``(new_cert2 ("Server Certificate")),
         "new_cert3"   		: ``(new_cert3 ("Server Certificate")),
-        "new_cert_advanced"   	: ``(new_cert_advanced ()),		    
+        "new_cert_advanced"   	: ``(new_cert_advanced (false)),
     ];
 
     Wizard::CreateDialog();
@@ -159,7 +159,7 @@ define symbol newClientCertificateSequence() ``{
         "new_cert1"  	 	: ``(new_cert1 ("Client Certificate")),
         "new_cert2"   		: ``(new_cert2 ("Client Certificate")),
         "new_cert3"   		: ``(new_cert3 ("Client Certificate")),
-        "new_cert_advanced"   	: ``(new_cert_advanced ()),		    
+        "new_cert_advanced"   	: ``(new_cert_advanced (false)),
     ];
 
     Wizard::CreateDialog();
@@ -183,7 +183,7 @@ define symbol newSubCASequence() ``{
         "new_cert1"  	 	: ``(new_cert1 ("Sub CA")),
         "new_cert2"   		: ``(new_cert2 ("Sub CA")),
         "new_cert3"   		: ``(new_cert3 ("Sub CA")),
-        "new_cert_advanced"   	: ``(new_cert_advanced ()),		    
+        "new_cert_advanced"   	: ``(new_cert_advanced (false)),
     ];
 
     Wizard::CreateDialog();
@@ -256,7 +256,11 @@ define symbol MainSequence() ``{
         "new_certSubCA"     : $[
 				`next       	: "ca_main",
 				`abort		: "ca_main",
-                            ],	
+                            ],
+        "edit_default"      : $[
+				`next       	: "ca_main",
+				`abort		: "ca_main",
+                            ],		
         ];
 
     Wizard::CreateDialog();
