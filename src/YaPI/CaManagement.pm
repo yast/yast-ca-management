@@ -1738,6 +1738,9 @@ In I<$valueMap> you can define the following keys:
 
 * crlDistributionPoints
 
+* notext (optional - if set to "1" do not output the
+          text version in the PEM file)
+
 The return value is "undef" on an error and the 
 filename(without suffix) of the certificate on success.
 
