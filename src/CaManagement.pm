@@ -989,12 +989,6 @@ sub ExportCA {
             return $file;
         }
     } elsif($format eq "PEM_CERT_KEY") {
-#        my $retCode = SCR::Execute(".target.bash",
-#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-#        if(not defined $retCode || $retCode != 0) {
-#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-#                                    code => "COPY_FAILED");
-#        }
 
         my $file1 = SCR::Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
 
@@ -1008,12 +1002,10 @@ sub ExportCA {
 
         my $file2 = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file2) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-#                SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
                 return SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
@@ -1021,10 +1013,8 @@ sub ExportCA {
             print OUT "\n";
             print OUT $file2;
             close OUT;
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file1."\n".$file2;
         }
     } elsif($format eq "PEM_CERT_ENCKEY") {
@@ -1044,12 +1034,6 @@ sub ExportCA {
             return $file1."\n".$file2;
         }
     } elsif($format eq "DER_CERT") {
-#        my $retCode = SCR::Execute(".target.bash",
-#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-#        if(not defined $retCode || $retCode != 0) {
-#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-#                                    code => "COPY_FAILED");
-#        }
 
         my $hash = {
                     DATATYPE => "CERTIFICATE",
@@ -1064,14 +1048,11 @@ sub ExportCA {
         
         my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file;
         }
     } elsif($format eq "PKCS12") {
@@ -1079,13 +1060,6 @@ sub ExportCA {
             return SetError(summary =>"Parameter 'P12Password' missing",
                                    code => "PARAM_CHECK_FAILED");
         }
-
-#        my $retCode = SCR::Execute(".target.bash",
-#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-#        if(not defined $retCode || $retCode != 0) {
-#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-#                                    code => "COPY_FAILED");
-#        }
 
         my $hash = {
                     DATATYPE => "CERTIFICATE",
@@ -1103,26 +1077,45 @@ sub ExportCA {
 
         my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file;
         }
     } elsif($format eq "PKCS12_CHAIN") {
-#        my $retCode = SCR::Execute(".target.bash",
-#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-#        if(not defined $retCode || $retCode != 0) {
-#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-#                                    code => "COPY_FAILED");
-#        }
-#        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError(summary => "Still not supported",
-                               code => "NOT_SUPPORTED");
+
+        if(!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
+            return SetError(summary =>"Parameter 'P12Password' missing",
+                            code => "PARAM_CHECK_FAILED");
+        }
+
+        my $hash = {
+                    DATATYPE => "CERTIFICATE",
+                    INFORM   => "PEM",
+                    INFILE   => "$CAM_ROOT/$caName/cacert.pem",
+                    KEYFILE  => "$CAM_ROOT/$caName/cacert.key",
+                    OUTFORM  => "PKCS12",
+                    CHAIN    => 1,
+                    CAPATH   => "$CAM_ROOT/.cas",
+                    PASSWD   => $data->{'caPasswd'},
+                    P12PASSWD=> $data->{'P12Password'}
+                   };
+
+        if(defined $destinationFile) {
+            $hash->{'OUTFILE'} = $destinationFile;
+        }
+
+        my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
+        if(not defined $file) {
+            return SetError(%{SCR::Error(".openca.openssl")});
+        }
+        if(defined $destinationFile) {
+            return 1;
+        } else {
+            return $file;
+        }
     }
 }
 
@@ -1208,12 +1201,6 @@ sub ExportCertificate {
             return SetError(summary => "Keyfile '$CAM_ROOT/$caName/keys/$keyname.key' does not exist",
                                    code => "FILE_DOES_NOT_EXIST");
         }
-#        my $retCode = SCR::Execute(".target.bash",
-#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-#        if(not defined $retCode || $retCode != 0) {
-#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-#                                    code => "COPY_FAILED");
-#        }
 
         my $file1 = SCR::Read(".target.string", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
         my $hash = {
@@ -1226,12 +1213,10 @@ sub ExportCertificate {
 
         my $file2 = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file2) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-#                SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
                 return SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
@@ -1239,10 +1224,8 @@ sub ExportCertificate {
             print OUT "\n";
             print OUT $file2;
             close OUT;
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file1."\n".$file2;
         }
     } elsif($format eq "PEM_CERT_ENCKEY") {
@@ -1262,12 +1245,6 @@ sub ExportCertificate {
             return $file1."\n".$file2;
         }
     } elsif($format eq "DER_CERT") {
-#        my $retCode = SCR::Execute(".target.bash",
-#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-#        if(not defined $retCode || $retCode != 0) {
-#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-#                                    code => "COPY_FAILED");
-#        }
 
         my $hash = {
                     DATATYPE => "CERTIFICATE",
@@ -1282,14 +1259,11 @@ sub ExportCertificate {
         
         my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file;
         }
     } elsif($format eq "PKCS12") {
@@ -1297,13 +1271,6 @@ sub ExportCertificate {
             return SetError(summary =>"Parameter 'P12Password' missing",
                                    code => "PARAM_CHECK_FAILED");
         }
-
-#        my $retCode = SCR::Execute(".target.bash",
-#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-#        if(not defined $retCode || $retCode != 0) {
-#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-#                                    code => "COPY_FAILED");
-#        }
 
         my $hash = {
                     DATATYPE => "CERTIFICATE",
@@ -1321,27 +1288,44 @@ sub ExportCertificate {
 
         my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file;
         }
     } elsif($format eq "PKCS12_CHAIN") {
-#        my $retCode = SCR::Execute(".target.bash",
-#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-#        if(not defined $retCode || $retCode != 0) {
-#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-#                                    code => "COPY_FAILED");
-#        }
-#        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError(summary => "Still not supported",
-                               code => "NOT_SUPPORTED");
+        if(!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
+            return SetError(summary =>"Parameter 'P12Password' missing",
+                                   code => "PARAM_CHECK_FAILED");
+        }
 
+        my $hash = {
+                    DATATYPE => "CERTIFICATE",
+                    INFORM   => "PEM",
+                    INFILE   => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem",
+                    KEYFILE  => "$CAM_ROOT/$caName/keys/".$keyname.".key",
+                    OUTFORM  => "PKCS12",
+                    CHAIN    => 1,
+                    CAPATH   => "$CAM_ROOT/.cas",
+                    PASSWD   => $data->{'keyPasswd'},
+                    P12PASSWD=> $data->{'P12Password'}
+                   };
+
+        if(defined $destinationFile) {
+            $hash->{'OUTFILE'} = $destinationFile;
+        }
+
+        my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
+        if(not defined $file) {
+            return SetError(%{SCR::Error(".openca.openssl")});
+        }
+        if(defined $destinationFile) {
+            return 1;
+        } else {
+            return $file;
+        }
     }
 }
 
