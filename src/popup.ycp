@@ -15,6 +15,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
+    import "YaPI";    
     import "YaPI::CaManagement";
 
     /**
@@ -55,13 +56,13 @@
      * @return void
      */
     define void showErrorCaManagement () ``{
-        map<string,any> messageMap = (map<string,any>) YaPI::CaManagement::Error();
-	string message = messageMap["summary"]:"";
-        if (size (message) > 0)
-        {
-	    y2error ("Showing error: %1", message);
-            Popup::Error (message);
-        }
+//        map<string,any> messageMap = (map<string,any>) YaPI::CaManagement::Error();
+//	string message = messageMap["summary"]:"";
+//        if (size (message) > 0)
+//        {
+//	    y2error ("Showing error: %1", message);
+//            Popup::Error (message);
+//        }
 	return;
     }
 
