@@ -35,7 +35,6 @@
      */
     define list<term> getCAList () ``{
         list<term> result = [];
-        integer i = 0;
 
         list<string> CAList = (list<string>) CaManagement::ReadCAList(); 
 	y2milestone("Output of ReadCAList: %1", CAList);
@@ -46,8 +45,7 @@
 	else
 	{
 	    foreach (string element, CAList, ``{
-		result = add (result, `item (`id (i), element ) );
-		i = i + 1;
+		result = add (result, `item (`id (element), element ) );
 	    });
 	}
         return result;
@@ -87,7 +85,8 @@
         Wizard::SetContents (_("CA Selection"), contents, helptext, false, true);
         UI::ChangeWidget (`id (`next), `Label, Label::FinishButton());
 	UI::ChangeWidget (`id (`abort), `Enabled, false);
-
+	UI::ChangeWidget (`id (`table), `CurrentItem, CaMgm::currentCA);
+			  
         symbol ui = nil;
 
         repeat
@@ -101,7 +100,7 @@
             ui = (symbol) UI::UserInput ();
             if (contains ([`enter], ui))
             {
-                integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+                string id = (string) UI::QueryWidget (`id (`table), `CurrentItem);
 		term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
 
 		if (table_item == nil)

@@ -19,6 +19,7 @@
     include "ca-management/new_cert.ycp";
     include "ca-management/util.ycp";
     include "ca-management/new_cert_advanced.ycp";
+    include "ca-management/ca.ycp";    
 
 /**
  * Main workflow of the CA management configuration
@@ -34,6 +35,7 @@ define symbol MainSequence() ``{
         "new_certCA2"   	: ``(new_cert2 ("Root CA")),
         "new_certCA3"   	: ``(new_cert3 ("Root CA")),
         "new_cert_advanced"   	: ``(new_cert_advanced ()),
+        "ca_main"  	 	: ``(ca ()),	
         ];
 
     map sequence = $[
@@ -41,7 +43,7 @@ define symbol MainSequence() ``{
         "startup"          : $[
                             `next       : `abort,
 			    `createRoot : "new_certCAinit",
-//                          `enter      : "ca_main",
+			    `enter      : "ca_main",
                             ],
         "new_certCAinit"   : $[
                             `next       : "new_certSaveDef",
@@ -70,7 +72,11 @@ define symbol MainSequence() ``{
         "new_cert_advanced"  : $[
 			    `abort	: "startup",
 			    `back	: "new_certCA3"
-	                    ],	
+	                    ],
+        "ca_main"	     : $[
+			    `back 	: "startup",
+			    `abort	: "startup",
+                            ],	
         ];
 
     Wizard::CreateDialog();

@@ -324,9 +324,9 @@
 	integer i = 0;
 	boolean nextLine = false;
 	
-        // help text 1/4
+        // help text 1/2
         string helptext = _("<p>This frame gives an overview about all setting for the certificate which will be created.</p>");
-        // help text 2/4
+        // help text 2/2
         helptext = helptext + _("<p>Click <b>Create</b> to generate the certificate.</p>");
 
 	string text = _("<br><h3>Summary</h3>");

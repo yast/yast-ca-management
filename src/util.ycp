@@ -38,7 +38,7 @@
       * @param s single char string
       * @return boolean blank/non blank
       */
-    global define boolean isBlank(string s) ``{
+    define boolean isBlank(string s) ``{
         if (s == "\n" || s == "\t" || s == " ")
         {
             return true;
