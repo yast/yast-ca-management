@@ -18,6 +18,14 @@ my $pwd = $ENV{'PWD'};
 print "$pwd\n";
 exit 1 if (!defined $pwd || $pwd eq "");
 
+my $req1 = "";
+my $req3 = "";
+my $req4 = "";
+my $crt1 = "";
+my $crt2 = "";
+my $crt3 = "";
+my %rev = ();
+
 init_testsetup();
 
 T01_Interface();
@@ -340,6 +348,7 @@ sub T10_AddRequest {
     } else {
         print "OK: \n";
         print STDERR Data::Dumper->Dump([$res])."\n";
+        $req1 = $res;
     }
 }
 
@@ -348,7 +357,7 @@ sub T11_issueCertificate {
     print "------------------- T11_issueCertificate ---------------------\n";
     my $data = {
                 'caName'                => 'Test1_SuSE_CA',
-                'request'               => '0763f25e2b3af9bd86f8afcf4bd0897b',
+                'request'               => $req1,
                 'certType'              => 'client',
                 'caPasswd'              => 'system',
                 'days'                  => '365',
@@ -368,6 +377,7 @@ sub T11_issueCertificate {
     } else {
         print "OK: \n";
         print STDERR Data::Dumper->Dump([$res])."\n";
+        $crt1 = $res;
     }
 }
 
@@ -404,6 +414,7 @@ sub T12_AddCertificate {
     } else {
         print "OK: \n";
         print STDERR Data::Dumper->Dump([$res])."\n";
+        $crt2 = $res;
     }
 }
 
@@ -452,6 +463,11 @@ sub T13_AddCertificate2 {
     } else {
         print "OK: \n";
         print STDERR Data::Dumper->Dump([$res])."\n";
+        $crt3 = $res;
+    }
+
+    if($crt3 =~ /^[[:xdigit:]]+:([[:xdigit:]]+[\d-]*)$/) {
+        $req3 = $1
     }
 }
 
@@ -481,7 +497,7 @@ sub T15_ReadCertificate {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
                     'type'   => $type,
-                    'certificate' => '03:52324820ee92ebe512780bec85174c14'
+                    'certificate' => $crt3
                    };
        
         my $res = YaPI::CaManagement->ReadCertificate($data);
@@ -502,7 +518,7 @@ sub T16_RevokeCertificate {
     my $data = {
                 'caName'      => 'Test1_SuSE_CA',
                 'caPasswd'    => 'system',
-                'certificate' => '01:0763f25e2b3af9bd86f8afcf4bd0897b'
+                'certificate' => $crt1
                };
     
     my $res = YaPI::CaManagement->RevokeCertificate($data);
@@ -598,7 +614,7 @@ sub T20_ExportCertificate {
     foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
-                    'certificate' => '03:52324820ee92ebe512780bec85174c14',
+                    'certificate' => $crt3,
                     'exportFormat' => $ef,
                     'keyPasswd' => "system",
                    };
@@ -683,7 +699,7 @@ sub T22_Verify {
             my $Vret = YaPI::CaManagement->Verify($data);
             if(not defined $Vret) {
                 my $err = YaPI::CaManagement->Error();
-                if( $cert->{'certificate'} ne "01:0763f25e2b3af9bd86f8afcf4bd0897b") {
+                if( $cert->{'certificate'} ne $crt1) {
                     printError($err);
                 } else {
                     print "Verify: false positive ".$err->{description}."\n";
@@ -794,6 +810,37 @@ sub T27_CreateManyCerts {
             print "OK: $i\n";
             print STDERR Data::Dumper->Dump([$res])."\n";
         }
+
+        if($res =~ /^11:/) {
+            $rev{$res} = "unspecified";
+        }
+        if($res =~ /^1D:/) {
+            $rev{$res} = "keyCompromise";
+        }
+        if($res =~ /^26:/) {
+            $rev{$res} = "CACompromise";
+        }
+        if($res =~ /^2B:/) {
+            $rev{$res} = "affiliationChanged";
+        }
+        if($res =~ /^A1:/) {
+            $rev{$res} = "superseded";
+        }
+        if($res =~ /^B2:/) {
+            $rev{$res} = "cessationOfOperation";
+        }
+        if($res =~ /^BA:/) {
+            $rev{$res} = "certificateHold";
+        }
+        if($res =~ /^C1:/) {
+            $rev{$res} = undef;
+        }
+        if($res =~ /^C5:/) {
+            $rev{$res} = undef;
+        }
+        if($res =~ /^C8:/) {
+            $rev{$res} = undef;
+        }
     }
 }
 
@@ -860,7 +907,7 @@ sub T34_DeleteCertificate {
     print "------------------- T34_DeleteCertificate ---------------------\n";
     my $data = {
                 caName        => 'Test1_SuSE_CA',
-                certificate   => '01:0763f25e2b3af9bd86f8afcf4bd0897b',
+                certificate   => $crt1,
                 caPasswd      => 'system'
                };
     
@@ -1170,7 +1217,7 @@ sub T39_CheckCertificate1 {
     my $data = {
                 'caName' => 'Test1_SuSE_CA',
                 'type'   => "plain",
-                'certificate' => '02:d9f127beb8144838fc140eaea5df8adf'
+                'certificate' => $crt2
                };
     
     my $res = YaPI::CaManagement->ReadCertificate($data);
@@ -1264,7 +1311,7 @@ sub T40_CheckCertificate2 {
     my $data = {
                 'caName' => 'Test1_SuSE_CA',
                 'type'   => "plain",
-                'certificate' => '03:52324820ee92ebe512780bec85174c14'
+                'certificate' => $crt3
                };
     
     my $res = YaPI::CaManagement->ReadCertificate($data);
@@ -1434,17 +1481,6 @@ Revoked Certificates:
 sub T42_RevokeManyCertificate {
     print STDERR "------------------- T42_RevokeManyCertificate ---------------------\n";
     print "------------------- T42_RevokeManyCertificate ---------------------\n";
-
-    my %rev = ("11:517ddb5b853ae83d0ebff8e3db534386" => "unspecified",
-               "1D:8d559d4efff24dd401368a1a0fcc7297" => "keyCompromise",
-               "26:0daf43bfa18ce980254fcfb4edcb3cf2" => "CACompromise",
-               "2B:243679e2bb3173014c82fcb624430aea" => "affiliationChanged",
-               "A1:52934f87d00ff07b6146d0aec0f4d469" => "superseded",
-               "B2:372b6ee045a74230340211afc8809ea0" => "cessationOfOperation",
-               "BA:9649606396b8dda7c3f8fa3cd12721b8" => "certificateHold",
-               "C1:b4bf675f6edc3c3a9e37b88c83870e77" => undef,
-               "C5:f0c38b5751d318a2859da8a2e965eef4" => undef,
-               "C8:91bd74429be334b04fe9a318f756143f" => undef);
 
     foreach my $c (keys %rev) {
     
@@ -1689,7 +1725,7 @@ sub T46_ReadRequest {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
                     'type'   => $type,
-                    'request' => '52324820ee92ebe512780bec85174c14'
+                    'request' => $req3
                    };
        
         my $res = YaPI::CaManagement->ReadRequest($data);
@@ -1765,6 +1801,7 @@ nwR1IKGnTcEx4CkTLp4lTISAj/2tE8jMPmTnGEO7dnkX2wW7Eb0Z5gDsVTzGh580
     } else {
         print "OK:\n";
         print STDERR Data::Dumper->Dump([$res])."\n";
+        $req4 = $res;
     }
 }
 
@@ -1774,7 +1811,7 @@ sub T49_DeleteRequest {
 
     my $data = {
                 'caName'   => 'Test1_SuSE_CA',
-                'request'  => "ea394b11c9650362cdfbf5f82c59fef9",
+                'request'  => $req4,
                 'caPasswd' => 'system'
                };
     
