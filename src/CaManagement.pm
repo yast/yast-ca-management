@@ -27,7 +27,7 @@ sub ReadCAList {
 
     my $ret = SCR::Read(".caTools.caList");
     if ( not defined $ret ) {
-        return $self->SetError(%{SCR::Error(".caTools.caList")});
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
     return $ret;
 }
@@ -617,6 +617,62 @@ sub AddCertificate {
     return $certificate;
 }
 
+BEGIN { $TYPEINFO{ReadCertificateList} = ["function", "any", "any"]; }
+sub ReadCertificateList {
+    my $self = shift;
+    my $data = shift;
+
+    if (not defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+        return $self->SetError(summary => "Missing parameter 'caName'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    my $caName = $data->{'caName'};
+    if (not defined $data->{'caPasswd'} ||
+        length($data->{'caPasswd'}) < 4) {
+        return $self->SetError(summary => "Wrong value for parameter 'caPasswd'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    my $ret = $self->UpdateDB($data);
+    if ( not defined $ret ) {
+        return undef;
+    }
+
+    $ret = SCR::Read(".caTools.certificateList", $data->{'caName'});
+    if ( not defined $ret ) {
+        return $self->SetError(%{SCR::Error(".caTools")});
+    }
+    return $ret;
+}
+
+BEGIN { $TYPEINFO{UpdateDB} = ["function", "boolean", "any"]; }
+sub UpdateDB {
+    my $self = shift;
+    my $data = shift;
+    
+    if (not defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+        return $self->SetError(summary => "Missing parameter 'caName'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    my $caName = $data->{'caName'};
+    if (not defined $data->{'caPasswd'} ||
+        length($data->{'caPasswd'}) < 4) {
+        return $self->SetError(summary => "Wrong value for parameter 'caPasswd'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    my $hash = {
+                CAKEY  => "$CAM_ROOT/$caName/cacert.key",
+                CACERT => "$CAM_ROOT/$caName/cacert.pem",
+                PASSWD => $data->{'caPasswd'}
+               };
+    my $ret = SCR::Read(".openca.openssl.updateDB", $data->{'caName'}, $hash);
+    if ( not defined $ret ) {
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
+    }
+}
 
 sub cleanCaInfrastructure {
     my $self     = shift || return undef;
