@@ -1,0 +1,121 @@
+/**
+ *
+ * File:
+ *   crl.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * CRL of a selected CA
+ *
+ */
+
+
+{
+
+    textdomain "ca-management";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    import "CaManagement";
+
+    include "ca-management/util.ycp";
+
+    /**
+     * getDescription - CRL description
+     * @param CA name
+     * @return a string with the CRL description
+     */
+    define string getCRLDescription (string CAname) ``{
+	string text = _("<br><h3>CA description</h3>");
+
+	map ret = (map) CaManagement::ReadCRL ($["caName":CAname, "type":"parsed"]);
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+            return _("<br>CRL not found");
+        }
+	y2milestone("ReadCRL(%1): %2", CAname, ret);
+
+//	map dn = ret["DN_HASH"]:$[];
+//	if (size (dn) > 0)
+//	{
+//	    text = text + _("<h4>Issued for:</h4>");
+//	    text = text + "<pre>";
+//	    text = text + "Common Name:  " + ((list)dn["CN"]:[])[0]:"";
+//	    text = text + "<br>Organization: " + ((list)dn["O"]:[])[0]:"";
+//	    text = text + "<br>Location:     " + ((list)dn["L"]:[])[0]:"";	    
+//	    text = text + "<br>State:        " + ((list)dn["ST"]:[])[0]:"";
+//	    text = text + "<br>Country:      " + ((list)dn["C"]:[])[0]:"";
+//	    text = text + "<br>EMAIL:        " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
+//	    text = text + "</pre>";	    
+//	}
+
+
+	text = text + _("<br>Valid from: ") + ret["NOTBEFORE"]:"";
+	text = text + _("<br>Valid to: ") + ret["NOTAFTER"]:"";
+	text = text + "<br><br>Fingerprint: " + ret["FINGERPRINT"]:"";
+
+	return text;
+	
+    }
+
+    /**
+     * CRL Overview 
+     * @return  'back, 'abort
+     */
+    define symbol crl () ``{
+
+	integer i = 0;
+	
+        // help text 1/4
+        string helptext = _("<p>Here you can see a text representation of the CRL.</p>");
+        // help text 2/4
+        helptext = helptext + _("<p>With the Button <b>generate CRL</b> a new CRL will be generated.</p>");
+        // help text 3/4
+        helptext = helptext + _("<p>With the button <b>Export to LDAP</b> the CRL and the CA are Exported to a LDAP Directory.</p>");
+        // help text 4/4
+        helptext = helptext + _("<p>With the button <b>Export as File</b> the CRL is exported as file in different formats.</p>");	
+
+        term contents = `VBox ();
+        contents = add (contents, `RichText(`id(`textinfo),""));
+        term buttons = `HBox ();
+        // To translators: pushbutton label
+        buttons = add (buttons,  `PushButton (`id (`gererateCRL), _("&Generate CRL")));
+	buttons = add (buttons,  `HStretch());
+	buttons = add (buttons,  `MenuButton( _("Export"),
+					      [
+					       `item(`id(`exportFile), _("Export as &File") ),
+					       `item(`id(`createSubCA), _("Export to &LDAP"))
+					       ]
+					      ));
+	
+	contents = add (contents, buttons);
+
+                                // To translators: dialog label
+        Wizard::SetContents ( _("CRL for CA: ") + CaMgm::currentCA, contents, helptext, true, false);
+        UI::ChangeWidget( `id(`textinfo), `Value, getCRLDescription (CaMgm::currentCA));
+
+        symbol ui = nil;
+
+        repeat
+        {
+            ui = (symbol) UI::UserInput ();
+
+        }
+        until (contains ([`back, `abort, `exportFile, `createSubCA, `gererateCRL], ui));
+
+        return ui;
+    }
+
+}
