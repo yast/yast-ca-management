@@ -1,0 +1,24 @@
+/**
+ * $Id$
+ * Summary:
+ *   SCR Agent for parsing CRLs 
+ * Authors:
+ *   Michael Calmer <mc@suse.de>
+ * Access:
+ *   Read
+ * See:
+ *   
+ *
+ *
+ * Example:
+ *   Read (.openca.CRL.getParsed, string file)
+ *   Read (.openca.CRL.getTXT, string file)
+ */
+.openca.CRL
+`ag_openca_CRL (
+  `CRL ($[
+    "path":   "/usr/bin/openssl",
+    "tmpdir": "/tmp",
+    "stderr": ">> /var/log/YaST2/ca.log",
+  ])
+)
