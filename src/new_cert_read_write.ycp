@@ -31,7 +31,8 @@
 
     
     /**
-     * Values initializing for creating CA/Certificate 
+     * Values initializing for creating CA/Certificate
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate")
      * @return `next
      */
     define symbol new_cert_init (string kind) ``{
@@ -514,6 +515,7 @@
 
     /**
      * Creating CA/Certificate by calling the CaManagement module
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate")     
      * @return true ( success )
      */
     define boolean new_cert_write (string kind) ``{

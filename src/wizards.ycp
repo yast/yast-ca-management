@@ -20,10 +20,53 @@
     include "ca-management/util.ycp";
     include "ca-management/new_cert_advanced.ycp";
     include "ca-management/ca.ycp";
-    include "ca-management/crl.ycp";    
+    include "ca-management/crl.ycp";
+//    include "ca-management/default.ycp";        
     include "ca-management/certificate.ycp";
 
 
+    define  map defaultSequence = $[
+        "ws_start"	    : "new_default1",
+        "new_default1"      : $[
+                            `next       	: "new_default2",
+			    `again 		: "new_default1",
+			    `abort		: `abort,
+                            ],
+        "new_default2"      : $[
+                            `next       	: "new_default3",
+			    `again 		: "new_default2",
+			    `abort		: `abort,
+			    `back		: "new_default1"
+	                    ],
+        "new_default3"      : $[
+                            `next       	: `abort,
+			    `abort		: `abort,
+			    `back		: "new_default2"
+                            ]
+    ];
+
+   /**
+    * Editing certificate defaults
+    * @return sequence result
+    */
+    define symbol editDefaultSequence() ``{
+
+	map aliases = $[
+//			"new_default1"  	: ``(new_default1 (),
+//			"new_default2"   	: ``(new_cert_advanced ()),	    
+//			"new_default3"   	: ``(new_default2 ())
+			];
+
+	Wizard::CreateDialog();
+	Wizard::SetDesktopIcon("ca_mgm");
+	symbol ret = WizardSequencer(aliases, defaultSequence);
+
+	UI::CloseDialog();
+
+	return ret;
+    }
+    
+    
     define  map certificateSequence = $[
 	"ws_start"	    : "new_certinit",
         "new_certinit"      : $[
@@ -163,7 +206,8 @@ define symbol MainSequence() ``{
 	"new_certCA"		: ``(newCASequence()),
 	"new_certServer"	: ``(newServerCertificateSequence()),
 	"new_certClient"	: ``(newClientCertificateSequence()),
-	"new_certSubCA"		: ``(newSubCASequence()),			
+	"new_certSubCA"		: ``(newSubCASequence()),
+	"edit_default"		: ``(editDefaultSequence()),
         "ca_main"  	 	: ``(ca ()),
 	"crl_main"		: ``(crl ()),
         "certificate"  	 	: ``(certificate ()),		
@@ -185,6 +229,7 @@ define symbol MainSequence() ``{
 				`abort		: "startup",
 				`certificates 	: "certificate",
 				`createSubCA	: "new_certSubCA",
+				`editDefault	: "edit_default",
 				`crl		: "crl_main",
                             ],
         "crl_main"	    : $[

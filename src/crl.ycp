@@ -145,13 +145,13 @@
 	text = text + "<br>Version: " + ret["VERSION"]:"";
 	text = text + "<br>Signature Algorithmus: " + ret["SIGNATURE_ALGORITHM"]:"";
 	text = text + "<br>Issuer: " + ret["ISSUER"]:"";
-	text = text + _("<br>Last Update: ") + ret["LASTUPDATE"]:"";
+	text = text + _("<br><br>Last Update: ") + ret["LASTUPDATE"]:"";
 	text = text + _("<br>Next Update: ") + ret["NEXTUPDATE"]:"";
 	integer counter = 0;
 	foreach (map element, ret["REVOKED_PARSED"]:[], ``{
 	    if (counter == 0)
 	    {
-		text = text + _("<br>Revoked Certificates: ");
+		text = text + _("<br><br>Revoked Certificates: ");
 	    }
 	    counter = counter +1;
 	    string reason = element["REASON"]:"";
@@ -174,13 +174,13 @@
 	integer i = 0;
 	
         // help text 1/4
-        string helptext = _("<p>Here you can see a text representation of the CRL.</p>");
+        string helptext = _("<p>Here you can see the most important values of the CRL.</p>");
         // help text 2/4
-        helptext = helptext + _("<p>With the Button <b>generate CRL</b> a new CRL will be generated.</p>");
+        helptext = helptext + _("<p>With the button <b>Generate CRL</b> a new CRL will be generated.</p>");
         // help text 3/4
-        helptext = helptext + _("<p>With the button <b>Export to LDAP</b> the CRL and the CA are Exported to a LDAP Directory.</p>");
+        helptext = helptext + _("<p><b>View</b> shows a complete description.</p>");	
         // help text 4/4
-        helptext = helptext + _("<p>With the button <b>Export as File</b> the CRL is exported as file in different formats.</p>");	
+        helptext = helptext + _("<p>You can <b>Export</b> the CRL to a file or LDAP Directory.</p>");
 
         term contents = `VBox ();
         contents = add (contents, `RichText(`id(`textinfo),""));

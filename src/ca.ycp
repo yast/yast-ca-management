@@ -133,7 +133,7 @@
         // help text 1/2
         string helptext = _("<p>Here you can see the most important values of the CA.</p>");
         // help text 2/2
-        helptext = helptext + _("<p>Special information about the current CA are given by the buttons <b>Certificates</b>,<b>Requests</b>,<b>CRL</b> and <b>Advanced</b>.</p>");
+        helptext = helptext + _("<p>Special information about the current CA are given by the buttons <b>Certificates</b>, <b>CRL</b> and <b>Advanced</b>.</p>");
 
 
         term contents = `VBox ();
@@ -146,14 +146,11 @@
 	buttons = add (buttons,  `HStretch());
 	buttons = add (buttons,  `MenuButton( _("&Advanced..."),
 					      [
-					       `item(`id(`information), _("&Show information") ),
+					       `item(`id(`information), _("&View") ),
 					       `item(`id(`createSubCA), _("C&reate SubCA")),					       
-					       `menu( _("Export"),
-						      [
-						       `item(`id(`exportFile),   _("to &File")   ),
-						       `item(`id(`exportLDAP),   _("to &LDAP")   )
-						       ]
-						      )
+					       `item(`id(`exportFile),  _("Export to &File")),
+					       `item(`id(`exportLDAP),  _("Export to &LDAP")),
+					       `item(`id(`editDefault), _("&Edit Default"))
 					       ]
 					      ));
 	contents = add (contents, buttons);
@@ -181,7 +178,7 @@
 		 exportCAtoFile (CaMgm::currentCA);
 	    }	    	    
         }
-        until (contains ([`back, `abort, `certificates, `createSubCA, `crl], ui));
+        until (contains ([`back, `abort, `certificates, `createSubCA, `crl, `editDefault], ui));
 
         return ui;
     }
