@@ -3634,19 +3634,22 @@ sub ExportCRLToLDAP {
     return 1;
 }
 
-
 =item *
 C<$defaultsMap = ReadLDAPExportDefaults($valueMap)>
 
-Return the defaults for export CA, CRL or certificates to 
+Return the defaults for export CA, CRL or certificates to
 LDAP. If an error ocured with I<code = LDAP_CONFIG_NEEDED>,
 you have to call B<InitLDAPcaManagement()> first.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * type (required - allowed values are: "ca", "crl", "certificates")
 
 * caName (optional)
+
+* commonName (required - only if 'type' is 'certificate')
+
+* emailAddress (optional - only if 'type' is 'certificate')
 
 The return value is "undef" on an error.
 
@@ -3660,6 +3663,8 @@ On success a map is returned with the following keys:
 
 * destinationDN
 
+The value of I<destinationDN> is an array.
+
 EXAMPLE:
 
  use Data::Dumper;
@@ -3670,12 +3675,13 @@ EXAMPLE:
             };
 
  my $res = YaPI::CaManagement->ReadLDAPExportDefaults($data);
- if( not defined $res ) {
+
+if( not defined $res ) {
      # error
  } else {
      print Data::Dumper->Dump([$res])."\n";
  }
- 
+
 =cut
 
 BEGIN { $TYPEINFO{ReadLDAPExportDefaults} = ["function", 
@@ -3688,6 +3694,9 @@ sub ReadLDAPExportDefaults {
     my $type = "ca";
     my $ldapMap = {};
     my $retMap = {};
+    my $ldapret = undef;
+    my $commonName = undef;
+    my $emailAddress = undef;
 
     if (defined $data->{'caName'} ) {
         if($data->{'caName'} =~ /^[A-Za-z0-9-_]+$/) {
@@ -3707,6 +3716,17 @@ sub ReadLDAPExportDefaults {
                                code    => "PARAM_CHECK_FAILED");
     }
     $type = $data->{'type'};
+
+    if($type eq "certificate") {
+        if(!defined $data->{'commonName'} || $data->{'commonName'} eq "") {
+            return $self->SetError(summary => _("Missing parameter 'commonName'"),
+                                   code => "PARAM_CHECK_FAILED");
+        }
+        $commonName = $data->{'commonName'};
+        if(defined $data->{'emailAddress'} && $data->{'emailAddress'} ne "") {
+            $emailAddress = $data->{'emailAddress'};
+        }
+    }
 
     if(Ldap->Read()) {
         $ldapMap = Ldap->Export();
@@ -3734,34 +3754,67 @@ sub ReadLDAPExportDefaults {
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
 
-    # Is there already a ldapconfig object?
-    my $ldapret = undef;
+    if(defined $type && ($type eq "ca" || $type eq "crl")) {
+        # Is there already a ldapconfig object?
+  
+        if(defined $caName && $caName ne "") {
+            $ldapret = SCR->Read(".ldap.search", {
+                                                  "base_dn" => $ldapMap->{'ldap_domain'},
+                                                  "filter" => "(& (objectclass=suseCaConfiguration) (cn=$caName))",
+                                                  "scope" => 2,
+                                                  "not_found_ok" => 1,
+                                                  "attrs" => [ 'suseDefaultBase' ]
+                                                 });
+            if (! defined $ldapret) {
+                my $ldapERR = SCR->Read(".ldap.error");
+                return $self->SetError(summary => "LDAP search failed!",
+                                       description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
+                                       code => "LDAP_SEARCH_FAILED");
+            }
+            if(@$ldapret > 0) {
+                $retMap->{'destinationDN'} = $ldapret->[0]->{susedefaultbase};
+            }
+        }
+        
+        if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
+            $ldapret = SCR->Read(".ldap.search", {
+                                                  "base_dn" => $ldapMap->{'ldap_domain'},
+                                                  "filter" => '(& (objectclass=suseCaConfiguration) (cn=default))',
+                                                  "scope" => 2,
+                                                  "not_found_ok" => 1
+                                                 });
+            if (! defined $ldapret) {
+                my $ldapERR = SCR->Read(".ldap.error");
+                return $self->SetError(summary => "LDAP search failed!",
+                                       description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
+                                       code => "LDAP_SEARCH_FAILED");
+            }
+            if(@$ldapret > 0) {
+                $retMap->{'destinationDN'} = $ldapret->[0]->{susedefaultbase};
+            }
+        }
+        
+        if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
+            return $self->SetError(summary => _("No configuation available in LDAP."),
+                                   code => "LDAP_CONFIG_NEEDED");
+        }
+        
+    } else {
+        # type is certificate
+        
+        my $filter = undef;
+        if(defined $emailAddress) {
+            $filter =  "(& (objectclass=inetOrgPerson) (| (cn=$commonName) (mail=$emailAddress)))";
+        } else {
+            $filter =  "(& (objectclass=inetOrgPerson) (cn=$commonName))";
+        }
 
-    if(defined $caName && $caName ne "") {
         $ldapret = SCR->Read(".ldap.search", {
                                               "base_dn" => $ldapMap->{'ldap_domain'},
-                                              "filter" => "(& (objectclass=suseCaConfiguration) (cn=$caName))",
+                                              "filter" => $filter,
                                               "scope" => 2,
                                               "not_found_ok" => 1,
-                                              "attrs" => [ 'suseDefaultBase' ]
-                                            });
-        if (! defined $ldapret) {
-            my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => "LDAP search failed!",
-                                   description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
-                                   code => "LDAP_SEARCH_FAILED");
-        }
-        if(@$ldapret > 0) {
-            $retMap->{'destinationDN'} = $ldapret->[0]->{susedefaultbase}->[0];
-        }
-    }
-
-    if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
-        $ldapret = SCR->Read(".ldap.search", {
-                                              "base_dn" => $ldapMap->{'ldap_domain'},
-                                              "filter" => '(& (objectclass=suseCaConfiguration) (cn=default))',
-                                              "scope" => 2,
-                                              "not_found_ok" => 1
+                                              "dn_only" => 1
                                              });
         if (! defined $ldapret) {
             my $ldapERR = SCR->Read(".ldap.error");
@@ -3770,15 +3823,11 @@ sub ReadLDAPExportDefaults {
                                    code => "LDAP_SEARCH_FAILED");
         }
         if(@$ldapret > 0) {
-            $retMap->{'destinationDN'} = $ldapret->[0]->{susedefaultbase}->[0];
+            $retMap->{'destinationDN'} = $ldapret;
         }
-    }
+        
 
-    if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
-        return $self->SetError(summary => _("No configuation available in LDAP."),
-                               code => "LDAP_CONFIG_NEEDED");
     }
-    
     $retMap->{'ldapHostname'} = $ldapMap->{'ldap_server'};
     $retMap->{'ldapPort'} = $ldapMap->{'ldap_port'};
     $retMap->{'BindDN'} = $ldapMap->{'bind_dn'};
@@ -3988,6 +4037,234 @@ sub InitLDAPcaManagement {
         }
     }
     return 1;    
+}
+
+=item *
+C<$bool = ExportCertificateToLDAP($valueMap)>
+
+Export a Certificate in a LDAP Directory. This function
+is designed for exporting user certificates. The destination
+entry must have the objectclass 'inetOrgPerson'.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* certificate (required)
+
+* keyPasswd (optional - if defined, then p12Passwd is required)
+
+* p12Passwd (optional)
+
+* ldapHostname (required)
+
+* ldapPort (default: 389)
+
+* destinationDN (required)
+
+* bindDN (required)
+
+* ldapPasswd (required)
+
+If the private key of the certificate is available and the
+parameter 'keyPasswd' and 'p12Passwd' are defined, an export 
+in PKCS12 format is also done.
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+ my $data = {
+             caName        => 'My_CA',
+             certificate   => $certificateName,
+             ldapHostname  => 'myhost.example.com',
+             ldapPort      => 389,
+             destinationDN => "uid=me,ou=people,dc=suse,dc=de",
+             BindDN        => "cn=Admin,dc=example,dc=com",
+             ldapPasswd    => "system"
+            };
+
+    my $res = YaPI::CaManagement->ExportCertificateToLDAP($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print STDERR "OK\n";
+    }
+
+=cut
+
+BEGIN { $TYPEINFO{ExportCertificateToLDAP} = ["function", "boolean", ["map", "string", "any"] ]; }
+sub ExportCertificateToLDAP {
+    my $self = shift;
+    my $data = shift;
+    my $caName  = "";
+    my $certificate = "";
+    my $key = "";
+    my $exportPKCS12 = 0;
+
+    if (!defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+                                           # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{'caName'};
+
+    if (!defined $data->{'certificate'} ||
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
+                                           # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'certificate'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $certificate = $data->{'certificate'};
+
+    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+)$/;
+    if(defined $1 && $1 ne "") {
+        $key = $1;
+    }
+    
+    if (! defined $data->{'ldapHostname'} ||
+        ! Hostname->CheckFQ($data->{'ldapHostname'}) ) {
+                                           # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'ldapHostname'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    if (! defined $data->{'ldapPort'} ||
+        $data->{'ldapPort'} eq "") {
+        # setting default value 
+        $data->{'ldapPort'} = 389;
+    }
+
+    if ($data->{'ldapPort'} !~ /^\d+$/ ) {
+                                           # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'ldapPort'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    if (! defined $data->{'destinationDN'} || 
+        $data->{'destinationDN'} eq "") {
+                                           # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'destinationDN'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    if (! defined $data->{'BindDN'} || 
+        $data->{'BindDN'} eq "") {
+                                           # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'BindDN'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    if (! defined $data->{'ldapPasswd'} || 
+        $data->{'ldapPasswd'} eq "") {
+                                           # parameter check failed
+        return $self->SetError(summary => _("Wrong value for parameter 'ldapPasswd'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    # test if this File already exists
+    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/$certificate.pem") == -1) {
+        return $self->SetError(summary => _("Certificate does not exist."),
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+
+    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/$key.key") > 0) {
+        if(defined $data->{'keyPasswd'} && $data->{'keyPasswd'} ne "") {
+            my $check = SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'keyPasswd'},
+                                                                  CERT => $certificate});
+            if(not defined $check) {
+                return $self->SetError(%{SCR->Error(".caTools")});
+            }
+            if(!defined $data->{'p12Passwd'} || $data->{'p12Passwd'} eq "") {
+                return $self->SetError(summary => "Missing parameter 'p12Passwd'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            $exportPKCS12 = 1;
+        }
+    }
+
+    my $crt = SCR->Read(".openssl.getParsedCert", $caName, 
+                        {
+                         INFILE => "$CAM_ROOT/$caName/newcerts/$certificate.pem",
+                         INFORM => "PEM"
+                        });
+    if (not defined $crt) {
+        return $self->SetError(%{SCR->Error(".openssl")});
+    }
+    my ($body) = ($crt->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
+
+    if (! defined $body || $body eq "") {
+        return $self->SetError(summary => "Can not parse the certificate",
+                               code => "PARSE_ERROR");
+    }
+
+    if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
+                                 "port"     => $data->{'ldapPort'}})) {
+        return $self->SetError(summary => "LDAP init failed",
+                               code => "SCR_INIT_FAILED");
+    }
+
+    if (! SCR->Execute(".ldap.bind", {"bind_dn" => $data->{'BindDN'},
+                                      "bind_pw" => $data->{'ldapPasswd'}}) ) {
+        my $ldapERR = SCR->Read(".ldap.error");
+        return $self->SetError(summary => "LDAP bind failed",
+                               code => "SCR_INIT_FAILED",
+                               description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+    }
+
+    my $dnList = SCR->Read(".ldap.search", {
+                                            "base_dn" => $data->{'destinationDN'},
+                                            "filter" => 'objectclass=inetOrgPerson',
+                                            "scope" => 0,
+                                            "dn_only" => 1
+                                           });
+    if (! defined $dnList) {
+        my $ldapERR = SCR->Read(".ldap.error");
+        return $self->SetError(summary => "'destinationDN' is not available in the LDAP directory.",
+                               code => "LDAP_SEARCH_FAILED",
+                               description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+    }
+    
+    my $entry = {
+                 'userCertificate;binary' => YaST::YCP::Byteblock(decode_base64($body))
+                };
+    if (not SCR->Write(".ldap.modify", { dn => $data->{'destinationDN'}} , $entry)) {
+        my $ldapERR = SCR->Read(".ldap.error");
+        return $self->SetError(summary => "Can not modify 'userCertificate' in LDAP directory.",
+                               code => "LDAP_MODIFY_FAILED",
+                               description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+    }
+    
+    if ( $exportPKCS12 ) {
+        
+        my $p12 = SCR->Execute(".openssl.dataConvert", $caName, 
+                        {
+                         DATATYPE  => "CERTIFICATE",
+                         INFILE    => "$CAM_ROOT/$caName/newcerts/$certificate.pem",
+                         KEYFILE   => "$CAM_ROOT/$caName/keys/$key.key",
+                         INFORM    => "PEM",
+                         OUTFORM   => "PKCS12",
+                         INPASSWD  => $data->{'keyPasswd'},
+                         OUTPASSWD => $data->{'p12Passwd'}, 
+                        });
+        if (not defined $p12) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+
+        my $entry = {
+                     'userPKCS12' => YaST::YCP::Byteblock($p12)
+                    };
+        if (not SCR->Write(".ldap.modify", { dn => $data->{'destinationDN'}} , $entry)) {
+            my $ldapERR = SCR->Read(".ldap.error");
+            return $self->SetError(summary => "Can not modify 'userPKCS12' in LDAP directory.",
+                                   code => "LDAP_MODIFY_FAILED",
+                                   description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+        }
+    }
+    
+    return 1;
+    
 }
 
 1;
