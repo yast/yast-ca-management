@@ -22,12 +22,94 @@
     import "Wizard";
     import "Label";
     import "Popup";
+    
+    include "ca-management/popup.ycp";
+    include "ca-management/util.ycp";
+    
+    /**
+     * editDefaultEntries() - changing Entries
+     */
+    define void editDefaultEntries () ``{
+
+	define string confirmPassword = "";
+
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `VSpacing(16),
+			       `VBox (
+				      `HSpacing (100),
+				      // popup window header
+				      `Heading (_("Edit Default Settings")),
+				      `VSpacing (0.5),
+				      `TextEntry( `id (`id_CAName), _("&CA Name:"), CaMgm::prop_CAName ),
+				      `TextEntry( `id (`id_commonName), _("&Common Name:"), CaMgm::prop_ca_commonName ),
+				      `TextEntry( `id (`id_serverName), _("&Server Name:"), CaMgm::prop_server_commonName ),
+				      `VBox(
+					    `HBox(`TextEntry( `id (`id_organisation), _("O&rgansisation:"),
+							      CaMgm::prop_organisation ),
+						  `TextEntry( `id (`id_organisationUnit), _("Or&gansisation Unit:"),
+							      CaMgm::prop_organisationUnit )
+						  ),
+					    `HBox(`TextEntry( `id (`id_locality), _("Loca&lity:"),
+							      CaMgm::prop_locality ),
+						  `TextEntry( `id (`id_state), _("&State:"),
+							      CaMgm::prop_state ))
+					    ),
+				      `HBox (`HWeight(1,`ComboBox( `id (`id_country), _("C&ountry:"), getCountryList()))),
+				      `Password(`id(`pw1), _("Password:"), CaMgm::prop_password),
+				      `Password(`id(`pw2), _("Confirm password:"), confirmPassword),
+				      `VSpacing (1.5),
+				      // push button label
+				      `HBox(
+					    `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					    `HStretch(),
+					    `PushButton (`id(`abort), `opt(`default, `key_F9), Label::CancelButton())
+					    )
+				      )
+			       )
+			);
+
+	UI::SetFocus (`id(`ok));
+	// Get the user input.
+	//
+	any ret = nil;
+
+	repeat
+	    {
+		ret = Wizard::UserInput();
+
+		if (ret == `ok)
+		{
+		    confirmPassword = (string) UI::QueryWidget(`id(`pw2), `Value);
+		    if ((string) UI::QueryWidget(`id(`pw1), `Value) != confirmPassword)
+		    {
+			Popup::Error(_("New passwords are not equal."));
+			ret = `again;
+		    }
+		    else
+		    {
+			CaMgm::prop_ca_commonName = (string) UI::QueryWidget (`id (`id_commonName), `Value);
+			CaMgm::prop_server_commonName = (string) UI::QueryWidget (`id (`id_serverName), `Value);
+			CaMgm::prop_CAName = (string) UI::QueryWidget(`id(`id_CAName), `Value);
+			CaMgm::prop_organisation = (string) UI::QueryWidget(`id(`id_organisation), `Value);
+			CaMgm::prop_organisationUnit = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
+			CaMgm::prop_locality = (string) UI::QueryWidget(`id(`id_locality), `Value);
+			CaMgm::prop_state = (string) UI::QueryWidget(`id(`id_state), `Value);
+			CaMgm::prop_country = (string) UI::QueryWidget(`id(`id_country), `Value);
+			CaMgm::prop_password = (string) UI::QueryWidget(`id(`pw1), `Value);			    
+		    }
+		}
+	    }
+	until ( ret == `ok
+		|| ret == `abort );
+	
+	UI::CloseDialog ();	    
+    };
+
 
 
    /* ----------------------------------------------------------------------
-    * Build dialog
+    * MAIN module
     * ----------------------------------------------------------------------*/
-
     Wizard::CreateDialog();
     Wizard::SetDesktopIcon("ca_mgm");    
     
@@ -37,16 +119,20 @@
     term contents = `VBox(
 			heading,
 			`Frame ( _("Selection"),
-				 `RadioButtonGroup(`id(`rb), 
+				 `RadioButtonGroup(`id(`rb),
 						   `VBox(
-							 `Left(`RadioButton(`id(`def), _("Creating &default CA/Certificate."))),
+							 `Left(`RadioButton(`id(`def), `opt( `notify),
+									    _("Creating &default CA/Certificate."))),
 							 `HBox(`HSpacing (3),`Left(`PushButton (`id(`change),
 												`opt( `notify),
 												_("Edit default &Settings")))
 							       ),
-							 `Left(`RadioButton(`id(`none), _("Creating &no CA/Certificate."))),
-							 `Left(`RadioButton(`id(`floppy), _("Import CA/Certificate from &floppy."))),
-							 `Left(`RadioButton(`id(`expert), _("Calling CA-Management for &expert settings.")))
+							 `Left(`RadioButton(`id(`none), `opt( `notify),
+									    _("Creating &no CA/Certificate."))),
+							 `Left(`RadioButton(`id(`floppy), `opt( `notify),
+									    _("Import CA/Certificate from &floppy."))),
+							 `Left(`RadioButton(`id(`expert), `opt( `notify),
+									    _("Calling CA-Management for &expert settings.")))
 							 )
 						   )
 				 )
@@ -72,14 +158,21 @@ while completing the installation
 
     repeat
     {
+	UI::ChangeWidget (`id (`change), `Enabled,
+			  UI::QueryWidget(`id(`rb), `CurrentButton) == `def);
+
 	ret = Wizard::UserInput();
 
-	if( ret == `next
+	if (ret == `next
 	    || ret == `rb )
 	{
 	    // Get selection
 	    //
 	    CaMgm::prop_selection = (symbol) UI::QueryWidget(`id(`rb), `CurrentButton);
+	}
+	if (ret == `change)
+	{
+	    editDefaultEntries ();
 	}
     }
     until ( ret == `next
@@ -87,6 +180,6 @@ while completing the installation
 	    || ret == `back);
     
     UI::CloseDialog();
-    
+
     return (symbol) ret;
 }
