@@ -1,0 +1,87 @@
+#! /usr/bin/perl
+
+package ag_openca_X509;
+use YaST::SCRAgent;
+use ycp;
+our @ISA = ("YaST::SCRAgent");
+
+use OpenCA::OpenSSL;
+use OpenCA::X509;
+
+my $openssl = undef;
+my $CAM_ROOT = "/var/lib/YaST2/CAM/";
+
+
+sub check_initialized ()
+{
+    my $class = shift;
+    if (not defined $openssl)
+    {
+        $class->SetError(summary => "Agent not initialized yet",
+                         code => "SCR_INIT_ERR");
+    }
+    return !!$openssl;
+}
+
+sub OtherCommand () {
+    my $class = shift;
+    my ($symbol, $config, @rest) = @_;
+    
+    if ($symbol ne "X509") {
+        return $class->SetError(summary=> "The first command must be the configuration.(Seen '$_')",
+                                code => "SCR_INIT_ERR");
+    } else {
+        $openssl = OpenCA::OpenSSL->new( SHELL => $config->{"path"} );
+        if( not defined $openssl ) {
+            return $class->SetError(summary => "Can not initialize OpenCA::OpenSSL",
+                                    code => "SCR_INIT_ERR");
+        }
+        $openssl->setParams(TMPDIR=>$config->{"tmpdir"},
+                            STDERR=>$config->{"stderr"},
+                            CONFIG=>"$CAM_ROOT/openssl.cnf.tmpl",
+                            DEBUG=>1
+                           );
+    }
+    
+    return 1;
+}
+
+sub Read { 
+    my $class = shift;
+    my ($path, $infile) = @_;
+    $class->check_initialized || return undef;
+    
+    if($path eq ".getParsed") {
+        my $X509 = new OpenCA::X509(INFILE => $infile , 
+                                    SHELL  => $openssl);
+        if(not defined $X509) {
+            return $class->SetError(summary => "Can not initialize OpenCA::X509",
+                                    code => "SCR_INIT_ERR");
+        }
+        if(not defined $X509->getParsed()) {
+            return $class->SetError(summary     => "Can not parse certificate",
+                                    description => "(".$OpenCA::X509::errno.")".$OpenCA::X509::errval,
+                                    code => "SCR_READ_ERROR");
+        }
+        return $X509->getParsed();
+    } elsif($path eq ".getTXT") {
+        my $X509 = new OpenCA::X509(INFILE => $infile , 
+                                    SHELL  => $openssl);
+        if(not defined $X509) {
+            return $class->SetError(summary => "Can not initialize OpenCA::X509",
+                                    code => "SCR_INIT_ERR");
+        }
+        if(not defined $X509->getParsed()) {
+            return $class->SetError(summary     => "Can not parse certificate",
+                                    description => "(".$OpenCA::X509::errno.")".$OpenCA::X509::errval,
+                                    code => "SCR_READ_ERROR");
+        }
+        return $X509->getTXT();
+    }
+    return 1;
+}
+
+
+package main;
+ag_openca_X509->Run;
+
