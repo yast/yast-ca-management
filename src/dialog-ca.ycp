@@ -31,7 +31,6 @@ import "YaPI::CaManagement";
 
 include "ca-management/util.ycp";
 include "ca-management/new_cert.ycp";
-include "ca-management/floppy.ycp";    
 include "ca-management/ca.ycp";
 include "ca-management/certificate.ycp";
 include "ca-management/crl.ycp";

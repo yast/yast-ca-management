@@ -127,7 +127,7 @@ global string 	prop_organisation = "";
 global string 	prop_organisationUnit = "";
 global string 	prop_locality = "";
 global string 	prop_state = "";
-global symbol   prop_selection = `def; // `none, `floppy `expert `disk
+global symbol   prop_selection = `def; // `none, `expert, `disk
 
 /**
  * variables for new CA/Certificate/Request

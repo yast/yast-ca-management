@@ -18,6 +18,87 @@
     include "ca-management/popup.ycp";
 
     /**
+      * returns true if char is blank (newline, tab or space)
+      * @param s single char string
+      * @return boolean blank/non blank
+      */
+    define boolean isBlank(string s) ``{
+        if (s == "\n" || s == "\t" || s == " ")
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * removes trailing and leading blank chars from string.
+     *   eg: "  as df  " -> "as df"
+     * @param str string source string
+     * @return string stripped string
+     */
+    define string strip(string str)``{
+        //emtpy  string
+        if (size (str) == 0) return "";
+
+        integer bound = size (str);
+        integer first = 0;
+        integer last = size (str) - 1;
+        // find first non-blank char
+        while(first < bound && isBlank(substring(str, first, 1)))
+        {
+            first = first + 1;
+        }
+    
+        while(last >= 0 && isBlank(substring(str, last, 1)))
+        {
+            last = last - 1;
+        }
+        if (last >= first)
+        {
+            return substring(str, first, last - first + 1);
+        }
+        return "";
+    }
+
+    
+    /**
+     * Asking for a existing or new file
+     * @param flag new file, filter, headline
+     * @return the pathname or a empty string if aborted
+     */
+    define string selectFile (boolean newFile,
+			      string filterString,
+			      string headline) ``{
+	map<string,any> display = UI::GetDisplayInfo ();
+	string ret = "";
+	
+	if (SCR::Read (.target.size, "/opt/kde3/bin/kfiledialog") > 0
+	    && !display["TextMode"]:false)
+	{
+	    // using kfiledialog
+	    map retmap = (map) SCR::Execute (.target.bash_output,
+					     sformat ("/opt/kde3/bin/kfiledialog drives:/ \"%1\"", filterString),
+					     $[] );
+	    y2milestone("kfiledialog :%1", retmap);
+	    ret = strip(retmap["stdout"]:"");
+	}
+	else
+	{
+	    if (newFile)
+	    {
+		ret = UI::AskForSaveFileName( ".", filterString, headline );
+	    }
+	    else
+	    {
+		ret = UI::AskForExistingFile( ".", filterString, headline );		
+	    }
+	}
+
+	return ret;
+    }
+
+    
+    /**
      * Creates Country items
      * @return a list country items formated for a UI table
      */
@@ -61,48 +142,7 @@
 	    Hostname::CheckDomain (parts[1]:"");
     }
 
-    /**
-      * returns true if char is blank (newline, tab or space)
-      * @param s single char string
-      * @return boolean blank/non blank
-      */
-    define boolean isBlank(string s) ``{
-        if (s == "\n" || s == "\t" || s == " ")
-        {
-            return true;
-        }
-        return false;
-    }
     
-    /**
-     * removes trailing and leading blank chars from string.
-     *   eg: "  as df  " -> "as df"
-     * @param str string source string
-     * @return string stripped string
-     */
-    define string strip(string str)``{
-        //emtpy  string
-        if (size (str) == 0) return "";
-
-        integer bound = size (str);
-        integer first = 0;
-        integer last = size (str) - 1;
-        // find first non-blank char
-        while(first < bound && isBlank(substring(str, first, 1)))
-        {
-            first = first + 1;
-        }
-    
-        while(last >= 0 && isBlank(substring(str, last, 1)))
-        {
-            last = last - 1;
-        }
-        if (last >= first)
-        {
-            return substring(str, first, last - first + 1);
-        }
-        return "";
-    }
 
     /**
      * Dialog for asking a CA password. Returns the password
@@ -515,7 +555,7 @@ Enter the required LDAP password.
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( ".", filterString, "Export to ..." );
+		string name = selectFile (true, filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -644,7 +684,7 @@ Enter the required LDAP password.
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( ".", filterString, "Export to ..." );
+		string name = selectFile (true, filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -787,7 +827,7 @@ Enter the required LDAP password.
 
 	    if (ui == `browse)
 	    {
-		string name = UI::AskForSaveFileName( ".", filterString, "Export to ..." );
+		string name = selectFile (true, filterString, "Export to ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -912,7 +952,7 @@ Certificate password</p>
 	    
 	    if (ret == `browse)
 	    {
-		string name = UI::AskForExistingFile( ".", "*.p12", "Import from ..." );
+		string name = selectFile (false, "*.p12", "Import from ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -1111,7 +1151,7 @@ This certificate might be not practical as a common server certificate.
 	    
 	    if (ret == `browse)
 	    {
-		string name = UI::AskForExistingFile( ".", "*.pem *.der", "Import from ..." );
+		string name = selectFile ( false, "*.pem *.der", "Import from ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -1227,7 +1267,7 @@ This certificate might be not practical as a common server certificate.
 	    
 	    if (ret == `browseCert)
 	    {
-		string name = UI::AskForExistingFile( ".", "*.pem", "Import from ..." );
+		string name = selectFile (false, "*.pem", "Import from ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`pathCert), `Value, name);
@@ -1237,7 +1277,7 @@ This certificate might be not practical as a common server certificate.
 	    
 	    if (ret == `browseKey)
 	    {
-		string name = UI::AskForExistingFile( ".", "*.pem", "Import from ..." );
+ 		string name = selectFile (false, "*.pem", "Import from ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`pathKey), `Value, name);

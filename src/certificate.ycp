@@ -20,8 +20,6 @@
 
 
 {
-    include "ca-management/floppy.ycp";
-    
     define list<string> certificateID = [];
 
     // help text 1/6
@@ -338,7 +336,6 @@
 						  [
 						   `item(`id(`exportFile), _("Export to File") ),
 						   `item(`id(`exportLDAP), _("Export to LDAP") ),
-						   `item(`id(`exportFloppy), _("Export to Floppy") ),
 						   `item(`id(`exportCommon), _("Export as Common Server Certificate") )		       
 						   ]
 						  ),
@@ -428,10 +425,6 @@
 	{
 	    exportCertificateToFile (CaMgm::currentCA, CaMgm::currentCertificate);
 	}
-	if (ui == `exportFloppy)
-	{
-	    exportCertificateToFloppy (CaMgm::currentCA, CaMgm::currentCertificate);
-	}	    
 	if (ui == `exportLDAP)
 	{
 	    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);

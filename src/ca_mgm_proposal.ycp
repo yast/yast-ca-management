@@ -28,7 +28,6 @@
     import "Users";
 	
     include "ca-management/new_cert_read_write.ycp";
-    include "ca-management/floppy.ycp";    
     
     string func  = (string)WFM::Args(0);
     map    param = (map)WFM::Args(1);
@@ -115,13 +114,9 @@
 	{
 	    proposal = HTML::Para(_("Not creating a CA and certificate."));
 	}
-	else if (CaMgm::prop_selection == `floppy)
-	{
-	    proposal = HTML::Para(_("Importing a CA and certificate from floppy."));
-	}
 	else if (CaMgm::prop_selection == `disk)
 	{
-	    proposal = HTML::Para(_("Importing a CA and certificate from disk."));
+	    proposal = HTML::Para(_("Importing a CA and certificate from file."));
 	}	
 	else if (CaMgm::prop_selection == `expert)
 	{
@@ -167,10 +162,6 @@
 	    if (CaMgm::prop_selection == `def)
 	    {
 		success = create_default_CA_certificate();
-	    }
-	    else if (CaMgm::prop_selection == `floppy)
-	    {
-		success = importCertificateFromFloppy ();
 	    }
 	    else if (CaMgm::prop_selection == `disk)
 	    {

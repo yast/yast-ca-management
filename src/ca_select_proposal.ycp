@@ -183,8 +183,6 @@ Here, change these <b>default settings</b>.
 							       ),
 							 `Left(`RadioButton(`id(`none), `opt( `notify),
 									    _("Do &Not Create CA and Certificate"))),
-							 `Left(`RadioButton(`id(`floppy), `opt( `notify),
-									    _("Import CA and Certificate from &Floppy"))),
 							 `Left(`RadioButton(`id(`disk), `opt( `notify),
 									    _("Import CA and Certificate from D&isk"))),
 							 `Left(`RadioButton(`id(`expert), `opt( `notify),
