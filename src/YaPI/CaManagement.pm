@@ -5064,5 +5064,112 @@ sub ReadFile {
     return $ret;
 }
 
+
+=item *
+C<$cert = ReadRequest($valueMap)>
+
+Returns a request as plain text or parsed map.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* request (required - name without suffix)
+
+* type (required - allowed values: "parsed" or "plain") 
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error.
+
+On success and type = plain the plain text view of the Certificate is returned.
+
+If the type is "parsed" a complex structure with the single values is returned.
+
+EXAMPLE:
+
+ use Data::Dumper;
+
+ foreach my $type ("parsed", "plain") {
+     my $data = {
+                 'caName'      => 'My_CA',
+                 'type'        => $type,
+                 'request'     => $certName
+                };
+
+     my $res = YaPI::CaManagement->ReadRequest($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         print Data::Dumper->Dump([$res])."\n";
+     }
+ }
+
+=cut
+
+BEGIN { $TYPEINFO{ReadRequest} = ["function", "any", ["map", "string", "any"]]; }
+sub ReadRequest {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $request = "";
+    my $type   = "";
+    my $ret = undef;
+
+    # checking requires
+    if (! defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{"caName"};
+    
+    if (! defined $data->{"type"} || 
+        !grep( ( $_ eq $data->{"type"}), ("parsed", "plain"))) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'type'."),
+                               code => "PARAM_CHECK_FAILED");
+    }
+    $type = $data->{"type"};
+    
+    if (! defined $data->{"request"} || 
+        $data->{'request'} !~ /^[[:xdigit:]]+$/) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'request'."),
+                               code => "PARAM_CHECK_FAILED");
+    }
+    $request = $data->{"request"};
+
+    my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req");
+    if ($size <= 0) {
+        return $self->SetError(summary => __("Request not found."),
+                               description => "Request '$request.req' not available in '$caName'",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+    my $hash = {
+                INFILE => "$CAM_ROOT/$caName/req/".$request.".req",
+                INFORM => "PEM"
+               };
+    if ($type eq "parsed") {
+        $ret = SCR->Read(".openssl.getParsedREQ", $caName, $hash);
+        if (not defined $ret) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+    } else {
+        $ret = SCR->Read(".openssl.getTXTREQ", $caName, $hash);
+        if (not defined $ret) {
+            return $self->SetError(%{SCR->Error(".openssl")});
+        }
+    }
+    return $ret;
+}
+
 1;
 
