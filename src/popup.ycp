@@ -1,5 +1,5 @@
 /**
- * File:        include/ca_mgm/popup.ycp
+ * File:        include/ca-management/popup.ycp
  * Package:     Configuration of CAs
  * Summary:     Popup definitions
  * Authors:     Stefan Schubert
@@ -8,7 +8,7 @@
  */
 
 {
-    textdomain "ca_mgm";
+    textdomain "ca-management";
 
     import "CaMgm";
     import "Require";

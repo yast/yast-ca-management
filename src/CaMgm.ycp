@@ -13,7 +13,7 @@
 {
 
 module "CaMgm";
-textdomain "ca_mgm";
+textdomain "ca-management";
 
 import "Progress";
 import "Report";

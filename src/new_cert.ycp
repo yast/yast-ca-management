@@ -21,16 +21,16 @@
 
 {
 
-    textdomain "ca_mgm";
+    textdomain "ca-management";
 
     import "CaMgm";
     import "Wizard";
     import "Label";
     import "Popup";
     import "CaManagement";
-    
+
     include "ca-management/util.ycp";
-    
+
     /**
      * Creates EMAIL items
      * @return a list EMAIL items formated for a UI table
@@ -45,7 +45,7 @@
 	});
         return result;
     }
-    
+
     /**
      * Creating new CA/Certificate ( 1. step )
      * @return `next, 'back, 'cancel, 'again
@@ -64,10 +64,10 @@
         helptext = helptext + _("<p><b>Organisation</b>, <b>Organisational Unit</b>, <b>Locality</b> and <b>State</p> are often optional.</p>");
         // help text 6/5
         helptext = helptext + _("<p><b>Country</b> is the ISO signature of a country.</p>");
-	
+
 
         list<term> emailTermList = getEMAILList ();
-	
+
         term buttons = `VBox ();
 	// To translators: pushbutton label
 	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`deleteEmail), `opt (`key_F5), Label::DeleteButton()))));
@@ -84,7 +84,7 @@
                                               _("E-Mail Address(es)")),
                                           emailTermList)));
 	editEmail = add (editEmail, `TextEntry (`id (`id_emailname ), "" ) );
-	
+
         term emails = `HBox ();
         emails = add (emails, `HWeight (3, editEmail));
         emails = add (emails, `HWeight (1, buttons));
@@ -105,7 +105,7 @@
                                 // To translators: dialog label
         Wizard::SetContents (_("Create new Certificate (step 1/3)"), contents, helptext, true, true);
 	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());
-	
+
         symbol ui = nil;
 
         repeat
@@ -132,7 +132,7 @@
 		{
 		    CaMgm::country = "EN";
 		}
-		
+
 		if (ui == `addEmail)
 		{
 		    string selection = (string) UI::QueryWidget(`id(`id_emailname), `Value);
@@ -148,14 +148,14 @@
 			}
 		    }
 		    ui = `again;
-		}	    
+		}
 		if (ui == `deleteEmail)
 		{
 		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		    CaMgm::emailList = remove (CaMgm::emailList, id);		    
+		    CaMgm::emailList = remove (CaMgm::emailList, id);
 
-		    ui = `again;		
-		}		
+		    ui = `again;
+		}
 	    }
         }
         until (contains ([`back, `again, `next, `abort], ui));
@@ -184,10 +184,10 @@
         // help text 5/5
         helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change this options, please take care that SuSE cannot guarentee that the generated certificate will work correctly.</p>");
 
-	
+
         term contents = `VBox ();
         contents = add (contents, `Password( `id (`id_password), _("&Password"), CaMgm::password));
-        contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password"), CaMgm::verifyPassword));	
+        contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password"), CaMgm::verifyPassword));
         contents = add (contents, `Password( `id (`id_caPassword), _("&CA Password"), CaMgm::CAPassword));
 	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 1, 10000, CaMgm::keyLength));
 	contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
@@ -195,7 +195,7 @@
 
                                 // To translators: dialog label
         Wizard::SetContents (_("Create new Certificate (step 2/3)"), contents, helptext, true, true);
-	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());	
+	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());
 
         symbol ui = nil;
 
@@ -221,7 +221,7 @@
 		if (ui == `advancedOptions)
 		{
 
-		}	    		
+		}
 	    }
         }
         until (contains ([`back, `next, `abort, `advancedOptions ], ui));
@@ -256,13 +256,13 @@
 	    }
 	    else
 	    {
-		text = text + "                   " + element + "\n";		
+		text = text + "                   " + element + "\n";
 	    }
 	    i = i + 1;
 	});
 	if (i==0)
 	{
-	    text = text + "\n";		
+	    text = text + "\n";
 	}
 
 	text = text + _("Locality:          ") + CaMgm::locality + "\n";
@@ -277,7 +277,7 @@
 
                                 // To translators: dialog label
         Wizard::SetContents (_("Create new Certificate (step 3/3)"), contents, helptext, true, true);
-	UI::ChangeWidget (`id (`next), `Label, Label::CreateButton());	
+	UI::ChangeWidget (`id (`next), `Label, Label::CreateButton());
 
         symbol ui = nil;
 
@@ -295,6 +295,6 @@
 
         return ui;
     }
-    
+
 
 }

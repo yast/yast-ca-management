@@ -21,17 +21,17 @@
 
 {
 
-    textdomain "ca_mgm";
+    textdomain "ca-management";
 
     import "CaMgm";
     import "Wizard";
     import "Label";
     import "Popup";
     import "CaManagement";
-    
+
     include "ca-management/util.ycp";
-    include "ca-management/new_cert_items.ycp";    
-    
+    include "ca-management/new_cert_items.ycp";
+
     /**
      * Creating new CA/Certificate ( Advanced Settings )
      * @return `next, 'back, 'cancel, 'again
@@ -54,12 +54,12 @@
 								 `Left(`Heading(`id(`heading), `opt(`hstretch), _("Current Selection: "))),
 								 `VSpacing(0.5),
 								 `VBox (
-									`HBox (`HStretch(),								       
+									`HBox (`HStretch(),
 									       `PushButton(`id(`default), `opt(`disabled), _("&Default"))
 									       ),
 									`ReplacePoint(`id(`replace),
 										      `RichText(`id(`id_advanced), advanced_help)),
-									`VStretch()									
+									`VStretch()
 								       )
 								 )
 							   )
@@ -76,9 +76,9 @@
 				      )
 			     )
 		       );
-	
+
 	UI::ChangeWidget (`id( `tree ), `CurrentItem, `advanced);
-	
+
 	symbol ret = `dummy;
 
 	while (ret != `cancel && ret != `abort && ret != `next && ret != `back)
@@ -125,10 +125,10 @@
 		y2milestone ("Selected: %1", selected);
 
 		map item = itemMap[selected]:$[];
-		// header label		  
+		// header label
 		UI::ChangeWidget (`id(`heading), `Value, _("Current Selection: ") + item["name"]:"");
 		UI::ReplaceWidget (`id(`replace), item["widget"]:`Empty() );
-		UI::ChangeWidget (`id (`default), `Enabled, item["default"]:true );		
+		UI::ChangeWidget (`id (`default), `Enabled, item["default"]:true );
 	    }
 	}
 

@@ -1,5 +1,5 @@
 /**
- * File:        include/ca_mgm/wizards.ycp
+ * File:        include/ca-management/wizards.ycp
  * Package:     Configuration of CAs
  * Summary:     Wizards definitions
  * Authors:     Stefan Schubert <schubi@suse.de>
@@ -8,7 +8,7 @@
  */
 
 {
-    textdomain "ca_mgm";
+    textdomain "ca-management";
 
     import "Wizard";
     import "Label";
@@ -18,7 +18,7 @@
     include "ca-management/startup.ycp";
     include "ca-management/new_cert.ycp";
     include "ca-management/util.ycp";
-    include "ca-management/new_cert_advanced.ycp";    
+    include "ca-management/new_cert_advanced.ycp";
 
 /**
  * Main workflow of the CA management configuration
@@ -31,21 +31,21 @@ define symbol MainSequence() ``{
         "new_cert1"   	 : ``(new_cert1 ()),
         "new_cert2"   	 : ``(new_cert2 ()),
         "new_cert3"   	 : ``(new_cert3 ()),
-        "new_cert_advanced"   : ``(new_cert_advanced ()),		
+        "new_cert_advanced"   : ``(new_cert_advanced ()),
         ];
 
     map sequence = $[
         "ws_start"      : "startup",
         "startup"       : $[
                             `next       : `abort,
-			    `createRoot : "new_cert1",                   
+			    `createRoot : "new_cert1",
 //                          `enter      : "ca_main",
                             ],
         "new_cert1"       : $[
                             `next       : "new_cert2",
 			    `again 	: "new_cert1",
 			    `abort	: "startup",
-			    `back	: "startup"			    
+			    `back	: "startup"
                             ],
         "new_cert2"       : $[
                             `next       : "new_cert3",
@@ -56,7 +56,7 @@ define symbol MainSequence() ``{
         "new_cert3"       : $[
                             `next       : "startup",
 			    `abort	: "startup",
-			    `back	: "new_cert2"			    
+			    `back	: "new_cert2"
                             ],
         ];
 
@@ -64,7 +64,7 @@ define symbol MainSequence() ``{
     symbol ret = WizardSequencer(aliases, sequence);
 
     UI::CloseDialog();
-    
+
     return ret;
 }
 

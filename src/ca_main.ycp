@@ -21,7 +21,7 @@
 
 {
 
-    textdomain "ca_mgm";
+    textdomain "ca-management";
 
     import "CaMgm";
     import "Wizard";

@@ -1,4 +1,4 @@
-# Makefile.am for source/ca_management/src
+# Makefile.am for source/ca-management/src
 
 myincludedir = @yncludedir@/ca-management
 
@@ -26,11 +26,11 @@ EXTRA_DIST =		\
         $(desktop_DATA)	\
 	$(myinclude_DATA)
 
-ca_mgm:
-	ln -sf . ca_mgm
+ca-management:
+	ln -sf . ca-management
 
-ycpchook = ca_mgm
+ycpchook = ca-management
 
-YCPCFLAGS=-I.
+YCPCFLAGS =
 
 include $(top_srcdir)/Makefile.am.common
