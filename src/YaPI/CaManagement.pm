@@ -3197,6 +3197,7 @@ sub ExportCRLToLDAP {
                                               "attrs" => [ "certificateRevocationList" ],
                                              });
         if (! defined $attr) {
+	    my $ldapERR = SCR->Read(".ldap.error");
             return $self->SetError(summary => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                    code => "LDAP_SEARCH_FAILED");
         }
