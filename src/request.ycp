@@ -65,8 +65,8 @@
                             ],
         "req_sign2"         : $[
 			    `abort		: `abort,
-                            `next       	: "req_sign2",
-			    `again 		: "req_sign1",
+                            `next       	: `abort,
+			    `again 		: "req_sign2",
 			    `back		: "req_sign1",
 			    `edit	 	: "req_advanced",
 	                    ],

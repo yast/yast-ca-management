@@ -99,6 +99,27 @@
     define boolean	sav_exp_cri_extendedKeyUsage = false;
     define string	sav_exp_extendedKeyUsage = "";
 
+
+    /**
+      * Resetting accept checkbox for the request extentions
+      * Especially used for signing a request
+      * @param request extention
+      */    
+    define void resetAcceptRequestExtention (string extention) ``{
+	if (contains (CaMgm::slectedRequestExtention, extention))
+	{
+	    list<string> dummy = [];
+	    foreach ( string entry, CaMgm::slectedRequestExtention, ``{
+		if (entry != extention)
+		{
+		    dummy = add (dummy, entry);
+		}
+	    });
+	    CaMgm::slectedRequestExtention = dummy;
+	}
+    }
+	    
+
     /**
       * saving default parameter
       * @return `next
@@ -226,7 +247,7 @@
 	}	
 	CaMgm::adv_pathlen = (boolean) UI::QueryWidget(`id(`id_adv_pathlen), `Value);
 	CaMgm::adv_pathlenValue = (integer) UI::QueryWidget(`id(`id_adv_pathlenValue), `Value);
-	
+
 	return error;
     }
     define void default_advanced_basic_constaints() ``{
@@ -236,6 +257,7 @@
 	CaMgm::adv_ca = sav_adv_ca;
 	CaMgm::adv_pathlen = sav_adv_pathlen;
 	CaMgm::adv_pathlenValue = sav_adv_pathlenValue;
+	resetAcceptRequestExtention("X509v3 Basic Constraints");	
     }
 
     
@@ -492,8 +514,8 @@
 	CaMgm::adv_encipherOnly = (boolean) UI::QueryWidget(`id(`encipherOnly), `Value);	
 	CaMgm::adv_keyAgreement = (boolean) UI::QueryWidget(`id(`keyAgreement), `Value);	
 	CaMgm::adv_keyCertSign = (boolean) UI::QueryWidget(`id(`keyCertSign), `Value);	
-	CaMgm::adv_decipherOnly = (boolean) UI::QueryWidget(`id(`decipherOnly), `Value);	
-	
+	CaMgm::adv_decipherOnly = (boolean) UI::QueryWidget(`id(`decipherOnly), `Value);
+
 	return error;
     }
     define void default_advanced_key_usage() ``{
@@ -509,6 +531,7 @@
 	CaMgm::adv_keyAgreement = sav_adv_keyAgreement;
 	CaMgm::adv_keyCertSign = sav_adv_keyCertSign;
 	CaMgm::adv_decipherOnly = sav_adv_decipherOnly;
+	resetAcceptRequestExtention("X509v3 Key Usage");		
     }    
 
     
@@ -523,8 +546,8 @@
 	string error = "";
 
 	CaMgm::adv_cri_nsComment = (boolean) UI::QueryWidget(`id(`id_adv_cri_nsComment), `Value);
-	CaMgm::adv_nsComment = (string) UI::QueryWidget(`id(`id_adv_nsComment), `Value);		
-	
+	CaMgm::adv_nsComment = (string) UI::QueryWidget(`id(`id_adv_nsComment), `Value);
+
 	return error;
     }	
     define void default_advanced_netscape_nsComment() ``{
@@ -532,6 +555,7 @@
 
 	CaMgm::adv_cri_nsComment = sav_adv_cri_nsComment;
 	CaMgm::adv_nsComment = sav_adv_nsComment;
+	resetAcceptRequestExtention("Netscape Comment");		
     }
     
     
@@ -576,6 +600,8 @@
 	CaMgm::adv_emailCA = sav_adv_emailCA;
 	CaMgm::adv_objsign = sav_adv_objsign;
 	CaMgm::adv_objCA = sav_adv_objCA;
+
+	resetAcceptRequestExtention("Netscape Cert Type");	
     }
 
     
@@ -631,6 +657,7 @@
 
 	CaMgm::adv_cri_subject_alt_name = sav_adv_cri_subject_alt_name;
 	CaMgm::adv_copy_subject_alt_name = sav_adv_copy_subject_alt_name;
+	resetAcceptRequestExtention("X509v3 Subject Alternative Name");	
     }
     
 
@@ -818,8 +845,8 @@
 	CaMgm::exp_cri_subjectKeyIdentifier = (boolean) UI::QueryWidget(`id(`id_exp_cri_subjectKeyIdentifier), `Value);
 	CaMgm::exp_subjectKeyIdentifier = (string) UI::QueryWidget(`id(`id_exp_subjectKeyIdentifier), `Value);		
 	CaMgm::exp_cri_authorityKeyIdentifier = (boolean) UI::QueryWidget(`id(`id_exp_cri_authorityKeyIdentifier), `Value);
-	CaMgm::exp_authorityKeyIdentifier = (string) UI::QueryWidget(`id(`id_exp_authorityKeyIdentifier), `Value);		
-	
+	CaMgm::exp_authorityKeyIdentifier = (string) UI::QueryWidget(`id(`id_exp_authorityKeyIdentifier), `Value);
+
 	return error;
     }
     define void default_expert_key_identifier() ``{
@@ -829,6 +856,8 @@
 	CaMgm::exp_subjectKeyIdentifier = sav_exp_subjectKeyIdentifier;
 	CaMgm::exp_cri_authorityKeyIdentifier = sav_exp_cri_authorityKeyIdentifier;
 	CaMgm::exp_authorityKeyIdentifier = sav_exp_authorityKeyIdentifier;
+	resetAcceptRequestExtention("X509v3 Subject Key Identifier");
+	resetAcceptRequestExtention("Authority Information Access");
     }	    
 
     
@@ -981,8 +1010,8 @@
 	string error = "";
 
 	CaMgm::exp_cri_extendedKeyUsage = (boolean) UI::QueryWidget(`id(`id_exp_cri_extendedKeyUsage), `Value);
-	CaMgm::exp_extendedKeyUsage = (string) UI::QueryWidget(`id(`id_exp_extendedKeyUsage), `Value);		
-	
+	CaMgm::exp_extendedKeyUsage = (string) UI::QueryWidget(`id(`id_exp_extendedKeyUsage), `Value);
+
 	return error;
     }
     define void default_expert_extendedKeyUsage() ``{
@@ -990,6 +1019,7 @@
 
 	CaMgm::exp_cri_extendedKeyUsage = sav_exp_cri_extendedKeyUsage;
 	CaMgm::exp_extendedKeyUsage = sav_exp_extendedKeyUsage;
+	resetAcceptRequestExtention("X509v3 Extended Key Usage");		
     }    
 
     
