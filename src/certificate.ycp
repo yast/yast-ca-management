@@ -21,6 +21,11 @@
 
 {
     textdomain "ca-management";
+
+    import "Wizard";
+    import "Label";
+    import "Popup";    
+    import "YaPI::CaManagement";
     
     define list<string> certificateID = [];
 
@@ -216,13 +221,12 @@
      * @return a string with the certification description  
      */      
     define string getCertDescription (map certMap) ``{
-	string text = _("\n<b>Description</b>");
+	string text = _("<p><b>Description</b></p>");
         if (certMap == nil)
         {
             showErrorCaManagement ();
             return _("\nCertificate not found");
         }
-	text = text + "<br>";
 	text = text + "<pre>";
 	text = text + "Fingerprint:        " + certMap["FINGERPRINT"]:"";
 	map dn = certMap["DN_HASH"]:$[];
@@ -329,9 +333,9 @@
 						    `item(`id(`addClientCerti), _("Add Client Certificate") )
 						    ]
 						   ),
-				      `PushButton (`id (`view) , _("View")),
-				      `PushButton (`id (`revoke) , _("Revoke")),
-				      `PushButton (`id (`delete) , _("Delete")),
+				      `PushButton (`id (`view) , _("&View")),
+				      `PushButton (`id (`revoke) , _("&Revoke")),
+				      `PushButton (`id (`delete) , _("&Delete")),
 				      `HStretch(),
 				      `MenuButton(`id(`export),
 						  _("Export"),
