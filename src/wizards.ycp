@@ -186,6 +186,7 @@ define symbol MainSequence() ``{
         "crl_main"	    : $[
 				`back 		: "ca_main",
 				`abort		: "startup",
+				`again		: "crl_main",
                             ],	
         "certificate"	    : $[
 				`back 		: "ca_main",
