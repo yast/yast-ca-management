@@ -128,57 +128,155 @@
 	
 	return error;
     }
+
+    define term issuer_box = `HBox( `VSpacing(10),
+				     `VBox (
+					    `HSpacing(10),
+					    `RadioButtonGroup(`id(`rb), 
+							      `HBox(
+								    `RadioButton(`id("EMAIL"), `opt(`notify), "EMAIL", true),
+								    `RadioButton(`id("URI"), `opt(`notify), "URI"),
+								    `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
+								    `RadioButton(`id("IP"), `opt(`notify), "IP"),
+								    `RadioButton(`id("RID"), `opt(`notify), "RID")
+								    )
+							      ),
+					    `TextEntry(`id(`name), "Name:"),
+					    // push button label
+					    `HBox(`PushButton (`id(`candel), `opt(`default, `key_F9), Label::CancelButton()),
+						  `HStretch(),
+						  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+						  ),
+					    `HSpacing(10)
+					    ),
+				     `VSpacing(10)
+				     );
+    
     define void add_advanced_issuer_alt_name() ``{
 	y2milestone("Calling add_advanced_issuer_alt_name");
 	
 	UI::OpenDialog (`opt(`decorated ),
-			`HBox( `VSpacing(10),
-			       `VBox (
-				      `HSpacing(10),
-				      `RadioButtonGroup(`id(`rb), 
-							`HBox(
-							      `RadioButton(`id("EMAIL"), `opt(`notify), "EMAIL", true),
-							      `RadioButton(`id("URI"), `opt(`notify), "URI"),
-							      `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
-							      `RadioButton(`id("IP"), `opt(`notify), "IP"),
-							      `RadioButton(`id("RID"), `opt(`notify), "RID")
-							      )
-							),
-				      `TextEntry(`id(`name), "Name:"),
-				      // push button label
-				      `HBox(`PushButton (`id(`candel), `opt(`default, `key_F9), Label::CancelButton()),
-					    `HStretch(),
-					    `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
-					    ),
-				      `HSpacing(10)
-				      ),
-			       `VSpacing(10)
-			       )
+			issuer_box
 			);
-
 	UI::SetFocus (`id(`ok));
 	while (true)
 	{
 	    any ret = UI::UserInput();
 	    if (ret == `ok)
 	    {
-//		integer current = (integer) UI::QueryWidget(`id(`rb), `CurrentButton);
-//		current = (current + 1) % 4;
-//		UI::ChangeWidget(`id(`rb), `CurrentButton, current);
+		map new_entry = $[];
+		new_entry["kind"] = (string) UI::QueryWidget(`id(`rb), `CurrentButton);
+		new_entry["name"] = (string) UI::QueryWidget(`id(`name), `Value);
+		CaMgm::adv_issuer_alt_name_list	= add (CaMgm::adv_issuer_alt_name_list, new_entry);
 		break;
 	    }
 	    else if (ret == `cancel)
 	    {
+		break;
 	    }
 	}
 	
 	UI::CloseDialog ();
+	// restoring table
+	get_advanced_issuer_alt_name();
     }
     define void delete_advanced_issuer_alt_name() ``{
 	y2milestone("Calling delete_advanced_issuer_alt_name");
+	
+	integer current_item  = (integer)UI::QueryWidget(`id(`id_adv_issuer_alt_name), `CurrentItem);
+	term table_item = (term) UI::QueryWidget(`id(`id_adv_issuer_alt_name), `Item(current_item));
+
+	if (table_item == nil)
+	{
+	    Popup::Error (_("No item has been selected."));
+	    return;
+	}
+
+	string current_kind = (string) select(table_item, 1, "");
+	string current_name = (string) select(table_item, 2, "");
+	
+        if (Popup::YesNoHeadline (
+                // To translators: ContinueCancel Popup headline
+                _("Delete"),
+                // To translators: ContinueCancel Popup
+                _("Really delete this entry ?")))
+        {
+	    map new_entry = $[];
+	    list<map> dummy_map = [];
+
+	    //finding entry in list
+	    foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+		if (element["kind"]:"" != current_kind
+		    || element["name"]:"" != current_name )
+		{
+		    dummy_map = add (dummy_map, element);
+		}
+	    });
+		
+	    CaMgm::adv_issuer_alt_name_list	= dummy_map;
+	}
+
+	// restoring table
+	get_advanced_issuer_alt_name();		
     }
     define void modify_advanced_issuer_alt_name() ``{
 	y2milestone("Calling modify_advanced_issuer_alt_name");
+	
+	integer current_item  = (integer)UI::QueryWidget(`id(`id_adv_issuer_alt_name), `CurrentItem);
+	term table_item = (term) UI::QueryWidget(`id(`id_adv_issuer_alt_name), `Item(current_item));
+
+	if (table_item == nil)
+	{
+	    Popup::Error (_("No item has been selected."));
+	    return;
+	}
+
+	string current_kind = (string) select(table_item, 1, "");
+	string current_name = (string) select(table_item, 2, "");
+	
+	UI::OpenDialog (`opt(`decorated ),
+			issuer_box
+			);
+
+	UI::ChangeWidget(`id(`name), `Value, current_name);
+	UI::ChangeWidget(`id(`rb), `CurrentButton, current_kind);
+	
+	UI::SetFocus (`id(`ok));
+	while (true)
+	{
+	    any ret = UI::UserInput();
+	    if (ret == `ok)
+	    {
+		map new_entry = $[];
+		list<map> dummy_map = [];
+		new_entry["kind"] = (string) UI::QueryWidget(`id(`rb), `CurrentButton);
+		new_entry["name"] = (string) UI::QueryWidget(`id(`name), `Value);
+
+		//finding entry in list
+		foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+		    if (element["kind"]:"" == current_kind
+			&& element["name"]:"" == current_name )
+		    {
+			dummy_map = add (dummy_map, new_entry);
+		    }
+		    else
+		    {
+			dummy_map = add (dummy_map, element);
+		    }
+		});
+		
+		CaMgm::adv_issuer_alt_name_list	= dummy_map;
+		break;
+	    }
+	    else if (ret == `cancel)
+	    {
+		break;
+	    }
+	}
+	
+	UI::CloseDialog ();
+	// restoring table
+	get_advanced_issuer_alt_name();	
     }
     
 
@@ -304,14 +402,154 @@
 	
 	return error;
     }
+
+    define term subject_box = `HBox( `VSpacing(10),
+				     `VBox (
+					    `HSpacing(10),
+					    `RadioButtonGroup(`id(`rb), 
+							      `HBox(
+								    `RadioButton(`id("URI"), `opt(`notify), "URI"),
+								    `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
+								    `RadioButton(`id("IP"), `opt(`notify), "IP"),
+								    `RadioButton(`id("RID"), `opt(`notify), "RID")
+								    )
+							      ),
+					    `TextEntry(`id(`name), "Name:"),
+					    // push button label
+					    `HBox(`PushButton (`id(`candel), `opt(`default, `key_F9), Label::CancelButton()),
+						  `HStretch(),
+						  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+						  ),
+					    `HSpacing(10)
+					    ),
+				     `VSpacing(10)
+				     );
+    
     define void add_advanced_subject_alt_name() ``{
 	y2milestone("Calling add_advanced_subject_alt_name");
+	
+	UI::OpenDialog (`opt(`decorated ),
+			subject_box
+			);
+	UI::SetFocus (`id(`ok));
+	while (true)
+	{
+	    any ret = UI::UserInput();
+	    if (ret == `ok)
+	    {
+		map new_entry = $[];
+		new_entry["kind"] = (string) UI::QueryWidget(`id(`rb), `CurrentButton);
+		new_entry["name"] = (string) UI::QueryWidget(`id(`name), `Value);
+		CaMgm::adv_subject_alt_name_list	= add (CaMgm::adv_subject_alt_name_list, new_entry);
+		break;
+	    }
+	    else if (ret == `cancel)
+	    {
+		break;
+	    }
+	}
+	
+	UI::CloseDialog ();
+	// restoring table
+	get_advanced_subject_alt_name();	
     }
     define void delete_advanced_subject_alt_name() ``{
 	y2milestone("Calling delete_advanced_subject_alt_name");
+	
+	integer current_item  = (integer)UI::QueryWidget(`id(`id_adv_subject_alt_name), `CurrentItem);
+	term table_item = (term) UI::QueryWidget(`id(`id_adv_subject_alt_name), `Item(current_item));
+
+	if (table_item == nil)
+	{
+	    Popup::Error (_("No item has been selected."));
+	    return;
+	}
+
+	string current_kind = (string) select(table_item, 1, "");
+	string current_name = (string) select(table_item, 2, "");
+	
+        if (Popup::YesNoHeadline (
+                // To translators: ContinueCancel Popup headline
+                _("Delete"),
+                // To translators: ContinueCancel Popup
+                _("Really delete this entry ?")))
+        {
+	    map new_entry = $[];
+	    list<map> dummy_map = [];
+
+	    //finding entry in list
+	    foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
+		if (element["kind"]:"" != current_kind
+		    || element["name"]:"" != current_name )
+		{
+		    dummy_map = add (dummy_map, element);
+		}
+	    });
+		
+	    CaMgm::adv_subject_alt_name_list	= dummy_map;
+	}
+
+	// restoring table
+	get_advanced_subject_alt_name();			
     }
     define void modify_advanced_subject_alt_name() ``{
 	y2milestone("Calling modify_advanced_subject_alt_name");
+
+	integer current_item  = (integer)UI::QueryWidget(`id(`id_adv_subject_alt_name), `CurrentItem);
+	term table_item = (term) UI::QueryWidget(`id(`id_adv_subject_alt_name), `Item(current_item));
+
+	if (table_item == nil)
+	{
+	    Popup::Error (_("No item has been selected."));
+	    return;
+	}
+
+	string current_kind = (string) select(table_item, 1, "");
+	string current_name = (string) select(table_item, 2, "");
+	
+	UI::OpenDialog (`opt(`decorated ),
+			subject_box
+			);
+
+	UI::ChangeWidget(`id(`name), `Value, current_name);
+	UI::ChangeWidget(`id(`rb), `CurrentButton, current_kind);
+	
+	UI::SetFocus (`id(`ok));
+	while (true)
+	{
+	    any ret = UI::UserInput();
+	    if (ret == `ok)
+	    {
+		map new_entry = $[];
+		list<map> dummy_map = [];
+		new_entry["kind"] = (string) UI::QueryWidget(`id(`rb), `CurrentButton);
+		new_entry["name"] = (string) UI::QueryWidget(`id(`name), `Value);
+
+		//finding entry in list
+		foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
+		    if (element["kind"]:"" == current_kind
+			&& element["name"]:"" == current_name )
+		    {
+			dummy_map = add (dummy_map, new_entry);
+		    }
+		    else
+		    {
+			dummy_map = add (dummy_map, element);
+		    }
+		});
+		
+		CaMgm::adv_subject_alt_name_list = dummy_map;
+		break;
+	    }
+	    else if (ret == `cancel)
+	    {
+		break;
+	    }
+	}
+	
+	UI::CloseDialog ();
+	// restoring table
+	get_advanced_subject_alt_name();		
     }
 
     
