@@ -185,8 +185,7 @@
 					      `VSpacing (1),
 					      // popup window header
 					      `Heading (_("LDAP Initialization")),
-					      `Label(_("LDAP has to initialize for the CA-Management")),
-					      `Label(_("Please give the concerning LDAP password.")),
+					      `Label(_("LDAP has to initialize for the CA-Management.\nPlease give the concerning LDAP password.")),
 					      `VSpacing (1),
 					      `Password(  `id (`password), _("P&assword:")),
  					      `VSpacing (1),					  
@@ -244,10 +243,10 @@
 				      // popup window header
 				      `Heading (_("Export To LDAP")),
 				      `VSpacing (1),
-				      `TextEntry( `id (`hostname), _("&Hostname:")),
-				      `TextEntry( `id (`port), _("&Port:")),
-				      `TextEntry( `id (`dn), _("&DN:")),
-				      `TextEntry( `id (`binddn), _("&Bind DN:")),
+				      `TextEntry( `id (`hostname), _("&Hostname:"), hostname),
+				      `TextEntry( `id (`port), _("&Port:"), port),
+				      `TextEntry( `id (`dn), _("&DN:"), dn),
+				      `TextEntry( `id (`binddn), _("&Bind DN:"), binddn),
 				      `Password(  `id (`password), _("P&assword:")),
 				      `VSpacing (1),					  
 				      `HBox (  // push button label
@@ -466,6 +465,105 @@
 	until (contains ([`ok, `cancel], ui));
 	UI::CloseDialog ();
     }        
-    
+
+    /**
+     * Dialog for exporting CRL to file
+     * @param CAname
+     * @return true ( success )
+     */
+    define void exportCRLtoFile (string CAname) ``{
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      // popup window header
+				      `Heading (_("Export CRL to File")),
+				      `VSpacing (1),
+				      `Frame ( _("Export Format"),
+					       `RadioButtonGroup(`id(`rb), 
+								 `VBox(
+								       `Left(`RadioButton(`id(`PEM), `opt(`notify),
+											  _("&PEM format"), true)),
+								       `Left(`RadioButton(`id(`DER), `opt(`notify),
+											  _("&DER format" )))
+								       )
+								 )
+					       ),
+				      `HBox ( 
+					     `HWeight(1, `TextEntry( `id (`filename), _("&Filename:"))),
+					     `VBox(
+						   `Label(""),
+						   `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
+						   )
+					     ),				      
+				      `VSpacing (1),					  
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),
+				      `VSpacing (1)					  
+				      ),
+			       `HSpacing (2)
+			       )
+			);
+
+	symbol ui = nil;
+	repeat
+ 	{
+	    ui = (symbol) UI::UserInput ();
+
+	    map<symbol,string> kindmap = $[`PEM:"PEM",
+					   `DER:"DER" ];
+	    
+            string kind =  kindmap[(symbol) UI::QueryWidget(`id(`rb),
+						   `CurrentButton)]:"";
+
+	    if (ui == `browse)
+	    {
+		string name = UI::AskForSaveFileName( "/tmp", "*", "Export to ..." );
+		if ( name != nil )
+		{
+		    UI::ChangeWidget(`id(`filename), `Value, name);
+		}
+	    }
+		
+	    if (ui == `ok)
+	    {
+		// export to file
+
+		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
+		if (size (filename) == 0)
+		{
+		    Popup::Error(_("Filename required"));
+		    ui = `again;
+		}
+		else
+		{
+		    string ret = nil;
+		    ret = (string) YaPI::CaManagement::ExportCRL ($["caName": CAname,
+								   "exportFormat" : kind,
+								   "destinationFile" : filename
+								 ]);
+		    
+		    y2milestone ("ExportCRL(%1) return %2", $["caName": CAname,
+							     "exportFormat" : kind,
+							     "destinationFile" : filename
+				 ], ret);
+		    if (ret == nil
+			|| ret != "1")
+		    {
+			showErrorCaManagement ();
+		    }
+		    else
+		    {
+			Popup::Message(_("CRL saved to file."));
+		    }
+		}
+	    }
+	}
+	until (contains ([`ok, `cancel], ui));
+	UI::CloseDialog ();
+    }        
 
 }

@@ -164,7 +164,7 @@
 	    }
 	    if (ui == `exportFile)
 	    {
-//		exportToFile ("CRL"); FIXME
+		exportCRLtoFile (CaMgm::currentCA); 
 	    }	    
         }
         until (contains ([`back, `abort, `createSubCA, `again], ui));
