@@ -3,6 +3,7 @@
 package ag_ca_tools;
 use YaST::SCRAgent;
 use ycp;
+use MIME::Base64;
 our @ISA = ("YaST::SCRAgent");
 
 my $CAM_ROOT = "/var/lib/YaST2/CAM/";
@@ -17,7 +18,7 @@ sub Read {
         if (opendir(CAMDIR, "$CAM_ROOT")) {
             foreach my $d (readdir(CAMDIR)) {
                 if ($d !~ /^\./) {
-                    if (-d "$CAM_ROOT/$d" && -e "$CAM_ROOT/$d/openssl.cnf") {
+                    if (-d "$CAM_ROOT/$d" && -e "$CAM_ROOT/$d/openssl.cnf.tmpl") {
                         push @av_ca, $d;
                     }
                 }
@@ -50,6 +51,85 @@ sub Read {
         } else {
             return $ret;
         }
+    } elsif($path eq ".certificateList") {
+        my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
+                                                      code => "PARAM_CHECK_FAILED");
+        my @ret = ();
+
+        if (opendir(CERTDIR, "$CAM_ROOT/$caName/newcerts/")) {
+            foreach my $d (readdir(CERTDIR)) {
+                if ($d !~ /^\./ && -e "$CAM_ROOT/$caName/newcerts/$d") {
+                    $d =~ /^([[:xdigit:]]+):([A-Za-z0-9\/=+]+)\.pem$/;
+                    if(!defined $1 || !defined $2) {
+                        y2warning("unknown filename $d");
+                        next;
+                    }
+                    my $serial = $1;
+                    my $b64 = $2;
+                    my $certLine = {};
+                    $certLine->{'serial'} = $serial;
+                    $certLine->{'certificate'} = "$serial:$b64";
+                    my $subject = decode_base64($b64);
+
+#                    my @rdns = split(/\//, $subject);
+
+#                    for(my $x = 0; $x < scalar @rdns ; $x++) {
+#                        if($rdns[$x] =~ /\\$/) {
+#                            # split was wrong
+#                            my $dummy = $rdns[$x];
+#                            $dummy =~ s/\\$/\//;
+#                            $dummy .= splice(@rdns, $x +1 , 1);
+#                            $rdns[$x] = $dummy;
+#                        }
+#                    }
+                    while( $subject =~ /(.*?[^\\])\//g ) {
+                        my $dummy = $1;
+                        $dummy =~ s/^\///;
+                        $dummy =~ s/\\\//\//;
+                        
+                        push( @rdns, $dummy );
+                    }
+
+                    foreach my $rdn (@rdns) {
+                        if($rdn =~ /^C=(.*)$/ && defined $1 && $1 ne "") {
+                            $certLine->{'country'} = $1;
+                        } elsif($rdn =~ /^ST=(.*)$/ && defined $1 && $1 ne "") {
+                            $certLine->{'stateOrProvinceName'} = $1;
+                        } elsif($rdn =~ /^L=(.*)$/ && defined $1 && $1 ne "") {
+                            $certLine->{'localityName'} = $1;
+                        } elsif($rdn =~ /^O=(.*)$/ && defined $1 && $1 ne "") {
+                            $certLine->{'organizationName'} = $1;
+                        } elsif($rdn =~ /^OU=(.*)$/ && defined $1 && $1 ne "") {
+                            $certLine->{'organizationalUnitName'} = $1;
+                        } elsif($rdn =~ /^CN=(.*)$/ && defined $1 && $1 ne "") {
+                            $certLine->{'commonName'} = $1;
+                        } elsif($rdn =~ /^emailAddress=(.*)$/ && defined $1 && $1 ne "") {
+                            $certLine->{'emailAddress'} = $1;
+                        }
+                    }
+                    $stat = $class->status($caName, $certLine->{'certificate'});
+                    if(not defined $stat) {
+                        return undef;
+                    }
+                    $certLine->{'status'} = $stat;
+                    push @ret, $certLine;
+                }
+            }
+            closedir(CERTDIR);
+            return \@ret;
+        } else {
+            return $class->SetError( code    => "Opendir_Failed",
+                                     summary => "Can not read directory '$CAM_ROOT' '$!'");
+        }
+    } elsif($path eq ".status") {
+        my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
+                                                      code => "PARAM_CHECK_FAILED");
+        my $certificate = shift || return $class->SetError(summary =>"Parameter 'certificate' missing",
+                                                           code => "PARAM_CHECK_FAILED");
+        return $class->status($caName, $certificate);
+    } else {
+        return $class->SetError(summary => "Wrong path '$path' ",
+                                code => "SCR_WRONG_PATH");
     }
     return 1;
 }
@@ -194,6 +274,46 @@ sub createCaInf {
 
     return 1;
 }
+
+sub status {
+    my $class       = shift || return undef;
+    my $caName      = shift || return $class->SetError(summary =>"Missing Parameter 'caName'",
+                                                       code => "PARAM_CHECK_FAILED");
+    my $certificate = shift || return $class->SetError(summary =>"Missing Parameter 'certificate'",
+                                                       code => "PARAM_CHECK_FAILED");;
+    my $serial = "";
+
+    $certificate =~ /^([[:xdigit:]]+):[A-Za-z0-9\/=+]+$/;
+    if(!defined $1) {
+        return $class->SetError(summary=>"Unknown certificate name '$certificate'",
+                                code=>"PARAM_CHECK_FAILED");
+    }
+    $serial = $1;
+
+    my $command = "/usr/bin/openssl ca ";
+    $command .= "-config $CAM_ROOT/$caName/openssl.cnf.tmpl ";
+    $command .= "-status $serial";
+    if (not open( FD, "$command 2>&1|" )) {
+        return $class->SetError(summary => "Cannot open pipe to OpenSSL.",
+                                code => "OPEN_FAILED");
+    }
+    my @ret = <FD>;
+    close(FD);
+    my $err = "";
+    foreach my $line (@ret) {
+        next if($line =~ /^Using configuration from/);
+        if($line =~ /^$serial=(\w+)\s+.*$/) {
+            return $1;
+        } else {
+            $err .= $l;
+            y2error("status:".$l);
+        }
+    }
+    return $class->SetError(summary => "Error at Read status",
+                            description => $err,
+                            code => "SCR_READ_FAILED");
+}
+
 
 package main;
 ag_ca_tools->Run;
