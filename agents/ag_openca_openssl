@@ -152,6 +152,15 @@ sub Execute {
                                     code => "SCR_EXECUTE_FAILED");
         }
         return 1;
+    } elsif($path eq ".dataConvert") {
+        my $hash = shift;
+        my $ret = $openssl->dataConvert(%{$hash});
+        if($openssl->errno() != 0) {
+            return $class->SetError(summary => "OpenCA::OpenSSL::dataConvert failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
     } else {
         return $class->SetError(summary => "Wrong path '$path' ",
                                 code => "SCR_WRONG_PATH");
