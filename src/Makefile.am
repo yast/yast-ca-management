@@ -19,6 +19,7 @@ myinclude_DATA =		\
 	certificate.ycp		\
 	default.ycp		\
 	floppy.ycp		\
+	dialog-ca.ycp		\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	

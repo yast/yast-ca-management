@@ -20,84 +20,10 @@
     include "ca-management/util.ycp";
     include "ca-management/new_cert_advanced.ycp";
     include "ca-management/ca.ycp";
-    include "ca-management/crl.ycp";
+    include "ca-management/dialog-ca.ycp";
     include "ca-management/default.ycp";        
-    include "ca-management/certificate.ycp";
 
-
-    define  map defaultSequence = $[
-        "ws_start"	    : "new_default1",
-        "new_default1"      : $[
-                            `next       	: "new_default2",
-			    `again 		: "new_default1",
-			    `abort		: `abort,
-                            ],
-        "new_default2"      : $[
-                            `next       	: "new_default3",
-			    `again 		: "new_default2",
-			    `abort		: `abort,
-			    `back		: "new_default1"
-	                    ],
-        "new_default3"      : $[
-                            `next       	: `abort,
-			    `abort		: `abort,
-			    `back		: "new_default2"
-                            ]
-    ];
-
-   /**
-    * Editing certificate defaults
-    * @return sequence result
-    */
-    define symbol editDefaultSequence() ``{
-
-	map aliases = $[
-			"new_default1"  	: ``(edit_default1 ()),
-			"new_default2"   	: ``(new_cert_advanced (true)),
-			"new_default3"   	: ``(edit_default2 ())
-			];
-
-	Wizard::CreateDialog();
-	Wizard::SetDesktopIcon("ca-management");
-	symbol ret = WizardSequencer(aliases, defaultSequence);
-
-	UI::CloseDialog();
-
-	return ret;
-    }
     
-    
-    define  map certificateSequence = $[
-	"ws_start"	    : "new_certinit",
-        "new_certinit"      : $[
-                            `next       	: "new_certSaveDef",
-			    `abort		: `abort,
-                            ],
-        "new_certSaveDef"   : $[
-                            `next       	: "new_cert1",
-			    `abort		: `abort
-                            ],		
-        "new_cert1"         : $[
-                            `next       	: "new_cert2",
-			    `again 		: "new_cert1",
-			    `abort		: `abort,
-                            ],
-        "new_cert2"         : $[
-                            `next       	: "new_cert3",
-			    `abort		: `abort,
-			    `back		: "new_cert1",
-			    `advancedOptions 	: "new_cert_advanced",
-	                    ],
-        "new_cert3"         : $[
-                            `next       	: `abort,
-			    `abort		: `abort,
-			    `back		: "new_cert2"
-                            ],
-        "new_cert_advanced"  : $[
-			    `abort		: `abort,
-			    `back		: "new_cert3"
-	                    ],	
-    ];
     
 /**
  * Creating new Root CA sequence
@@ -116,84 +42,13 @@ define symbol newCASequence() ``{
 
     Wizard::CreateDialog();
     Wizard::SetDesktopIcon("ca-management");
-    symbol ret = WizardSequencer(aliases, certificateSequence);
+    symbol ret = WizardSequencer(aliases, CaMgm::certificateSequence);
 
     UI::CloseDialog();
 
     return ret;
 }
 
-/**
- * Creating new Server Certificate sequence
- * @return sequence result
- */
-define symbol newServerCertificateSequence() ``{
-
-    map aliases = $[
-        "new_certinit"   	: ``(new_cert_init ("Server Certificate")),
-        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
-        "new_cert1"  	 	: ``(new_cert1 ("Server Certificate")),
-        "new_cert2"   		: ``(new_cert2 ("Server Certificate")),
-        "new_cert3"   		: ``(new_cert3 ("Server Certificate")),
-        "new_cert_advanced"   	: ``(new_cert_advanced (false)),
-    ];
-
-    Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca-management");
-    symbol ret = WizardSequencer(aliases, certificateSequence);
-
-    UI::CloseDialog();
-
-    return ret;
-}
-
-/**
- * Creating new Client Certificate sequence
- * @return sequence result
- */
-define symbol newClientCertificateSequence() ``{
-
-    map aliases = $[
-        "new_certinit"   	: ``(new_cert_init ("Client Certificate")),
-        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
-        "new_cert1"  	 	: ``(new_cert1 ("Client Certificate")),
-        "new_cert2"   		: ``(new_cert2 ("Client Certificate")),
-        "new_cert3"   		: ``(new_cert3 ("Client Certificate")),
-        "new_cert_advanced"   	: ``(new_cert_advanced (false)),
-    ];
-
-    Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca-management");
-    symbol ret = WizardSequencer(aliases, certificateSequence);
-
-    UI::CloseDialog();
-
-    return ret;
-}
-
-/**
- * Creating new Client Certificate sequence
- * @return sequence result
- */
-define symbol newSubCASequence() ``{
-
-    map aliases = $[
-        "new_certinit"   	: ``(new_cert_init ("Sub CA")),
-        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
-        "new_cert1"  	 	: ``(new_cert1 ("Sub CA")),
-        "new_cert2"   		: ``(new_cert2 ("Sub CA")),
-        "new_cert3"   		: ``(new_cert3 ("Sub CA")),
-        "new_cert_advanced"   	: ``(new_cert_advanced (false)),
-    ];
-
-    Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca-management");
-    symbol ret = WizardSequencer(aliases, certificateSequence);
-
-    UI::CloseDialog();
-
-    return ret;
-}   
 
 /**
  * Main workflow of the CA management configuration
@@ -206,11 +61,7 @@ define symbol MainSequence() ``{
 	"new_certCA"		: ``(newCASequence()),
 	"new_certServer"	: ``(newServerCertificateSequence()),
 	"new_certClient"	: ``(newClientCertificateSequence()),
-	"new_certSubCA"		: ``(newSubCASequence()),
-	"edit_default"		: ``(editDefaultSequence()),
-        "ca_main"  	 	: ``(ca ()),
-	"crl_main"		: ``(crl ()),
-        "certificate"  	 	: ``(certificate ()),		
+        "ca_main"  	 	: ``(runCADialog ()),
         ];
 
     map sequence = $[
@@ -228,41 +79,15 @@ define symbol MainSequence() ``{
 				`back 		: "startup",
 				`next 		: "startup",				
 				`abort		: "startup",
-				`certificates 	: "certificate",
-				`createSubCA	: "new_certSubCA",
-				`editDefault	: "edit_default",
-				`crl		: "crl_main",
-                            ],
-        "crl_main"	    : $[
-				`back 		: "ca_main",
-				`next 		: "ca_main",				
-				`abort		: "startup",
-				`again		: "crl_main",
-                            ],	
-        "certificate"	    : $[
-				`back 		: "ca_main",
-				`abort		: "startup",
-				`again		: "certificate",
-				`next		: "ca_main",				
-				`addServer 	: "new_certServer",
-				`addClient 	: "new_certClient",				
                             ],
         "new_certServer"    : $[
-				`next       	: "certificate",
-				`abort		: "certificate",
+//				`next       	: "certificate",
+//				`abort		: "certificate",
                             ],
         "new_certClient"    : $[
-				`next       	: "certificate",
-				`abort		: "certificate",
+//				`next       	: "certificate",
+//				`abort		: "certificate",
                             ],
-        "new_certSubCA"     : $[
-				`next       	: "ca_main",
-				`abort		: "ca_main",
-                            ],
-        "edit_default"      : $[
-				`next       	: "ca_main",
-				`abort		: "ca_main",
-                            ],		
         ];
 
     Wizard::CreateDialog();

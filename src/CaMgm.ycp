@@ -20,6 +20,41 @@ import "Report";
 import "Runlevel";
 import "Summary";
 
+/**
+ * sequence for creating CA and certificates
+ */
+global  map certificateSequence = $[
+	"ws_start"	    : "new_certinit",
+        "new_certinit"      : $[
+                            `next       	: "new_certSaveDef",
+			    `abort		: `abort,
+                            ],
+        "new_certSaveDef"   : $[
+                            `next       	: "new_cert1",
+			    `abort		: `abort
+                            ],		
+        "new_cert1"         : $[
+                            `next       	: "new_cert2",
+			    `again 		: "new_cert1",
+			    `abort		: `abort,
+                            ],
+        "new_cert2"         : $[
+                            `next       	: "new_cert3",
+			    `abort		: `abort,
+			    `back		: "new_cert1",
+			    `advancedOptions 	: "new_cert_advanced",
+	                    ],
+        "new_cert3"         : $[
+                            `next       	: `abort,
+			    `abort		: `abort,
+			    `back		: "new_cert2"
+                            ],
+        "new_cert_advanced"  : $[
+			    `abort		: `abort,
+			    `back		: "new_cert3"
+	                    ],	
+    ];
+
 
 /**
  * selected default type
