@@ -110,7 +110,14 @@ sub mergeToConfig {
   
     my $cfg_exists = SCR->Read(".CAM.openssl_cnf.value.$caName.$ext_name.$name");
     
-    if ((! defined $param->{"$name"} ) && (defined $cfg_exists )) {
+    # Magic is awful here. If the value is present in the config and not
+    # set by the user => delete it
+    #
+    # If the value is defined by the user => set it
+    #
+    y2debug("checking: '$name' configvalue:'$cfg_exists'");
+    if ((!exists $param->{"$name"} || ! defined $param->{"$name"} ) 
+        && (defined $cfg_exists )) {
         # remove value from config
         y2debug("remove value from config ($name)");
         if(not SCR->Write(".CAM.openssl_cnf.value.$caName.$ext_name.$name", undef)) {
@@ -124,7 +131,10 @@ sub mergeToConfig {
             return $self->SetError( summary => "Can not write to config file",
                                     code => "SCR_WRITE_FAILED");
         }
-    } # else do nothing: $param->{"$name"} is not defined and not in the config file
+    } else {
+        # else do nothing: $param->{"$name"} is not defined and not in the config file
+        y2debug("$name not in configfile and not set");
+    }
     
     return 1;
 }
