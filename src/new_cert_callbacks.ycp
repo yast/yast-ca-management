@@ -24,7 +24,7 @@
     textdomain "ca-management";
 
     import "CaMgm";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
 
     // saved default settings

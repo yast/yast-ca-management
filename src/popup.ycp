@@ -15,7 +15,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     /**
      * Popup to confirm after finish is pressed
@@ -55,7 +55,7 @@
      * @return void
      */
     define void showErrorCaManagement () ``{
-        map<string,any> messageMap = (map<string,any>) CaManagement::Error();
+        map<string,any> messageMap = (map<string,any>) YaPI::CaManagement::Error();
 	string message = messageMap["summary"]:"";
         if (size (message) > 0)
         {

@@ -27,7 +27,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
     include "ca-management/new_cert_items.ycp";

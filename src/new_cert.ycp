@@ -27,7 +27,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
     include "ca-management/new_cert_read_write.ycp";
@@ -54,7 +54,7 @@
      */
     define list<term> getCountryList () ``{
         list<term> result = [];
-	map country_names = (map) eval(SCR::Read(.target.yast2, "country.ycp"));
+	map<string, string> country_names = (map) eval(SCR::Read(.target.yast2, "country.ycp"));
 
 	foreach (string id, string name , country_names, ``{
 	    result = add (result, `item (`id (id), name , CaMgm::country == id) );

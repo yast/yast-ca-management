@@ -78,6 +78,10 @@ $bool = Verify($valueMap)
 
   verify a certificate
 
+$bool = AddSubCA($valueMap)
+
+  Create a new CA which signed by another CA
+
 B<common parameter in $valueMap>
 
 Here is a list of common parameter which are used in $valueMap
@@ -314,7 +318,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ReadCAList} = ["function", "any"]; }
+BEGIN { $TYPEINFO{ReadCAList} = ["function", ["list", "string"]]; }
 sub ReadCAList {
     my $caList = undef;
 
@@ -336,7 +340,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{AddRootCA} = ["function", "boolean", "any" ]; }
+BEGIN { $TYPEINFO{AddRootCA} = ["function", "boolean", ["map", "string", "any"]]; }
 sub AddRootCA {
     my $data = shift;
     my @dn   = ();
@@ -508,7 +512,11 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ReadCertificateDefaults} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{ReadCertificateDefaults} = [
+                                              "function", 
+                                              ["map", "string", "any"],
+                                              ["map", "string", "any"]
+                                                 ]; }
 sub ReadCertificateDefaults {
     my $data = shift;
     my $caName   = "";
@@ -595,7 +603,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ReadCA} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{ReadCA} = ["function", "any", ["map", "string", "any"]]; }
 sub ReadCA {
     my $data = shift;
     my $caName = "";
@@ -651,7 +659,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{AddRequest} = ["function", "string", "any" ]; }
+BEGIN { $TYPEINFO{AddRequest} = ["function", "string", ["map", "string", "any"] ]; }
 sub AddRequest {
     my $data = shift;
     my @dn   = ();
@@ -803,7 +811,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{IssueCertificate} = ["function", "string", "any" ]; }
+BEGIN { $TYPEINFO{IssueCertificate} = ["function", "string", ["map", "string", "any"] ]; }
 sub IssueCertificate {
     my $data = shift;
     my @dn   = ();
@@ -976,7 +984,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{AddCertificate} = ["function", "string", "any" ]; }
+BEGIN { $TYPEINFO{AddCertificate} = ["function", "string", ["map", "string", "any"] ]; }
 sub AddCertificate {
     my $data = shift;
 
@@ -1006,7 +1014,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ReadCertificateList} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{ReadCertificateList} = ["function", ["list", "any"], ["map", "string", "any"]]; }
 sub ReadCertificateList {
     my $data = shift;
     my $ret  = undef;
@@ -1046,7 +1054,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{UpdateDB} = ["function", "boolean", "any"]; }
+BEGIN { $TYPEINFO{UpdateDB} = ["function", "boolean", ["map", "string", "any"]]; }
 sub UpdateDB {
     my $data = shift;
     
@@ -1084,7 +1092,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ReadCertificate} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{ReadCertificate} = ["function", "any", ["map", "string", "any"]]; }
 sub ReadCertificate {
     my $data = shift;
     my $caName = "";
@@ -1149,7 +1157,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{RevokeCertificate} = ["function", "boolean", "any"]; }
+BEGIN { $TYPEINFO{RevokeCertificate} = ["function", "boolean", ["map", "string", "any"]]; }
 sub RevokeCertificate {
     my $data = shift;
     my $caName = "";
@@ -1208,7 +1216,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{AddCRL} = ["function", "boolean", "any"]; }
+BEGIN { $TYPEINFO{AddCRL} = ["function", "boolean", ["map", "string", "any"]]; }
 sub AddCRL {
     my $data = shift;
     my $caName = "";
@@ -1270,7 +1278,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ReadCRL} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{ReadCRL} = ["function", "any", ["map", "string", "any"]]; }
 sub ReadCRL {
     my $data = shift;
     my $caName = "";
@@ -1326,7 +1334,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ExportCA} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{ExportCA} = ["function", "any", ["map", "string", "any"]]; }
 sub ExportCA {
     my $data = shift;
     my $caName = "";
@@ -1530,7 +1538,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ExportCertificate} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{ExportCertificate} = ["function", "any", ["map", "string", "any"]]; }
 sub ExportCertificate {
     my $data = shift;
     my $caName = "";
@@ -1751,7 +1759,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{ExportCRL} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{ExportCRL} = ["function", "any", ["map", "string", "any"]]; }
 sub ExportCRL {
     my $data = shift;
     my $caName = "";
@@ -1845,7 +1853,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{Verify} = ["function", "any", "any"]; }
+BEGIN { $TYPEINFO{Verify} = ["function", "boolean", ["map", "string", "any"]]; }
 sub Verify {
     my $data = shift;
     my $caName = "";
@@ -1889,7 +1897,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{AddSubCA} = ["function", "boolean", "any" ]; }
+BEGIN { $TYPEINFO{AddSubCA} = ["function", "boolean", ["map", "string", "any"] ]; }
 sub AddSubCA {
     my $data = shift;
     my @dn   = ();

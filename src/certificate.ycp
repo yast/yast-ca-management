@@ -27,7 +27,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
     include "ca-management/new_cert.ycp";    
@@ -41,7 +41,7 @@
     define list<term> getCertificateList ( string currentCA, string password) ``{
         list<term> result = [];
         integer i = 0;
-	list ret = (list) CaManagement::ReadCertificateList ($["caName":currentCA, "caPasswd":password]);
+	list ret = (list) YaPI::CaManagement::ReadCertificateList ($["caName":currentCA, "caPasswd":password]);
         if (ret == nil)
         {
             showErrorCaManagement ();
