@@ -1,0 +1,179 @@
+/**
+ *
+ * File:
+ *   certificate.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   Handling certificates of a CA
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Showing and hadling CA certificates
+ *
+ */
+
+
+{
+
+    textdomain "ca-management";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    import "CaManagement";
+
+    include "ca-management/util.ycp";
+
+    /**
+     * Creates certikficate items
+     *
+     * @param name of the selected CA
+     * @return a list certificate items formated for a UI table
+     */
+    define list<term> getCertificateList ( string currentCA, string password) ``{
+        list<term> result = [];
+        integer i = 0;
+	list ret = (list) CaManagement::ReadCertificateList ($["caName":currentCA, "caPasswd":password]);
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+	    CaMgm::passwdMap = remove (CaMgm::passwdMap, currentCA);
+	    return nil;
+        }
+        y2milestone("ReadCertificate(%1): %2", currentCA, ret);
+
+	
+	
+
+	foreach (map element, ret, ``{
+	    result = add (result, `item (`id (i), element["status"]:"",
+					 element["commonName"]:"",
+					 element["emailAddress"]:"",
+					 element["organizationName"]:"",
+					 element["organizationalUnitName"]:"",
+					 element["localityName"]:"",
+					 element["stateOrProvinceName"]:"",
+					 element["countryName"]:"" ) );
+	    i = i + 1;
+	});
+        return result;
+    }
+
+
+    /**
+     * Showing CA certificates
+     * @return 'back, 'abort, 'again
+     */
+    define symbol certificate () ``{
+	
+	string password = getPassword (CaMgm::currentCA);
+	if (password == nil)
+	{
+	    return `abort;
+	}
+
+        list<term> certTermList = getCertificateList ( CaMgm::currentCA, password );	
+	if (certTermList == nil)
+	{
+	    return `abort;
+	}
+	
+        // help text 1/6
+        string helptext = _("<p>First you see a ListView with all available Certificates in this CA. The columns are the DN of the Certificates incl. the email address and the state of the Certificate (valid/revoked/...).</p>");
+        // help text 2/6 
+        helptext = helptext + _("<p>You can select on of the Certificate and execute some actions</p>");
+        // help text 3/6 
+	helptext = helptext + _("<p><b>View</b> opens a window with a text representation of the complete Certificate.</p>");
+        // help text 4/6
+        helptext = helptext + _("<p>Furthermore you can <b>Revoke</b>, <b>Delete</b> or <b>Export</b> a request.</p>");
+        // help text 5/6
+        helptext = helptext + _("<p>With <b>Add</b> you can generate a new server or client certificate.</p>");
+        // help text 6/6
+        helptext = helptext + _("<p>In the textentry below you can see the most important Values of the selected certificate.</p>");
+
+        term buttons = `HBox ();
+	// To translators: pushbutton label
+	buttons = add (buttons,  `MenuButton( _("Add"),
+                                              [
+                                               `item(`id(`addServer), _("Add Server Certificate") ),
+                                               `item(`id(`addClient), _("Add Client Certificate") )
+                                               ]
+                                              ));
+	buttons = add (buttons, `PushButton (`id (`view) , _("View")));
+	buttons = add (buttons, `PushButton (`id (`revoke) , _("Revoke")));
+	buttons = add (buttons, `PushButton (`id (`delete) , _("Delete")));	
+        buttons = add (buttons, `HStretch());
+        buttons = add (buttons, `MenuButton(`id(`export),
+					    _("Export"),
+                                              [
+                                               `item(`id(`exportFile), _("Add Server Certificate") ),
+                                               `item(`id(`addClie), _("Add Client Certificate") )
+                                               ]
+                                              ));
+        term contents = `VBox ();
+
+	contents = add (contents, `HBox(
+					`HSpacing(5),
+					`Table (`id (`table), `opt (`notify, `immediate),
+						`header (
+							 // To translators: table headers
+							 _("Status"), _("Common Name"),
+							 _("EMAIL Address"), _("Organisation"),
+							 _("Organisational Unit"), _("Locality"),
+							 _("State"), _("Country")),
+						certTermList),
+					`HSpacing(5)
+					)
+			);
+	
+	contents = add (contents, buttons);
+	contents = add (contents, `RichText(`id(`textinfo),""));
+
+        Wizard::SetContents (  _("Certificates of CA: ") + CaMgm::currentCA, contents, helptext, true, false);
+
+        symbol ui = nil;
+
+        repeat
+        {
+            boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
+            UI::ChangeWidget (`id (`delete), `Enabled, anyitems);
+            UI::ChangeWidget (`id (`revoke), `Enabled, anyitems);
+            UI::ChangeWidget (`id (`view), `Enabled, anyitems);
+            UI::ChangeWidget (`id (`export), `Enabled, anyitems);	    
+
+            ui = (symbol) UI::UserInput ();
+
+
+	    if (ui == `deleteEmail)
+	    {
+		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
+		    string current_name = (string) select(table_item, 1, "");
+ 		    list<map> dummy_map = [];
+
+		    //finding entry in list
+//		    foreach (map element, CaMgm::emailList, ``{
+//			if (element["name"]:"" != current_name )
+//			{
+//			    dummy_map = add (dummy_map, element);
+//			}
+//		    });
+		    
+//		    CaMgm::emailList = dummy_map;
+
+		    ui = `again;
+	    }
+        }
+        until (contains ([`back, `again, `abort], ui));
+
+        return ui;
+    }	
+
+}
