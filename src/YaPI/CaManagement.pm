@@ -3705,8 +3705,8 @@ sub InitLDAPcaManagement {
     }
     
     # bind
-    if (! SCR->Execute(".ldap.bind", { binddn => $ldapMap->{'bind_dn'},
-                                       bindpw => $data->{ldapPasswd}
+    if (! SCR->Execute(".ldap.bind", { bind_dn => $ldapMap->{'bind_dn'},
+                                       bind_pw => $data->{ldapPasswd}
                                      }) ) {
         my $ldapERR = SCR->Read(".ldap.error");
         return $self->SetError(summary => "LDAP bind failed",
@@ -3717,7 +3717,7 @@ sub InitLDAPcaManagement {
     $ldapret = SCR->Read(".ldap.search", {
                                           "base_dn" => $ldapMap->{'ldap_domain'},
                                           "filter" => '(& (objectclass=suseCaConfiguration) (cn=default))',
-                                          "scope" => 0,
+                                          "scope" => 2,
                                           "not_found_ok" => 1
                                          });
     if (! defined $ldapret) {
@@ -3792,8 +3792,8 @@ sub InitLDAPcaManagement {
                                code => "LDAP_SEARCH_FAILED");
     }
     my $caBase = undef;
-    if(@$ldapret > 0 && exists $ldapret->[0]->{'suseDefaultBase'}) {
-        $caBase = $ldapret->[0]->{'suseDefaultBase'}
+    if(@$ldapret > 0 && exists $ldapret->[0]->{'susedefaultbase'}->[0]) {
+        $caBase = $ldapret->[0]->{'susedefaultbase'}->[0];
     } else {
         return $self->SetError( summary => "CA Base not found in LDAP!",
                                 code => "LDAP_SEARCH_FAILED");
@@ -3807,37 +3807,43 @@ sub InitLDAPcaManagement {
                                          });
     if (! defined $ldapret) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => "LDAP search failed!",
-                               description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
-                               code => "LDAP_SEARCH_FAILED");
-    }
-    if(@$ldapret <= 0) {
-
-        my $object = X500::DN->ParseRFC2253($caBase);
-        my $attr = $object->getRDN($object->getRDNs()-1)->getAttributeTypes();
-        my $val = $object->getRDN($object->getRDNs()-1)->getAttributeValue($attr);
-        
-        if(!defined $attr || !defined $val) {
-            return $self->SetError(summary => "Can not parse caBase",
-                                   description => "Parsing error for caBase '$caBase'",
-                                   code => "PARSE_ERROR");
-        }
-        my $entry = {};
-
-        if( lc($attr) eq "ou") {
-            $entry = {
-                      "objectClass" => [ "organizationalUnit" ],
-                      "ou" => $val,
-                     }
-        }
-
-        $ldapret = SCR->Write(".ldap.add", { dn => $caBase }, $entry);
-        
-        if(! defined $ldapret) {
-            my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => "Can not add CA configuration entry!",
-                                   code => "LDAP_ADD_FAILED",
-                                   description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+        if ($ldapERR->{'code'} == 32) {
+            my $object = X500::DN->ParseRFC2253($caBase);
+            my @attr = $object->getRDN($object->getRDNs()-1)->getAttributeTypes();
+            my $val = $object->getRDN($object->getRDNs()-1)->getAttributeValue($attr[0]);
+            
+            if(!defined $attr[0] || !defined $val) {
+                return $self->SetError(summary => "Can not parse caBase",
+                                       description => "Parsing error for caBase '$caBase'",
+                                       code => "PARSE_ERROR");
+            }
+            my $entry = {};
+            
+            if( lc($attr[0]) eq "ou") {
+                $entry = {
+                          "objectClass" => [ "organizationalUnit" ],
+                          "ou" => $val,
+                         }
+            } elsif( lc($attr[0]) eq "o") {
+                $entry = {
+                          "objectClass" => [ "organization" ],
+                          "o" => $val,
+                         }
+            }
+            
+            $ldapret = SCR->Write(".ldap.add", { dn => $caBase }, $entry);
+            
+            if(! defined $ldapret) {
+                my $ldapERR = SCR->Read(".ldap.error");
+                return $self->SetError(summary => "Can not add CA configuration entry!",
+                                       code => "LDAP_ADD_FAILED",
+                                       description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
+            }
+            
+        } else {
+            return $self->SetError(summary => "LDAP search failed!",
+                                   description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
+                                   code => "LDAP_SEARCH_FAILED");
         }
     }
     return 1;    
