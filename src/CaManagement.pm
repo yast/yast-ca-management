@@ -23,9 +23,7 @@ sub ReadCAList {
 
     my $ret = SCR::Read(".caTools.caList");
     if ( not defined $ret ) {
-        return $self->SetError(SCR::Error(".caTools.caList"));
-        #return $self->SetError(code => "SCR_READ_ERROR",
-        #                summary => "Can not call SCR::Read(.caTools.caList)");
+        return $self->SetError(%{SCR::Error(".caTools.caList")});
     }
     return @$ret;
 }
@@ -84,11 +82,11 @@ sub AddRootCA {
     }
     if(not SCR::Write(".caTools.caInfrastructure", $data->{"caName"}))
     {
-        return $self->SetError(SCR::Error(".caTools"));
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
 
     my $retCode = SCR::Execute(".target.bash",
-                           "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
     if(not defined $retCode || $retCode != 0) {
         return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
@@ -160,7 +158,7 @@ sub AddRootCA {
 
     if (not defined $ret) {
         $self->cleanCaInfrastructure($caName);
-        return $self->SetError(SCR::Error(".openca.openssl"));
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
     
     $hash = {
@@ -171,7 +169,7 @@ sub AddRootCA {
     $ret = SCR::Execute( ".openca.openssl.genReq", $caName, $hash);
     if (not defined $ret) {
         $self->cleanCaInfrastructure($caName);
-        return $self->SetError(SCR::Error(".openca.openssl"));
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
 
     $hash = {
@@ -184,7 +182,7 @@ sub AddRootCA {
     $ret = SCR::Execute( ".openca.openssl.genCert", $caName, $hash);
     if (not defined $ret) {
         $self->cleanCaInfrastructure($caName);
-        return $self->SetError(SCR::Error(".openca.openssl"));
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
     
     return 1;
@@ -200,7 +198,6 @@ sub cleanCaInfrastructure {
         return undef;
     }
     SCR::Execute(".target.bash", "rm -rf $CAM_ROOT/$caName");
-
 }
 
 sub checkValueWithConfig {
@@ -221,7 +218,7 @@ sub checkValueWithConfig {
         # this is an error
         if (not defined $value) {
             return $self->SetError( summary => "Can not find $name in config file",
-                             code => "PARAM_CHECK_FAILED");
+                                    code => "PARAM_CHECK_FAILED");
         }
         $min = SCR::Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_min");
         $max = SCR::Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_max");
@@ -234,11 +231,11 @@ sub checkValueWithConfig {
     if( defined $param->{$name} ) {
         if( (defined $min) && length($param->{$name}) < $min ) {
             return $self->SetError( summary => "Value '$name' is to short, must be min $min",
-                             code    => "PARAM_CHECK_FAILED");
+                                    code    => "PARAM_CHECK_FAILED");
         }
         if( (defined $max) && length($param->{$name}) > $max ) {
             return $self->SetError( summary => "Value '$name' is to long, must be max $max",
-                             code    => "PARAM_CHECK_FAILED");
+                                    code    => "PARAM_CHECK_FAILED");
         }
     }
 
@@ -246,7 +243,7 @@ sub checkValueWithConfig {
     if( (defined $policy) && ($policy eq "supplied") && 
         (not defined $param->{$name} || $param->{$name} eq "")) {
         return $self->SetError( summary => "Value '$name' must be set",
-                         code    => "PARAM_CHECK_FAILED");
+                                code    => "PARAM_CHECK_FAILED");
     }
     # FIXME: add a "match check" here
     return 1;
@@ -263,22 +260,22 @@ sub mergeToConfig {
   my $cfg_exists = SCR::Read(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name");
   
   if (defined $default && (not defined $param->{"$name"} or $param->{"$name"} eq "")) {
-    if (defined $cfg_exists) {  # a default in the configfile is given
-      $param->{"$name"} = $cfg_exists;
-    } else {                    # use hardcoded default
-      $param->{"$name"} = "$default";
-    }
+      if (defined $cfg_exists) {  # a default in the configfile is given
+          $param->{"$name"} = $cfg_exists;
+      } else {                    # use hardcoded default
+          $param->{"$name"} = "$default";
+      }
   }
 
   if ((not defined $param->{"$name"} ) && (defined $cfg_exists )) {
-    # remove value from config
-    y2debug("remove value from config (".$param->{"$name"}."/$name");
-    SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef);
+      # remove value from config
+      y2debug("remove value from config (".$param->{"$name"}."/$name");
+      SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef);
   } elsif (defined $param->{"$name"}) {
-    # add or modify are the same here
-    y2debug("modify value in config (".$param->{"$name"}."/$name");
-    SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", $param->{$name});
-  }                             # else do nothing: $param->{"$name"} is not defined and not in the config file
+      # add or modify are the same here
+      y2debug("modify value in config (".$param->{"$name"}."/$name");
+      SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", $param->{$name});
+  } # else do nothing: $param->{"$name"} is not defined and not in the config file
   return 1;
 }
 
@@ -606,7 +603,7 @@ sub checkURI {
     my $self     = shift || return 0;
     my $url      = shift || return 0;
     my $doEscape = shift || 0;
-
+    
     
     my($scheme, $authority, $path, $query, $fragment) =
       $url =~ m|^(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?|;
