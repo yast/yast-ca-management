@@ -1,0 +1,240 @@
+#! /usr/bin/perl -w
+
+package ag_openssl;
+use strict;
+use YaST::SCRAgent;
+use ycp;
+our @ISA = ("YaST::SCRAgent");
+
+use OPENSSL;
+
+my $openssl = undef;
+my $CAM_ROOT = "/var/lib/YaST2/CAM/";
+my $privkeyalg = "des3";
+
+sub check_initialized ()
+{
+    my $class = shift;
+    if (not defined $openssl)
+    {
+        $class->SetError(summary => "Agent not initialized yet",
+                         code => "SCR_INIT_ERR");
+    }
+    return !!$openssl;
+}
+
+sub OtherCommand {
+    my $class = shift;
+    my ($symbol, $config, @rest) = @_;
+    
+    if ($symbol ne "OPENSSL") {
+        return $class->SetError(summary=> "The first command must be the configuration.(Seen '$_')",
+                                code => "SCR_INIT_ERR");
+    } else {
+        $openssl = OPENSSL->new( BINARY => $config->{"bin"} );
+        if( not defined $openssl ) {
+            return $class->SetError(summary => "Can not initialize OPENSSL",
+                                    code => "SCR_INIT_ERR");
+        }
+        $openssl->setParams(TMPDIR=>$config->{"tmpdir"},
+                            STDERR=>$config->{"stderr"},
+                           );
+        $openssl->setParams(DEBUG=>1) if($config->{'debug'} eq "1");
+
+        $privkeyalg = $config->{'privkeyalg'} if( defined $config->{'privkeyalg'});
+    }
+    
+    return 1;
+}
+
+sub setConfig {
+    my $class  = shift;
+    my $caName = shift;
+
+    if( ! -e "$CAM_ROOT/$caName/openssl.cnf" ) {
+        if(! -e "$CAM_ROOT/$caName/openssl.cnf.tmpl") {
+            $class->SetError(summary=>"config does not exist!",
+                             code =>"SCR_INIT_ERR");
+            return 0;
+        }
+        $openssl->setParams(
+                            CONFIG=>"$CAM_ROOT/$caName/openssl.cnf.tmpl"
+                           );
+        return 1;
+    }
+    $openssl->setParams(
+                        CONFIG=>"$CAM_ROOT/$caName/openssl.cnf"
+                       );
+    return 1;
+}
+
+sub Read {
+    my $class  = shift || return undef;
+    my $path   = shift || return $class->SetError(summary => "Missing 'path'", 
+                                                  code => "PARAM_CHECK_FAILED");
+    my $caName = shift || return $class->SetError(summary => "Missing 'caName'", 
+                                                  code => "PARAM_CHECK_FAILED");
+    my $hash = undef;
+    my $ret = undef;
+    
+    $class->check_initialized || return undef;
+    
+    $class->setConfig($caName) || return undef;
+
+    if($path eq ".getParsedCert") {
+        $hash = shift;
+        $ret = $openssl->getParsedCert(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not parse certificate!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
+    } elsif($path eq ".getTXTCert") {
+        $hash = shift;
+        $ret = $openssl->getTXTCert(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not parse certificate!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
+    } elsif($path eq ".getParsedCRL") {
+        $hash = shift;
+        $ret = $openssl->getParsedCRL(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not parse CRL!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
+    } elsif($path eq ".getTXTCRL") {
+        $hash = shift;
+        $ret = $openssl->getTXTCRL(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not parse CRL!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
+    } else {
+        return $class->SetError(summary => "Wrong path '$path' ",
+                                code => "SCR_WRONG_PATH");
+    }
+}
+
+sub Execute {
+    my $class  = shift || return undef;
+    my $path   = shift || return $class->SetError(summary => "Missing 'path'", 
+                                                  code => "PARAM_CHECK_FAILED");
+    my $caName = shift || return $class->SetError(summary => "Missing 'caName'", 
+                                                  code => "PARAM_CHECK_FAILED");
+    my $hash = undef;
+    my $ret = undef;
+
+    $class->check_initialized || return undef;
+    
+    $class->setConfig($caName) || return undef;
+    if($path eq ".genKey") {
+        $hash = shift;
+        if(not defined $hash->{'ALGORITHM'}) {
+            $hash->{'ALGORITHM'} = $privkeyalg;
+        }
+        $ret = $openssl->createKey( %{$hash} );
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not create key!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".genReq") {
+        $hash = shift;
+        $ret = $openssl->createReq( %{$hash} );
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not create request!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".genCert") {
+        $hash = shift;
+        $ret = $openssl->createSelfSignedCert( %{$hash} );
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not create a self-signed certificate!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".issueCert") {
+        $hash = shift;
+        my $ret = $openssl->issueReq( %{$hash} );
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not issuer request!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".getNumericDate") {
+        my $date = shift;
+        $ret = $openssl->getNumericDate( $date );
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not get a numeric date!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
+    } elsif($path eq ".updateDB") {
+        $hash = shift;
+        $ret = $openssl->updateDB(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not update the database",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".revoke") {
+        $hash = shift;
+        $ret = $openssl->revokeCert(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not revoke certificate!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".issueCrl") {
+        $hash = shift;
+        $ret = $openssl->issueCRL(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Can not issue the CRL!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".dataConvert") {
+        $hash = shift;
+        $ret = $openssl->convert(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Convert failed!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
+    } elsif($path eq ".verify") {
+        $hash = shift;
+        $ret = $openssl->verify(%{$hash});
+        if(not defined $ret) {
+            return $class->SetError(summary => "Verify failed!",
+                                    description => $openssl->errmsg(),
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
+    } else {
+        return $class->SetError(summary => "Wrong path '$path' ",
+                                code => "SCR_WRONG_PATH");
+    }
+}
+
+
+package main;
+ag_openca_openssl->Run;
+
