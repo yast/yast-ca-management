@@ -455,7 +455,6 @@
 	CaMgm::requestExtentionValue = $[];
 	CaMgm::requestKind = "";
 	CaMgm::requestSubject = "";
-	CaMgm::requestAttributes = "";
 	CaMgm::validPeriod = 30;
 
 	// IS CA ?
@@ -482,8 +481,6 @@
 
 	// Subject
 	CaMgm::requestSubject = ret["DN"]:"";
-	// Attributes not found FIXME !!!
-	CaMgm::requestAttributes = "NOT AVAILABLE; Fix it.";
 
 	// Filling up reqeust extentions
 	map<string,list> opensslExtentions = ret["OPENSSL_EXTENSIONS"]:$[];
@@ -523,8 +520,6 @@
         term contents = `VBox (
 			       `Left(`Label(_("Subject:"))),
 			       `Left(`RichText(CaMgm::requestSubject)),
-			       `Left(`Label(_("Attributes:"))),
-			       `Left(`Label(`id(`attributes), `opt(`outputField), CaMgm::requestAttributes)),
 			       `IntField( `id(`period), _("Valid Period (days):"),  1, 10000, CaMgm::validPeriod),
 			       `MultiSelectionBox( `id(`extentions), _("Requested Extentions which you can particular accept:"),
 						   createExtentionItem ())
@@ -570,7 +565,6 @@
 	string text = _("\n<b>Summary</b>");
 	text = text + "<br><pre>";
 	text = text + "Subject:                  "  + CaMgm::requestSubject;
-	text = text + "Attributes:               "  + CaMgm::requestAttributes;
 	text = text + "Valid Period:             " + CaMgm::validPeriod + _(" days\n");
 	text = text + "Basic Constaints:         " + CaMgm::adv_ca
 	    + (CaMgm::adv_cri_ca ? _(" (critical)\n") : "\n") ;

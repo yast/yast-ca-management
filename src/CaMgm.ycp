@@ -80,7 +80,6 @@ global string currentRequest = "";
 // Request Extentions of the current Request
 global string requestKind = "";
 global string requestSubject = "";
-global string requestAttributes = "";
 global map<string,string> requestExtentionValue = $[];
 global list<string> slectedRequestExtention = [];
 global list<string> validRequestExtention =
