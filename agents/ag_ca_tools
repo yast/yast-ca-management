@@ -10,7 +10,7 @@ my $TEMPLATE = "$CAM_ROOT/openssl.cnf.tmpl";
 
 sub Read {
     my $class = shift;
-    my ($path, $hash) = @_;
+    my $path  = shift;
     
     if($path eq ".caList") {
         my @av_ca = ();
@@ -28,6 +28,28 @@ sub Read {
                                      summary => "Can not read directory '$CAM_ROOT' '$!'");
         }
         return \@av_ca;
+    } elsif($path eq ".nextSerial") {
+        my $caName = shift || return $class->SetError(summary =>"Parameter 'caName' missing",
+                                                      code => "PARAM_CHECK_FAILED");
+        my $ret = undef;
+        if(!open(SER, "< $CAM_ROOT/$caName/serial")) {
+            return $class->SetError( summary => "Can not open '$CAM_ROOT/$caName/serial' '$!'",
+                                     code    => "OPEN_FAILED");            
+        }
+        while(my $l = <SER>) {
+            chomp $l;
+            if($l =~ /^[[:xdigit:]]+$/) {
+                $ret = $l;
+                last;
+            }
+        }
+        close SER;
+        if(not defined $ret) {
+            return $class->SetError(summary => "No serial number found in '$CAM_ROOT/$caName/serial'",
+                                    code => "PARSING_ERROR");
+        } else {
+            return $ret;
+        }
     }
     return 1;
 }
