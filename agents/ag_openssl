@@ -266,6 +266,18 @@ sub Execute {
                                     code => "SCR_EXECUTE_FAILED");
         }
         return $ret;
+    } elsif($path eq ".status") {
+        $hash = shift || return $class->SetError(summary => "No data.",
+                                                 code => "SCR_EXECUTE_FAILED");
+        $ret = $openssl->status(%{$hash});
+        if(not defined $ret) {
+            my $desc = ($openssl->errmsg() ne "") ? $openssl->errmsg() : "Unknown error in issueReq";
+            $desc .= ($openssl->erropenssl() ne "") ? "\nOPENSSL message:\n".$openssl->erropenssl() : "";
+            return $class->SetError(summary => "Check status failed!",
+                                    description => $desc,
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
     } else {
         return $class->SetError(summary => "Wrong path '$path' ",
                                 code => "SCR_WRONG_PATH");
