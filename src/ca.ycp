@@ -47,6 +47,7 @@
         }
 	else
 	{
+	    ret = "<pre>" + ret + "</pre>";
 	    UI::OpenDialog (`opt(`decorated ),
 			    `HBox( `VSpacing(16),
 				   `VBox (
