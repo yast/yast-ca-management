@@ -163,6 +163,14 @@ $bool = DeleteCA($valueMap)
 
   Delete a Certificate Authority infrastructure
 
+$crlValueMap = ReadCRLDefaults($valueMap)
+
+  Read the default values for a CRL.
+
+$bool = WriteCRLDefaults($valueMap)
+
+  Write the default values for creating a CRL.
+
 
 =head1 COMMON PARAMETER
 
@@ -5915,6 +5923,205 @@ print STDERR "CA expired\n";
     }
 }
 
+
+
+
+=item *
+C<$crlValueMap = ReadCRLDefaults($valueMap)>
+
+Read the default values for a CRL.
+In I<$valueMap> you can define the following keys:
+
+* caName (if not defined, read defaults for new Root CAs)
+
+Returns a map with defaults for CRLs in this CA.
+The return value is "undef" on an error.
+
+On success the return value is a hash which can contain the following keys:
+
+* days
+
+* authorityKeyIdentifier
+
+* issuerAltName
+
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+EXAMPLE:
+
+ use Data::Dumper;
+
+ my $data = {
+             'caName'   => 'My_CA'
+            }
+ $crlValueMap = YaPI::CaManagement->ReadCRLDefaults($data) 
+ if( not defined $crlValueMap ) {
+     # error
+ } else {
+     print Data::Dumper->Dump([$crlValueMap])."\n";
+ }
+
+=cut
+
+BEGIN { $TYPEINFO{ReadCRLDefaults} = [
+                                      "function", 
+                                      ["map", "string", "any"],
+                                      ["map", "string", "any"]
+                                     ]; }
+sub ReadCRLDefaults {
+    my $self = shift;
+    my $data = shift;
+    my $caName   = "";
+    my $ret = {};
+
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+
+    $ret = {
+            'authorityKeyIdentifier' => undef,
+            'issuerAltName'         => undef,
+           };
+
+    foreach my $extName ( keys %{$ret}) {
+        if (defined $caName && $caName ne "") {
+            $ret->{$extName} = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_crl.$extName");
+            if (not defined $ret->{$extName}) {
+                delete $ret->{$extName};
+            }
+        } else {
+            $ret->{$extName} = SCR->Read(".CAM.opensslroot_tmpl.value.v3_crl.$extName");
+            if (not defined $ret->{$extName}) {
+                delete $ret->{$extName};
+            }
+        }
+    }
+    if (defined $caName && $caName ne "") {
+        $ret->{'days'} = SCR->Read(".CAM.openssl_tmpl.value.$caName.ca.default_crl_days");
+    } else {
+        $ret->{'days'} = SCR->Read(".CAM.opensslroot_tmpl.value.ca.default_crl_days");
+    }
+    delete $ret->{'days'} if(not defined $ret->{'days'});
+    
+    return $ret;
+}
+
+
+
+=item *
+C<$bool = WriteCRLDefaults($valueMap)>
+
+Write the default values for creating a CRL.
+Keys which are not present, will be removed if they are available
+in the configuration file except for the 'days' key.
+
+In I<$valueMap> you can define the following keys:
+
+* caName (required)
+
+* days
+
+* authorityKeyIdentifier
+
+* issuerAltName
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+     my $data = {
+                 'caName'    => 'My_CA',
+                 'days'      => '7'                 
+                };
+     my $res = YaPI::CaManagement->WriteCRLDefaults($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         print "OK\n";
+     }
+ }
+
+=cut
+
+BEGIN { $TYPEINFO{WriteCRLDefaults} = ["function", "boolean", ["map", "string", "any"]]; }
+sub WriteCRLDefaults {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $ret = undef;
+
+    if (not defined YaST::caUtils->checkCommonValues($data)) {
+        return $self->SetError(%{YaST::caUtils->Error()});
+    }
+    
+    # checking requires
+    if (!defined $data->{"caName"}) {
+                                           # parameter check failed
+        return $self->SetError( summary => __("Missing value 'caName'."),
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $caName = $data->{"caName"};
+    
+    $ret = SCR->Execute(".target.bash",
+                        "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+    if (! defined $ret || $ret != 0) {
+        return $self->SetError( summary => "Can not create backup file '$CAM_ROOT/$caName/openssl.cnf'",
+                                code => "COPY_FAILED");
+    }
+
+    if (not SCR->Write(".CAM.openssl_cnf.value.$caName.ca.crl_extensions", 
+                       "v3_crl")) { 
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError( summary => "Can not write to config file",
+                                code => "SCR_WRITE_FAILED");
+    }
+
+    #####################################################
+    # merge this extentions to the config file
+    #
+    #             v3 ext. value               default
+    #####################################################
+    my %v3ext = (
+                 'authorityKeyIdentifier' => undef,
+                 'issuerAltName'          => undef,
+                );
+    
+    foreach my $extName ( keys %v3ext) {
+        if (not defined YaST::caUtils->mergeToConfig($extName, "v3_crl",
+                                                     $data, $v3ext{$extName})) {
+            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+            return $self->SetError(%{YaST::caUtils->Error()});
+        }
+    }
+    
+    if(defined $data->{days} && $data->{days} =~ /\d+/) {
+        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.ca.default_crl_days", $data->{days})) {
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    }
+
+    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError( summary => "Can not write to config file",
+                                code => "SCR_WRITE_FAILED");
+    }
+    
+    $ret = SCR->Execute(".target.bash", 
+                        "cp $CAM_ROOT/$caName/openssl.cnf $CAM_ROOT/$caName/openssl.cnf.tmpl");
+    if (! defined $ret || $ret != 0) {
+        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        return $self->SetError( summary => "Can not create new template file '$CAM_ROOT/$caName/openssl.cnf.tmpl'",
+                                code => "COPY_FAILED");
+    }
+    SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+    return 1;
+}
 
 1;
 
