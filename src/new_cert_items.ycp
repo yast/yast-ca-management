@@ -28,7 +28,7 @@
     import "Label";
     import "CaManagement";
 
-    define string advanced_help = _("<P>This frame shows further OpenSSL X509V3 extensions which can be set. If you are not familiar with these extentions please have a look to the file /usr/share/doc/packages/openssl-doc/openssl.txt ( packagen openssl-doc )</P>" );
+    define string advanced_help = _("<P>This frame shows further attributes and OpenSSL X509v3 extensions which can be set. If you are not familiar with these extentions please have a look to the file /usr/share/doc/packages/openssl-doc/openssl.txt ( packagen openssl-doc )</P>" );
 
     define string expert_help = advanced_help + _("<P>Please take care that wrong entries can make the certificate unuseable.</P>");
     

@@ -53,14 +53,16 @@
     define symbol new_cert1 () ``{
 
         // help text 1/5
-        string helptext = _("<p>In order to generate a new ceritficate or CA some entries are needed: </p>");
+        string helptext = _("<p>In order to generate a new ceritficate or CA some entries are needed.</p>");
         // help text 2/5
+        helptext = helptext + _("<p>It depends on the policy defined in the configuration file.</p>");
+        // help text 3/5
         helptext = helptext + _("<p><b>Common Name</b> is the name of the User/Admistrator/Server.</p>");
-        // help text 2/5
-        helptext = helptext + _("<p><b>EMAILs</b> are valid EMAIL addresses of the User or Server-Admistrator.</p>");
         // help text 4/5
-        helptext = helptext + _("<p><b>Locality</b> and <b>State</p> are optional.</p>");
+        helptext = helptext + _("<p><b>E-Mail Address(es)</b> are valid E-Mail addresses of the User or Server-Admistrator.</p>");
         // help text 5/5
+        helptext = helptext + _("<p><b>Organisation</b>, <b>Organisational Unit</b>, <b>Locality</b> and <b>State</p> are often optional.</p>");
+        // help text 6/5
         helptext = helptext + _("<p><b>Country</b> is the ISO signature of a country.</p>");
 	
 
@@ -79,7 +81,7 @@
 					  `Table (`id (`table), `opt (`notify, `immediate),
                                           `header (
                                               // To translators: table headers
-                                              _("EMAIL Address(es)")),
+                                              _("E-Mail Address(es)")),
                                           emailTermList)));
 	editEmail = add (editEmail, `TextEntry (`id (`id_emailname ), "" ) );
 	
@@ -101,7 +103,7 @@
 					      ] )));
 
                                 // To translators: dialog label
-        Wizard::SetContents (_("Create new Certification (step 1/3)"), contents, helptext, true, true);
+        Wizard::SetContents (_("Create new Certificate (step 1/3)"), contents, helptext, true, true);
 	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());
 	
         symbol ui = nil;
@@ -169,18 +171,18 @@
     define symbol new_cert2 () ``{
 
         // help text 1/5
-        string helptext = _("<p>Each certrificate needs a <B>password</B>. For verification reasons please reenter it in the next field.</p>");
-        // help text 2/5
-        helptext = helptext + _("<p><b>CA Password</b> is the password of the CA to which the new certificate belongs.</p>");
+        string helptext = _("<p>The private key of the certrificate needs a <B>Password</B>. For verification reasons please reenter it in the next field.</p>");
+        // help text 2/5 (only for creating sub CAs and certificates)
+        helptext = helptext + _("<p><b>CA Password</b> is the password of the CA which should sign the new certificate.</p>");
 
         // help text 3/5
-        helptext = helptext + _("<p>Each certificate has it own <b>Key Lenght</b>. Please take care that some applications which use certifications, need special key lengths. Have a look into the application manual.</p>");
+        helptext = helptext + _("<p>Each certificate has its own <b>Key Lenght</b>. Please take care that some applications which use certificates, need special key lengths.</p>");
 
         // help text 4/5
-        helptext = helptext + _("<p>The ceritfication will be valid for only specific period. The validation period of a user certificate will be 1 year.</p>");
+        helptext = helptext + _("<p>The ceritficate will be valid for only specific period(<b>Valid Period</b>.</p>");
 
         // help text 5/5
-        helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you use this option, please take care that SuSE cannot guarentee that the generated certification will work correctly.</p>");
+        helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you use this option, please take care that SuSE cannot guarentee that the generated certificate will work correctly.</p>");
 
 	
         term contents = `VBox ();
@@ -192,7 +194,7 @@
         contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
 
                                 // To translators: dialog label
-        Wizard::SetContents (_("Create new Certification (step 2/3)"), contents, helptext, true, true);
+        Wizard::SetContents (_("Create new Certificate (step 2/3)"), contents, helptext, true, true);
 	UI::ChangeWidget (`id (`next), `Label, Label::NextButton());	
 
         symbol ui = nil;
@@ -236,7 +238,7 @@
         // help text 1/4
         string helptext = _("<p>This frame gives an overview about all setting for the certificate which will be created.</p>");
         // help text 2/4
-        helptext = helptext + _("<p>Klick <b>Create</b> to generate the certificate.</p>");
+        helptext = helptext + _("<p>Click <b>Create</b> to generate the certificate.</p>");
 
 	string text = _("<br><h3>Summary</h3>");
 	text = text + "<pre>";
@@ -274,7 +276,7 @@
         contents = add (contents, `RichText(text));
 
                                 // To translators: dialog label
-        Wizard::SetContents (_("Create new Certification (step 3/3)"), contents, helptext, true, true);
+        Wizard::SetContents (_("Create new Certificate (step 3/3)"), contents, helptext, true, true);
 	UI::ChangeWidget (`id (`next), `Label, Label::CreateButton());	
 
         symbol ui = nil;

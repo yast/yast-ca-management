@@ -45,7 +45,7 @@
 					      `HBox(
 						    `HWeight (35,
 							     // tree widget label
-							     `Tree(`id(`tree), `opt(`notify, `vstretch), _("&Further Parameters"), itemList)
+							     `Tree(`id(`tree), `opt(`notify, `vstretch), _("&Advanced Options"), itemList)
 							      ),
 						    `HSpacing(1),
 						    `HWeight(65,
