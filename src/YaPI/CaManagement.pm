@@ -5735,7 +5735,7 @@ sub ImportCA {
     if($pemKey !~ /ENCRYPTED/si) {
         if(! defined $data->{caPasswd} || $data->{caPasswd} eq "") {
             return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
-                                   code    => "PARAM_CHECK_FAILED");
+                                   code    => "PASSWD_REQUIRED");
         }
     }
     
