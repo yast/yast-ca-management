@@ -173,7 +173,7 @@ symbol runCADialog () {
 								// Menu Item - CA - Tab
 			    `item ( `id( "CRL" ),		_("CR&L") ),
 								// Menu Item - CA - Tab
-			    `item ( `id( "Request" ),		_("&Request") ),			    
+			    `item ( `id( "Request" ),		_("&Requests") ),			    
 			    ];
 
     term contents =
