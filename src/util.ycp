@@ -1175,6 +1175,142 @@ This certificate might be not practical as a common server certificate.
 	return success;
     }
 
+
+    /**
+     * importCAFromDisk() - Importing CA from disk
+     * @return success
+     */
+    define boolean importCAFromDisk () ``{
+	boolean success = false;
+
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      `Heading (_("Import CA from Disk")),
+				      `TextEntry( `id (`caName), _("&CA Name:")),
+				      `HBox ( 
+					     `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of Certificate:"))),
+					     `HWeight(1,`VBox(
+							      `Label(""),
+							      `PushButton (`id(`browseCert), `opt( `notify), Label::BrowseButton())
+							      )
+						      )
+					     ),
+				      `HBox ( 
+					     `HWeight(2, `TextEntry( `id (`pathKey), _("Path of Key:"))),
+					     `HWeight(1,`VBox(
+							      `Label(""),
+							      `PushButton (`id(`browseKey), `opt( `notify), Label::BrowseButton())
+							      )
+						      )
+					     ),			       
+				      `VSpacing (1),					  
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),				      
+				      `VSpacing (1)
+				      )
+			       )
+			);
+
+
+
+
+	any ret = `again;
+	while (ret == `again)
+	{
+	    success = false;
+	    ret = UI::UserInput ();
+	    
+	    if (ret == `browseCert)
+	    {
+		string name = UI::AskForExistingFile( ".", "*.pem", "Import from ..." );
+		if ( name != nil )
+		{
+		    UI::ChangeWidget(`id(`pathCert), `Value, name);
+		}
+		ret = `again;		
+	    }
+	    
+	    if (ret == `browseKey)
+	    {
+		string name = UI::AskForExistingFile( ".", "*.pem", "Import from ..." );
+		if ( name != nil )
+		{
+		    UI::ChangeWidget(`id(`pathKey), `Value, name);
+		}
+		ret = `again;		
+	    }	    
+	    
+	    if (ret == `ok)
+	    {
+		// reading CA from disk
+		
+		string caCertificate = (string) UI::QueryWidget(`id(`pathCert), `Value);
+		string caKey = (string) UI::QueryWidget(`id(`pathKey), `Value);
+		string caName = (string) UI::QueryWidget(`id(`caName), `Value);
+		if (size (caCertificate) == 0)
+		{
+		    Popup::Error(_("Path to certificate file required."));
+		    ret = `again;
+		} else if (size (caKey) == 0)
+		{
+		    Popup::Error(_("Path of the private key required."));
+		    ret = `again;
+		} else if (size (caName) == 0)
+		{
+		    Popup::Error(_("CA Name required."));
+		    ret = `again;
+		}
+		
+		if (ret == `ok)
+		{
+		    UI::BusyCursor();
+		    UI::OpenDialog(`VBox(`Label(_("Importing request..."))));
+		    
+		    boolean yapiret = (boolean) YaPI::CaManagement::ImportCA ($["caName" : caName,
+									      "caCertificate" : caCertificate,
+									      "caKey" : caKey]);
+		    y2milestone ("ImportRequest(%1,%2,%3) return %2",
+				 caName,
+				 caCertificate,
+				 caKey,
+				 yapiret);
+		    if (!yapiret)
+		    {
+			// Checking if password required only
+			map<string,any> messageMap = YaPI::Error();
+			if (messageMap["code"]:"" == "PASSWD_REQUIRED")
+			{
+			    yapiret = (boolean) YaPI::CaManagement::ImportCA ($["caName" : caName,
+									       "caCertificate" : caCertificate,
+									       "caKey" : caKey,
+									       "caPasswd" : getPassword(caName)
+									     ]);			    
+
+			}
+		    }
+		    if (yapiret == nil)
+		    {
+			showErrorCaManagement ();
+			ret = `again;
+		    }
+		    else
+		    {
+			Popup::Message(_("Request has been imported."));
+			success = true;
+		    }		    
+		    UI::CloseDialog ();
+		}
+	    }
+	}
+	UI::CloseDialog ();	
+	return success;
+    }
+
     
     
 // EOF
