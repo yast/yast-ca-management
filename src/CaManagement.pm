@@ -7,6 +7,7 @@ use Errno qw(ENOENT);
 
 use YaST::YCP;
 use ycp;
+use URI::Escape;
 YaST::YCP::Import ("SCR");
 
 #@YaST::Logic::ISA = qw( YaST );
@@ -37,6 +38,8 @@ sub AddRootCA {
     my @dn       = ();
     my $caName  = "";
 
+    return undef if(not defined $self->checkCommonValues($data));
+
     # checking requires
     if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
         return $self->SetError( summary => "Missing value 'caName'",
@@ -54,10 +57,6 @@ sub AddRootCA {
         return $self->SetError( summary => "Missing value 'commonName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
-#    if (!defined $data->{"emailAddress"} || $data->{"emailAddress"} eq "") {
-#        return $self->SetError( summary => "missing value 'emailAddress'",
-#                         code    => "CHECK_PARAM_FAILED");
-#    }
 #    if (!-d "$CAM_ROOT/$caName") {
 #        return $self->SetError( summary => "'$CAM_ROOT/$caName' does not exist!",
 #                         code    => "DIR_DOES_NOT_EXIST");
@@ -109,7 +108,7 @@ sub AddRootCA {
         push @dn, $data->{$DN_Part};
     }
 
-    if(not defined SCR::Write(".var.lib.YaST2.CAM.value.$caName.req.x509_extensions", "v3_ca"))
+    if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.req.x509_extensions", "v3_ca"))
     { 
         $self->cleanCaInfrastructure($caName);
         return $self->SetError( summary => "Can not write to config file",
@@ -146,19 +145,18 @@ sub AddRootCA {
                              $data, $v3ext{$extName});
     }
 
-    if(not defined SCR::Write(".var.lib.YaST2.CAM.value.$caName", "nil")) 
+    if(not SCR::Write(".var.lib.YaST2.CAM", undef)) 
     {
         $self->cleanCaInfrastructure($caName);
         return $self->SetError( summary => "Can not write to config file",
-                         code => "SCR_WRITE_FAILED");
+                                code => "SCR_WRITE_FAILED");
     }
-
     my $hash = {
                 OUTFILE  => "$CAM_ROOT/$caName/cacert.key",
-                PASSWD   => $data->{"KeyPasswd"},
-                BITS     => $data->{"KeyLength"}
+                PASSWD   => $data->{"keyPasswd"},
+                BITS     => $data->{"keyLength"}
                };
-    my $ret = SCR::Execute( ".openca.openssl.genKey", $hash);
+    my $ret = SCR::Execute( ".openca.openssl.genKey", $caName, $hash);
 
     if (not defined $ret) {
         $self->cleanCaInfrastructure($caName);
@@ -168,9 +166,9 @@ sub AddRootCA {
     $hash = {
              OUTFILE => "$CAM_ROOT/$caName/cacert.req",
              KEYFILE => "$CAM_ROOT/$caName/cacert.key",
-             PASSWD  => $data->{"KeyPasswd"},
+             PASSWD  => $data->{"keyPasswd"},
              DN      => \@dn };
-    $ret = SCR::Execute( ".openca.openssl.genReq", $hash);
+    $ret = SCR::Execute( ".openca.openssl.genReq", $caName, $hash);
     if (not defined $ret) {
         $self->cleanCaInfrastructure($caName);
         return $self->SetError(SCR::Error(".openca.openssl"));
@@ -180,10 +178,10 @@ sub AddRootCA {
              OUTFILE => "$CAM_ROOT/$caName/cacert.pem",
              KEYFILE => "$CAM_ROOT/$caName/cacert.key",
              REQFILE => "$CAM_ROOT/$caName/cacert.req",
-             PASSWD  => $data->{"KeyPasswd"},
+             PASSWD  => $data->{"keyPasswd"},
              DAYS    => $data->{"days"} 
             };
-    $ret = SCR::Execute( ".openca.openssl.genCert", $hash);
+    $ret = SCR::Execute( ".openca.openssl.genCert", $caName, $hash);
     if (not defined $ret) {
         $self->cleanCaInfrastructure($caName);
         return $self->SetError(SCR::Error(".openca.openssl"));
@@ -198,7 +196,7 @@ sub cleanCaInfrastructure {
     if (!defined $caName || $caName eq "" || $caName =~ /\./) {
         return undef;
     }
-    if(!defined $CAM_ROOT || $CAM_ROOT != /^\/var\/lib\/YaST2/) {
+    if(!defined $CAM_ROOT || $CAM_ROOT !~ /^\/var\/lib\/YaST2/) {
         return undef;
     }
     SCR::Execute(".target.bash", "rm -rf $CAM_ROOT/$caName");
@@ -275,7 +273,7 @@ sub mergeToConfig {
   if ((not defined $param->{"$name"} ) && (defined $cfg_exists )) {
     # remove value from config
     y2debug("remove value from config (".$param->{"$name"}."/$name");
-    SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", "nil");
+    SCR::Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef);
   } elsif (defined $param->{"$name"}) {
     # add or modify are the same here
     y2debug("modify value in config (".$param->{"$name"}."/$name");
@@ -285,316 +283,312 @@ sub mergeToConfig {
 }
 
 sub checkCommonValues {
-  my $self = shift || return undef;
-  my $data = shift || return $self->SetError(summary=>"Missing 'data' map.",
-                                             code => "PARAM_CHECK_FAILED");
+    my $self = shift || return undef;
+    my $data = shift || return $self->SetError(summary=>"Missing 'data' map.",
+                                               code => "PARAM_CHECK_FAILED");
 
-  foreach my $key (keys %{$data}) {
-    if ( $key eq "caName") {
-      if (not defined $data->{$key} ||
-          $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "certType") {
-      if ( !$self->isOneOfList($data->{$key}, ["client", "server", "ca"] ) ) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "newCaName") {
-      if (not defined $data->{$key} ||
-          $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "template") {
-      #FIXME: Is this parameter needed?
-    } elsif ( $key eq "request") {
-      if (not defined $data->{$key} ||
-          $data->{$key} !~ /^[A-Za-z0-9\/=+]+\.req$/) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "certificate") {
-      if (not defined $data->{$key} ||
-          $data->{$key} !~ /^[:A-Za-z0-9\/=+]+\.pem$/) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "keyPasswd") {
-      if (not defined $data->{$key} ||
-          length($data->{$key}) < 4) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "keyLength") {
-      if ( not defined $data->{$key} ||
-           $data->{$key} !~ /^\d{3,4}$/ ) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "days") {
-      if ( not defined $data->{$key} ||
-           $data->{$key} !~ /^\d{1,}$/ ) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "crlReason") {
-      if ( !$self->isOneOfList($data->{$key}, ["unspecified", "keyCompromise", "CACompromise",
-                                               "affiliationChanged", "superseded", 
-                                               "cessationOfOperation", "certificateHold"] ) ) {
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "commonName") {
-    } elsif ( $key eq "emailAddress") {
-    } elsif ( $key eq "countryName") {
-    } elsif ( $key eq "stateOrProvinceName") {
-    } elsif ( $key eq "localityName") {
-    } elsif ( $key eq "organizationName") {
-    } elsif ( $key eq "organizationalUnitName") {
-    } elsif ( $key eq "challengePassword") {
-    } elsif ( $key eq "unstructuredName") {
-    } elsif ( $key eq "basicConstraints") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
-        next if($p     eq "critical");
-        next if(uc($p) eq "CA:TRUE");
-        next if($p     =~ /pathlen:\d+/);
-        return $self->SetError( summary => "Unknown value '$p' in '$key'.",
-                                code => "PARAM_CHECK_FAILED");
-      } 
-    } elsif ( $key eq "nsComment") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "nsCertType") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
-        next if($p     eq "critical");
-        if ( !$self->isOneOfList($p, ["client", "server", "email", "objsign",
-                                      "reserved", "sslCA", "emailCA", "objCA"])) {
-          return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                                 code    => "PARAM_CHECK_FAILED");
-        }
-      }
-    } elsif ( $key eq "keyUsage") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
-        next if($p     eq "critical");
-        if ( !$self->isOneOfList($p, ["digitalSignature", "nonRepudiation",
-                                      "keyEncipherment", "dataEncipherment",
-                                      "keyAgreement", "keyCertSign", "cRLSign",
-                                      "encipherOnly", "decipherOnly"])) {
-          return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                                 code    => "PARAM_CHECK_FAILED");
-        }
-      }
-    } elsif ( $key eq "subjectKeyIdentifier") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
-        next if($p eq "critical");
-        next if($p eq "hash");
-        next if($p =~ /^([[:xdigit:]]{2}:)+[[:xdigit:]]{2}$/);
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "authorityKeyIdentifier") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
-        next if($p     eq "critical");
-        next if($self->isOneOfList($p, ["issuer:always", "keyid:always",
-                                        "issuer", "keyid"]));
+    foreach my $key (keys %{$data}) {
+        if ( $key eq "caName") {
+            if (not defined $data->{$key} ||
+                $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "certType") {
+            if ( !$self->isOneOfList($data->{$key}, ["client", "server", "ca"] ) ) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "newCaName") {
+            if (not defined $data->{$key} ||
+                $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "template") {
+            #FIXME: Is this parameter needed?
+        } elsif ( $key eq "request") {
+            if (not defined $data->{$key} ||
+                $data->{$key} !~ /^[A-Za-z0-9\/=+]+\.req$/) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "certificate") {
+            if (not defined $data->{$key} ||
+                $data->{$key} !~ /^[:A-Za-z0-9\/=+]+\.pem$/) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "keyPasswd") {
+            if (not defined $data->{$key} ||
+                length($data->{$key}) < 4) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "keyLength") {
+            if ( not defined $data->{$key} ||
+                 $data->{$key} !~ /^\d{3,4}$/ ) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "days") {
+            if ( not defined $data->{$key} ||
+                 $data->{$key} !~ /^\d{1,}$/ ) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "crlReason") {
+            if ( !$self->isOneOfList($data->{$key}, ["unspecified", "keyCompromise", "CACompromise",
+                                                     "affiliationChanged", "superseded", 
+                                                     "cessationOfOperation", "certificateHold"] ) ) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "commonName" || $key eq "emailAddress" ||
+                  $key eq "countryName" || $key eq "stateOrProvinceName" ||
+                  $key eq "localityName" || $key eq "organizationName" ||
+                  $key eq "organizationalUnitName" || $key eq "challengePassword" ||
+                  $key eq "unstructuredName") {
+            if ($data->{$key} !~ /^[[:print:]]*$/ ) {
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+            $data->{$key} =~ s/([`$"'\\])/\\$1/g ; 
+        } elsif ( $key eq "basicConstraints") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
+                next if($p     eq "critical");
+                next if(uc($p) eq "CA:TRUE");
+                next if($p     =~ /pathlen:\d+/);
+                return $self->SetError( summary => "Unknown value '$p' in '$key'.",
+                                        code => "PARAM_CHECK_FAILED");
+            } 
+        } elsif ( $key eq "nsComment") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "nsCertType") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
+                next if($p     eq "critical");
+                if ( !$self->isOneOfList($p, ["client", "server", "email", "objsign",
+                                              "reserved", "sslCA", "emailCA", "objCA"])) {
+                    return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                           code    => "PARAM_CHECK_FAILED");
+                }
+            }
+        } elsif ( $key eq "keyUsage") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
+                next if($p     eq "critical");
+                if ( !$self->isOneOfList($p, ["digitalSignature", "nonRepudiation",
+                                              "keyEncipherment", "dataEncipherment",
+                                              "keyAgreement", "keyCertSign", "cRLSign",
+                                              "encipherOnly", "decipherOnly"])) {
+                    return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                           code    => "PARAM_CHECK_FAILED");
+                }
+            }
+        } elsif ( $key eq "subjectKeyIdentifier") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
+                next if($p eq "critical");
+                next if($p eq "hash");
+                next if($p =~ /^([[:xdigit:]]{2}:)+[[:xdigit:]]{2}$/);
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "authorityKeyIdentifier") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
+                next if($p     eq "critical");
+                next if($self->isOneOfList($p, ["issuer:always", "keyid:always",
+                                                "issuer", "keyid"]));
           
-        return $self->SetError(summary => "Wrong value for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "subjectAltName" || $key eq "issuerAltName") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      my @san = split(/\s*,\s*/ , $data->{$key});
-      foreach my $p (@san) {
-        next if($p eq "critical");
-        next if($p eq "email:copy" && $key eq "subjectAltName");
-        next if($p eq "issuer:copy" && $key eq "issuerAltName");
-        if ($p =~ /^\s*email:(.+)\s*$/) {
-          if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]$/) {
-            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                   code    => "PARAM_CHECK_FAILED");
-          }
-        } elsif ($p =~ /^\s*URI:(.+)\s*$/) {
-          my $nu = 0;
-          if (!defined $1 || !($nu = $self->checkURI($1, 1))) {
-            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                   code    => "PARAM_CHECK_FAILED");
-          }
-          $p = "URI:$nu";
-        } elsif ($p =~ /^\s*DNS:(.+)\s*$/) {
-          if (!defined $1 || $1 !~ /^[^_@]+\.[^_@]$/) {
-            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                   code    => "PARAM_CHECK_FAILED");
-          }
-        } elsif ($p =~ /^\s*RID:(.+)\s*$/) {
-          if (!defined $1 || $1 !~ /^(\d+\.)+\d+$/) {
-            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                   code    => "PARAM_CHECK_FAILED");
-          }
-        } elsif ($p =~ /^\s*IP:(.+)\s*$/) {
-          if (!defined $1 || $1 !~ /^\d+\.\d+\.\d+\.\d+$/) {
-            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                   code    => "PARAM_CHECK_FAILED");
-          }
-        } else {
-          return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                 code    => "PARAM_CHECK_FAILED");
-        }
-      }
-      $data->{$key} = join(",", @san);
-    } elsif ( $key eq "nsBaseUrl" || $key eq "nsRevocationUrl" ||
-              $key eq "nsCaRevocationUrl" || "nsRenewalUrl" ||
-              $key eq "nsCaPolicyUrl" ) {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      $data->{$key} =~ /^\s*critical\s*,\s*(.*)/ ;
-      if (!checkURI($1)) {
-        return $self->SetError(summary => "Wrong value'$1' for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "nsSslServerName") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-    } elsif ( $key eq "extendedKeyUsage") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
-        next if($p     eq "critical");
-        next if($p !~ /^(\d+\.)+\d+$/);
-        next if($self->isOneOfList($p, ["serverAuth", "clientAuth", "codeSigning",
-                                        "emailProtection", "timeStamping",
-                                        "msCodeInd", "msCodeCom", "msCTLSign",
-                                        "msSGC", "msEFS", "nsSGC"]));
-        return $self->SetError(summary => "Wrong value '$p' for parameter '$key'.",
-                               code    => "PARAM_CHECK_FAILED");
-      }
+                return $self->SetError(summary => "Wrong value for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "subjectAltName" || $key eq "issuerAltName") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            my @san = split(/\s*,\s*/ , $data->{$key});
+            foreach my $p (@san) {
+                next if($p eq "critical");
+                next if($p eq "email:copy" && $key eq "subjectAltName");
+                next if($p eq "issuer:copy" && $key eq "issuerAltName");
+                if ($p =~ /^\s*email:(.+)\s*$/) {
+                    if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]$/) {
+                        return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } elsif ($p =~ /^\s*URI:(.+)\s*$/) {
+                    if (!defined $1 || !$self->checkURI($1)) {
+                        return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } elsif ($p =~ /^\s*DNS:(.+)\s*$/) {
+                    if (!defined $1 || $1 !~ /^[^_@]+\.[^_@]$/) {
+                        return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } elsif ($p =~ /^\s*RID:(.+)\s*$/) {
+                    if (!defined $1 || $1 !~ /^(\d+\.)+\d+$/) {
+                        return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } elsif ($p =~ /^\s*IP:(.+)\s*$/) {
+                    if (!defined $1 || $1 !~ /^\d+\.\d+\.\d+\.\d+$/) {
+                        return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } else {
+                    return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                           code    => "PARAM_CHECK_FAILED");
+                }
+            }
+            $data->{$key} = join(",", @san);
+        } elsif ( $key eq "nsBaseUrl" || $key eq "nsRevocationUrl" ||
+                  $key eq "nsCaRevocationUrl" || $key eq "nsRenewalUrl" ||
+                  $key eq "nsCaPolicyUrl" ) {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            $data->{$key} =~ /^\s*critical\s*,\s*(.*)/ ;
+            if (!checkURI($1)) {
+                return $self->SetError(summary => "Wrong value'$1' for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "nsSslServerName") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+        } elsif ( $key eq "extendedKeyUsage") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
+            }
+            foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
+                next if($p     eq "critical");
+                next if($p !~ /^(\d+\.)+\d+$/);
+                next if($self->isOneOfList($p, ["serverAuth", "clientAuth", "codeSigning",
+                                                "emailProtection", "timeStamping",
+                                                "msCodeInd", "msCodeCom", "msCTLSign",
+                                                "msSGC", "msEFS", "nsSGC"]));
+                return $self->SetError(summary => "Wrong value '$p' for parameter '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
         
-    } elsif ( $key eq "authorityInfoAccess") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
-        next if($p     eq "critical");
-        my($accessOID, $location) = split(/\s*;\s*/ , $p, 2);
-        if ( $accessOID eq "OCSP" || $accessOID eq "caIssuers" ||
-             $accessOID =~ /^(\d+\.)+\d+$/ ) {
-          if ($location =~ /^\s*email:(.+)\s*$/) {
-            if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]$/) {
-              return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                     code    => "PARAM_CHECK_FAILED");
+        } elsif ( $key eq "authorityInfoAccess") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
             }
-          } elsif ($location =~ /^\s*URI:(.+)\s*$/) {
-            my $nu = 0;
-            if (!defined $1 || !($nu = $self->checkURI($1, 1))) {
-              return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                     code    => "PARAM_CHECK_FAILED");
+            foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
+                next if($p     eq "critical");
+                my($accessOID, $location) = split(/\s*;\s*/ , $p, 2);
+                if ( $accessOID eq "OCSP" || $accessOID eq "caIssuers" ||
+                     $accessOID =~ /^(\d+\.)+\d+$/ ) {
+                    if ($location =~ /^\s*email:(.+)\s*$/) {
+                        if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]$/) {
+                            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                                   code    => "PARAM_CHECK_FAILED");
+                        }
+                    } elsif ($location =~ /^\s*URI:(.+)\s*$/) {
+                        if (!defined $1 || !$self->checkURI($1)) {
+                            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                                   code    => "PARAM_CHECK_FAILED");
+                        }
+                    } elsif ($location =~ /^\s*DNS:(.+)\s*$/) {
+                        if (!defined $1 || $1 !~ /^[^_@]+\.[^_@]$/) {
+                            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                                   code    => "PARAM_CHECK_FAILED");
+                        }
+                    } elsif ($location =~ /^\s*RID:(.+)\s*$/) {
+                        if (!defined $1 || $1 !~ /^(\d+\.)+\d+$/) {
+                            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                                   code    => "PARAM_CHECK_FAILED");
+                        }
+                    } elsif ($location =~ /^\s*IP:(.+)\s*$/) {
+                        if (!defined $1 || $1 !~ /^\d+\.\d+\.\d+\.\d+$/) {
+                            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                                   code    => "PARAM_CHECK_FAILED");
+                        }
+                    } else {
+                        return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } else {
+                    return $self->SetError(summary => "Wrong value '$location' for parameter '$key'.",
+                                           code    => "PARAM_CHECK_FAILED");
+                }
             }
-            $location = "URI:$nu";
-          } elsif ($location =~ /^\s*DNS:(.+)\s*$/) {
-            if (!defined $1 || $1 !~ /^[^_@]+\.[^_@]$/) {
-              return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                     code    => "PARAM_CHECK_FAILED");
+        } elsif ( $key eq "crlDistributionPoints") {
+            # test critical
+            if ($data->{$key} =~ /critical/ && 
+                $data->{$key} !~ /^\s*critical/) {
+                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                                       code => "PARAM_CHECK_FAILED");
             }
-          } elsif ($location =~ /^\s*RID:(.+)\s*$/) {
-            if (!defined $1 || $1 !~ /^(\d+\.)+\d+$/) {
-              return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                     code    => "PARAM_CHECK_FAILED");
+            foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
+                next if($p eq "critical");
+                if ($p =~ /^\s*URI:(.+)\s*$/) {
+                    if (!defined $1 || !$self->checkURI($1)) {
+                        return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } else {
+                    return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
+                                           code    => "PARAM_CHECK_FAILED");
+                }
             }
-          } elsif ($location =~ /^\s*IP:(.+)\s*$/) {
-            if (!defined $1 || $1 !~ /^\d+\.\d+\.\d+\.\d+$/) {
-              return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                     code    => "PARAM_CHECK_FAILED");
-            }
-          } else {
-            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                   code    => "PARAM_CHECK_FAILED");
-          }
         } else {
-          return $self->SetError(summary => "Wrong value '$location' for parameter '$key'.",
-                                 code    => "PARAM_CHECK_FAILED");
+            # FIXME: What do we do here?
+            y2error("ATTENTION: unsupported value '$key' = '".$data->{$key}."'");
         }
-      }
-    } elsif ( $key eq "crlDistributionPoints") {
-      # test critical
-      if ($data->{$key} =~ /critical/ && 
-          $data->{$key} !~ /^\s*critical/) {
-        return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
-                               code => "PARAM_CHECK_FAILED");
-      }
-      foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
-        next if($p eq "critical");
-        if ($p =~ /^\s*URI:(.+)\s*$/) {
-          my $nu = 0;
-          if (!defined $1 || !($nu = $self->checkURI($1, 1))) {
-            return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                   code    => "PARAM_CHECK_FAILED");
-          }
-          $p = "URI:$nu";
-        } else {
-          return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
-                                 code    => "PARAM_CHECK_FAILED");
-        }
-      }
-    } else {
-      # FIXME: What do we do here?
-      y2error("ATTENTION: unsupported value '$key' = '".$data->{$key}."'");
     }
-  }
+    return 1;
 }
 
 sub isOneOfList {
@@ -646,7 +640,7 @@ sub SetError {
         @__error{'package','file','line'} = caller();
     }
     if ( defined $__error{summary} ) {
-        y2error($__error{code}." ".$__error{summary});
+        y2error($__error{code}."[".$__error{line}.":".$__error{file}." ".$__error{summary});
     } else {
         y2error($__error{code});
     }
