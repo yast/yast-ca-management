@@ -27,7 +27,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
 
@@ -70,7 +70,7 @@
 	    {
 		// generating CRL
 		boolean ret = nil;
-		ret = (boolean) CaManagement::AddCRL ($["caName"  : CAname,
+		ret = (boolean) YaPI::CaManagement::AddCRL ($["caName"  : CAname,
 							"caPasswd": getPassword(CaMgm::currentCA),
 							"days"    : tostring(days)]);
 		if (ret == nil
@@ -93,7 +93,7 @@
      * @return a string with the CRL description
      */
     define string getCRLDescription (string CAname) ``{
-	map ret = (map) CaManagement::ReadCRL ($["caName":CAname, "type":"parsed"]);
+	map ret = (map) YaPI::CaManagement::ReadCRL ($["caName":CAname, "type":"parsed"]);
         if (ret == nil)
         {
             showErrorCaManagement ();

@@ -13,6 +13,7 @@
 
     import "Label";
     import "Hostname";
+    import "YaPI::CaManagement";
 
     /**
      * See RFC 2822, 3.4
@@ -122,7 +123,7 @@
 		{
 		    // checking password
 		    boolean ret = nil;
-		    ret = (boolean) CaManagement::UpdateDB ($["caName": CAname, "caPasswd":password]);
+		    ret = (boolean) YaPI::CaManagement::UpdateDB ($["caName": CAname, "caPasswd":password]);
 		    if (ret == nil
 			|| ret == false)
 		    {
@@ -203,7 +204,7 @@
 		boolean ret = nil;
 		if (kind == "CA")
 		{
-//		    ret = (boolean) CaManagement::ExportCAToLDAP ($["caName": CaMgm::currentCA,
+//		    ret = (boolean) YaPI::CaManagement::ExportCAToLDAP ($["caName": CaMgm::currentCA,
 //								    "ldapHostname" : hostname,
 //								    "ldapPort" : port,
 //								    "destinationDN" : dn,
@@ -214,7 +215,7 @@
 		}
 		if (kind == "CRL")
 		{
-//		    ret = (boolean) CaManagement::ExportCRLToLDAP ($["caName": CaMgm::currentCA,
+//		    ret = (boolean) YaPI::CaManagement::ExportCRLToLDAP ($["caName": CaMgm::currentCA,
 //								     "ldapHostname" : hostname,
 //								     "ldapPort" : port,
 //								     "destinationDN" : dn,
@@ -225,7 +226,7 @@
 		}
 		if (kind == "CERT")
 		{
-//		    ret = (boolean) CaManagement::ExportCertificateToLDAP ($["caName": CaMgm::currentCA,
+//		    ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CaMgm::currentCA,
 //									     "certificate" : 
 //									     "ldapHostname" : hostname,
 //									     "ldapPort" : port,

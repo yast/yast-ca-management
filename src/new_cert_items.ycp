@@ -26,7 +26,7 @@
     import "CaMgm";
     import "Wizard";
     import "Label";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     include "ca-management/new_cert_callbacks.ycp";    
 

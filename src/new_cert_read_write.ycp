@@ -25,7 +25,7 @@
 
     import "CaMgm";
     import "Popup";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
 
@@ -109,15 +109,15 @@
 	if (kind == "Root CA"
 	    || kind == "Sub CA")
 	{
-	    ret = (map) CaManagement::ReadCertificateDefaults ($["certType":"ca"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"ca"]);
 	}
 	if (kind == "Server Certificate")
 	{
-	    ret = (map) CaManagement::ReadCertificateDefaults ($["certType":"server"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"server"]);
 	}
 	if (kind == "Client Certificate")
 	{
-	    ret = (map) CaManagement::ReadCertificateDefaults ($["certType":"client"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"client"]);
 	}		
 	if (ret == nil)
 	{
@@ -969,13 +969,13 @@
 	if (kind == "Root CA")
 	{
 	    y2milestone("CaManagement::AddRootCA(%1)", param);	
-	    return CaManagement::AddRootCA (param);
+	    return YaPI::CaManagement::AddRootCA (param);
 	}
 	if (kind == "Server Certificate"
 	    || kind == "Client Certificate")
 	{
 	    y2milestone("CaManagement::AddCertificate(%1)", param);	
-	    string filename = CaManagement::AddCertificate (param);
+	    string filename = YaPI::CaManagement::AddCertificate (param);
 	    if (filename == nil
 		|| size(filename) == 0)
 	    {
@@ -990,7 +990,7 @@
 	if (kind == "Sub CA")
 	{
 	    y2milestone("CaManagement::AddSubCA(%1)", param);	
-//	    return CaManagement::AddSubCA (param);   // FIXME
+	    return YaPI::CaManagement::AddSubCA (param);   // FIXME
 	    return true;
 	}	
     }

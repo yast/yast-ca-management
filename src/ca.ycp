@@ -27,7 +27,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
 
@@ -39,7 +39,7 @@
     define string getDescription (string CAname) ``{
 	string text = _("<br><h3>CA description</h3>");
 
-	map ret = (map) CaManagement::ReadCA ($["caName":CAname, "type":"parsed"]);
+	map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CAname, "type":"parsed"]);
         if (ret == nil)
         {
             showErrorCaManagement ();

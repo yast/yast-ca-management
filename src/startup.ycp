@@ -27,7 +27,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    import "CaManagement";
+    import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";    
 
@@ -38,7 +38,7 @@
     define list<term> getCAList () ``{
         list<term> result = [];
 
-        list<string> CAList = (list<string>) CaManagement::ReadCAList(); 
+        list<string> CAList = (list<string>) YaPI::CaManagement::ReadCAList(); 
 	y2milestone("Output of ReadCAList: %1", CAList);
 	if (CAList == nil)
 	{
