@@ -25,6 +25,9 @@ my $crt1 = "";
 my $crt2 = "";
 my $crt3 = "";
 my $subca = "";
+my $servercert = "";
+my $clientcert = "";
+
 my %rev = ();
 
 sub printError {
@@ -840,9 +843,17 @@ sub T27_CreateManyCerts {
                     'stateOrProvinceName'   => 'Bavaria',
                     'organizationalUnitName'=> 'IT Abteilung',
                     'organizationName'      => 'My Linux Tux GmbH',
-                    'days'                  => '365',
+                    'keyUsage'              => 'nonRepudiation, digitalSignature, keyEncipherment',
+                    'nsCertType'            => 'client, email, objsign',
                    };
         
+        # create a server certificate for $1 = 2
+        if($i == 2) {
+            $data->{certType}   = "server";
+            $data->{keyUsage}   = "digitalSignature, keyEncipherment";
+            $data->{nsCertType} = "server";
+        }
+
         my $res = YaPI::CaManagement->AddCertificate($data);
         if( not defined $res ) {
             print STDERR "Fehler\n";
@@ -851,6 +862,12 @@ sub T27_CreateManyCerts {
         } else {
             print "OK: $i\n";
             print STDERR Data::Dumper->Dump([$res])."\n";
+        }
+        if($i == 2) {
+            $servercert = $res;
+        }
+        if($i == 1) {
+            $clientcert = $res;
         }
 
         if($res =~ /^11:/) {
@@ -2011,6 +2028,87 @@ sub T54_AddRequest {
     }
 }
 
+sub T29_verify_with_purpose {
+    print STDERR "------------------- T29_verify_with_purpose ---------------------\n";
+    print "------------------- T29_verify_with_purpose ---------------------\n";
+
+    my $data = {
+                caName => 'Test2_SuSE_CA', 
+                certificate => $servercert,
+                disableCRLcheck => 1,
+                purpose => 'sslserver'
+               };
+    
+    my $Vret = YaPI::CaManagement->Verify($data);
+    if(not defined $Vret) {
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK: \n";
+    }
+
+    $data = {
+             caName => 'Test2_SuSE_CA', 
+             certificate => $clientcert,
+             disableCRLcheck => 1,
+             purpose => 'sslclient'
+            };
+    
+    $Vret = YaPI::CaManagement->Verify($data);
+    if(not defined $Vret) {
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK: \n";
+    }
+
+    $data = {
+             caName => 'Test2_SuSE_CA', 
+             certificate => $clientcert,
+             disableCRLcheck => 1,
+             purpose => 'sslserver'
+            };
+    
+    $Vret = YaPI::CaManagement->Verify($data);
+    if(not defined $Vret) {
+        my $err = YaPI::CaManagement->Error();
+        print "OK: This error must happen: ".$err->{description}."\n";
+        print STDERR "OK: This error must happen: \n";
+        foreach my $k (keys %$err) {
+            print STDERR "$k = ".$err->{$k}."\n";
+        }
+        print STDERR "\n";
+    } else {
+        print "FAILED: This call must end in an error\n";
+        exit 1;
+    }
+
+    $data = {
+             caName => 'Test2_SuSE_CA', 
+             certificate => $servercert,
+             disableCRLcheck => 1,
+             purpose => 'sslclient'
+            };
+    
+    $Vret = YaPI::CaManagement->Verify($data);
+    if(not defined $Vret) {
+        my $err = YaPI::CaManagement->Error();
+        print "OK: This error must happen: ".$err->{description}."\n";
+        print STDERR "OK: This error must happen: \n";
+        foreach my $k (keys %$err) {
+            print STDERR "$k = ".$err->{$k}."\n";
+        }
+        print STDERR "\n";
+    } else {
+        print "FAILED: This call must end in an error\n";
+        exit 1;
+    }
+
+
+}
+
+
+
 init_testsetup();
 
 T01_Interface();
@@ -2042,6 +2140,8 @@ T23a_enhanced_verify();
 T26_UpdateDB();
 T27_CreateManyCerts();
 T28_ListManyCerts();
+
+T29_verify_with_purpose();
 
 T42_RevokeManyCertificate();
 T43_AddCRL3();
