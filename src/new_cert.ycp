@@ -244,6 +244,32 @@
 			Popup::Error(_("Common Name required"));
 			ui = `again;
 		    }
+
+		    // Checking if there is an EMAIL entry without using the
+		    // "add" button
+		    map selection = $[];
+		    selection["name"] = (string) UI::QueryWidget(`id(`id_emailname), `Value);
+		    if (size (selection["name"]:"") > 0)
+		    {
+			if (size (CaMgm::emailList) > 0)
+			{
+			    selection["default"] = false;
+			}
+			else
+			{
+			    selection["default"] = true;
+			}
+			
+			if (check_mail_address(selection["name"]:""))
+			{
+			    CaMgm::emailList = add (CaMgm::emailList, selection);
+			}
+			else
+			{
+			    Popup::Error(_("Wrong EMAIL format."));
+			    ui = `again;			    
+			}
+		    }		    
 		}
 	    }
         }
