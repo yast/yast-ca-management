@@ -1332,10 +1332,105 @@ sub IssueCertificate {
 =item *
 C<$name = AddCertificate($valueMap)>
 
-create a new Certificate and returns the name
+Create a new Certificate and returns the name
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* certType (required - "client", "server" or "ca" )
+
+* keyPasswd (required)
+
+* caPasswd (required)
+
+* commonName (required)
+
+* emailAddress (depending on CA policy)
+
+* keyLength (required)
+
+* days (required)
+
+* countryName (depending on CA policy)
+
+* stateOrProvinceName (depending on CA policy)
+
+* localityName (depending on CA policy)
+
+* organizationName (depending on CA policy)
+
+* organizationalUnitName (depending on CA policy)
+
+* challengePassword
+
+* unstructuredName
+
+* basicConstraints (required)
+
+* nsComment
+
+* nsCertType
+
+* keyUsage
+
+* subjectKeyIdentifier
+
+* authorityKeyIdentifier
+
+* subjectAltName
+
+* issuerAltName
+
+* nsBaseUrl
+
+* nsRevocationUrl
+
+* nsCaRevocationUrl
+
+* nsRenewalUrl
+
+* nsCaPolicyUrl
+
+* nsSslServerName
+
+* extendedKeyUsage
+
+* authorityInfoAccess
+
+* crlDistributionPoints
+
+The return value is "undef" on an error and the 
+filename(without suffix) of the certificate on success.
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
 
 EXAMPLE:
 
+ my $data = {
+            'caName'                => 'My_CA',
+            'certType'              => 'client',
+            'keyPasswd'             => 'system',
+            'caPasswd'              => 'system',
+            'commonName'            => 'John Doe',
+            'emailAddress'          => 'John.Doe@example.com',
+            'keyLength'             => '2048',
+            'days'                  => '365',
+            'countryName'           => 'US',
+            'localityName'          => 'New York',
+            'organizationalUnitName'=> 'IT',
+            'organizationName'      => 'My Inc.',
+            'crlDistributionPoints' => "URI:ldap://ldap.example.com/?cn=My_CA%2Cou=PKI%2Cdc=example%2Cdc=com",
+            'nsComment'             => "YaST Generated Certificate",
+            };
+
+    my $res = YaPI::CaManagement->AddCertificate($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        print "OK: '$res'\n";
+    }
 
 =cut
 
@@ -1363,10 +1458,58 @@ sub AddCertificate {
 =item *
 C<$certList = ReadCertificateList($valueMap)>
 
-returns a list of maps with all certificates of a special CA
+Returns a list of maps with all certificates of the defined CA.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* caPasswd (optional)
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error.
+
+On success it returns an array of hashes with all 
+certificates of this CA. @ret[0..X] can have the 
+following Hash keys:
+
+* certificate (the name of the certificate)
+
+* commonName
+
+* emailAddress
+
+* country
+
+* stateOrProvinceName
+
+* localityName
+
+* organizationName
+
+* organizationalUnitName
+
+* status (The status of the certificate: "valid", "revoked", "expired")
+
 
 EXAMPLE:
 
+ use Data::Dumper;
+
+ my $data = {
+             'caName'   => 'My_CA',
+             'caPasswd' => 'system'
+            };
+
+    my $res = YaPI::CaManagement->ReadCertificateList($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        my $certificateName = $res->[0]->{'certificate'};
+        print Data::Dumper->Dump([$res])."\n";
+    }
 
 =cut
 
@@ -1404,10 +1547,32 @@ sub ReadCertificateList {
 =item *
 C<$bool = UpdateDB($valueMap)>
 
-update the internal openssl database
+Update the internal openssl database. 
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* caPasswd (required)
+
+The return value is "undef" on an error and "1" on success.
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
 
 EXAMPLE:
 
+ my $data = {
+             'caName'   => 'My_CA',
+             'caPasswd' => 'system'
+            };
+
+ my $res = YaPI::CaManagement->UpdateDB($data);
+ if( not defined $res ) {
+     # error
+ } else {
+     print "OK \n";
+ }
 
 =cut
 
@@ -1443,10 +1608,43 @@ sub UpdateDB {
 =item *
 C<$cert = ReadCertificate($valueMap)>
 
-returns a certificate as plain text or parsed map
+Returns a certificate as plain text or parsed map.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* certificate (required - name without suffix)
+
+* type (required - allowed values: "parsed" or "plain") 
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error.
+
+On success and type = plain the plain text view of the Certificate is returned.
+
+If the type is "parsed" a complex structure with the single values is returned.
 
 EXAMPLE:
 
+ use Data::Dumper;
+
+ foreach my $type ("parsed", "plain") {
+     my $data = {
+                 'caName'      => 'My_CA',
+                 'type'        => $type,
+                 'certificate' => $certName
+                };
+
+     my $res = YaPI::CaManagement->ReadCertificate($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         print Data::Dumper->Dump([$res])."\n";
+     }
+ }
 
 =cut
 
@@ -1509,10 +1707,38 @@ sub ReadCertificate {
 =item *
 C<$bool = RevokeCertificate($valueMap)>
 
-revoke a certificate
+Revoke a certificate. 
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* caPasswd (required)
+
+* certificate (required)
+
+* crlReason
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error and "1" on success.
 
 EXAMPLE:
 
+ my $data = {
+             'caName'      => 'My_CA',
+             'caPasswd'    => 'system',
+             'certificate' => $certName,
+             'crlReason'   => 'keyCompromise'
+            };
+
+ my $res = YaPI::CaManagement->RevokeCertificate($data);
+ if( not defined $res ) {
+     # error
+ } else {
+     print "Revoke successful\n";
+ }
 
 =cut
 
@@ -1569,10 +1795,35 @@ sub RevokeCertificate {
 =item *
 C<$bool = AddCRL($valueMap)>
 
-create a CRL
+Create a new CRL. 
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* caPasswd (required)
+
+* days (required)
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error and "1" on success.
 
 EXAMPLE:
 
+ my $data = {
+             'caName'      => 'My_CA',
+             'caPasswd'    => 'system',
+             'days'        => 8
+            };
+
+ my $res = YaPI::CaManagement->AddCRL($data);
+ if( not defined $res ) {
+     # error
+ } else {
+     print "AddCRL successful\n";
+ }
 
 =cut
 
@@ -1632,10 +1883,40 @@ sub AddCRL {
 =item *
 C<$crl = ReadCRL($valueMap)>
 
-returns a CRL as plain text or parsed map
+Returns a CRL as plain text or parsed map.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* type (required - allowed values: "parsed" or "plain")
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error.
+
+On success and type = plain the plain text view of the CRL is returned.
+
+If the type is "parsed" a complex structure with the single values is returned.
 
 EXAMPLE:
 
+ use Data::Dumper;
+
+ foreach my $type ("parsed", "plain") {
+     my $data = {
+                 'caName' => 'My_CA',
+                 'type'   => $type,
+                };
+
+     my $res = YaPI::CaManagement->ReadCRL($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         print Data::Dumper->Dump([$res])."\n";
+     }
+ }
 
 =cut
 
@@ -1689,10 +1970,62 @@ sub ReadCRL {
 =item *
 C<$file = ExportCA($valueMap)>
 
-Export a CA to a file or returns it in different formats
+Export a CA to a file or returns it in different formats.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* caPassword (required)
+
+* exportFormat <format> (required)
+
+  PEM_CERT (export only the Certificate im PEM format)
+
+  PEM_CERT_KEY (export the Certificate and the Key unencrypted in PEM Format)
+
+  PEM_CERT_ENCKEY (export the Certificate and the Key encrypted in PEM Format)
+
+  DER_CERT (export the Certificate in DER Format)
+
+  PKCS12 (export the Certificate and the Key in PKCS12 Format)
+
+  PKCS12_CHAIN (like PKCS12 + include the CA Chain )
+
+* destinationFile (optional)
+
+* P12Password (only for creating PKCS12 password)
+
+The return value is "undef" on an error and "1" on success if destinationFile is defined.
+If destinationFile is not defined, the CA is directly returned. If the exportFormat is
+PEM_CERT_KEY or PEM_CERT_ENCKEY the certificate and the key are returned. 
+Because of the PEM format it is easy to split them later.
+
 
 EXAMPLE:
 
+ foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
+     my $data = {
+                 'caName'       => 'My_CA',
+                 'exportFormat' => $ef,
+                 'caPasswd'     => "system",
+                };
+     if($ef =~ /^PKCS12/) {
+         $data->{'P12Password'} = "p12pass";
+     }
+
+     my $res = YaPI::CaManagement->ExportCA($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         if(! open(OUT, "> /tmp/certs/$ef")) {
+             print STDERR "OPEN_FAILED\n";
+             exit 1;
+         }
+         print OUT $res;
+         close OUT;
+     }
+ }
 
 =cut
 
@@ -1894,10 +2227,65 @@ sub ExportCA {
 =item *
 C<$file = ExportCertificate($valueMap)>
 
-Export a certificate to a file or returns it in different formats
+Export a certificate to a file or returns it in different formats.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* keyPassword (required)
+
+* certificate (required)
+
+* exportFormat <format> (required)
+
+  PEM_CERT (export only the Certificate im PEM format)
+
+  PEM_CERT_KEY (export the Certificate and the Key unencrypted in PEM Format)
+
+  PEM_CERT_ENCKEY (export the Certificate and the Key encrypted in PEM Format)
+
+  DER_CERT (export the Certificate in DER Format)
+
+  PKCS12 (export the Certificate and the Key in PKCS12 Format)
+
+  PKCS12_CHAIN (like PKCS12 + include the CA Chain )
+
+* destinationFile (optional)
+
+* P12Password (only for creating PKCS12 password)
+
+The return value is "undef" on an error and "1" on success if destinationFile is defined.
+If destinationFile is not defined, the certificate is directly returned. If the exportFormat is
+PEM_CERT_KEY or PEM_CERT_ENCKEY the certificate and the key are returned. 
+Because of the PEM format it is easy to split them later.
+
 
 EXAMPLE:
 
+ foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
+     my $data = {
+                 'caName'       => 'My_CA',
+                 'certificate'  => §certName,
+                 'exportFormat' => $ef,
+                 'keyPasswd'    => "system",
+                };
+     if($ef =~ /^PKCS12/) {
+         $data->{'P12Password'} = "p12pass";
+     }
+
+     my $res = YaPI::CaManagement->ExportCertificate($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         if(! open(OUT, "> /tmp/certs/$ef")) {
+             print STDERR "OPEN_FAILED\n";
+             exit 1;
+         }
+         print OUT $res;
+         close OUT;
+     }
+ }
 
 =cut
 
@@ -2116,10 +2504,43 @@ sub ExportCertificate {
 =item *
 C<$file = ExportCRL($valueMap)>
 
-Export a CRL to a file or returns it in different formats
+Export a CRL to a file or returns it in different formats.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* exportFormat <format> (required)
+
+  PEM - Export the CRL in PEM format
+
+  DER - Export the CRL in DER format
+
+* destinationFile (optional)
+
+The return value is "undef" on an error and "1" on success,
+if 'destinationFile' is defined. 
+If 'destinationFile' is not defined the CRL is returned.
 
 EXAMPLE:
 
+ foreach my $ef ("PEM", "DER") {
+     my $data = {
+                 'caName'       => 'My_CA',
+                 'exportFormat' => $ef,
+                };
+     
+     my $res = YaPI::CaManagement->ExportCRL($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         if(! open(OUT, "> /tmp/certs/CRL_$ef")) {
+             print STDERR "OPEN_FAILED\n";
+         }
+         print OUT $res;
+         close OUT;
+     }
+ }
 
 =cut
 
@@ -2211,10 +2632,33 @@ sub ExportCRL {
 =item *
 C<$bool = Verify($valueMap)>
 
-verify a certificate
+Verify a certificate.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* certificate (required)
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" if the verification failed.
+On success it returns "1".
 
 EXAMPLE:
 
+ $data = {
+           'caName'      => 'My_CA',
+           'certificate' => $certName
+         };
+
+ my $Vret = YaPI::CaManagement->Verify($data);
+ if(not defined $Vret) {
+     # verification failed
+ } else {
+     print "OK \n";
+ }
 
 =cut
 
@@ -2255,11 +2699,103 @@ sub Verify {
 =item *
 C<$bool = AddSubCA($valueMap)>
 
-create a new CA signed by another
+create a new CA signed by another CA.
 
+In I<$valueMap> you can define the following keys: 
+
+* newCaName (required - the name of the new CA)
+
+* caName (required - the name of the CA which should issue the new CA)
+
+* keyPasswd (required - password for the new CA)
+
+* caPasswd (required - password for the CA which should issue the new CA)
+
+* commonName (required)
+
+* emailAddress (depending on CA policy)
+
+* keyLength (required)
+
+* days (required)
+
+* countryName (depending on CA policy)
+
+* stateOrProvinceName (depending on CA policy)
+
+* localityName (depending on CA policy)
+
+* organizationName (depending on CA policy)
+
+* organizationalUnitName (depending on CA policy)
+
+* challengePassword
+
+* unstructuredName
+
+* basicConstraints (required)
+
+* nsComment
+
+* nsCertType
+
+* keyUsage
+
+* subjectKeyIdentifier
+
+* authorityKeyIdentifier
+
+* subjectAltName
+
+* issuerAltName
+
+* nsBaseUrl
+
+* nsRevocationUrl
+
+* nsCaRevocationUrl
+
+* nsRenewalUrl
+
+* nsCaPolicyUrl
+
+* nsSslServerName
+
+* extendedKeyUsage
+
+* authorityInfoAccess
+
+* crlDistributionPoints
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error and "1" on success.
 
 EXAMPLE:
 
+ my $data = {
+             'caName'                => 'My_CA',
+             'newCaName'             => 'My_New_Sub_CA',
+             'keyPasswd'             => 'newPasswd',
+             'caPasswd'              => 'system',
+             'commonName'            => 'My CA New Sub CA',
+             'emailAddress'          => 'my@example.com',
+             'keyLength'             => '2048',
+             'days'                  => '3000',
+             'countryName'           => 'US',
+             'localityName'          => 'New York',
+             'organizationName'      => 'My Inc.',
+             'basicConstraints'      => 'CA:TRUE',
+             'crlDistributionPoints' => 'URI:http://my.example.com/',
+            };
+
+ my $res = YaPI::CaManagement->AddSubCA($data);
+ if( not defined $res ) {
+     # error    
+ } else {
+     print "OK\n";
+ }
 
 =cut
 
