@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Apr 16 16:52:05 CEST 2004 - mc@suse.de
+
+- add proposal files to spec 
+
+-------------------------------------------------------------------
 Fri Apr 16 14:36:30 CEST 2004 - mc@suse.de
 
 - remove Execute .status from ag_ca_tools; is now in ag_openssl
