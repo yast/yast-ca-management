@@ -205,7 +205,17 @@ sub AddRootCA {
         $self->cleanCaInfrastructure($caName);
         return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
-    
+
+    $ret = SCR::Execute(".target.bash", "cp $CAM_ROOT/$caName/cacert.pem $CAM_ROOT/.cas/$caName.pem");
+    if(not defined $ret || $ret != 0) {
+        return $self->SetError( summary => "Can not copy CA certificate",
+                                code => "COPY_FAILED");
+    }
+    $ret = SCR::Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
+    if(not defined $ret || $ret != 0) {
+        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
+                                code => "C_REHASH_FAILED");
+    }
     return 1;
 }
 
@@ -872,6 +882,17 @@ sub AddCRL {
         return $self->SetError(%{SCR::Error(".openca.openssl")});
     }
     SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+
+    $ret = SCR::Execute(".target.bash", "cp $CAM_ROOT/$caName/crl/crl.pem $CAM_ROOT/.cas/crl_$caName.pem");
+    if(not defined $ret || $ret != 0) {
+        return $self->SetError( summary => "Can not copy CRL",
+                                code => "COPY_FAILED");
+    }
+    $ret = SCR::Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
+    if(not defined $ret || $ret != 0) {
+        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
+                                code => "C_REHASH_FAILED");
+    }
     return 1;
 }
 
@@ -1337,6 +1358,36 @@ sub ExportCertificate {
                                code => "NOT_SUPPORTED");
 
     }
+}
+
+BEGIN { $TYPEINFO{Verify} = ["function", "any", "any"]; }
+sub Verify {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $certificate = "";
+
+    # checking requires
+    if (not defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{"caName"};
+
+    if (not defined $data->{'certificate'} ||
+        $data->{'certificate'} !~ /^[:A-Za-z0-9\/=+]+$/) {
+        return $self->SetError(summary => "Wrong value for parameter 'certificate'.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $certificate = $data->{"certificate"};
+    
+    my $hash = { CERT => $certificate };
+    my $ret = SCR::Execute(".caTools.verify", $caName, $hash);
+    if( not defined $ret ) {
+        return $self->SetError(%{SCR::Error(".caTools")});
+    }
+    return $ret;
 }
 
 sub cleanCaInfrastructure {
