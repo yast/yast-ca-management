@@ -127,6 +127,12 @@
 					       _("Password: ") + passwordString,
 					       _("Email: ") + CaMgm::prop_email
 					       ] );
+	    if ( size(CaMgm::prop_password) < 4)
+	    {
+		ret = add( ret, "warning", _("The root password is to short for using it as password for the certificates. 
+ Please enter a valid password for the certificates or disable creating  certificates."));
+		ret = add( ret, "warning_level", `blocker );
+	    }
 	}
 	else if (CaMgm::prop_selection == `none)
 	{

@@ -123,6 +123,11 @@ Here, change these <b>default settings</b>.
 			Popup::Error(_("New passwords do not match."));
 			ret = `again;
 		    }
+		    else if ( size(confirmPassword) < 4)
+		    {
+			Popup::Error(_("Password lenght should be greater than 3 characters."));
+			ret = `again;
+		    }
 		    else
 		    {
 			if (CaMgm::prop_ca_commonName != (string) UI::QueryWidget (`id (`id_commonName), `Value))
