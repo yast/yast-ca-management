@@ -48,8 +48,6 @@
 	    return nil;
         }
         y2milestone("ReadCertificate(%1): %2", currentCA, ret);
-
-	
 	
 
 	foreach (map element, ret, ``{
@@ -119,18 +117,14 @@
                                               ));
         term contents = `VBox ();
 
-	contents = add (contents, `HBox(
-					`HSpacing(5),
-					`Table (`id (`table), `opt (`notify, `immediate),
+	contents = add (contents, `Table (`id (`table), `opt (`notify, `immediate),
 						`header (
 							 // To translators: table headers
 							 _("Status"), _("Common Name"),
 							 _("EMAIL Address"), _("Organisation"),
 							 _("Organisational Unit"), _("Locality"),
 							 _("State"), _("Country")),
-						certTermList),
-					`HSpacing(5)
-					)
+						certTermList)
 			);
 	
 	contents = add (contents, buttons);

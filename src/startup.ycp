@@ -29,6 +29,8 @@
     import "Popup";
     import "CaManagement";
 
+    include "ca-management/util.ycp";    
+
     /**
      * Creates CA items
      * @return a list of CA items formated for a UI table
@@ -112,6 +114,14 @@
 		{
 		    CaMgm::currentCA = (string) select(table_item, 1, "");
 		}
+		if (ui == `enter)
+		{
+		    // checking password
+		    if (getPassword(CaMgm::currentCA) == nil)
+		    {
+			ui = `again;
+		    }
+		}		
             }
         }
         until (contains ([`createRoot, `enter,`next], ui));

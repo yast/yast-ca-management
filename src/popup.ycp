@@ -59,6 +59,7 @@
 	string message = messageMap["summary"]:"";
         if (size (message) > 0)
         {
+	    y2error ("Showing error: %1", message);
             Popup::Error (message);
         }
 	return;

@@ -12,6 +12,7 @@ myinclude_DATA =		\
 	new_cert_advanced.ycp	\
 	new_cert_read_write.ycp \
 	ca.ycp			\
+	certificate.ycp		\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	\
