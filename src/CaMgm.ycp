@@ -62,7 +62,7 @@ global integer 	keyLength = 1024;
 global integer 	validPeriod = 365;
 
 global boolean 	adv_cri_ca = false;
-global string 	adv_ca = "";
+global string 	adv_ca = "none";
 global boolean	adv_pathlen = false;
 global integer	adv_pathlenValue = 1;
 

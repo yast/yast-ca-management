@@ -82,6 +82,9 @@
 												    `VSpacing(1.5),
 												    `HBox (`HWeight(1,`ComboBox(`id(`id_adv_ca), "CA",
 														     [
+														      `item(`id(`none),
+															    "none",
+															    CaMgm::adv_ca == "none"),
 														      `item(`id(`caFalse),
 															    "CA:false",
 															    CaMgm::adv_ca == "CA:false"),
