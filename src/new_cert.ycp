@@ -271,7 +271,6 @@
         term contents = `VBox ();
         contents = add (contents, `Password( `id (`id_password), _("&Password:"), CaMgm::password));
         contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password:"), CaMgm::verifyPassword));
-        contents = add (contents, `Password( `id (`id_caPassword), _("&CA Password:"), CaMgm::CAPassword));
 	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 100, 9999, CaMgm::keyLength));
 	contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
         contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
@@ -291,7 +290,6 @@
             {
 		CaMgm::password = (string) UI::QueryWidget(`id(`id_password), `Value);
 		CaMgm::verifyPassword = (string) UI::QueryWidget(`id(`id_verifyPassword), `Value);
-		CaMgm::CAPassword = (string) UI::QueryWidget(`id(`id_caPassword), `Value);
 		CaMgm::keyLength = (integer) UI::QueryWidget(`id(`id_keyLength), `Value);
 		CaMgm::validPeriod = (integer) UI::QueryWidget(`id(`id_validPeriod), `Value);
 
