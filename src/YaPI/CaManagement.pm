@@ -3547,7 +3547,7 @@ sub ExportCRLToLDAP {
             # if all crlDP are not defined or empty, than we can add it automaticaly
             
             my $crlDP = "URI:";
-            $crlDP   .= "ldap://".$data->{'ldapHostname'}.":".$data->{'ldapPort'}."/?";
+            $crlDP   .= "ldap://".$data->{'ldapHostname'}.":".$data->{'ldapPort'}."/";
             $crlDP   .= uri_escape("cn=$caName,".$data->{'destinationDN'});
             
             if ( !SCR->Write(".openssl.tmpl.value.$caName.v3_client.crlDistributionPoints", $crlDP) ||
