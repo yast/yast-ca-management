@@ -24,3 +24,4 @@ GenericName=Configure CAs, Certificates and Requests
 Name[de]=CA Management
 GenericName[de]=Konfiguration von CAs, Zertifikate und Requests
 
+X-KDE-SubstituteUID=true
