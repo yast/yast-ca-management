@@ -782,7 +782,7 @@
 
                                 // To translators: dialog label
         Wizard::SetContents ( _("Create new ") + kind + _(" (step 3/3)"), contents, helptext, true, true);
-	UI::ChangeWidget (`id (`next), `Label, Label::CreateButton());
+	Wizard::SetNextButton(`next, Label::CreateButton() );
 
         symbol ui = nil;
 
