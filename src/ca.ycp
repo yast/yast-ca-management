@@ -172,6 +172,14 @@
 	    {
 		showLongDescription (CaMgm::currentCA);
 	    }
+	    if (ui == `exportLDAP)
+	    {
+		exportToLDAP ("CA", CaMgm::currentCA);
+	    }
+	    if (ui == `exportFile)
+	    {
+		 exportCAtoFile (CaMgm::currentCA);
+	    }	    	    
         }
         until (contains ([`back, `abort, `certificates, `createSubCA, `crl], ui));
 

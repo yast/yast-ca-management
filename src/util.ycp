@@ -156,7 +156,7 @@
      * @param "CA" "CRL" "CERT"
      * @return true ( success )
      */
-    define boolean exportToLDAP(string kind)``{
+    define boolean exportToLDAP(string kind, string CAname)``{
 
 	UI::OpenDialog (`opt(`decorated ),
 			`HBox( `HSpacing(2),
@@ -204,37 +204,35 @@
 		boolean ret = nil;
 		if (kind == "CA")
 		{
-//		    ret = (boolean) YaPI::CaManagement::ExportCAToLDAP ($["caName": CaMgm::currentCA,
-//								    "ldapHostname" : hostname,
-//								    "ldapPort" : port,
-//								    "destinationDN" : dn,
-//								    "BindDN" : binddn,
-//								    "password" : password
-//								  ]);
-		    ret = true; // FIXME		    
+		    ret = (boolean) YaPI::CaManagement::ExportCAToLDAP ($["caName": CAname,
+								    "ldapHostname" : hostname,
+								    "ldapPort" : port,
+								    "destinationDN" : dn,
+								    "BindDN" : binddn,
+								    "ldapPasswd" : password
+								  ]);
 		}
 		if (kind == "CRL")
 		{
-//		    ret = (boolean) YaPI::CaManagement::ExportCRLToLDAP ($["caName": CaMgm::currentCA,
-//								     "ldapHostname" : hostname,
-//								     "ldapPort" : port,
-//								     "destinationDN" : dn,
-//								     "BindDN" : binddn,
-//								     "password" : password
-//								   ]);
-		    ret = true; // FIXME
+		    ret = (boolean) YaPI::CaManagement::ExportCRLToLDAP ($["caName": CAname,
+								     "ldapHostname" : hostname,
+								     "ldapPort" : port,
+								     "destinationDN" : dn,
+								     "BindDN" : binddn,
+								     "ldapPasswd" : password
+								   ]);
 		}
 		if (kind == "CERT")
 		{
-//		    ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CaMgm::currentCA,
+//		    ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CAname,
 //									     "certificate" : 
 //									     "ldapHostname" : hostname,
 //									     "ldapPort" : port,
 //									     "destinationDN" : dn,
 //									     "BindDN" : binddn,
-//									     "password" : password
+//									     "ldapPasswd" : password
 //									   ]);
-		    ret = true; // FIXME		    
+		    ret = true; // FIXME
 		}				
 		if (ret == nil
 		    || ret == false)
@@ -242,11 +240,153 @@
 		    showErrorCaManagement ();
 		    ret = false;
 		}
+		else
+		{
+		    Popup::Message(_("Saved to LDAP successfully."));
+		}
 	    }
 	}
 	until (contains ([`ok, `cancel], ui));
 	UI::CloseDialog ();
     }
 
+
+    /**
+     * Dialog for exporting CA to file
+     * @param CAname
+     * @return true ( success )
+     */
+    define void exportCAtoFile (string CAname) ``{
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      // popup window header
+				      `Heading (_("Export CA to File")),
+				      `VSpacing (1),
+				      `Frame ( _("Export Format"),
+					       `RadioButtonGroup(`id(`rb), 
+								 `VBox(
+								       `Left(`RadioButton(`id(`PEM_CERT), `opt(`notify),
+											  _("o&nly the certificate in PEM format"), true)),
+								       `Left(`RadioButton(`id(`PEM_CERT_KEY), `opt(`notify),
+											  _("ce&rtificate and the key unencrypted in PEM format" ))),
+								       `Left(`RadioButton(`id(`PEM_CERT_ENCKEY), `opt(`notify),
+											  _("c&ertificate and the key encrypted in PEM format" ))),
+								       `Left(`RadioButton(`id(`DER_CERT), `opt(`notify),
+											  _("&certificate in DER format" ))),
+								       `Left(`RadioButton(`id(`PKCS12), `opt(`notify),
+											  _("cer&tificate and the key in PKCS12 format" ))),
+								       `Left(`RadioButton(`id(`PKCS12_CHAIN), `opt(`notify),
+											  _("&like PKCS12 + include the CA chain" )))
+								       )
+								 )
+					       ),
+				      `Password( `id (`PK12password), "&P12Password:"),
+				      `HBox ( 
+					     `HWeight(1, `TextEntry( `id (`filename), _("&Filename:"))),
+					     `VBox(
+						   `Label(""),
+						   `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
+						   )
+					     ),				      
+				      `VSpacing (1),					  
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),
+				      `VSpacing (1)					  
+				      ),
+			       `HSpacing (2)
+			       )
+			);
+
+	symbol ui = nil;
+	UI::ChangeWidget (`id (`PK12password), `Enabled, false);	
+	repeat
+ 	{
+	    ui = (symbol) UI::UserInput ();
+
+	    map<symbol,string> kindmap = $[`PEM_CERT:"PEM_CERT",
+					   `PEM_CERT_KEY:"PEM_CERT_KEY",
+					   `PEM_CERT_ENCKEY:"PEM_CERT_ENCKEY",
+					   `DER_CERT:"DER_CERT",
+					   `PKCS12:"PKCS12",
+					   `PKCS12_CHAIN:"PKCS12_CHAIN"];
+	    
+            string kind =  kindmap[(symbol) UI::QueryWidget(`id(`rb),
+						   `CurrentButton)]:"";
+
+	    if (kind == "PKCS12"
+		|| kind == "PKCS12_CHAIN")
+	    {
+		UI::ChangeWidget (`id (`PK12password), `Enabled, true);
+	    }
+	    else
+	    {
+		UI::ChangeWidget (`id (`PK12password), `Enabled, false);		
+	    }
+
+	    if (ui == `browse)
+	    {
+		string name = UI::AskForSaveFileName( "/tmp", "*", "Export to ..." );
+		if ( name != nil )
+		{
+		    UI::ChangeWidget(`id(`filename), `Value, name);
+		}
+	    }
+		
+	    if (ui == `ok)
+	    {
+		// export to file
+
+		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
+		if (size (filename) == 0)
+		{
+		    Popup::Error(_("Filename required"));
+		    ui = `again;
+		}
+		else
+		{
+		    string ret = nil;
+		    if (kind == "PKCS12"
+			|| kind == "PKCS12_CHAIN")
+		    {
+			ret = (string) YaPI::CaManagement::ExportCA ($["caName": CAname,
+									"caPasswd" : getPassword (CAname),
+									"exportFormat" : kind,
+									"destinationFile" : filename,
+									"P12Password" : UI::QueryWidget (`id(`PK12password), `Value)
+								       ]);
+		    }
+		    else
+		    {
+			ret = (string) YaPI::CaManagement::ExportCA ($["caName": CAname,
+									"caPasswd" : getPassword (CAname),
+									"exportFormat" : kind,
+									"destinationFile" : filename
+								       ]);
+		    }
+		    y2milestone ("ExportCA(%1) return %2", $["caName": CAname,
+							     "exportFormat" : kind,
+							     "destinationFile" : filename
+				 ], ret);
+		    if (ret == nil
+			|| ret != "1")
+		    {
+			showErrorCaManagement ();
+		    }
+		    else
+		    {
+			Popup::Message(_("CA saved to file."));
+		    }
+		}
+	    }
+	}
+	until (contains ([`ok, `cancel], ui));
+	UI::CloseDialog ();
+    }        
+    
 
 }

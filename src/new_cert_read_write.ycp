@@ -986,7 +986,7 @@
 	if (kind == "Sub CA")
 	{
 	    y2milestone("CaManagement::AddSubCA(%1)", param);	
-	    return YaPI::CaManagement::AddSubCA (param);   // FIXME
+	    return YaPI::CaManagement::AddSubCA (param);
 	    return true;
 	}	
     }
