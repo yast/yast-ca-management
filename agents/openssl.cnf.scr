@@ -1,7 +1,14 @@
-.var.lib.YaST2.CAM
+/**
+ * $Id$
+ * Summary:
+ *   SCR Agent for editing openssl.cnf in CAM repository
+ * Authors:
+ *   Michael Calmer <mc@suse.de>
+ */
+.CAM.openssl_cnf
 `ag_ini(
     `IniAgent(
-        [ "/var/lib/YaST2/CAM/*/openssl.cnf" ],
+        [ "/var/lib/CAM/*/openssl.cnf" ],
         $[
             "options" : [ "no_nested_sections", 
                           "line_can_continue"
@@ -27,8 +34,8 @@
                 ],
             ],
             "rewrite": [
-                        ["/var/lib/YaST2/CAM/(.*)/openssl\.cnf",
-                         "/var/lib/YaST2/CAM/%s/openssl.cnf"]
+                        ["/var/lib/CAM/(.*)/openssl\.cnf",
+                         "/var/lib/CAM/%s/openssl.cnf"]
                        ],
        ]
     )

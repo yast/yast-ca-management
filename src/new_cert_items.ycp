@@ -30,9 +30,9 @@
 
     include "ca-management/new_cert_callbacks.ycp";    
 
-    define string advanced_help = _("<P>This frame shows further attributes and OpenSSL X509v3 extensions which can be set. If you are not familiar with these extentions please have a look to the file /usr/share/doc/packages/openssl-doc/openssl.txt ( package openssl-doc )</P>" );
+    define string advanced_help = _("<P>This frame shows further attributes and OpenSSL X509v3 extensions that can be set. If you are not familiar with these extentions, refer to the file /usr/share/doc/packages/openssl-doc/openssl.txt (package openssl-doc).</P>");
 
-    define string expert_help = advanced_help + _("<P>Please take care that wrong entries can make the certificate unuseable.</P>");
+    define string expert_help = advanced_help + _("<P>Wrong entries can make the certificate unusable.</P>");
 
     define list itemList = [
        `item(`id(`advanced), _("Advanced Settings"), true,
@@ -132,7 +132,7 @@
 								  "widget"	: `Frame ("", `VBox (
 												     `VSpacing(1.5),
 												     `TextEntry(`id(`id_adv_challenge_password),
-														"Challage Password",
+														"Challenge Password",
 														CaMgm::adv_challenge_password),
 												     `VSpacing(1.5)
 												     )
@@ -149,7 +149,7 @@
 													    ),
 												     `VSpacing(1.5),
 												     `Left (`CheckBox(`id(`id_adv_copy_issuer_alt_name),
-														      _("copy Subject Alt Name from CA"),
+														      _("Copy Subject Alt Name from CA"),
 														      CaMgm::adv_copy_issuer_alt_name)
 													    ),
 												     `VSpacing(1.5),
@@ -332,7 +332,7 @@
 														       )),
 												     `VSpacing(1.5),
 												     `Left (`CheckBox(`id(`id_adv_copy_subject_alt_name),
-														      _("copy Standard EMAIL Address"),
+														      _("Copy Standard E-Mail Address"),
 														      CaMgm::adv_copy_subject_alt_name)
 													    ),
 												     `VSpacing(1.5),

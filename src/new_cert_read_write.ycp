@@ -25,6 +25,7 @@
 
     import "CaMgm";
     import "Popup";
+    import "Language";    
     import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
@@ -110,18 +111,30 @@
 	if (kind == "Root CA")
         {
             ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"ca"]);
+	    y2milestone("ReadCertificateDefaults(%1): %2",
+			$["certType":"ca"],
+			ret);	    
         }
 	if (kind == "Sub CA")
 	{
 	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"ca"]);
+	    y2milestone("ReadCertificateDefaults(%1): %2",
+			$["caName": CaMgm::currentCA, "certType":"ca"],
+			ret);
 	}
 	if (kind == "Server Certificate")
 	{
 	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"server"]);
+	    y2milestone("ReadCertificateDefaults(%1): %2",
+			$["caName": CaMgm::currentCA, "certType":"server"],
+			ret);			
 	}
 	if (kind == "Client Certificate")
 	{
 	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"client"]);
+	    y2milestone("ReadCertificateDefaults(%1): %2",
+			$["caName": CaMgm::currentCA, "certType":"client"],
+			ret);						
 	}		
 	if (ret == nil)
 	{
@@ -129,17 +142,15 @@
 	    return `next;
 	}
 	
-	y2milestone("ReadCertificateDefaults: %1", ret);
-
- 	CaMgm::keyLength = tointeger(ret["keyLength"]:"");
- 	CaMgm::validPeriod = tointeger(ret["days"]:"");
+ 	CaMgm::keyLength = tointeger(ret["keyLength"]:"0");
+ 	CaMgm::validPeriod = tointeger(ret["days"]:"0");
 
 	map<string,list> dn = ret["DN"]:$[];
  	CaMgm::organisation = ((list)dn["O"]:[])[0]:"";
  	CaMgm::organisationUnit = ((list)dn["OU"]:[])[0]:"";
  	CaMgm::locality = ((list)dn["L"]:[])[0]:"";
  	CaMgm::state = ((list)dn["ST"]:[])[0]:"";
- 	CaMgm::country = ((list)dn["C"]:[])[0]:"GB";
+ 	CaMgm::country = ((list)dn["C"]:[])[0]:Language::GetLanguageCountry ();
 	
 	list<string> dummy = splitstring (ret["basicConstraints"]:"", ",");
 	foreach ( string entry, dummy, ``{
@@ -744,6 +755,18 @@
 		param["keyUsage"] = "nonRepudiation";
 		firstHit = true;
 	    }
+	    if (CaMgm::adv_digitalSignature)
+	    {
+		if (firstHit)
+		{
+		    param["keyUsage"] = param["keyUsage"]:""+ ",digitalSignature";
+		}
+		else
+		{
+		    param["keyUsage"] = param["keyUsage"]:""+ "digitalSignature";
+		    firstHit = true;			
+		}
+	    }	    	    
 	    if (CaMgm::adv_cRLSign)
 	    {
 		if (firstHit)
@@ -976,13 +999,13 @@
 	
 	if (kind == "Root CA")
 	{
-	    y2milestone("CaManagement::AddRootCA(%1)", param);	
-	    return YaPI::CaManagement::AddRootCA (param);
+//	    y2milestone("CaManagement::AddRootCA(%1)", param);	
+	    return YaPI::CaManagement::AddRootCA (param) == nil ? false:true;
 	}
 	if (kind == "Server Certificate"
 	    || kind == "Client Certificate")
 	{
-	    y2milestone("CaManagement::AddCertificate(%1)", param);	
+//	    y2milestone("CaManagement::AddCertificate(%1)", param);	
 	    string filename = YaPI::CaManagement::AddCertificate (param);
 	    if (filename == nil
 		|| size(filename) == 0)
@@ -997,9 +1020,8 @@
 	}
 	if (kind == "Sub CA")
 	{
-	    y2milestone("CaManagement::AddSubCA(%1)", param);	
-	    return YaPI::CaManagement::AddSubCA (param);
-	    return true;
+//	    y2milestone("CaManagement::AddSubCA(%1)", param);	
+	    return YaPI::CaManagement::AddSubCA (param) == nil ? false:true;
 	}	
     }
 
@@ -1168,6 +1190,18 @@
 		param["keyUsage"] = "nonRepudiation";
 		firstHit = true;
 	    }
+	    if (CaMgm::adv_digitalSignature)
+	    {
+		if (firstHit)
+		{
+		    param["keyUsage"] = param["keyUsage"]:""+ ",digitalSignature";
+		}
+		else
+		{
+		    param["keyUsage"] = param["keyUsage"]:""+ "digitalSignature";
+		    firstHit = true;			
+		}
+	    }	    
 	    if (CaMgm::adv_cRLSign)
 	    {
 		if (firstHit)
@@ -1400,6 +1434,119 @@
 	
 	y2milestone("CaManagement::WriteCertificateDefaults(%1)", param);	
 	return YaPI::CaManagement::WriteCertificateDefaults (param);
+    }
+
+
+    /**
+     * Creating default CA/Certificate
+     * @return boolean ( success )
+     */
+    define boolean create_default_CA_certificate() ``{
+	
+	UI::BusyCursor();
+	UI::OpenDialog(`VBox(`Label(_("Creating certificate..."))));
+	
+	// creating CA
+	new_cert_init ("Root CA");
+	if (size (CaMgm::prop_email) > 0)
+	{
+	    CaMgm::emailList = [$["default":true,"name":CaMgm::prop_email]];
+	}
+ 	CaMgm::commonName = CaMgm::prop_ca_commonName;
+ 	CaMgm::CAName = CaMgm::prop_CAName;
+ 	CaMgm::organisation = CaMgm::prop_organisation;
+ 	CaMgm::organisationUnit = CaMgm::prop_organisationUnit;
+ 	CaMgm::locality = CaMgm::prop_locality;
+ 	CaMgm::state = CaMgm::prop_state;
+ 	CaMgm::country = CaMgm::prop_country;
+ 	CaMgm::password = CaMgm::prop_password;
+
+	y2milestone("Creating default Root CA");
+	if (new_cert_write ("Root CA"))
+	{
+	    // saving password for the generated CA
+	    CaMgm::passwdMap[CaMgm::prop_CAName] = CaMgm::prop_password;
+	    CaMgm::currentCA = CaMgm::prop_CAName;
+	    
+	    // Creating server certificate
+	    new_cert_init ("Server Certificate");
+	    if (size (CaMgm::prop_email) > 0)
+	    {
+		CaMgm::emailList = [$["default":true,"name":CaMgm::prop_email]];
+	    }
+	    CaMgm::commonName = CaMgm::prop_server_commonName;
+	    CaMgm::CAName = CaMgm::prop_CAName;
+	    CaMgm::organisation = CaMgm::prop_organisation;
+	    CaMgm::organisationUnit = CaMgm::prop_organisationUnit;
+	    CaMgm::locality = CaMgm::prop_locality;
+	    CaMgm::state = CaMgm::prop_state;
+	    CaMgm::country = CaMgm::prop_country;
+	    CaMgm::password = CaMgm::prop_password;
+
+	    y2milestone("Creating default Server Certificate");	    
+	    
+	    if (!new_cert_write ("Server Certificate"))
+	    {
+		UI::CloseDialog();
+		showErrorCaManagement ();
+		Popup::Message(_("The default certificate can also be created in 
+the CA Management.
+"));
+		return false;
+	    }
+	    else
+	    {
+		list<map> certList = (list<map>) YaPI::CaManagement::ReadCertificateList ($["caName":CaMgm::prop_CAName,
+											    "caPasswd":CaMgm::prop_password]);
+		y2milestone("ReadCertificateList(%1): %2", CaMgm::prop_CAName, certList);
+		
+		// Exporting to common server certificate
+		string tmpdir = (string) SCR::Read (.target.tmpdir);
+		string yapiret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CaMgm::prop_CAName,
+										   "certificate" : (certList[0]:$[])["certificate"]:"", 
+										   "keyPasswd" : CaMgm::prop_password,
+										   "exportFormat" : "PKCS12_CHAIN",
+										   "destinationFile" : tmpdir +"/YaST-Servercert.p12",
+										   "P12Password" : CaMgm::prop_password
+										 ]);
+		y2milestone ("ExportCertificate(%1) return %2", $["caName": CaMgm::prop_CAName,
+								  "certificate" : (certList[0]:$[])["certificate"]:"",
+								  "exportFormat" : "PKCS12_CHAIN",
+								  "destinationFile" : tmpdir +"/YaST-Servercert.p12"], yapiret);
+		if (yapiret == nil
+		    || yapiret != "1")
+		{
+		    UI::CloseDialog();		    
+		    showErrorCaManagement ();
+		    return false;		    
+		}
+
+		boolean importret = (boolean) YaPI::CaManagement::ImportCommonServerCertificate ($["passwd" : CaMgm::prop_password,
+											 "inFile" : tmpdir +"/YaST-Servercert.p12"]);
+		y2milestone ("ImportCommonServerCertificate() return %1",
+			     importret);
+		if (importret == nil
+		    || !importret)
+		{
+		    UI::CloseDialog();		    
+		    showErrorCaManagement ();
+		    return false;		    
+		}
+	    }
+	}
+	else
+	{
+	    UI::CloseDialog();	    
+	    showErrorCaManagement ();
+	    Popup::Message(_("The default certificate can also be created in 
+the CA Management.
+"));
+	    return false;
+	}
+	
+	UI::CloseDialog();
+
+	return true;
     }
 
 }

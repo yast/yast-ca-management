@@ -1,0 +1,17 @@
+# Test suite for ca-management stand-alone unit tests
+
+# execute ca-management
+
+set testname ca-management
+
+set errorCode "NONE"
+
+catch {
+  set result [ exec ./full-test.pl ]
+}
+
+if { $errorCode == "NONE" } {
+  pass $testname
+} else {
+  fail $testname
+}

@@ -384,7 +384,7 @@
                 // To translators: ContinueCancel Popup headline
                 _("Delete"),
                 // To translators: ContinueCancel Popup
-                _("Really delete this entry ?")))
+                _("Really delete this entry?")))
         {
 	    map new_entry = $[];
 	    list<map> dummy_map = [];
@@ -703,7 +703,7 @@
                 // To translators: ContinueCancel Popup headline
                 _("Delete"),
                 // To translators: ContinueCancel Popup
-                _("Really delete this entry ?")))
+                _("Really delete this entry?")))
         {
 	    list<map> dummy_map = [];
 

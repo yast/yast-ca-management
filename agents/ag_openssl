@@ -1,5 +1,11 @@
 #! /usr/bin/perl -w
 
+###############################################################
+# Copyright 2004, Novell, Inc.  All rights reserved.
+#
+# $Id$
+###############################################################
+
 package ag_openssl;
 use strict;
 use YaST::SCRAgent;
@@ -9,7 +15,7 @@ our @ISA = ("YaST::SCRAgent");
 use OPENSSL;
 
 my $openssl = undef;
-my $CAM_ROOT = "/var/lib/YaST2/CAM/";
+my $CAM_ROOT = "/var/lib/CAM/";
 my $privkeyalg = "des3";
 
 sub check_initialized ()

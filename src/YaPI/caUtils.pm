@@ -1,3 +1,9 @@
+###############################################################
+# Copyright 2004, Novell, Inc.  All rights reserved.
+#
+# $Id$
+###############################################################
+
 package YaST::caUtils;
 
 BEGIN {
@@ -13,7 +19,6 @@ use POSIX ();     # Needed for setlocale()
 
 use Locale::gettext;
 POSIX::setlocale(LC_MESSAGES, "");
-textdomain("ca-management");
 
 YaST::YCP::Import ("SCR");
 YaST::YCP::Import ("IP");
@@ -22,8 +27,8 @@ YaST::YCP::Import ("URL");
 
 our %TYPEINFO;
 my %__error = ();
-my $CAM_ROOT = "/var/lib/YaST2/CAM";
-
+my $CAM_ROOT = "/var/lib/CAM";
+my $domain = "ca-management";
 
 sub cleanCaInfrastructure {
     my $self = shift;
@@ -31,7 +36,7 @@ sub cleanCaInfrastructure {
     if (!defined $caName || $caName eq "" || $caName =~ /\./) {
         return undef;
     }
-    if(!defined $CAM_ROOT || $CAM_ROOT !~ /^\/var\/lib\/YaST2/) {
+    if(!defined $CAM_ROOT || $CAM_ROOT !~ /^\/var\/lib/) {
         return undef;
     }
     SCR->Execute(".target.bash", "rm -rf $CAM_ROOT/$caName");
@@ -48,37 +53,37 @@ sub checkValueWithConfig {
     my $caName   = $param->{'caName'};
 
     # check for limits
-    my $value = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.$name"); 
+    my $value = SCR->Read(".CAM.openssl_cnf.value.$caName.req_distinguished_name.$name"); 
     if(not defined $value) {
-        $value = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.$name"); 
+        $value = SCR->Read(".CAM.openssl_cnf.value.$caName.req_attributes.$name"); 
         # $name is not in req_distinguished_name nor in req_attributes
         # this is an error
         if (not defined $value) {
             return $self->SetError( summary => "Can not find $name in config file",
                                     code => "PARAM_CHECK_FAILED");
         }
-        $min = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_min");
-        $max = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_attributes.".$name."_max");
+        $min = SCR->Read(".CAM.openssl_cnf.value.$caName.req_attributes.".$name."_min");
+        $max = SCR->Read(".CAM.openssl_cnf.value.$caName.req_attributes.".$name."_max");
     } else {
-        $min = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.".$name."_min");
-        $max = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.".$name."_max");
+        $min = SCR->Read(".CAM.openssl_cnf.value.$caName.req_distinguished_name.".$name."_min");
+        $max = SCR->Read(".CAM.openssl_cnf.value.$caName.req_distinguished_name.".$name."_max");
     }
     if(defined $param->{certType} && $param->{certType} eq "client") {
-        $policy = SCR->Read(".var.lib.YaST2.CAM.value.$caName.policy_client.$name");
+        $policy = SCR->Read(".CAM.openssl_cnf.value.$caName.policy_client.$name");
     } else {
-        $policy = SCR->Read(".var.lib.YaST2.CAM.value.$caName.policy_server.$name");
+        $policy = SCR->Read(".CAM.openssl_cnf.value.$caName.policy_server.$name");
     }
 
     if( defined $param->{$name} ) {
         if( (defined $min) && length($param->{$name}) < $min ) {
             return $self->SetError( summary => sprintf(
-                                                       _('Value \'%s\' is to short, must be min %s'),
+                                                       __('Value \'%s\' is to short, must be min %s'),
                                                        $name, $min),
                                     code    => "PARAM_CHECK_FAILED");
         }
         if( (defined $max) && length($param->{$name}) > $max ) {
             return $self->SetError( summary => sprintf(
-                                                       _('Value \'%s\' is to long, must be max %s'),
+                                                       __('Value \'%s\' is to long, must be max %s'),
                                                        $name, $max),
                                     code    => "PARAM_CHECK_FAILED");
         }
@@ -88,7 +93,7 @@ sub checkValueWithConfig {
     if( (defined $policy) && ($policy eq "supplied") && 
         (! defined $param->{$name} || $param->{$name} eq "")) {
         return $self->SetError( summary => sprintf(
-                                                   _('Value \'%s\' must be set.'),$name),
+                                                   __('Value \'%s\' must be set.'),$name),
                                 code    => "PARAM_CHECK_FAILED");
     }
     # FIXME: add a "match check" here
@@ -103,85 +108,85 @@ sub mergeToConfig {
     my $default  = shift || undef;
     my $caName = $param->{'caName'};
   
-  my $cfg_exists = SCR->Read(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name");
-  
-  if (defined $default && (! defined $param->{"$name"} || $param->{"$name"} eq "")) {
-      if (defined $cfg_exists) {  # a default in the configfile is given
-          $param->{"$name"} = $cfg_exists;
-      } else {                    # use hardcoded default
-          $param->{"$name"} = "$default";
-      }
-  }
-
-  if ((! defined $param->{"$name"} ) && (defined $cfg_exists )) {
-      # remove value from config
-      y2debug("remove value from config ($name)");
-      if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", undef)) {
-          return $self->SetError( summary => "Can not write to config file",
-                                 code => "SCR_WRITE_FAILED");
-      }
-  } elsif (defined $param->{"$name"}) {
-      # add or modify are the same here
-      y2debug("modify value in config (".$param->{"$name"}."/$name");
-      if(not SCR->Write(".var.lib.YaST2.CAM.value.$caName.$ext_name.$name", $param->{$name})) {
-          return $self->SetError( summary => "Can not write to config file",
-                                 code => "SCR_WRITE_FAILED");
-      }
-  } # else do nothing: $param->{"$name"} is not defined and not in the config file
-  return 1;
+    my $cfg_exists = SCR->Read(".CAM.openssl_cnf.value.$caName.$ext_name.$name");
+    
+    if ((! defined $param->{"$name"} ) && (defined $cfg_exists )) {
+        # remove value from config
+        y2debug("remove value from config ($name)");
+        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.$ext_name.$name", undef)) {
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    } elsif (defined $param->{"$name"}) {
+        # add or modify are the same here
+        y2debug("modify value in config (".$param->{"$name"}."/$name");
+        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.$ext_name.$name", $param->{$name})) {
+            return $self->SetError( summary => "Can not write to config file",
+                                    code => "SCR_WRITE_FAILED");
+        }
+    } # else do nothing: $param->{"$name"} is not defined and not in the config file
+    
+    return 1;
 }
 
 sub checkCommonValues {
     my $self = shift;
     my $data = shift || return $self->SetError(summary=>"Missing 'data' map.",
-                                              code => "PARAM_CHECK_FAILED");
-
+                                               code => "PARAM_CHECK_FAILED");
+    
     foreach my $key (keys %{$data}) {
         if ( $key eq "caName") {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       code    => "PARAM_CHECK_FAILED");
+            }
+            if($data->{$key} =~ /^-/ || $data->{$key} =~ /-$/) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       description => "'-' as first or last character is forbidden.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "certType") {
             if ( !grep( ($_ eq $data->{$key}), ("client", "server", "ca") ) ) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "newCaName") {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "request") {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[[:xdigit:]]+$/) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "certificate") {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "keyPasswd" || $key eq "caPasswd") {
             if (! defined $data->{$key} ||
                 length($data->{$key}) < 4) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "keyLength") {
             if ( ! defined $data->{$key} ||
-                 $data->{$key} !~ /^\d{3,4}$/ ) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
-                                      code    => "PARAM_CHECK_FAILED");
+                 $data->{$key} !~ /^\d{3,4}$/ ||
+                 $data->{$key} < 512 ) {
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                                       description => "Minimal key length is 512 Bit",
+                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "days") {
             if ( ! defined $data->{$key} ||
                  $data->{$key} !~ /^\d{1,}$/ ) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "crlReason") {
@@ -190,7 +195,7 @@ sub checkCommonValues {
                                             "affiliationChanged", "superseded", 
                                             "cessationOfOperation", "certificateHold") ) ) 
             {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "commonName" || $key eq "emailAddress" ||
@@ -199,13 +204,13 @@ sub checkCommonValues {
                   $key eq "organizationalUnitName" || $key eq "challengePassword" ||
                   $key eq "unstructuredName") {
             if ($data->{$key} !~ /^[[:print:]]*$/ ) {
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
             if($key eq "emailAddress") {
                 if (!defined $data->{$key} || $data->{$key} !~ /^[^@]+@[^@]+\.[^@]+$/) {
                     return $self->SetError(summary => sprintf(
-                                                              _("Wrong value'%s' for parameter '%s'."),
+                                                              __("Invalid value'%s' for parameter '%s'."),
                                                               $data->{$key}, $key),
                                            code    => "PARAM_CHECK_FAILED");
                 }
@@ -223,7 +228,7 @@ sub checkCommonValues {
                 next if(uc($p) eq "CA:FALSE");
                 next if($p     =~ /pathlen:\d+/);
                 return $self->SetError( summary => sprintf(
-                                                           _("Unknown value '%s' in '%s'."),
+                                                           __("Unknown value '%s' in '%s'."),
                                                            $p, $key),
                                         code => "PARAM_CHECK_FAILED");
             } 
@@ -245,7 +250,7 @@ sub checkCommonValues {
                 next if($p eq "critical");
                 if ( !grep( ($_ eq $p), ("client", "server", "email", "objsign",
                                          "reserved", "sslCA", "emailCA", "objCA"))) {
-                    return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                    return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                           code    => "PARAM_CHECK_FAILED");
                 }
             }
@@ -263,7 +268,7 @@ sub checkCommonValues {
                                          "keyAgreement", "keyCertSign", "cRLSign",
                                          "encipherOnly", "decipherOnly")))
                 { 
-                    return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                    return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                            code    => "PARAM_CHECK_FAILED");
                 }
             }
@@ -278,7 +283,7 @@ sub checkCommonValues {
                 next if($p eq "critical");
                 next if($p eq "hash");
                 next if($p =~ /^([[:xdigit:]]{2}:)+[[:xdigit:]]{2}$/);
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "authorityKeyIdentifier") {
@@ -293,7 +298,7 @@ sub checkCommonValues {
                 next if(grep( ($_ eq $p), ("issuer:always", "keyid:always",
                                            "issuer", "keyid")));
           
-                return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
+                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "subjectAltName" || $key eq "issuerAltName") {
@@ -311,41 +316,41 @@ sub checkCommonValues {
                 if ($p =~ /^\s*email:(.+)\s*$/) {
                     if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]+$/) {
                         return $self->SetError(summary => sprintf(
-                                                           _("Wrong value'%s' for parameter '%s'."),
+                                                           __("Invalid value'%s' for parameter '%s'."),
                                                             $p, $key),
                                                code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*URI:(.+)\s*$/) {
                     if (!defined $1 || !URL->Check("$1")) {
                         return $self->SetError(summary =>  sprintf(
-                                                           _("Wrong value'%s' for parameter '%s'."),
+                                                           __("Invalid value'%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*DNS:(.+)\s*$/) {
                     if (!defined $1 || !Hostname->CheckDomain("$1")) {
                         return $self->SetError(summary => sprintf(
-                                                           _("Wrong value'%s' for parameter '%s'."),
+                                                           __("Invalid value'%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*RID:(.+)\s*$/) {
                     if (!defined $1 || $1 !~ /^(\d+\.)+\d+$/) {
                         return $self->SetError(summary => sprintf(
-                                                           _("Wrong value'%s' for parameter '%s'."),
+                                                           __("Invalid value'%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*IP:(.+)\s*$/) {
                     if (!defined $1 || !(IP->Check4("$1") || IP->Check6("$1")) ) {
                         return $self->SetError(summary => sprintf(
-                                                           _("Wrong value'%s' for parameter '%s'."),
+                                                           __("Invalid value'%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } else {
                     return $self->SetError(summary => sprintf(
-                                                            _("Wrong value'%s' for parameter '%s'."),
+                                                            __("Invalid value'%s' for parameter '%s'."),
                                                             $p, $key),
                                           code    => "PARAM_CHECK_FAILED");
                 }
@@ -363,7 +368,7 @@ sub checkCommonValues {
             $data->{$key} =~ /^\s*(critical)?\s*,*\s*(.*)/ ;
             if (!URL->Check("$2")) {
                 return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $2, $key),
                                       code    => "PARAM_CHECK_FAILED");
             }
@@ -389,7 +394,7 @@ sub checkCommonValues {
                                            "msCodeInd", "msCodeCom", "msCTLSign",
                                            "msSGC", "msEFS", "nsSGC")));
                 return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key), 
                                       code    => "PARAM_CHECK_FAILED");
             }
@@ -409,47 +414,47 @@ sub checkCommonValues {
                     if ($location =~ /^\s*email:(.+)\s*$/) {
                         if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]+$/) {
                             return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*URI:(.+)\s*$/) {
                         if (!defined $1 || !URL->Check("$1")) {
                             return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*DNS:(.+)\s*$/) {
                         if (!defined $1 || !Hostname->CheckDomain("$1")) {
                             return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*RID:(.+)\s*$/) {
                         if (!defined $1 || $1 !~ /^(\d+\.)+\d+$/) {
                             return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*IP:(.+)\s*$/) {
                         if (!defined $1 || !(IP->Check4("$1") || IP->Check6("$1")) ) {
                             return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } else {
                         return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } else {
                     return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $location, $key),
                                           code    => "PARAM_CHECK_FAILED");
                 }
@@ -466,13 +471,13 @@ sub checkCommonValues {
                 if ($p =~ /^\s*URI:(.+)\s*$/) {
                     if (!defined $1 || !URL->Check("$1")) {
                         return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $1, $key),
                                                code    => "PARAM_CHECK_FAILED");
                     }
                 } else {
                     return $self->SetError(summary => sprintf(
-                                                          _("Wrong value'%s' for parameter '%s'."),
+                                                          __("Invalid value'%s' for parameter '%s'."),
                                                           $p, $key),
                                            code    => "PARAM_CHECK_FAILED");
                 }
@@ -560,3 +565,9 @@ sub Error {
     my $self = shift;
     return \%__error;
 }
+
+sub __ {
+    my $msgid = shift;
+    return Locale::gettext::dgettext ($domain, $msgid);
+}
+

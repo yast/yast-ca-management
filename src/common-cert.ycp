@@ -1,0 +1,9 @@
+/**
+ * Author:      Stefan Schubert <schubi@suse.de>
+ * Summary:     Just a redirection
+ * $Id$
+ */
+{
+    string target = "common_cert";
+    return WFM::CallFunction (target, WFM::Args ());
+}

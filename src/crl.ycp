@@ -45,7 +45,7 @@
 			       `VBox (
 				      `VSpacing (1),
 				      // popup window header
-				      `Heading (_("Generate new CRL")),
+				      `Heading (_("Generate New CRL")),
 				      `VSpacing (1),
 				      `IntField( `id (`entry), _("&Valid to (days):"), 1, 10000, 30),
 				      `VSpacing (1),					  
@@ -135,30 +135,38 @@
 	map ret = (map) YaPI::CaManagement::ReadCRL ($["caName":CAname, "type":"parsed"]);
         if (ret == nil)
         {
-            showErrorCaManagement ();
-            return _("<br>CRL not found");
+	    map<string,any> messageMap = YaPI::Error();
+	    string message = messageMap["summary"]:"";
+	    string description = messageMap["description"]:"";
+	    if (size (message) > 0)
+	    {
+		string retString = "\n";
+		retString = retString + message + "\n";
+		retString = retString + description;
+		return retString;
+	    }
         }
 	y2milestone("ReadCRL(%1): %2", CAname, ret);
 
-	string text = _("<h4>Certificate Revocation List (CRL):</h4>");
+	string text = _("<b>Certificate Revocation List (CRL):</b>");
 	text = text + "<pre>";
-	text = text + "<br>Version: " + ret["VERSION"]:"";
-	text = text + "<br>Signature Algorithmus: " + ret["SIGNATURE_ALGORITHM"]:"";
-	text = text + "<br>Issuer: " + ret["ISSUER"]:"";
-	text = text + _("<br><br>Last Update: ") + ret["LASTUPDATE"]:"";
-	text = text + _("<br>Next Update: ") + ret["NEXTUPDATE"]:"";
+	text = text + "\nVersion: " + ret["VERSION"]:"";
+	text = text + "\nSignature Algorithmus: " + ret["SIGNATURE_ALGORITHM"]:"";
+	text = text + "\nIssuer: " + ret["ISSUER"]:"";
+	text = text + _("\n\nLast Update: ") + ret["LASTUPDATE"]:"";
+	text = text + _("\nNext Update: ") + ret["NEXTUPDATE"]:"";
 	integer counter = 0;
 	foreach (map element, ret["REVOKED_PARSED"]:[], ``{
 	    if (counter == 0)
 	    {
-		text = text + _("<br><br>Revoked Certificates: ");
+		text = text + _("\n\nRevoked Certificates: ");
 	    }
 	    counter = counter +1;
 	    string reason = element["REASON"]:"";
 	    reason = deletechars (reason, "\n");
-	    text = text + "<br>     Serial Number: " + element["SERIAL"]:"";
-	    text = text + "<br>            Date:   " + element["DATE"]:"";
-	    text = text + "<br>            Reason: " + reason;
+	    text = text + "\n     Serial Number: " + element["SERIAL"]:"";
+	    text = text + "\n            Date:   " + element["DATE"]:"";
+	    text = text + "\n            Reason: " + reason;
 	});
 	
 	return text;
@@ -174,9 +182,9 @@
 	integer i = 0;
 	
         // help text 1/4
-        string helptext = _("<p>Here you can see the most important values of the CRL.</p>");
+        string helptext = _("<p>Here, see the most important values of the CRL.</p>");
         // help text 2/4
-        helptext = helptext + _("<p>With the button <b>Generate CRL</b> a new CRL will be generated.</p>");
+        helptext = helptext + _("<p>With <b>Generate CRL</b>, a new CRL will be generated.</p>");
         // help text 3/4
         helptext = helptext + _("<p><b>View</b> shows a complete description.</p>");	
         // help text 4/4
@@ -199,7 +207,7 @@
 	contents = add (contents, buttons);
 
                                 // To translators: dialog label
-        Wizard::SetContents ( _("Certificate Revocation List (CRL) for CA: ") + CaMgm::currentCA, contents, helptext, true, false);
+        Wizard::SetContents ( _("Certificate Revocation List (CRL) for CA: ") + CaMgm::currentCA, contents, helptext, true, true);
         UI::ChangeWidget( `id(`textinfo), `Value, getCRLDescription (CaMgm::currentCA));
 
         symbol ui = nil;
@@ -224,7 +232,7 @@
 		exportCRLtoFile (CaMgm::currentCA); 
 	    }	    
         }
-        until (contains ([`back, `abort, `createSubCA, `again], ui));
+        until (contains ([`back, `abort, `createSubCA, `again, `next], ui));
 
         return ui;
     }

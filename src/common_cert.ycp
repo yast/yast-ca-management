@@ -1,0 +1,105 @@
+/**
+ * File:        clients/common_cert.ycp
+ * Package:     CA Management
+ * Summary:     Main file
+ * Authors:     Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Showing current common server certificate
+ */
+
+{
+
+/***
+ * <h3>Common Server Certificate</h3>
+ */
+
+textdomain "ca-management";
+import "CaMgm";
+import "Wizard";
+import "Label";
+import "Popup";
+import "YaPI::CaManagement";
+
+include "ca-management/util.ycp";
+include "ca-management/floppy.ycp";    
+
+
+/* The main () */
+y2milestone ("----------------------------------------");
+y2milestone ("common_cert module started");
+
+Wizard::CreateDialog();
+Wizard::SetDesktopIcon("ca-management");
+
+// help text 1/4
+string helptext = _("<p>The <b>Common Server Certificate</b> will be used by other YaST modules.</p>");
+// help text 2/4
+helptext = helptext + _("<p>This certificate can be exchanged by <b>importing</b> a certificate <b>from floppy</b> or <b>from disk</b>.</p>");
+// help text 3/4
+helptext = helptext + _("<p>Certificates can be written to floppy using <i>Export to Floppy</i> in section <i>certificate</i> in the <b>CA Management</b> module.</p>");
+
+// help text 3/4
+helptext = helptext + _("<p>Certificates to import from disk must have been written in <b>PKCS12 format with CA chain</b>.</p>");
+
+symbol ui = nil;
+
+repeat
+{
+    string ret = (string) YaPI::CaManagement::ReadFile ($[ "inFile":"/etc/ssl/servercerts/servercert.pem",
+							   "datatype":"CERTIFICATE",
+							   "inForm":"PEM",
+							   "type":"plain"]);
+	
+    y2milestone("ReadCertificate(/etc/ssl/certs/YaST-CA.pem): %1", ret);
+    if (ret == nil)
+    {
+	ret = "<pre>Common Server Certificate not found.\nYou can import a certificate from floppy or disk</pre>";
+    }
+    else
+    {
+	ret = "<pre>" + ret + "</pre>";
+    }
+
+
+    term contents = `VBox (
+			   `Left(`Label (_("Description"))),
+			   `VSpacing (0.5),
+			   `RichText (ret),
+			   `VSpacing (0.5),
+			   `Right(`MenuButton(`id(`export),
+					      _("Import"),
+					      [
+					       `item(`id(`importFloppy), _("from Floppy")),
+					       `item(`id(`importDisk), _("from Disk"))
+					       ]
+					      )	
+				  )       
+			   );
+    
+    // To translators: dialog label
+    Wizard::SetContents (_("Common Server Certificate"), contents, helptext, false, true);
+    Wizard::SetNextButton(`next, Label::FinishButton() );
+    
+    ui = (symbol) UI::UserInput ();
+    if (ui == `importFloppy)
+    {
+	importCertificateFromFloppy();
+	ui = `again;
+    }
+    if (ui == `importDisk)
+    {
+	importCertificateFromDisk();	
+	ui = `again;	
+    }    
+}
+until (contains ([`back, `next, `abort], ui));
+Wizard::CloseDialog();
+/* Finish */
+y2milestone("common_cert finished");
+y2milestone("----------------------------------------");
+
+
+/* EOF */
+}

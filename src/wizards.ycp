@@ -58,7 +58,7 @@
 			];
 
 	Wizard::CreateDialog();
-	Wizard::SetDesktopIcon("ca_mgm");
+	Wizard::SetDesktopIcon("ca-management");
 	symbol ret = WizardSequencer(aliases, defaultSequence);
 
 	UI::CloseDialog();
@@ -115,7 +115,7 @@ define symbol newCASequence() ``{
     ];
 
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca_mgm");
+    Wizard::SetDesktopIcon("ca-management");
     symbol ret = WizardSequencer(aliases, certificateSequence);
 
     UI::CloseDialog();
@@ -139,7 +139,7 @@ define symbol newServerCertificateSequence() ``{
     ];
 
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca_mgm");
+    Wizard::SetDesktopIcon("ca-management");
     symbol ret = WizardSequencer(aliases, certificateSequence);
 
     UI::CloseDialog();
@@ -163,7 +163,7 @@ define symbol newClientCertificateSequence() ``{
     ];
 
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca_mgm");
+    Wizard::SetDesktopIcon("ca-management");
     symbol ret = WizardSequencer(aliases, certificateSequence);
 
     UI::CloseDialog();
@@ -187,7 +187,7 @@ define symbol newSubCASequence() ``{
     ];
 
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca_mgm");
+    Wizard::SetDesktopIcon("ca-management");
     symbol ret = WizardSequencer(aliases, certificateSequence);
 
     UI::CloseDialog();
@@ -226,6 +226,7 @@ define symbol MainSequence() ``{
                             ],
         "ca_main"	    : $[
 				`back 		: "startup",
+				`next 		: "startup",				
 				`abort		: "startup",
 				`certificates 	: "certificate",
 				`createSubCA	: "new_certSubCA",
@@ -234,6 +235,7 @@ define symbol MainSequence() ``{
                             ],
         "crl_main"	    : $[
 				`back 		: "ca_main",
+				`next 		: "ca_main",				
 				`abort		: "startup",
 				`again		: "crl_main",
                             ],	
@@ -241,7 +243,7 @@ define symbol MainSequence() ``{
 				`back 		: "ca_main",
 				`abort		: "startup",
 				`again		: "certificate",
-				`next		: "certificate",				
+				`next		: "ca_main",				
 				`addServer 	: "new_certServer",
 				`addClient 	: "new_certClient",				
                             ],
@@ -264,7 +266,7 @@ define symbol MainSequence() ``{
         ];
 
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca_mgm");
+    Wizard::SetDesktopIcon("ca-management");
     symbol ret = WizardSequencer(aliases, sequence);
 
     UI::CloseDialog();

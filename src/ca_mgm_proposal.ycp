@@ -25,8 +25,11 @@
     import "Popup";
     import "DNS";
     import "Language";
+    import "Users";
 	
-
+    include "ca-management/new_cert_read_write.ycp";
+    include "ca-management/floppy.ycp";    
+    
     string func  = (string)WFM::Args(0);
     map    param = (map)WFM::Args(1);
     map    ret   = $[];
@@ -39,57 +42,148 @@
 	string warning = nil;
 	symbol warning_level = nil;
 
-	string subDomain = ((list<string>) splitstring (DNS::domain, "."))[0]:"";
-
-	CaMgm::prop_ca_commonName = subDomain + " CA";
-	CaMgm::prop_server_commonName = DNS::hostname;
-	CaMgm::prop_CAName = subDomain + "_CA";
-	CaMgm::prop_country = Language::language;
+	map retmap = (map) SCR::Execute (.target.bash_output,
+					"/bin/hostname --long",
+					$[] );
+	y2milestone("Hostname :%1", retmap);
+	string longhostname = retmap["stdout"]:"";
+	string hostname = ((list<string>) splitstring (longhostname, "."))[0]:"";
+	
+	if (!CaMgm::prop_ca_commonNameChanged)
+	{
+	    CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";
+	}
+	if (!CaMgm::prop_server_commonNameChanged)
+	{
+	    CaMgm::prop_server_commonName = longhostname;
+	}
+	if (!CaMgm::prop_CANameChanged)
+	{
+	    CaMgm::prop_CAName = "YaST_Default_CA";
+	}
+	if (!CaMgm::prop_countryChanged)
+	{
+	    CaMgm::prop_country = Language::GetLanguageCountry ();
+	}
+	if (!CaMgm::prop_passwordChanged)
+	{
+	    CaMgm::prop_password = Users::GetRootPassword();
+	}
 	
 	if (force_reset)
 	{
-	    CaMgm::prop_selection = `def;
+	    y2milestone("FORCE RESET");
+	    if (CaMgm::prop_settingsWritten)
+	    {
+		string errorString = _("CA Management") + "\n" +
+		    _("Settings have already been written.");
+		Popup::Warning (errorString);
+	    }
+	    else
+	    {
+		CaMgm::prop_selection = `def;
+		CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";	    
+		CaMgm::prop_CAName = "YaST_Default_CA";
+		CaMgm::prop_country = Language::GetLanguageCountry ();
+		CaMgm::prop_password = Users::GetRootPassword();
+		CaMgm::prop_server_commonName = longhostname;
+	    }
 	}
 
 	if (CaMgm::prop_selection == `def)
 	{
-	    proposal = HTML::Para(_("Creating default CA/Certificate.")
-				  + HTML::Newline()
-				  + _("You can change these settings (especially the password).")); 
+	    if (!CaMgm::prop_passwordChanged)
+	    {
+		proposal = HTML::Para(_("Creating default CA and certificate.")
+				      + HTML::Newline() 
+				      + _("With higher security requirements, you should change the password."));
+	    }	
+	    else
+	    {
+		proposal = HTML::Para(_("Creating default CA and certificate.")
+				      + HTML::Newline());
+	    }
+	    string passwordString = (string) (CaMgm::prop_passwordChanged ? _("[manually set]") : _("[root password]"));
+            proposal = proposal+ HTML::List( [ _("CA Name: ") + CaMgm::prop_CAName,
+					       _("Common Name: ") + CaMgm::prop_ca_commonName,
+					       _("Server Name: ") + CaMgm::prop_server_commonName,
+					       _("Country: ") + CaMgm::prop_country,
+					       _("Password: ") + passwordString
+					       ] );
 	}
 	else if (CaMgm::prop_selection == `none)
 	{
-	    proposal = HTML::Para(_("Creating no CA/Certificate."));
+	    proposal = HTML::Para(_("Not creating a CA and certificate."));
 	}
 	else if (CaMgm::prop_selection == `floppy)
 	{
-	    proposal = HTML::Para(_("Import CA/Certificate from floppy."));
+	    proposal = HTML::Para(_("Importing a CA and certificate from floppy."));
 	}
+	else if (CaMgm::prop_selection == `disk)
+	{
+	    proposal = HTML::Para(_("Importing a CA and certificate from disk."));
+	}	
 	else if (CaMgm::prop_selection == `expert)
 	{
-	    proposal = HTML::Para(_("Calling CA-Management for expert settings."));
+	    proposal = HTML::Para(_("Calling CA Management for expert settings."));
 	}	
 	
 	ret = add (ret, "preformatted_proposal", proposal);
+	if ( ((list<string>) splitstring (CaMgm::prop_server_commonName, "."))[0]:"" == "linux")
+	{
+	    ret = add (ret, "warning" ,
+		       _("Is the default host name <b>linux</b> really unique? The certificate is only valid if the host name is correct."));
+	}
     }
     else if (func == "AskUser")
     {
-	any sequence = WFM::CallFunction ( "ca_select_proposal", [] );
+	if (!CaMgm::prop_settingsWritten)
+	{
+	    any sequence = WFM::CallFunction ( "ca_select_proposal", [] );
 
-	ret = $[ "workflow_sequence" : sequence ];
+	    ret = $[ "workflow_sequence" : sequence ];
+	}
+	else
+	{
+	    Popup::Warning(_("Settings have already been written."));
+	    ret = $[ "workflow_sequence" : `auto ];
+	}
     }
     else if (func == "Description")
     {
 	// richtext label
 	ret = $[ "rich_text_title" :	_("CA Management"),
 		// menu title
-		 "menu_title" :		_("&CA Managegent"),
+		 "menu_title" :		_("&CA Management"),
 		 "id" :			"ca_mgm",
 		 ];
     }
     else if (func == "Write")
     {
 	boolean success = true;
+
+	if (!CaMgm::prop_settingsWritten)
+	{
+	    if (CaMgm::prop_selection == `def)
+	    {
+		success = create_default_CA_certificate();
+	    }
+	    else if (CaMgm::prop_selection == `floppy)
+	    {
+		success = importCertificateFromFloppy ();
+	    }
+	    else if (CaMgm::prop_selection == `disk)
+	    {
+		success = importCertificateFromDisk ();
+	    }
+	    else if (CaMgm::prop_selection == `expert)
+	    {
+		WFM::CallFunction( "ca_mgm", [] );	    
+	    }
+
+	    CaMgm::prop_settingsWritten = true;
+	}
+	
         ret = $[ "success" : success ];
     }
     return ret;
