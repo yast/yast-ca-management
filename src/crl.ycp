@@ -189,6 +189,7 @@
 				      `HSpacing (1),
 				      `PushButton (`id (`gererateCRL), _("&Generate CRL")),
 				      `PushButton (`id (`view) , _("View")),
+				      `PushButton (`id (`defaults) , _("Default")),
 				      `HStretch(),
 				      `MenuButton (_("Export"),
 						   [
@@ -232,6 +233,10 @@
 	{
 	    exportCRLtoFile (CaMgm::currentCA); 
 	}
+	if (ui == `defaults)
+	{
+	    editDefaults (CaMgm::currentCA); 
+	}	
 	return (symbol) ui;	
     }
 
