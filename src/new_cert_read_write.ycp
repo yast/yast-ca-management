@@ -32,7 +32,7 @@
 
     
     /**
-     * Values initializing for creating CA/Certificate
+     * Values initializing for creating CA/Certificate/Request
      * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate")
      * @return `next
      */

@@ -21,6 +21,7 @@
 
 {
     include "ca-management/floppy.ycp";
+    include "ca-management/signRequest.ycp";
     
     define list<string> requestID = [];
 
@@ -45,17 +46,39 @@
     define symbol signRequestSequence() ``{
 
 	map aliases = $[
-//	   "new_certinit"   	: ``(new_cert_init ("Server Request")),
-//	   "new_certSaveDef"  	: ``(new_cert_save_default ()),		
-//	   "new_cert1"  	: ``(new_cert1 ("Server Request")),
-//	   "new_cert2"   	: ``(new_cert2 ("Server Request")),
-//	   "new_cert3"   	: ``(new_cert3 ("Server Request")),
-//	   "new_cert_advanced"  : ``(new_cert_advanced (false)),
+	   "req_init"   	: ``(signRequestInit ()),
+	   "req_sign1"  	: ``(signRequest1 ()),
+	   "req_sign2"   	: ``(signRequest2 ()),
 	   ];
+	
+	map requestSequence = $[
+	"ws_start"	    : "req_init",
+        "req_init"          : $[
+                            `next       	: "req_sign1",
+			    `abort		: `abort,
+                            ],
+        "req_sign1"         : $[
+                            `next       	: "req_sign2",
+			    `again 		: "req_sign1",
+			    `abort		: `abort,
+                            ],
+        "req_sign2"         : $[
+			    `abort		: `abort,
+                            `next       	: "req_sign2",
+			    `again 		: "req_sign1",
+			    `back		: "req_sign1",
+//			    `advancedOptions 	: "new_cert_advanced",
+	                    ],
+
+//        "new_cert_advanced"  : $[
+//			    `abort		: `abort,
+//			    `back		: "new_cert3"
+//	                    ],	
+    ];
 
 	Wizard::CreateDialog();
 	Wizard::SetDesktopIcon("ca-management");
-	symbol ret = nil;// = WizardSequencer(aliases, CaMgm::requestSequence);
+	symbol ret = WizardSequencer(aliases, requestSequence);
 	
 	UI::CloseDialog();
 
@@ -295,7 +318,7 @@
 	}
 	if (ui == `sign)
 	{
-//	    revokeRequest();
+	    signRequestSequence ();
 	    ui = `again;		
 	}
 	if (ui == `exportFile)

@@ -77,8 +77,21 @@ global string currentCertificate = "";
  * selected Request
  */
 global string currentRequest = "";
-
-
+// Request Extentions of the current Request
+global string requestKind = "";
+global string requestSubject = "";
+global string requestAttributes = "";
+global map<string,string> requestExtentionValue = $[];
+global list<string> slectedRequestExtention = [];
+global list<string> validRequestExtention =
+    ["X509v3 Subject Key Identifier",
+     "X509v3 Subject Alternative Name",
+     "X509v3 Basic Constraints",
+     "X509v3 Key Usage",
+     "X509v3 Extended Key Usage",
+     "Netscape Comment",
+     "Authority Information Access",
+     "Netscape Cert Type"];
 
 /**
  * Password map for CA
@@ -107,7 +120,7 @@ global string 	prop_state = "";
 global symbol   prop_selection = `def; // `none, `floppy `expert `disk
 
 /**
- * variables for new CA/Certificate
+ * variables for new CA/Certificate/Request
  */
 global list<map> emailList = [];
 global string 	commonName = "";

@@ -1,0 +1,881 @@
+/**
+ *
+ * File:
+ *   signRequest.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   Signing a request
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Signing a request
+ *
+ */
+
+
+{
+
+    textdomain "ca-management";
+
+    import "CaMgm";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+    import "YaPI::CaManagement";
+
+    include "ca-management/util.ycp";
+    include "ca-management/new_cert_read_write.ycp";
+
+    /**
+     * Creates Request Extention items
+     * @return a list items formated for a UI Multiselectionbox
+     */
+    define list<term> createExtentionItem () ``{
+        list<term> result = [];
+
+	foreach (string key, string value, CaMgm::requestExtentionValue, ``{
+	    result = add (result, `item (`id (key), key + ": " + value,
+					 contains (CaMgm::slectedRequestExtention, key)));
+	});
+        return result;
+    }
+
+    /**
+     * The user has decide that given request extention
+     * will be used. --> setting for signation
+     * @param request extention
+     * @return void
+     */
+    define void setRequestExtentions (string extention)``{
+	list<string> dummy = [];
+	if (extention == "X509v3 Subject Key Identifier")
+	{
+	    CaMgm::exp_cri_subjectKeyIdentifier = false;
+	    CaMgm::exp_subjectKeyIdentifier = "";
+	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
+	    foreach ( string entry, dummy, ``{
+		entry = strip(entry);
+		if (entry == "critical")
+		{
+		    CaMgm::exp_cri_subjectKeyIdentifier = true;
+		}
+		else
+		{
+		    CaMgm::exp_subjectKeyIdentifier = entry;
+		}
+	    });
+	}
+	else if (extention == "X509v3 Subject Alternative Name")
+	{
+	    CaMgm::adv_subject_alt_name_list = [];
+	    CaMgm::adv_cri_subject_alt_name = false;
+	    CaMgm::adv_copy_subject_alt_name = false;
+	    
+	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
+	    foreach ( string entry, dummy, ``{
+		entry = strip(entry);
+		list valuelist = splitstring (entry,":");
+		string ident = strip(valuelist[0]:"");
+		string value = strip(valuelist[1]:"");
+	    
+		if (ident == "critical")
+		{
+		    CaMgm::adv_cri_subject_alt_name = true;
+		}
+		else if (ident == "email"
+			 && value == "copy")
+		{
+		    CaMgm::adv_copy_subject_alt_name = true;
+		}
+		else
+		{
+		    map new_entry = $[];
+		    new_entry["kind"] = ident;
+		    new_entry["name"] = value;
+		    CaMgm::adv_subject_alt_name_list = add (CaMgm::adv_subject_alt_name_list, new_entry);
+		}
+	    });
+	}
+	else if (extention == "X509v3 Basic Constraints")
+	{
+	    CaMgm::adv_pathlen = false;
+	    CaMgm::adv_pathlenValue = 0;
+	    CaMgm::adv_cri_ca = false;
+	    CaMgm::adv_ca = "";
+	    
+	    list<string> dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
+	    foreach ( string entry, dummy, ``{
+		entry = strip(entry);
+		list valuelist = splitstring (entry,":");
+		string ident = strip(valuelist[0]:"");
+		string value = strip(valuelist[1]:"");
+	    
+		if (ident == "critical")
+		{
+		    CaMgm::adv_cri_ca = true;
+		}
+		if (ident == "CA")
+		{
+		    if (value == "false"
+			|| value == "FALSE" )
+		    {
+			CaMgm::adv_ca = ident + ":false";
+		    }
+		    else
+		    {
+			CaMgm::adv_ca = ident + ":true";
+		    }
+		}
+		if (ident == "pathlen")
+		{
+		    CaMgm::adv_pathlen = true;
+		    CaMgm::adv_pathlenValue = tointeger (value);
+		}
+	    });
+	}
+	else if (extention == "X509v3 Key Usage")
+	{
+	    CaMgm::adv_cri_key_usage = false;
+	    CaMgm::adv_digitalSignature = false;
+	    CaMgm::adv_nonRepudiation = false;
+	    CaMgm::adv_cRLSign = false;
+	    CaMgm::adv_keyEncipherment = false;
+	    CaMgm::adv_dataEncipherment = false;
+	    CaMgm::adv_encipherOnly = false;
+	    CaMgm::adv_keyAgreement = false;
+	    CaMgm::adv_keyCertSign = false;
+	    CaMgm::adv_decipherOnly = false;
+	    
+	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
+	    foreach ( string entry, dummy, ``{
+		entry = strip(entry);
+		if (entry == "critical")
+		{
+		    CaMgm::adv_cri_key_usage = true;
+		}
+		else if (entry == "digitalSignature")
+		{
+		    CaMgm::adv_digitalSignature = true;
+		}
+		else if (entry == "nonRepudiation")
+		{
+		    CaMgm::adv_nonRepudiation = true;
+		}
+		else if (entry == "cRLSign")
+		{
+		    CaMgm::adv_cRLSign = true;
+		}
+		else if (entry == "keyEncipherment")
+		{
+		    CaMgm::adv_keyEncipherment = true;
+		}
+		else if (entry == "dataEncipherment")
+		{
+		    CaMgm::adv_dataEncipherment = true;
+		}
+		else if (entry == "encipherOnly")
+		{
+		    CaMgm::adv_encipherOnly = true;
+		}
+		else if (entry == "keyAgreement")
+		{
+		    CaMgm::adv_keyAgreement = true;
+		}
+		else if (entry == "keyCertSign")
+		{
+		    CaMgm::adv_keyCertSign = true;
+		}
+		else if (entry == "decipherOnly")
+		{
+		    CaMgm::adv_decipherOnly = true;
+		}	    	    	    	    	    
+	    });
+	}
+	else if (extention == "X509v3 Extended Key Usage")
+	{
+	    CaMgm::exp_cri_extendedKeyUsage = false;
+	    CaMgm::exp_extendedKeyUsage = "";
+	    
+	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
+	    integer counter = 0;
+	    foreach ( string entry, dummy, ``{
+		entry = strip(entry);
+		list valuelist = splitstring (entry,":");
+		string ident = strip(valuelist[0]:"");
+		string value = strip(valuelist[1]:"");
+	    
+		if (ident == "critical")
+		{
+		    CaMgm::exp_cri_extendedKeyUsage = true;
+		}
+		else
+		{
+		    if (counter == 0)
+		    {
+			CaMgm::exp_extendedKeyUsage = CaMgm::exp_extendedKeyUsage +
+			    ident + ((size(value) > 0) ? ":" : "") + value;
+		    }
+		    else
+		    {
+			CaMgm::exp_extendedKeyUsage = CaMgm::exp_extendedKeyUsage +
+			    "," + ident + ((size(value) > 0) ? ":" : "") + value;
+		    }
+		    counter = counter +1;			
+		}
+	    });
+	}
+	else if (extention == "Netscape Comment")
+	{
+	    CaMgm::adv_cri_nsComment = false;
+	    CaMgm::adv_nsComment = "";
+	    
+	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
+	    foreach ( string entry, dummy, ``{
+		entry = strip(entry);
+		if (entry == "critical")
+		{
+		    CaMgm::adv_cri_nsComment = true;
+		}
+		else
+		{
+		    CaMgm::adv_nsComment = entry;
+		}
+	    });
+	}
+	else if (extention == "Authority Information Access")
+	{
+	    CaMgm::exp_cri_authorityKeyIdentifier = false;
+	    CaMgm::exp_authorityKeyIdentifier = "";
+	    
+	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
+	    integer counter = 0;
+	    foreach ( string entry, dummy, ``{
+		entry = strip(entry);
+		list valuelist = splitstring (entry,":");
+		string ident = strip(valuelist[0]:"");
+		string value = strip(valuelist[1]:"");
+	    
+		if (ident == "critical")
+		{
+		    CaMgm::exp_cri_authorityKeyIdentifier = true;
+		}
+		else
+		{
+		    if (counter == 0)
+		    {
+			CaMgm::exp_authorityKeyIdentifier = CaMgm::exp_authorityKeyIdentifier +
+			    ident + ((size(value) > 0) ? ":" : "") + value;
+		    }
+		    else
+		    {
+			CaMgm::exp_authorityKeyIdentifier = CaMgm::exp_authorityKeyIdentifier +
+			    "," + ident + ((size(value) > 0) ? ":" : "") + value;
+		    }
+		    counter = counter +1;
+		}
+	    });
+	}	    	    	    
+	else if (extention == "Netscape Cert Type")
+	{
+	    CaMgm::adv_cri_nsCertType = false;
+	    CaMgm::adv_client = false;
+	    CaMgm::adv_server = false;
+	    CaMgm::adv_sslCA = false;
+	    CaMgm::adv_email = false;
+	    CaMgm::adv_reserved = false;
+	    CaMgm::adv_emailCA = false;
+	    CaMgm::adv_objsign = false;
+	    CaMgm::adv_objCA = false;
+	    
+	    dummy = splitstring (CaMgm::requestExtentionValue[extention]:"", ",");
+	    foreach ( string entry, dummy, ``{
+		entry = strip(entry);
+		if (entry == "critical")
+		{
+		    CaMgm::adv_cri_nsCertType = true;
+		}
+		else if (entry == "client")
+		{
+		    CaMgm::adv_client = true;
+		}
+		else if (entry == "server")
+		{
+		    CaMgm::adv_server = true;
+		}
+		else if (entry == "sslCA")
+		{
+		    CaMgm::adv_sslCA = true;
+		}
+		else if (entry == "email")
+		{
+		    CaMgm::adv_email = true;
+		}	    
+		else if (entry == "reserved")
+		{
+		    CaMgm::adv_reserved = true;
+		}	    	
+		else if (entry == "emailCA")
+		{
+		    CaMgm::adv_emailCA = true;
+		}
+		else if (entry == "objsign")
+		{
+		    CaMgm::adv_objsign = true;
+		}
+		else if (entry == "objCA")
+		{
+		    CaMgm::adv_objCA = true;
+		}
+	    });
+	}
+	else
+	{
+	    Popup::Error (sformat(_("Extention \"%1\" not found."), extention));
+	}
+    }
+
+    
+   /**
+     * Values initializing for creating a Request
+     * @return `next,`abort
+     */
+    define symbol signRequestInit () ``{
+	map ret = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
+							   "request":CaMgm::currentRequest,
+							   "type":"parsed"]);
+	y2milestone("ReadRequest(%1,%2): %3", CaMgm::currentCA, CaMgm::currentRequest, ret);
+        if (ret == nil)
+        {
+            showErrorCaManagement ();
+            return `abort;
+        }
+
+	CaMgm::slectedRequestExtention = [];
+	CaMgm::requestExtentionValue = $[];
+	CaMgm::requestKind = "";
+	CaMgm::requestSubject = "";
+	CaMgm::requestAttributes = "";
+	CaMgm::validPeriod = 30;
+
+	// IS CA ?
+	if (ret["IS_CA"]:"" == "1")
+	{
+	    //Request is a CA
+	    new_cert_init("Sub CA");
+	    CaMgm::requestKind = "ca";
+	}
+	else
+	{
+	    //Ask user for the kind of certificate
+	    if (Popup::YesNo(_("Is this a request of a server certificate ?")))
+	    {
+		new_cert_init("Server Certificate");
+		CaMgm::requestKind = "server";		
+	    }
+	    else
+	    {
+		new_cert_init("Client Certificate");
+		CaMgm::requestKind = "client";				
+	    }
+	}
+
+	// Subject
+	CaMgm::requestSubject = ret["DN"]:"";
+	// Attributes not found FIXME !!!
+	CaMgm::requestAttributes = "NOT AVAILABLE; Fix it.";
+
+	// Filling up reqeust extentions
+	map<string,list> opensslExtentions = ret["OPENSSL_EXTENSIONS"]:$[];
+	foreach (string key, list value, opensslExtentions, {
+	    if (contains (CaMgm::validRequestExtention,key))
+	    {
+		CaMgm::requestExtentionValue = add (CaMgm::requestExtentionValue, key, (string) value[0]:"");
+	    }
+	    else
+	    {
+		Popup::Error (sformat(_("Extention \"%1\" not found."), key));
+	    }		
+	});
+	    	
+	new_cert_save_default();
+
+	return `next;
+    }
+
+
+    
+    /**
+     * Signing a request ( 1. step )
+     * @return `next, 'abort
+     */
+    define symbol signRequest1 () ``{
+
+	string helptext	= "";
+        // help text 1/3
+	helptext = _("<p>This frame shows the signing request.</p>");
+
+        // help text 2/3 
+        helptext = helptext + _("<p>The request has special <b>request extentions</b> which you can accept.</p>");
+        // help text 3/3
+	helptext = helptext + _("<p>If you reject these extentions the default value will be taken instead.</p>");
+
+        term contents = `VBox (
+			       `Left(`Label(_("Subject:"))),
+			       `Left(`Label(`id(`subject), `opt(`outputField), CaMgm::requestSubject)),
+			       `Left(`Label(_("Attibutes:"))),
+			       `Left(`Label(`id(`attributes), `opt(`outputField), CaMgm::requestAttributes)),
+			       `IntField( `id(`period), _("Valid Period (days):"),  1, 10000, CaMgm::validPeriod),
+			       `MultiSelectionBox( `id(`extentions), _("Requested Extentions which you can particular accept:"),
+						     createExtentionItem ())
+			       );
+
+        Wizard::SetContents ( _("Sign Request (step 1/2)"), contents, helptext, true, true);
+	Wizard::RestoreNextButton();
+	Wizard::DisableBackButton();
+	UI::SetFocus(`id(`period));
+	
+        symbol ui = nil;
+
+        repeat
+        {
+            ui = (symbol) UI::UserInput ();
+
+            if (ui == `next)
+            {
+		CaMgm::validPeriod = (integer) UI::QueryWidget(`id(`period), `Value);
+		CaMgm::slectedRequestExtention= (list<string>) UI::QueryWidget( `id(`extentions), `SelectedItems );
+	    }
+        }
+        until (contains ([`next, `abort], ui));
+
+        return ui;
+    }
+
+
+    /**
+     * Signing request ( 2. step )
+     * @return `next, 'back, 'cancel, `advancedOptions
+     */
+    define symbol signRequest2 () ``{
+
+	integer i = 0;
+	boolean nextLine = false;
+	
+        // help text 1/2
+        string helptext = _("<p>This frame gives an overview of all settings for the request that will be signed.</p>");
+        // help text 2/2
+        helptext = helptext + _("<p>Click <b>Sign Request</b> to go on.</p>");
+
+	string text = _("\n<b>Summary</b>");
+	text = text + "<br><pre>";
+	text = text + "Subject:                  "  + CaMgm::requestExtentionValue["subject"]:"" + "\n";
+	text = text + "Attributes:               "  + CaMgm::requestExtentionValue["attributes"]:"" + "\n";
+	text = text + "Valid Period:             " + CaMgm::validPeriod + _(" days\n");
+	text = text + "Basic Constaints:         " + CaMgm::adv_ca
+	    + (CaMgm::adv_cri_ca ? _(" (critical)\n") : "\n") ;
+	if (CaMgm::adv_pathlen)
+	{
+	    text = text +  "                          "  + _("Path Length ") + CaMgm::adv_pathlenValue + "\n"; 
+	}
+	if (size (CaMgm::adv_nsComment) > 0)
+	{	
+	    text = text + _("nsComment:                ") + CaMgm::adv_nsComment
+		+ (CaMgm::adv_cri_nsComment ? _(" (critical)\n") : "\n") ;
+	}
+	if (CaMgm::adv_client
+	    || CaMgm::adv_server
+	    || CaMgm::adv_sslCA
+	    || CaMgm::adv_email
+	    || CaMgm::adv_reserved
+	    || CaMgm::adv_emailCA
+	    || CaMgm::adv_objsign
+	    || CaMgm::adv_objCA)
+	{
+	    text = text + _("nsCertType:               ")
+		+ (CaMgm::adv_cri_nsCertType ? _(" (critical)\n") : "") ;
+	    nextLine = CaMgm::adv_cri_nsCertType;
+	    if (CaMgm::adv_client)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "client\n";
+		}
+		else
+		{
+		    text = text + "                          " + "client\n";
+		}	    
+	    }
+	    if (CaMgm::adv_server)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "server\n";
+		}
+		else
+		{
+		    text = text + "                          " + "server\n";
+		}	    
+	    }
+	    if (CaMgm::adv_sslCA)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "sslCA\n";
+		}
+		else
+		{
+		    text = text + "                          " + "sslCA\n";
+		}	    
+	    }
+	    if (CaMgm::adv_email)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "email\n";
+		}
+		else
+		{
+		    text = text + "                          " + "email\n";
+		}	    
+	    }
+	    if (CaMgm::adv_reserved)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "reserved\n";
+		}
+		else
+		{	
+		    text = text + "                          " + "reserved\n";
+		}	    
+	    }
+	    
+	    if (CaMgm::adv_emailCA)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "emailCA\n";
+		}
+		else
+		{
+		    text = text + "                          " + "emailCA\n";
+		}	    
+	    }
+	    if (CaMgm::adv_objsign)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "objsign\n";
+		}
+		else
+		{
+		    text = text + "                          " + "objsign\n";
+		}	    
+	    }
+	    if (CaMgm::adv_objCA)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "objCA\n";
+		}
+		else
+		{
+		    text = text + "                          " + "objCA\n";
+		}	    
+	    }
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "\n";
+	    }
+	}
+ 	if (size (CaMgm::exp_extendedKeyUsage) > 0)
+	{	
+	    text = text +   "extendedKeyUsage:         "  + CaMgm::exp_extendedKeyUsage
+		+ (CaMgm::exp_cri_extendedKeyUsage ? _(" (critical)\n") : "\n") ;
+	}
+ 	if (size (CaMgm::exp_subjectKeyIdentifier) > 0)
+	{	
+	    text = text +   "Subject Key Identifier:   "  + CaMgm::exp_subjectKeyIdentifier
+		+ (CaMgm::exp_cri_subjectKeyIdentifier ? _(" (critical)\n") : "\n") ;
+	}	
+ 	if (size (CaMgm::exp_authorityKeyIdentifier) > 0)
+	{	
+	    text = text +   "Authority Key Identifier: "  + CaMgm::exp_authorityKeyIdentifier
+		+ (CaMgm::exp_cri_authorityKeyIdentifier ? _(" (critical)\n") : "\n") ;
+	}
+	if (size (CaMgm::adv_subject_alt_name_list) > 0
+	    || CaMgm::adv_copy_subject_alt_name)
+	{	
+	    text = text + "Subject Alt Name:         "
+		+ (CaMgm::adv_cri_subject_alt_name ? _("(critical) ") : "") ;
+	    text = text + (CaMgm::adv_copy_subject_alt_name ?   _("Copy Standard E-Mail Address"): "");
+	    i = 0;
+	    if (CaMgm::adv_cri_subject_alt_name
+		|| CaMgm::adv_copy_subject_alt_name)
+	    {
+		i = i + 1;
+		text = text + "\n";	    
+	    }
+	    foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
+		if (i==0)
+		{
+		    text = text + element["kind"]:"" + ":" + element["name"]:"";
+		}
+		else
+		{
+		    text = text + "                          " + element["kind"]:"" + ":" + element["name"]:"";
+		}
+		text = text + "\n";
+		i = i + 1;
+	    });
+	    if (i==0)
+	    {
+		text = text + "\n";
+	    }
+	}
+	if (size (CaMgm::adv_issuer_alt_name_list) > 0
+	    || CaMgm::adv_copy_issuer_alt_name)
+	{	
+	    text = text + "Issuer Alt Name:          "
+		+ (CaMgm::adv_cri_issuer_alt_name ? _("(critical) ") : "") ;
+	    text = text + (CaMgm::adv_copy_issuer_alt_name ?  _("Copy Subject Alt Name from CA"): "");
+	    i = 0;
+	    if (CaMgm::adv_cri_issuer_alt_name
+		|| CaMgm::adv_copy_issuer_alt_name)
+	    {
+		i = i + 1;
+		text = text + "\n";	    
+	    }
+	    foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+		if (i==0)
+		{
+		    text = text + element["kind"]:"" + ":" + element["name"]:"";
+		}
+		else
+		{
+		    text = text + "                          " + element["kind"]:"" + ":" + element["name"]:"";
+		}
+		text = text + "\n";
+		i = i + 1;
+	    });
+	    if (i==0)
+	    {
+		text = text + "\n";
+	    }
+	}
+ 	if (size (CaMgm::exp_netscape_nsBaseUrl) > 0)
+	{	
+	    text = text +   "nsBaseUrl:                "  + CaMgm::exp_netscape_nsBaseUrl
+		+ (CaMgm::exp_cri_netscape_nsBaseUrl ? _(" (critical)\n") : "\n") ;
+	}
+ 	if (size (CaMgm::exp_netscape_nsRevocationUrl) > 0)
+	{	
+	    text = text +   "nsRevocationUrl:          "  + CaMgm::exp_netscape_nsRevocationUrl
+		+ (CaMgm::exp_cri_netscape_nsRevocationUrl ? _(" (critical)\n") : "\n") ;
+	}
+ 	if (size (CaMgm::exp_netscape_nsCaRevocationUrl) > 0)
+	{	
+	    text = text +   "nsCaRevocationUrl:        "  + CaMgm::exp_netscape_nsCaRevocationUrl
+		+ (CaMgm::exp_cri_netscape_nsCaRevocationUrl ? _(" (critical)\n") : "\n") ;
+	}
+	if (CaMgm::adv_digitalSignature
+	    || CaMgm::adv_nonRepudiation
+	    || CaMgm::adv_cRLSign
+	    || CaMgm::adv_keyEncipherment
+	    || CaMgm::adv_dataEncipherment
+	    || CaMgm::adv_encipherOnly
+	    || CaMgm::adv_keyAgreement
+	    || CaMgm::adv_keyCertSign
+	    || CaMgm::adv_decipherOnly)
+	{		
+	    text = text + "Key Usage:                "
+		+ (CaMgm::adv_cri_key_usage ? _("(critical)\n") : "") ;
+	    nextLine = CaMgm::adv_cri_key_usage;
+	    if (CaMgm::adv_digitalSignature)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "digitalSignature\n";
+		}
+		else
+		{
+		    text = text + "                          " + "digitalSignature\n";
+		}	    
+	    }
+	    if (CaMgm::adv_nonRepudiation)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "nonRepudiation\n";
+		}
+		else
+		{
+		    text = text + "                          " + "nonRepudiation\n";
+		}	    
+	    }
+	    if (CaMgm::adv_cRLSign)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "cRLSign\n";
+		}
+		else
+		{
+		    text = text + "                          " + "cRLSign\n";
+		}	    
+	    }
+	    if (CaMgm::adv_keyEncipherment)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "keyEncipherment\n";
+		}
+		else
+		{
+		    text = text + "                          " + "keyEncipherment\n";
+		}	    	    
+	    }
+	    if (CaMgm::adv_dataEncipherment)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "dataEncipherment\n";
+		}
+		else
+		{
+		    text = text + "                          " + "dataEncipherment\n";
+		}	    
+	    }
+	    
+	    if (CaMgm::adv_encipherOnly)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "encipherOnly\n";
+		}
+		else
+		{
+		    text = text + "                          " + "encipherOnly\n";
+		}	    
+	    }
+	    if (CaMgm::adv_keyAgreement)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "keyAgreement\n";
+		}
+		else
+		{
+		    text = text + "                          " + "keyAgreement\n";
+		}	    
+	    }
+	    if (CaMgm::adv_keyCertSign)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "keyCertSign\n";
+		}
+		else
+		{
+		    text = text + "                          " + "keyCertSign\n";
+		}	    
+	    }
+	    if (CaMgm::adv_decipherOnly)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "decipherOnly\n";
+		}
+		else
+		{
+		    text = text + "                          " + "decipherOnly\n";
+		}   	    
+	    }
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "\n";
+	    }
+	}
+ 	if (size (CaMgm::exp_netscape_nsRenewalUrl) > 0)
+	{	
+	    text = text +   "nsRenewalUrl:             "  + CaMgm::exp_netscape_nsRenewalUrl
+		+ (CaMgm::exp_cri_netscape_nsRenewalUrl ? _(" (critical)\n") : "\n") ;
+	}
+ 	if (size (CaMgm::exp_netscape_nsCaPolicyUrl) > 0)
+	{	
+	    text = text +   "nsCaPolicyUrl:            "  + CaMgm::exp_netscape_nsCaPolicyUrl
+		+ (CaMgm::exp_cri_netscape_nsCaPolicyUrl ? _(" (critical)\n") : "\n") ;
+	}
+	if (size (CaMgm::adv_nsSslServerName) > 0)
+	{	
+	    text = text + "nsSslServerName:          " + CaMgm::adv_nsSslServerName
+		+ (CaMgm::adv_cri_nsSslServerName ? _(" (critical)\n") : "\n") ;
+	}
+	if (size (CaMgm::adv_distribution_point) > 0)
+	{
+	    text = text + "CRL Distribution Point:   " + CaMgm::adv_distribution_point
+		+ (CaMgm::adv_cri_distribution_point ? _(" (critical)\n") : "\n") ;
+	}	
+ 	if (size (CaMgm::exp_authorityInfoAccess) > 0)
+	{	
+	    text = text +   "authorityInfoAccess:      "  + CaMgm::exp_authorityInfoAccess
+		+ (CaMgm::exp_cri_authorityInfoAccess ? _(" (critical)\n") : "\n") ;
+	}
+	
+	text = text + "</pre>";
+
+        term contents = `VBox ();
+        contents = add (contents, `RichText(text));
+
+                                // To translators: dialog label
+        Wizard::SetContents ( _("Sign Request (step 2/2)"), contents, helptext, true, true);
+	Wizard::SetNextButton(`next, _("Sign Request") );
+
+        symbol ui = nil;
+
+        repeat
+        {
+            ui = (symbol) UI::UserInput ();
+
+            if (ui == `next)
+            {
+		//signing request
+//		if (!sign_request())
+//		{
+//		    showErrorCaManagement ();
+//		    ui = `again;
+//		}
+	    }
+        }
+        until (contains ([`back, `next, `abort], ui));
+
+        return ui;
+    }
+
+
+}

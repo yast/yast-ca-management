@@ -18,6 +18,7 @@ myinclude_DATA =		\
 	crl.ycp			\
 	certificate.ycp		\
 	request.ycp		\
+	signRequest.ycp		\
 	default.ycp		\
 	floppy.ycp		\
 	dialog-ca.ycp		\
