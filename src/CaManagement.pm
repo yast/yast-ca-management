@@ -47,7 +47,6 @@ sub Version {
 
 BEGIN { $TYPEINFO{Supports} = ["function", "boolean", "string"]; }
 sub Supports {
-    
     my $cap  = shift;
 
     return isOneOfList($cap, @CAPABILITIES);
@@ -55,7 +54,6 @@ sub Supports {
 
 BEGIN { $TYPEINFO{ReadCAList} = ["function", "any"]; }
 sub ReadCAList {
-    my $self   = shift;
     my $caList = undef;
 
     my $ret = SCR::Read(".caTools.caList");
@@ -68,7 +66,6 @@ sub ReadCAList {
 
 BEGIN { $TYPEINFO{AddRootCA} = ["function", "boolean", "any" ]; }
 sub AddRootCA {
-    
     my $data = shift;
     my @dn   = ();
     my $caName  = "";
@@ -221,7 +218,6 @@ sub AddRootCA {
 
 BEGIN { $TYPEINFO{ReadCertificateDefaults} = ["function", "any", "any"]; }
 sub ReadCertificateDefaults {
-    
     my $data = shift;
     my $caName   = "";
     my $certType = "";
@@ -297,7 +293,6 @@ sub ReadCertificateDefaults {
 
 BEGIN { $TYPEINFO{ReadCA} = ["function", "any", "any"]; }
 sub ReadCA {
-    
     my $data = shift;
     my $caName = "";
     my $type   = "";
@@ -340,7 +335,6 @@ sub ReadCA {
 
 BEGIN { $TYPEINFO{AddRequest} = ["function", "string", "any" ]; }
 sub AddRequest {
-    
     my $data = shift;
     my @dn   = ();
     my $caName  = "";
@@ -479,7 +473,6 @@ sub AddRequest {
 
 BEGIN { $TYPEINFO{IssueCertificate} = ["function", "string", "any" ]; }
 sub IssueCertificate {
-    
     my $data = shift;
     my @dn   = ();
     my $caName  = "";
@@ -641,7 +634,6 @@ sub IssueCertificate {
 
 BEGIN { $TYPEINFO{AddCertificate} = ["function", "string", "any" ]; }
 sub AddCertificate {
-    
     my $data = shift;
 
     my $request = AddRequest($data);
@@ -662,7 +654,6 @@ sub AddCertificate {
 
 BEGIN { $TYPEINFO{ReadCertificateList} = ["function", "any", "any"]; }
 sub ReadCertificateList {
-    
     my $data = shift;
     my $ret  = undef;
 
@@ -693,7 +684,6 @@ sub ReadCertificateList {
 
 BEGIN { $TYPEINFO{UpdateDB} = ["function", "boolean", "any"]; }
 sub UpdateDB {
-    
     my $data = shift;
     
     if (not defined $data->{'caName'} ||
@@ -708,12 +698,12 @@ sub UpdateDB {
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    my $retCode = SCR::Execute(".target.bash",
-                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if(not defined $retCode || $retCode != 0) {
-        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
+#    my $retCode = SCR::Execute(".target.bash",
+#                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#    if(not defined $retCode || $retCode != 0) {
+#        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                code => "COPY_FAILED");
+#    }
 
     my $hash = {
                 CAKEY  => "$CAM_ROOT/$caName/cacert.key",
@@ -722,16 +712,15 @@ sub UpdateDB {
                };
     my $ret = SCR::Execute(".openca.openssl.updateDB", $data->{'caName'}, $hash);
     if ( not defined $ret ) {
-        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return SetError(%{SCR::Error(".openca.openssl")});
     }
-    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
     return 1;
 }
 
 BEGIN { $TYPEINFO{ReadCertificate} = ["function", "any", "any"]; }
 sub ReadCertificate {
-    
     my $data = shift;
     my $caName = "";
     my $certificate = "";
@@ -783,7 +772,6 @@ sub ReadCertificate {
 
 BEGIN { $TYPEINFO{RevokeCertificate} = ["function", "boolean", "any"]; }
 sub RevokeCertificate {
-    
     my $data = shift;
     my $caName = "";
     my $certificate = "";
@@ -813,12 +801,12 @@ sub RevokeCertificate {
                                code => "FILE_DOES_NOT_EXIST");
     }
 
-    my $retCode = SCR::Execute(".target.bash",
-                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if(not defined $retCode || $retCode != 0) {
-        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
+#    my $retCode = SCR::Execute(".target.bash",
+#                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#    if(not defined $retCode || $retCode != 0) {
+#        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                code => "COPY_FAILED");
+#    }
 
     my $hash = {
                 CAKEY  => "$CAM_ROOT/$caName/cacert.key",
@@ -831,16 +819,15 @@ sub RevokeCertificate {
     }
     my $ret = SCR::Execute(".openca.openssl.revoke", $caName, $hash);
     if(not defined $ret) {
-        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return SetError(%{SCR::Error(".openca.openssl")});
     }
-    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
     return 1;
 }
 
 BEGIN { $TYPEINFO{AddCRL} = ["function", "boolean", "any"]; }
 sub AddCRL {
-    
     my $data = shift;
     my $caName = "";
 
@@ -862,12 +849,12 @@ sub AddCRL {
                                 code    => "CHECK_PARAM_FAILED");
     }
 
-    my $retCode = SCR::Execute(".target.bash",
-                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if(not defined $retCode || $retCode != 0) {
-        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
+#    my $retCode = SCR::Execute(".target.bash",
+#                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#    if(not defined $retCode || $retCode != 0) {
+#        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                code => "COPY_FAILED");
+#    }
 
     my $hash = {
                 CAKEY   => "$CAM_ROOT/$caName/cacert.key",
@@ -879,10 +866,10 @@ sub AddCRL {
                };
     my $ret = SCR::Execute(".openca.openssl.issueCrl", $caName, $hash);
     if(not defined $ret) {
-        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#        SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return SetError(%{SCR::Error(".openca.openssl")});
     }
-    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#    SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
 
     $ret = SCR::Execute(".target.bash", "cp $CAM_ROOT/$caName/crl/crl.pem $CAM_ROOT/.cas/crl_$caName.pem");
     if(not defined $ret || $ret != 0) {
@@ -899,7 +886,6 @@ sub AddCRL {
 
 BEGIN { $TYPEINFO{ReadCRL} = ["function", "any", "any"]; }
 sub ReadCRL {
-    
     my $data = shift;
     my $caName = "";
     my $type   = "";
@@ -942,7 +928,6 @@ sub ReadCRL {
 
 BEGIN { $TYPEINFO{ExportCA} = ["function", "any", "any"]; }
 sub ExportCA {
-    
     my $data = shift;
     my $caName = "";
     my $destinationFile = undef;
@@ -1004,12 +989,12 @@ sub ExportCA {
             return $file;
         }
     } elsif($format eq "PEM_CERT_KEY") {
-        my $retCode = SCR::Execute(".target.bash",
-                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-        if(not defined $retCode || $retCode != 0) {
-            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                    code => "COPY_FAILED");
-        }
+#        my $retCode = SCR::Execute(".target.bash",
+#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#        if(not defined $retCode || $retCode != 0) {
+#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                    code => "COPY_FAILED");
+#        }
 
         my $file1 = SCR::Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
 
@@ -1023,12 +1008,12 @@ sub ExportCA {
 
         my $file2 = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file2) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#                SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
                 return SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
@@ -1036,10 +1021,10 @@ sub ExportCA {
             print OUT "\n";
             print OUT $file2;
             close OUT;
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file1."\n".$file2;
         }
     } elsif($format eq "PEM_CERT_ENCKEY") {
@@ -1059,12 +1044,12 @@ sub ExportCA {
             return $file1."\n".$file2;
         }
     } elsif($format eq "DER_CERT") {
-        my $retCode = SCR::Execute(".target.bash",
-                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-        if(not defined $retCode || $retCode != 0) {
-            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                    code => "COPY_FAILED");
-        }
+#        my $retCode = SCR::Execute(".target.bash",
+#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#        if(not defined $retCode || $retCode != 0) {
+#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                    code => "COPY_FAILED");
+#        }
 
         my $hash = {
                     DATATYPE => "CERTIFICATE",
@@ -1079,14 +1064,14 @@ sub ExportCA {
         
         my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file;
         }
     } elsif($format eq "PKCS12") {
@@ -1095,12 +1080,12 @@ sub ExportCA {
                                    code => "PARAM_CHECK_FAILED");
         }
 
-        my $retCode = SCR::Execute(".target.bash",
-                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-        if(not defined $retCode || $retCode != 0) {
-            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                    code => "COPY_FAILED");
-        }
+#        my $retCode = SCR::Execute(".target.bash",
+#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#        if(not defined $retCode || $retCode != 0) {
+#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                    code => "COPY_FAILED");
+#        }
 
         my $hash = {
                     DATATYPE => "CERTIFICATE",
@@ -1118,14 +1103,14 @@ sub ExportCA {
 
         my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file;
         }
     } elsif($format eq "PKCS12_CHAIN") {
@@ -1143,7 +1128,6 @@ sub ExportCA {
 
 BEGIN { $TYPEINFO{ExportCertificate} = ["function", "any", "any"]; }
 sub ExportCertificate {
-    
     my $data = shift;
     my $caName = "";
     my $certificate = "";
@@ -1224,12 +1208,12 @@ sub ExportCertificate {
             return SetError(summary => "Keyfile '$CAM_ROOT/$caName/keys/$keyname.key' does not exist",
                                    code => "FILE_DOES_NOT_EXIST");
         }
-        my $retCode = SCR::Execute(".target.bash",
-                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-        if(not defined $retCode || $retCode != 0) {
-            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                    code => "COPY_FAILED");
-        }
+#        my $retCode = SCR::Execute(".target.bash",
+#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#        if(not defined $retCode || $retCode != 0) {
+#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                    code => "COPY_FAILED");
+#        }
 
         my $file1 = SCR::Read(".target.string", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
         my $hash = {
@@ -1242,12 +1226,12 @@ sub ExportCertificate {
 
         my $file2 = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file2) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#                SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
                 return SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
@@ -1255,10 +1239,10 @@ sub ExportCertificate {
             print OUT "\n";
             print OUT $file2;
             close OUT;
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file1."\n".$file2;
         }
     } elsif($format eq "PEM_CERT_ENCKEY") {
@@ -1278,12 +1262,12 @@ sub ExportCertificate {
             return $file1."\n".$file2;
         }
     } elsif($format eq "DER_CERT") {
-        my $retCode = SCR::Execute(".target.bash",
-                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-        if(not defined $retCode || $retCode != 0) {
-            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                    code => "COPY_FAILED");
-        }
+#        my $retCode = SCR::Execute(".target.bash",
+#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#        if(not defined $retCode || $retCode != 0) {
+#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                    code => "COPY_FAILED");
+#        }
 
         my $hash = {
                     DATATYPE => "CERTIFICATE",
@@ -1298,14 +1282,14 @@ sub ExportCertificate {
         
         my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file;
         }
     } elsif($format eq "PKCS12") {
@@ -1314,12 +1298,12 @@ sub ExportCertificate {
                                    code => "PARAM_CHECK_FAILED");
         }
 
-        my $retCode = SCR::Execute(".target.bash",
-                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-        if(not defined $retCode || $retCode != 0) {
-            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                    code => "COPY_FAILED");
-        }
+#        my $retCode = SCR::Execute(".target.bash",
+#                                   "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+#        if(not defined $retCode || $retCode != 0) {
+#            return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+#                                    code => "COPY_FAILED");
+#        }
 
         my $hash = {
                     DATATYPE => "CERTIFICATE",
@@ -1337,14 +1321,14 @@ sub ExportCertificate {
 
         my $file = SCR::Execute(".openca.openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return SetError(%{SCR::Error(".openca.openssl")});
         }
         if(defined $destinationFile) {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return 1;
         } else {
-            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+#            SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
             return $file;
         }
     } elsif($format eq "PKCS12_CHAIN") {
@@ -1363,7 +1347,6 @@ sub ExportCertificate {
 
 BEGIN { $TYPEINFO{Verify} = ["function", "any", "any"]; }
 sub Verify {
-    
     my $data = shift;
     my $caName = "";
     my $certificate = "";
@@ -1392,7 +1375,6 @@ sub Verify {
 }
 
 sub cleanCaInfrastructure {
-#    my $self     = shift || return undef;
     my $caName = shift;
     if (!defined $caName || $caName eq "" || $caName =~ /\./) {
         return undef;
@@ -1404,7 +1386,6 @@ sub cleanCaInfrastructure {
 }
 
 sub checkValueWithConfig {
-#    my $self     = shift || return undef;
     my $name     = shift || return undef;
     my $param    = shift || return undef;
 
@@ -1453,7 +1434,6 @@ sub checkValueWithConfig {
 }
 
 sub mergeToConfig {
-#  my $self     = shift || return undef;
   my $name     = shift || return undef;
   my $ext_name = shift || return undef;
   my $param    = shift || return undef;
@@ -1489,7 +1469,6 @@ sub mergeToConfig {
 }
 
 sub checkCommonValues {
-#    my $self = shift || return undef;
     my $data = shift || return SetError(summary=>"Missing 'data' map.",
                                                code => "PARAM_CHECK_FAILED");
 
@@ -1800,7 +1779,6 @@ sub checkCommonValues {
 }
 
 sub isOneOfList {
-#    my $self  = shift || return 0;
     my $value = shift || return 0;
     my $list  = shift || return 0;
     
@@ -1811,7 +1789,6 @@ sub isOneOfList {
 }
 
 sub checkURI {
-#    my $self     = shift || return 0;
     my $url      = shift || return 0;
     my $doEscape = shift || 0;
     
@@ -1836,7 +1813,6 @@ sub checkURI {
 }
 
 sub stringFromDN {
-#    my $self = shift || return undef;
     my $data = shift || return SetError(summary => "Missing parameter 'data'",
                                                code => "PARAM_CHECK_FAILED");;
     my @rdn = ();
@@ -1894,8 +1870,6 @@ my %__error = ();
 
 BEGIN { $TYPEINFO{SetError} = ["function", "boolean", ["map", "string", "any" ]]; }
 sub SetError {
-#    my $class = shift;      # so that SetError can be called via -> like all
-                            # other SCRAgent functions
     %__error = @_;
     if( !$__error{package} && !$__error{file} && !$__error{line})
     {
