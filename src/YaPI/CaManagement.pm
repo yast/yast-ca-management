@@ -681,6 +681,8 @@ sub AddRootCA {
         return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
+    SCR->UnmountAgent(".CAM.openssl_cnf");
+
     # check this values, if they were accepted from the openssl command
     my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
                      'organizationName', 'organizationalUnitName',
@@ -1077,6 +1079,7 @@ sub WriteCertificateDefaults {
         return $self->SetError( summary => "Can not create backup file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
+    SCR->UnmountAgent(".CAM.openssl_cnf");
 
     if (not SCR->Write(".CAM.openssl_cnf.value.$caName.".$certType."_cert.x509_extensions", 
                        "v3_".$certType)) { 
@@ -1163,6 +1166,8 @@ sub WriteCertificateDefaults {
         return $self->SetError( summary => "Can not create new template file '$CAM_ROOT/$caName/openssl.cnf.tmpl'",
                                 code => "COPY_FAILED");
     }
+    SCR->UnmountAgent(".CAM.openssl_tmpl");
+
     SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
     return 1;
 }
@@ -1405,6 +1410,9 @@ sub AddRequest {
         return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
+    SCR->UnmountAgent(".CAM.openssl_cnf");
+
+
     # check this values, if they were accepted from the openssl command
     my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
                      'organizationName', 'organizationalUnitName',
@@ -1627,13 +1635,16 @@ sub IssueCertificate {
                                 code    => "CHECK_PARAM_FAILED");
     }
 
+    if (!defined $data->{"certType"}) {
+        return $self->SetError( summary => __("Missing value 'certType'."),
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $certType = $data->{"certType"};
+
     # Set default values, if the values are not set and modify the
     # config with this values.
     if (!defined $data->{"days"}) {
         $data->{"days"} = 365;
-    }
-    if (defined $data->{"certType"}) {
-        $certType = $data->{"certType"};
     }
     # test if the file already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") == -1) {
@@ -1656,6 +1667,7 @@ sub IssueCertificate {
         return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
+    SCR->UnmountAgent(".CAM.openssl_cnf");
 
     # check time period of the CA against DAYS to sign this cert
     my $caP = $self->ReadCA({caName => $caName, type => 'parsed'});
@@ -1900,6 +1912,7 @@ sub AddCertificate {
         return undef;
     }
     $data->{'request'} = $request;
+
     my $certificate = $self->IssueCertificate($data);
     if (not defined $certificate) {
         my $caName = $data->{'caName'};
@@ -3207,7 +3220,29 @@ In I<$valueMap> you can define the following keys:
 
 * certificate (required)
 
-The syntax of these values are explained in the 
+* disableCRLcheck (optional)
+
+* purpose (optional)
+
+The parameter B<purpose> could be one of the following values:
+
+* sslclient    (SSL client)
+
+* sslserver    (SSL server)
+
+* nssslserver  (Netscape SSL server)
+
+* smimesign    (S/MIME signing)
+
+* smimeencrypt (S/MIME encryption)
+
+* crlsign      (CRL signing)
+
+* any          (Any Purpose)
+
+* ocsphelper   (OCSP helper)
+
+The syntax of the other values are explained in the 
 B<COMMON PARAMETER> section.
 
 The return value is "undef" if the verification failed.
@@ -3235,6 +3270,7 @@ sub Verify {
     my $data = shift;
     my $caName = "";
     my $certificate = "";
+    my $enableCRLcheck = 1;
 
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
@@ -3254,12 +3290,27 @@ sub Verify {
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
-    
+
+    if(defined $data->{'disableCRLcheck'} && $data->{'disableCRLcheck'} ) {
+        $enableCRLcheck = 0;
+    }
     my $hash = { 
                 CERT => "$CAM_ROOT/$caName/newcerts/$certificate.pem",
                 CAPATH => "$CAM_ROOT/.cas/",
-                CRLCHECK => 1
+                CRLCHECK => $enableCRLcheck,
                };
+    if(defined $data->{'purpose'} && $data->{'purpose'} ne "") {
+        if(!grep( ($_ eq $data->{'purpose'}), ("sslclient", "sslserver", "nssslserver",
+                                               "smimesign", "smimeencrypt", "crlsign",
+                                               "any", "ocsphelper"))) {
+                                                 # parameter check failed
+            return $self->SetError(summary => __("Invalid value for parameter 'purpose'."),
+                                   description => "Value '".$data->{'purpose'}.
+                                                  "' for 'purpose' is not allowed",
+                                   code    => "PARAM_CHECK_FAILED");
+        }
+        $hash->{'PURPOSE'} = $data->{'purpose'};
+    }
     my $ret = SCR->Execute(".openssl.verify", $caName, $hash);
     if ( not defined $ret ) {
         return $self->SetError(%{SCR->Error(".openssl")});
@@ -3429,6 +3480,7 @@ sub AddSubCA {
         return undef;
     }
     $data->{'request'} = $request;
+    $data->{'certType'} = 'ca';
     my $certificate = $self->IssueCertificate($data);
     if (! defined $certificate) {
         my $caName = $data->{'caName'};
@@ -6104,6 +6156,7 @@ sub WriteCRLDefaults {
         return $self->SetError( summary => "Can not create backup file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
+    SCR->UnmountAgent(".CAM.openssl_cnf");
 
     if (not SCR->Write(".CAM.openssl_cnf.value.$caName.ca.crl_extensions", 
                        "v3_crl")) { 
@@ -6150,6 +6203,8 @@ sub WriteCRLDefaults {
         return $self->SetError( summary => "Can not create new template file '$CAM_ROOT/$caName/openssl.cnf.tmpl'",
                                 code => "COPY_FAILED");
     }
+    SCR->UnmountAgent(".CAM.openssl_tmpl");
+
     SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
     return 1;
 }
