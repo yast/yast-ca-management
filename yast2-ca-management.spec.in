@@ -2,7 +2,7 @@
 # neededforbuild yast2-devel-packages perl-gettext perl-gettext yast2-perl-bindings perl-OPENSSL perl-X500-DN perl-Date-Calc perl-URI dosfstools perl-Parse-RecDescent
 
 @HEADER@
-Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-OPENSSL perl-X500-DN perl-Date-Calc perl-URI dosfstools
+Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-OPENSSL perl-X500-DN perl-Date-Calc perl-URI dosfstools perl-Config-IniFiles
 
 BuildArchitectures:	noarch
 
@@ -42,3 +42,5 @@ Summary:	CA Management
 @scrconfdir@/*
 @agentdir@/*
 %doc @docdir@
+/usr/bin/generateCRL.pl
+%attr(600, root, root) %config(noreplace) /etc/generateCRL.conf
