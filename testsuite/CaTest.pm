@@ -35,7 +35,8 @@ sub run {
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
 #    test_AddCRL();
-    test_ReadCRL();
+#    test_ReadCRL();
+    test_ExportCA();
 
     return 1;
 }
@@ -375,5 +376,32 @@ sub test_ReadCRL {
     }
 }
 
+sub test_ExportCA {
+    foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
+        my $data = {
+                    'caName' => $exampleCA,
+                    'exportFormat' => $ef,
+                    'caPasswd' => "system",
+                   };
+        if($ef =~ /^PKCS12/) {
+            $data->{'P12Password'} = "tralla";
+        }
+        print STDERR "trying to call YaST::caManagement->ExportCA($ef)\n";
+        print STDERR "with caName = '$exampleCA' \n";
+    
+        my $res = CaManagement->ExportCA($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = CaManagement->Error();
+            printError($err);
+        } else {
+            if(! open(OUT, "> /tmp/mc/certs/$ef")) {
+                print STDERR "OPEN_FAILED\n";
+            }
+            print OUT $res;
+            close OUT;
+        }
+    }
+}
 
 1;
