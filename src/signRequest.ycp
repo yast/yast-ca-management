@@ -32,6 +32,7 @@
     include "ca-management/util.ycp";
     include "ca-management/new_cert_read_write.ycp";
 
+
     /**
      * Creates Request Extention items
      * @return a list items formated for a UI Multiselectionbox
@@ -47,6 +48,78 @@
     }
 
     /**
+     * Reset an accpetation of a RequestExtention
+     * @param request extention
+     * @return void
+     */
+    define void unsetRequestExtentions (string extention)``{
+	list<string> dummy = [];
+
+	y2milestone("Unset requestExtention %1", extention);
+	if (extention == "X509v3 Subject Key Identifier")
+	{
+	    CaMgm::exp_cri_subjectKeyIdentifier = sav_exp_cri_subjectKeyIdentifier;
+	    CaMgm::exp_subjectKeyIdentifier = sav_exp_subjectKeyIdentifier;
+	}
+	else if (extention == "X509v3 Subject Alternative Name")
+	{
+	    CaMgm::adv_cri_subject_alt_name = sav_adv_cri_subject_alt_name;
+	    CaMgm::adv_copy_subject_alt_name = sav_adv_copy_subject_alt_name;
+	}
+	else if (extention == "X509v3 Basic Constraints")
+	{
+	    CaMgm::adv_pathlen = sav_adv_pathlen;
+	    CaMgm::adv_pathlenValue = sav_adv_pathlenValue;
+	    CaMgm::adv_cri_ca = sav_adv_cri_ca;
+	    CaMgm::adv_ca = sav_adv_ca;
+	}
+	else if (extention == "X509v3 Key Usage")
+	{
+	    CaMgm::adv_cri_key_usage = sav_adv_cri_key_usage;
+	    CaMgm::adv_digitalSignature = sav_adv_digitalSignature;
+	    CaMgm::adv_nonRepudiation = sav_adv_nonRepudiation;
+	    CaMgm::adv_cRLSign = sav_adv_cRLSign;
+	    CaMgm::adv_keyEncipherment = sav_adv_keyEncipherment;
+	    CaMgm::adv_dataEncipherment = sav_adv_dataEncipherment;
+	    CaMgm::adv_encipherOnly = sav_adv_encipherOnly;
+	    CaMgm::adv_keyAgreement = sav_adv_keyAgreement;
+	    CaMgm::adv_keyCertSign = sav_adv_keyCertSign;
+	    CaMgm::adv_decipherOnly = sav_adv_decipherOnly;
+	}
+	else if (extention == "X509v3 Extended Key Usage")
+	{
+	    CaMgm::exp_cri_extendedKeyUsage = sav_exp_cri_extendedKeyUsage;
+	    CaMgm::exp_extendedKeyUsage = sav_exp_extendedKeyUsage;
+	}
+	else if (extention == "Netscape Comment")
+	{
+	    CaMgm::adv_cri_nsComment = sav_adv_cri_nsComment;
+	    CaMgm::adv_nsComment = sav_adv_nsComment;
+	}
+	else if (extention == "Authority Information Access")
+	{
+	    CaMgm::exp_cri_authorityKeyIdentifier = sav_exp_cri_authorityKeyIdentifier;
+	    CaMgm::exp_authorityKeyIdentifier = sav_exp_authorityKeyIdentifier;
+	}	    	    	    
+	else if (extention == "Netscape Cert Type")
+	{
+	    CaMgm::adv_cri_nsCertType = sav_adv_cri_nsCertType;
+	    CaMgm::adv_client = sav_adv_client;
+	    CaMgm::adv_server = sav_adv_server;
+	    CaMgm::adv_sslCA = sav_adv_sslCA;
+	    CaMgm::adv_email = sav_adv_email;
+	    CaMgm::adv_reserved = sav_adv_reserved;
+	    CaMgm::adv_emailCA = sav_adv_emailCA;
+	    CaMgm::adv_objsign = sav_adv_objsign;
+	    CaMgm::adv_objCA = sav_adv_objCA;
+	}
+	else
+	{
+	    Popup::Error (sformat(_("Extention \"%1\" not found."), extention));
+	}
+    }    
+    
+    /**
      * The user has decide that given request extention
      * will be used. --> setting for signation
      * @param request extention
@@ -54,6 +127,8 @@
      */
     define void setRequestExtentions (string extention)``{
 	list<string> dummy = [];
+
+	y2milestone("Set requestExtention %1", extention);
 	if (extention == "X509v3 Subject Key Identifier")
 	{
 	    CaMgm::exp_cri_subjectKeyIdentifier = false;
@@ -340,6 +415,26 @@
 	}
     }
 
+    /**
+     * setExtentionValues - Accept special extention values
+     * @param list of accepted extentions
+     */
+    define void () setExtentionValues (list<string> acceptedExtentions)``{
+	foreach( string extention, acceptedExtentions, ``{
+	    // setting all accepted extentions
+	    setRequestExtentions (extention);
+	});
+
+	foreach( string extention, CaMgm::slectedRequestExtention, ``{
+	    if (!contains (acceptedExtentions, extention))
+	    {
+		//set to defaults
+		unsetRequestExtentions (extention);
+	    }
+	});
+
+	CaMgm::slectedRequestExtention = acceptedExtentions;
+    }
     
    /**
      * Values initializing for creating a Request
@@ -427,12 +522,12 @@
 
         term contents = `VBox (
 			       `Left(`Label(_("Subject:"))),
-			       `Left(`Label(`id(`subject), `opt(`outputField), CaMgm::requestSubject)),
-			       `Left(`Label(_("Attibutes:"))),
+			       `Left(`RichText(CaMgm::requestSubject)),
+			       `Left(`Label(_("Attributes:"))),
 			       `Left(`Label(`id(`attributes), `opt(`outputField), CaMgm::requestAttributes)),
 			       `IntField( `id(`period), _("Valid Period (days):"),  1, 10000, CaMgm::validPeriod),
 			       `MultiSelectionBox( `id(`extentions), _("Requested Extentions which you can particular accept:"),
-						     createExtentionItem ())
+						   createExtentionItem ())
 			       );
 
         Wizard::SetContents ( _("Sign Request (step 1/2)"), contents, helptext, true, true);
@@ -449,7 +544,7 @@
             if (ui == `next)
             {
 		CaMgm::validPeriod = (integer) UI::QueryWidget(`id(`period), `Value);
-		CaMgm::slectedRequestExtention= (list<string>) UI::QueryWidget( `id(`extentions), `SelectedItems );
+		 setExtentionValues((list<string>) UI::QueryWidget( `id(`extentions), `SelectedItems ));
 	    }
         }
         until (contains ([`next, `abort], ui));
