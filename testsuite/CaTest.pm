@@ -22,7 +22,8 @@ sub run {
 #    test_AddRootCA2();
     test_ReadCertificateDefaults();
     test_ReadCertificateDefaults2();
-   
+    test_ReadCA();
+
     return 1;
 }
 
@@ -140,5 +141,27 @@ sub test_ReadCertificateDefaults2 {
         print STDERR Data::Dumper->Dump([$res])."\n";
     }
 }
+
+sub test_ReadCA {
+
+    foreach my $type ("parsed", "plain") {
+        my $data = {
+                    'caName' => $exampleCA,
+                    'type'   => $type
+                   };
+        print STDERR "trying to call YaST::caManagement->ReadCA($type)\n";
+        print STDERR "with caName = '$exampleCA'\n";
+        
+        my $res = CaManagement->ReadCA($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = CaManagement->Error();
+            printError($err);
+        } else {
+            print STDERR Data::Dumper->Dump([$res])."\n";
+        }
+    }
+}
+
 
 1;
