@@ -19,5 +19,6 @@
     "path":   "/usr/bin/openssl",
     "tmpdir": "/tmp",
     "stderr": ">> /var/log/YaST2/ca.log",
+    "privkeyalg": "des3",
   ])
 )
