@@ -5171,5 +5171,85 @@ sub ReadRequest {
     return $ret;
 }
 
+=item *
+C<$certList = ReadRequestList($valueMap)>
+
+Returns a list of maps with all requests of the defined CA.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error.
+
+On success it returns an array of hashes with all 
+requests of this CA. @ret[0..X] can have the 
+following Hash keys:
+
+* request (the name of the certificate)
+
+* commonName
+
+* emailAddress
+
+* countryName
+
+* stateOrProvinceName
+
+* localityName
+
+* organizationName
+
+* organizationalUnitName
+
+
+EXAMPLE:
+
+ use Data::Dumper;
+
+ my $data = {
+             'caName'   => 'My_CA'
+            };
+
+    my $res = YaPI::CaManagement->ReadRequestList($data);
+    if( not defined $res ) {
+        # error
+    } else {
+        my $requestName = $res->[0]->{'request'};
+        print Data::Dumper->Dump([$res])."\n";
+    }
+
+=cut
+
+BEGIN { $TYPEINFO{ReadRequestList} = ["function", ["list", "any"], ["map", "string", "any"]]; }
+sub ReadRequestList {
+    my $self = shift;
+    my $data = shift;
+    my $ret  = undef;
+
+    if (! defined $data->{'caName'} ||
+        $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Missing parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    if($data->{'caName'} =~ /^-/ || $data->{'caName'} =~ /-$/) {
+        return $self->SetError(summary => __("Invalid value for parameter")." 'caName'.",
+                               description => "'-' as first or last character is forbidden.",
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    my $caName = $data->{'caName'};
+
+    $ret = SCR->Read(".caTools.requestList", $data->{'caName'});
+    if ( not defined $ret ) {
+        return $self->SetError(%{SCR->Error(".caTools")});
+    }
+    return $ret;
+}
+
+
 1;
 
