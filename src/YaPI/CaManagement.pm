@@ -449,8 +449,7 @@ containing the issuer caName.
 * $caList->[$x]->[1] is the issuer caName 
 
 If the issuer caName is empty caName is a root CA.
-The list is sorted. If an entry has an issuer, the 
-issuer entry was listed before.
+The list is sorted by the first element.
 
 The function return undef on an error.
 
@@ -500,35 +499,7 @@ sub ReadCATree {
         }
     }
 
-    # sort the list
-    my $i = 0;
-    while(exists $result->[$i]) {
-        #print STDERR "STATUS:\n".Data::Dumper->Dump([$result])."\n";
-        if($result->[$i]->[1] eq '') {
-            #print STDERR "found root CA\n";
-            $i++;
-            next;
-        } else {
-
-            my $y = $i - 1;
-            my $ok = 0;
-            while($y >= 0) {
-                if($result->[$i]->[1] eq $result->[$y]->[0]) {
-                    #print STDERR "Sub CA is after the issuer\n";
-                    $ok = 1;
-                    $i++;
-                    last;
-
-                }
-                $y--;
-            }
-            if(!$ok) {  # we must swap
-                #print STDERR "do swap\n";
-                push(@$result, $result->[$i]);
-                splice( @$result, $i, 1);
-            }
-        }
-    }
+    $result = [ sort { $a->[0] cmp $b->[0] if(ref($a) and ref($b)) } @$result ];
 
     return $result;
 }
