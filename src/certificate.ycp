@@ -35,6 +35,75 @@
     define list<string> certificateID = [];
 
     /**
+     * Dialog for revoking a certificate
+     */
+    define void revokeCertificate() ``{
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      // popup window header
+				      `Heading (_("Revoke Certificate")),
+				      `VSpacing (1),
+				      `RadioButtonGroup(`id(`rb), 
+							`VBox(
+							      `Label(_("Reasons")),
+							      `VSpacing (1),
+							      `Left(`RadioButton(`id("unspecified"), "&unspecified", true)),
+							      `Left(`RadioButton(`id("keyCompromise"), "&keyCompromise" )),
+							      `Left(`RadioButton(`id("CACompromise"), "CAC&ompromise" )),
+							      `Left(`RadioButton(`id("affiliationChanged"), "&affiliationChanged" )),
+							      `Left(`RadioButton(`id("superseded"), "&superseded" )),
+							      `Left(`RadioButton(`id("cessationOfOperation"), "&cessationOfOperation" )),
+							      `Left(`RadioButton(`id("certificateHold"), "c&ertificateHold" ))
+							      )
+							),
+				      `VSpacing (1),					  
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),
+				      `VSpacing (1)					  
+				      ),
+			       `HSpacing (2)
+			       )
+			);
+
+	symbol ui = nil;
+	repeat
+ 	{
+	    ui = (symbol) UI::UserInput ();
+	    
+            string reason = (string) UI::QueryWidget(`id(`rb), `CurrentButton);	    
+	    
+	    if (ui == `ok)
+	    {
+		// Revoke certificate
+		boolean ret = nil;
+		ret = (boolean) YaPI::CaManagement::RevokeCertificate ($["caName": CaMgm::currentCA,
+									 "caPasswd" : getPassword(CaMgm::currentCA),
+									 "certificate" : CaMgm::currentCertificate,
+									 "crlReason" : reason
+								       ]);
+		y2milestone ("RevokeCertificate(%1) return %2", $["caName": CaMgm::currentCA,
+								  "certificate" : CaMgm::currentCertificate,
+								  "crlReason" : reason
+			     ],
+			     ret);
+		if (ret == nil
+		    || ret == false)
+		{
+		    showErrorCaManagement ();
+		    ret = false;
+		}
+	    }
+	}
+	until (contains ([`ok, `cancel], ui));
+	UI::CloseDialog ();
+    }        
+
+    /**
      * showLongCertDescription - description of a certificate in textform
      * @param CA name , certification name
      */
@@ -253,28 +322,18 @@
 	    if (ui == `delete)
 	    {
 		    integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
-		    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
-		    string CaMgm::currentCertificate = (string) select(table_item, 2, "");
- 		    list<map> dummy_map = [];
-
-		    //finding entry in list
-//		    foreach (map element, CaMgm::emailList, ``{
-//			if (element["name"]:"" != current_name )
-//			{
-//			    dummy_map = add (dummy_map, element);
-//			}
-//		    });
-		    
-//		     CaMgm::currentCertificate= dummy_map;
+		    CaMgm::currentCertificate = (string) certificateID[id]:"";		    
 
 		    ui = `again;
 	    }
 	    if (ui == `revoke)
 	    {
+		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+		CaMgm::currentCertificate = (string) certificateID[id]:"";		    		
+		revokeCertificate();
+		ui = `again;		
 	    }
-	    if (ui == `view)
-	    {
-	    }
+
         }
         until (contains ([`back, `again, `abort, `addServer, `addClient], ui));
 
