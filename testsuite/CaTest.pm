@@ -1,6 +1,8 @@
 package CaTest;
 #use warnings;
 
+use MIME::Base64;
+
 BEGIN {
     $TYPEINFO{run} = ["function", "void"];
     push @INC, '/usr/share/YaST2/modules/';
@@ -15,14 +17,19 @@ POSIX::setlocale(LC_MESSAGES, "");
 textdomain("caManagement");
 
 my $exampleCA = "";
+my $exampleReq = "";
 
 sub run {
+    test_AddRootCA();
     test_ReadCAList();
-#    test_AddRootCA();
 #    test_AddRootCA2();
-    test_ReadCertificateDefaults();
-    test_ReadCertificateDefaults2();
-    test_ReadCA();
+#    test_ReadCertificateDefaults();
+#    test_ReadCertificateDefaults2();
+#    test_ReadCA();
+#    test_AddRequest();
+#    test_issueCertificate();
+    test_AddCertificate();
+
 
     return 1;
 }
@@ -57,7 +64,7 @@ sub test_AddRootCA {
                 'keyPasswd'             => 'system',
                 'commonName'            => 'My CA',
                 'emailAddress'          => 'my@linux.tux',
-                'keyLength'             => '1024',
+                'keyLength'             => '2048',
                 'days'                  => '3650',
                 'countryName'           => 'DE',
                 'localityName'          => 'Nuernberg',
@@ -160,6 +167,89 @@ sub test_ReadCA {
         } else {
             print STDERR Data::Dumper->Dump([$res])."\n";
         }
+    }
+}
+
+sub test_AddRequest {
+    my $data = {
+                'caName'                => $exampleCA,
+                'keyPasswd'             => 'system',
+                'commonName'            => 'My Request5',
+                'emailAddress'          => 'my2@tait.linux.tux',
+                'keyLength'             => '2048',
+                'days'                  => '365',
+                'countryName'           => 'DE',
+                'localityName'          => 'Nuremberg',
+                'stateOrProvinceName'   => 'Bavaria',
+                'organizationalUnitName'=> 'IT Abteilung',
+                'organizationName'      => 'My Linux/OU=hallo',
+                'nsComment'             => "\"heide witzka, herr Kapitän\""
+               };
+    print STDERR "trying to call YaST::caManagement->AddRequest with caName = '$exampleCA'\n";
+    
+    my $res = CaManagement->AddRequest($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = CaManagement->Error();
+        printError($err);
+    } else {
+        $exampleReq = $res;
+        print STDERR "OK: '$res'\n";
+    }
+}
+
+sub test_issueCertificate {
+    my $data = {
+                'caName'                => $exampleCA,
+                'request'               => $exampleReq,
+                'certType'              => 'client',
+                'caPasswd'              => 'system',
+                'days'                  => '365',
+                'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
+                'nsComment'             => "\"Heide Witzka, Herr Kapitän\"",
+               };
+    print STDERR "trying to call YaST::caManagement->IssueCertificate with caName = '$exampleCA'\n";
+    
+    my $res = CaManagement->IssueCertificate($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK: '$res'\n";
+        $res =~ /^[[:xdigit:]]+:(.*)$/;
+        print STDERR decode_base64($1)."\n";
+    }
+}
+
+sub test_AddCertificate {
+    my $data = {
+                'caName'                => $exampleCA,
+                'certType'              => 'client',
+                'keyPasswd'             => 'system',
+                'caPasswd'              => 'system',
+                'commonName'            => 'My Request6',
+                'emailAddress'          => 'my2@tait.linux.tux',
+                'keyLength'             => '2048',
+                'days'                  => '365',
+                'countryName'           => 'DE',
+                'localityName'          => 'Nuremberg',
+                'stateOrProvinceName'   => 'Bavaria',
+                'organizationalUnitName'=> 'IT Abteilung',
+                'organizationName'      => 'My Linux Tux ',
+                'days'                  => '365',
+                'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
+                'nsComment'             => "\"Heide Witzka, Herr Kapitän\"",
+               };
+    print STDERR "trying to call YaST::caManagement->AddCertificate with caName = '$exampleCA'\n";
+    
+    my $res = CaManagement->AddCertificate($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "OK: '$res'\n";
     }
 }
 
