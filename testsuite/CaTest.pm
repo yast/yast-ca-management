@@ -31,13 +31,14 @@ sub run {
 #    test_AddRequest();
 #    test_issueCertificate();
 #    test_AddCertificate();
-    test_ReadCertificateList();
+#    test_ReadCertificateList();
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
 #    test_AddCRL();
 #    test_ReadCRL();
 #    test_ExportCA();
-    test_ExportCertificate();
+#    test_ExportCertificate();
+    test_Verify();
 
     return 1;
 }
@@ -249,15 +250,15 @@ sub test_AddCertificate {
                 'certType'              => 'client',
                 'keyPasswd'             => 'system',
                 'caPasswd'              => 'system',
-                'commonName'            => 'My Request11',
-                'emailAddress'          => 'my2@tait.linux.tux',
+                'commonName'            => 'My Request4',
+                'emailAddress'          => 'my@linux.tux',
                 'keyLength'             => '2048',
                 'days'                  => '365',
                 'countryName'           => 'DE',
                 'localityName'          => 'Nuremberg',
                 'stateOrProvinceName'   => 'Bavaria',
                 'organizationalUnitName'=> 'IT Abteilung',
-                'organizationName'      => 'My Linux Tux / Inc',
+                'organizationName'      => 'My Linux Tux GmbH',
                 'days'                  => '365',
                 'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
                 'nsComment'             => "\"Heide Witzka, Herr Kapitän\"",
@@ -431,6 +432,41 @@ sub test_ExportCertificate {
             }
             print OUT $res;
             close OUT;
+        }
+    }
+}
+
+sub test_Verify {
+
+    my $data = {
+                caName => $exampleCA,
+                caPasswd => "system"
+               };
+    
+    print STDERR "trying to call YaST::caManagement->ReadCertificateList()\n";
+    print STDERR "with caName = '$exampleCA'\n";
+    
+    my $res = CaManagement->ReadCertificateList($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = CaManagement->Error();
+        printError($err);
+    } else {
+
+        foreach my $cert (@$res) {
+            $data = {
+                     caName => $exampleCA, 
+                     certificate => $cert->{'certificate'} 
+                    };
+
+            print STDERR "trying to call YaST::caManagement->Verify(".$cert->{'certificate'}.")\n";
+
+            my $Vret = CaManagement->Verify($data);
+            if(not defined $Vret) {
+                printError(CaManagement->Error());
+            } else {
+                print STDERR "$Vret\n";
+            }
         }
     }
 }
