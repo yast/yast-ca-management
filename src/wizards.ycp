@@ -124,7 +124,28 @@ define symbol newClientCertificateSequence() ``{
     return ret;
 }
 
-    
+/**
+ * Creating new Client Certificate sequence
+ * @return sequence result
+ */
+define symbol newSubCASequence() ``{
+
+    map aliases = $[
+        "new_certinit"   	: ``(new_cert_init ("Sub CA")),
+        "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+        "new_cert1"  	 	: ``(new_cert1 ("Sub CA")),
+        "new_cert2"   		: ``(new_cert2 ("Sub CA")),
+        "new_cert3"   		: ``(new_cert3 ("Sub CA")),
+        "new_cert_advanced"   	: ``(new_cert_advanced ()),		    
+    ];
+
+    Wizard::CreateDialog();
+    symbol ret = WizardSequencer(aliases, certificateSequence);
+
+    UI::CloseDialog();
+
+    return ret;
+}   
 
 /**
  * Main workflow of the CA management configuration
@@ -136,7 +157,8 @@ define symbol MainSequence() ``{
         "startup"        	: ``(Startup()),
 	"new_certCA"		: ``(newCASequence()),
 	"new_certServer"	: ``(newServerCertificateSequence()),
-	"new_certClient"	: ``(newClientCertificateSequence()),		
+	"new_certClient"	: ``(newClientCertificateSequence()),
+	"new_certSubCA"		: ``(newSubCASequence()),			
         "ca_main"  	 	: ``(ca ()),
         "certificate"  	 	: ``(certificate ()),		
         ];
@@ -156,6 +178,7 @@ define symbol MainSequence() ``{
 				`back 		: "startup",
 				`abort		: "startup",
 				`certificates 	: "certificate",
+				`createSubCA	: "new_certSubCA",
                             ],
         "certificate"	    : $[
 				`back 		: "ca_main",
@@ -172,7 +195,11 @@ define symbol MainSequence() ``{
         "new_certClient"    : $[
 				`next       	: "certificate",
 				`abort		: "certificate",
-                            ],		
+                            ],
+        "new_certSubCA"     : $[
+				`next       	: "ca_main",
+				`abort		: "ca_main",
+                            ],	
         ];
 
     Wizard::CreateDialog();

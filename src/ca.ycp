@@ -102,8 +102,9 @@
         term buttons = `HBox ();
         // To translators: pushbutton label
         buttons = add (buttons,  `PushButton (`id (`certificates), _("&Certificates...")));
-        buttons = add (buttons,  `PushButton (`id (`requests), _("&Requests...")));
+//        buttons = add (buttons,  `PushButton (`id (`requests), _("&Requests...")));
 	buttons = add (buttons,  `PushButton (`id (`crl), _("CR&L...")));
+	buttons = add (buttons,  `HStretch());
 	buttons = add (buttons,  `MenuButton( _("&Advanced..."),
 					      [
 					       `item(`id(`information), _("&Show information") ),
@@ -129,7 +130,7 @@
             ui = (symbol) UI::UserInput ();
 
         }
-        until (contains ([`back, `abort, `certificates], ui));
+        until (contains ([`back, `abort, `certificates, `createSubCA], ui));
 
         return ui;
     }
