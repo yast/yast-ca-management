@@ -61,7 +61,7 @@
     define symbol Startup () ``{
 
         // help text 1/2
-        string helptext = _("<p>Please select on CA and press <b>Enter CA </b>.</p>");
+        string helptext = _("<p>Please select one CA and press <b>Enter CA </b>.</p>");
         // help text 2/2
         helptext = helptext + _("<p><b>Create Root CA</b> generates a new root Certificate Authority.");
 

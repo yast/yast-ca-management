@@ -176,13 +176,13 @@
         helptext = helptext + _("<p><b>CA Password</b> is the password of the CA which should sign the new certificate.</p>");
 
         // help text 3/5
-        helptext = helptext + _("<p>Each certificate has its own <b>Key Lenght</b>. Please take care that some applications which use certificates, need special key lengths.</p>");
+        helptext = helptext + _("<p>Each certificate has its own <b>Key Length</b>. Please take care that some applications which use certificates, need special key lengths.</p>");
 
         // help text 4/5
-        helptext = helptext + _("<p>The ceritficate will be valid for only specific period(<b>Valid Period</b>.</p>");
+        helptext = helptext + _("<p>The ceritficate will be valid for only specific period(<b>Valid Period</b>). You can enter the timeframe in days.</p>");
 
         // help text 5/5
-        helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you use this option, please take care that SuSE cannot guarentee that the generated certificate will work correctly.</p>");
+        helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change this options, please take care that SuSE cannot guarentee that the generated certificate will work correctly.</p>");
 
 	
         term contents = `VBox ();
