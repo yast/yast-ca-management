@@ -52,11 +52,11 @@
      */
     define string strip(string str)``{
         //emtpy  string
-        if (size(str) == 0) return "";
+        if (size (str) == 0) return "";
 
-        integer bound = size(str);
+        integer bound = size (str);
         integer first = 0;
-        integer last = size(str) - 1;
+        integer last = size (str) - 1;
         // find first non-blank char
         while(first < bound && isBlank(substring(str, first, 1)))
         {
@@ -107,7 +107,7 @@
     
     /**
      * Values initializing for creating CA/Certificate 
-     * @return `next, 'abort
+     * @return `next
      */
     define symbol new_cert_init (string kind) ``{
 
@@ -182,6 +182,12 @@
 
 	
 	map ret = (map) CaManagement::ReadCertificateDefaults ($["certType":kind]);
+	if (ret == nil)
+	{
+	    Popup::Error (_("Cannot read default certificate."));
+	    return `next;
+	}
+	
 	y2milestone("ReadCertificateDefaults: %1", ret);
 
  	CaMgm::keyLength = tointeger(ret["keyLength"]:"");
@@ -661,7 +667,7 @@
 		{
 		    map selection = $[];
 		    selection["name"] = (string) UI::QueryWidget(`id(`id_emailname), `Value);
-		    if (size(CaMgm::emailList) > 0)
+		    if (size (CaMgm::emailList) > 0)
 		    {
 			selection["default"] = false;
 		    }
@@ -670,7 +676,7 @@
 			selection["default"] = true;
 		    }
 			
-		    if (size(selection["name"]:"") > 0)
+		    if (size (selection["name"]:"") > 0)
 		    {
 			if (check_mail_address(selection["name"]:""))
 			{
@@ -800,6 +806,9 @@
      */
     define symbol new_cert3 (string kind) ``{
 
+	integer i = 0;
+	boolean nextLine = false;
+	
         // help text 1/4
         string helptext = _("<p>This frame gives an overview about all setting for the certificate which will be created.</p>");
         // help text 2/4
@@ -807,45 +816,66 @@
 
 	string text = _("<br><h3>Summary</h3>");
 	text = text + "<pre>";
-	if (kind == "ca")
+	if (kind == "ca"
+	    && size (CaMgm::CAName) > 0)
 	{
 	    text = text + _("CA Name:                  ")  + CaMgm::CAName + "\n";
 	}
-	text = text +  _("Common Name:              ")  + CaMgm::commonName + "\n";
-	text = text +  _("Organisation:             ")  + CaMgm::organisation + "\n";
-	text = text +  _("Organisation Unit:        ")  + CaMgm::organisationUnit + "\n";
-	text = text +  _("Locality:                 ")  + CaMgm::locality + "\n";
-	text = text +  _("EMAIL(s):                 ");
+	if (size (CaMgm::commonName) > 0)
+	{
+	    text = text +  _("Common Name:              ")  + CaMgm::commonName + "\n";
+	}
+	if (size (CaMgm::organisation) > 0)
+	{
+	    text = text +  _("Organisation:             ")  + CaMgm::organisation + "\n";
+	}
+	if (size (CaMgm::organisationUnit) > 0)
+	{	
+	    text = text +  _("Organisation Unit:        ")  + CaMgm::organisationUnit + "\n";
+	}
 
-	integer i = 0;
-	foreach (map element, CaMgm::emailList, ``{
+	if (size (CaMgm::emailList) > 0)
+	{
+	    text = text +  _("EMAIL(s):                 ");
+
+	    i = 0;
+	    foreach (map element, CaMgm::emailList, ``{
+		if (i==0)
+		{
+		    text = text + element["name"]:"";
+		}
+		else
+		{
+		    text = text + "                          " + element["name"]:"";
+		}
+		if (element["default"]:false)
+		{
+		    text = text + " (default)" + "\n";
+		}
+		else
+		{
+		    text = text + "\n";
+		}
+	    
+		i = i + 1;
+	    });
 	    if (i==0)
-	    {
-		text = text + element["name"]:"";
-	    }
-	    else
-	    {
-		text = text + "                          " + element["name"]:"";
-	    }
-	    if (element["default"]:false)
-	    {
-		text = text + " (default)" + "\n";
-	    }
-	    else
 	    {
 		text = text + "\n";
 	    }
-	    
-	    i = i + 1;
-	});
-	if (i==0)
-	{
-	    text = text + "\n";
 	}
-
-	text = text + _("Locality:                 ") + CaMgm::locality + "\n";
-	text = text + _("State:                    ") + CaMgm::state + "\n";
-	text = text + _("Country:                  ") + CaMgm::country + "\n";
+	if (size (CaMgm::locality) > 0)
+	{		
+	    text = text +  _("Locality:                 ")  + CaMgm::locality + "\n";
+	}
+	if (size (CaMgm::state) > 0)
+	{			
+	    text = text + _("State:                    ") + CaMgm::state + "\n";
+	}
+	if (size (CaMgm::country) > 0)
+	{	
+	    text = text + _("Country:                  ") + CaMgm::country + "\n";
+	}
 	text = text + _("Key Length:               ") + CaMgm::keyLength + " bit\n";
 	text = text + _("Valid Period:             ") + CaMgm::validPeriod + _(" days\n");
 	text = text + "Basic Constaints:         " + CaMgm::adv_ca
@@ -854,314 +884,383 @@
 	{
 	    text = text +  "                          "  + _("Pathlength ") + CaMgm::adv_pathlenValue + "\n"; 
 	}
-	text = text + "CRL Distribution Point:   " + CaMgm::adv_distribution_point
-	    + (CaMgm::adv_cri_distribution_point ? _(" (critical)\n" ) : "\n") ;
-	text = text + "Challage Password:        " + CaMgm::adv_challange_password + "\n";
-	
-	text = text + "Issuer Alt Name:          "
-	    + (CaMgm::adv_cri_issuer_alt_name ? _("(critical) " ) : "") ;
-	text = text + (CaMgm::adv_copy_issuer_alt_name ?  _("copy Subject Alt Name from CA"): "");
-	i = 0;
-	if (CaMgm::adv_cri_issuer_alt_name
+	if (size (CaMgm::adv_distribution_point) > 0)
+	{
+	    text = text + "CRL Distribution Point:   " + CaMgm::adv_distribution_point
+		+ (CaMgm::adv_cri_distribution_point ? _(" (critical)\n" ) : "\n") ;
+	}
+	if (size (CaMgm::adv_challange_password) > 0)
+	{	
+	    text = text + "Challage Password:        " + CaMgm::adv_challange_password + "\n";
+	}
+
+	if (size (CaMgm::adv_issuer_alt_name_list) > 0
 	    || CaMgm::adv_copy_issuer_alt_name)
-	{
-	    i = i + 1;
-	    text = text + "\n";	    
-	}
-	foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+	{	
+	    text = text + "Issuer Alt Name:          "
+		+ (CaMgm::adv_cri_issuer_alt_name ? _("(critical) " ) : "") ;
+	    text = text + (CaMgm::adv_copy_issuer_alt_name ?  _("copy Subject Alt Name from CA"): "");
+	    i = 0;
+	    if (CaMgm::adv_cri_issuer_alt_name
+		|| CaMgm::adv_copy_issuer_alt_name)
+	    {
+		i = i + 1;
+		text = text + "\n";	    
+	    }
+	    foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+		if (i==0)
+		{
+		    text = text + element["kind"]:"" + ":" + element["name"]:"";
+		}
+		else
+		{
+		    text = text + "                          " + element["kind"]:"" + ":" + element["name"]:"";
+		}
+		text = text + "\n";
+		i = i + 1;
+	    });
 	    if (i==0)
 	    {
-		text = text + element["kind"]:"" + ":" + element["name"]:"";
+		text = text + "\n";
 	    }
-	    else
-	    {
-		text = text + "                          " + element["kind"]:"" + ":" + element["name"]:"";
-	    }
-	    text = text + "\n";
-	    i = i + 1;
-	});
-	if (i==0)
-	{
-	    text = text + "\n";
-	}
-	
-	text = text + "Key Usage:                "
-	    + (CaMgm::adv_cri_key_usage ? _("(critical)\n" ) : "") ;
-	boolean nextLine = CaMgm::adv_cri_key_usage;
-	if (CaMgm::adv_digitalSignature)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "digitalSignature\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "digitalSignature\n";
-	    }	    
-	}
-	if (CaMgm::adv_nonRepudiation)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "nonRepudiation\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "nonRepudiation\n";
-	    }	    
-	}
-	if (CaMgm::adv_cRLSign)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "cRLSign\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "cRLSign\n";
-	    }	    
-	}
-	if (CaMgm::adv_keyEncipherment)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "keyEncipherment\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "keyEncipherment\n";
-	    }	    	    
-	}
-	if (CaMgm::adv_dataEncipherment)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "dataEncipherment\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "dataEncipherment\n";
-	    }	    
-	}
-	    	
-	if (CaMgm::adv_encipherOnly)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "encipherOnly\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "encipherOnly\n";
-	    }	    
-	}
-	if (CaMgm::adv_keyAgreement)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "keyAgreement\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "keyAgreement\n";
-	    }	    
-	}
-	if (CaMgm::adv_keyCertSign)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "keyCertSign\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "keyCertSign\n";
-	    }	    
-	}
-	if (CaMgm::adv_decipherOnly)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "decipherOnly\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "decipherOnly\n";
-	    }   	    
-	}
-	if (!nextLine)
-	{
-	    nextLine = true;
-	    text = text + "\n";
 	}
 
- 
-	text = text + _("nsComment:                ") + CaMgm::adv_nsComment
-	    + (CaMgm::adv_cri_nsComment ? _(" (critical)\n" ) : "\n") ;
+	if (CaMgm::adv_digitalSignature
+	    || CaMgm::adv_nonRepudiation
+	    || CaMgm::adv_cRLSign
+	    || CaMgm::adv_keyEncipherment
+	    || CaMgm::adv_dataEncipherment
+	    || CaMgm::adv_encipherOnly
+	    || CaMgm::adv_keyAgreement
+	    || CaMgm::adv_keyCertSign
+	    || CaMgm::adv_decipherOnly)
+	{		
+	    text = text + "Key Usage:                "
+		+ (CaMgm::adv_cri_key_usage ? _("(critical)\n" ) : "") ;
+	    nextLine = CaMgm::adv_cri_key_usage;
+	    if (CaMgm::adv_digitalSignature)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "digitalSignature\n";
+		}
+		else
+		{
+		    text = text + "                          " + "digitalSignature\n";
+		}	    
+	    }
+	    if (CaMgm::adv_nonRepudiation)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "nonRepudiation\n";
+		}
+		else
+		{
+		    text = text + "                          " + "nonRepudiation\n";
+		}	    
+	    }
+	    if (CaMgm::adv_cRLSign)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "cRLSign\n";
+		}
+		else
+		{
+		    text = text + "                          " + "cRLSign\n";
+		}	    
+	    }
+	    if (CaMgm::adv_keyEncipherment)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "keyEncipherment\n";
+		}
+		else
+		{
+		    text = text + "                          " + "keyEncipherment\n";
+		}	    	    
+	    }
+	    if (CaMgm::adv_dataEncipherment)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "dataEncipherment\n";
+		}
+		else
+		{
+		    text = text + "                          " + "dataEncipherment\n";
+		}	    
+	    }
+	    
+	    if (CaMgm::adv_encipherOnly)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "encipherOnly\n";
+		}
+		else
+		{
+		    text = text + "                          " + "encipherOnly\n";
+		}	    
+	    }
+	    if (CaMgm::adv_keyAgreement)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "keyAgreement\n";
+		}
+		else
+		{
+		    text = text + "                          " + "keyAgreement\n";
+		}	    
+	    }
+	    if (CaMgm::adv_keyCertSign)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "keyCertSign\n";
+		}
+		else
+		{
+		    text = text + "                          " + "keyCertSign\n";
+		}	    
+	    }
+	    if (CaMgm::adv_decipherOnly)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "decipherOnly\n";
+		}
+		else
+		{
+		    text = text + "                          " + "decipherOnly\n";
+		}   	    
+	    }
+	    if (!nextLine)
+	    {
+		nextLine = true;
+		text = text + "\n";
+	    }
+	}
+	    
+	if (size (CaMgm::adv_nsComment) > 0)
+	{	
+	    text = text + _("nsComment:                ") + CaMgm::adv_nsComment
+		+ (CaMgm::adv_cri_nsComment ? _(" (critical)\n" ) : "\n") ;
+	}
 
-	text = text + _("nsCertType:               ")
-	    + (CaMgm::adv_cri_nsCertType ? _(" (critical)\n" ) : "") ;
-	nextLine = CaMgm::adv_cri_nsCertType;
-	if (CaMgm::adv_client)
+	if (CaMgm::adv_client
+	    || CaMgm::adv_server
+	    || CaMgm::adv_sslCA
+	    || CaMgm::adv_email
+	    || CaMgm::adv_reserved
+	    || CaMgm::adv_emailCA
+	    || CaMgm::adv_objectSign
+	    || CaMgm::adv_objCA)
 	{
+	    text = text + _("nsCertType:               ")
+		+ (CaMgm::adv_cri_nsCertType ? _(" (critical)\n" ) : "") ;
+	    nextLine = CaMgm::adv_cri_nsCertType;
+	    if (CaMgm::adv_client)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "client\n";
+		}
+		else
+		{
+		    text = text + "                          " + "client\n";
+		}	    
+	    }
+	    if (CaMgm::adv_server)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "server\n";
+		}
+		else
+		{
+		    text = text + "                          " + "server\n";
+		}	    
+	    }
+	    if (CaMgm::adv_sslCA)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "sslCA\n";
+		}
+		else
+		{
+		    text = text + "                          " + "sslCA\n";
+		}	    
+	    }
+	    if (CaMgm::adv_email)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "email\n";
+		}
+		else
+		{
+		    text = text + "                          " + "email\n";
+		}	    
+	    }
+	    if (CaMgm::adv_reserved)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "reserved\n";
+		}
+		else
+		{	
+		    text = text + "                          " + "reserved\n";
+		}	    
+	    }
+	    
+	    if (CaMgm::adv_emailCA)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "emailCA\n";
+		}
+		else
+		{
+		    text = text + "                          " + "emailCA\n";
+		}	    
+	    }
+	    if (CaMgm::adv_objectSign)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "objectSign\n";
+		}
+		else
+		{
+		    text = text + "                          " + "objectSign\n";
+		}	    
+	    }
+	    if (CaMgm::adv_objCA)
+	    {
+		if (!nextLine)
+		{
+		    nextLine = true;
+		    text = text + "objCA\n";
+		}
+		else
+		{
+		    text = text + "                          " + "objCA\n";
+		}	    
+	    }
 	    if (!nextLine)
 	    {
 		nextLine = true;
-		text = text + "client\n";
+		text = text + "\n";
 	    }
-	    else
-	    {
-		text = text + "                          " + "client\n";
-	    }	    
 	}
-	if (CaMgm::adv_server)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "server\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "server\n";
-	    }	    
-	}
-	if (CaMgm::adv_sslCA)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "sslCA\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "sslCA\n";
-	    }	    
-	}
-	if (CaMgm::adv_email)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "email\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "email\n";
-	    }	    
-	}
-	if (CaMgm::adv_reserved)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "reserved\n";
-	    }
-	    else
-	    {	
-		text = text + "                          " + "reserved\n";
-	    }	    
+	if (size (CaMgm::adv_nsSslServerName) > 0)
+	{	
+	    text = text + "nsSslServerName:          " + CaMgm::adv_nsSslServerName
+		+ (CaMgm::adv_cri_nsSslServerName ? _(" (critical)\n" ) : "\n") ;
 	}
 
-	if (CaMgm::adv_emailCA)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "emailCA\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "emailCA\n";
-	    }	    
-	}
-	if (CaMgm::adv_objectSign)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "objectSign\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "objectSign\n";
-	    }	    
-	}
-	if (CaMgm::adv_objCA)
-	{
-	    if (!nextLine)
-	    {
-		nextLine = true;
-		text = text + "objCA\n";
-	    }
-	    else
-	    {
-		text = text + "                          " + "objCA\n";
-	    }	    
-	}
-	if (!nextLine)
-	{
-	    nextLine = true;
-	    text = text + "\n";
-	}
-
-	text = text + "nsSslServerName:          " + CaMgm::adv_nsSslServerName
-	    + (CaMgm::adv_cri_nsSslServerName ? _(" (critical)\n" ) : "\n") ;
-	
-	text = text + "Subject Alt Name:         "
-	    + (CaMgm::adv_cri_subject_alt_name ? _("(critical) " ) : "") ;
-	text = text + (CaMgm::adv_copy_subject_alt_name ?   _("copy Standard EMAIL Address"): "");
-	i = 0;
-	if (CaMgm::adv_cri_subject_alt_name
+	if (size (CaMgm::adv_subject_alt_name_list) > 0
 	    || CaMgm::adv_copy_subject_alt_name)
-	{
-	    i = i + 1;
-	    text = text + "\n";	    
-	}
-	foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
+	{	
+	    text = text + "Subject Alt Name:         "
+		+ (CaMgm::adv_cri_subject_alt_name ? _("(critical) " ) : "") ;
+	    text = text + (CaMgm::adv_copy_subject_alt_name ?   _("copy Standard EMAIL Address"): "");
+	    i = 0;
+	    if (CaMgm::adv_cri_subject_alt_name
+		|| CaMgm::adv_copy_subject_alt_name)
+	    {
+		i = i + 1;
+		text = text + "\n";	    
+	    }
+	    foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
+		if (i==0)
+		{
+		    text = text + element["kind"]:"" + ":" + element["name"]:"";
+		}
+		else
+		{
+		    text = text + "                          " + element["kind"]:"" + ":" + element["name"]:"";
+		}
+		text = text + "\n";
+		i = i + 1;
+	    });
 	    if (i==0)
 	    {
-		text = text + element["kind"]:"" + ":" + element["name"]:"";
+		text = text + "\n";
 	    }
-	    else
-	    {
-		text = text + "                          " + element["kind"]:"" + ":" + element["name"]:"";
-	    }
-	    text = text + "\n";
-	    i = i + 1;
-	});
-	if (i==0)
-	{
-	    text = text + "\n";
 	}
 
-	text = text +   "Unstructured Name:        "  + CaMgm::adv_unstructured_name +"\n";
-	text = text +   "Subject Key Identifier:   "  + CaMgm::exp_SubjectKeyIdentifier
-	    + (CaMgm::exp_cri_SubjectKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
-	text = text +   "Authority Key Identifier: "  + CaMgm::exp_AuthorityKeyIdentifier
-	    + (CaMgm::exp_cri_AuthorityKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
-	text = text +   "nsBaseUrl:                "  + CaMgm::exp_netscape_nsBaseUrl
-	    + (CaMgm::exp_cri_netscape_nsBaseUrl ? _(" (critical)\n" ) : "\n") ;
-	text = text +   "nsRevocationUrl:          "  + CaMgm::exp_netscape_nsRevocationUrl
-	    + (CaMgm::exp_cri_netscape_nsRevocationUrl ? _(" (critical)\n" ) : "\n") ;
-	text = text +   "nsCaRevocationUrl:        "  + CaMgm::exp_netscape_nsCaRevocationUrl
-	    + (CaMgm::exp_cri_netscape_nsCaRevocationUrl ? _(" (critical)\n" ) : "\n") ;
-	text = text +   "nsRenewalUrl:             "  + CaMgm::exp_netscape_nsRenewalUrl
-	    + (CaMgm::exp_cri_netscape_nsRenewalUrl ? _(" (critical)\n" ) : "\n") ;
-	text = text +   "nsCaPolicyUrl:            "  + CaMgm::exp_netscape_nsCaPolicyUrl
-	    + (CaMgm::exp_cri_netscape_nsCaPolicyUrl ? _(" (critical)\n" ) : "\n") ;
-	text = text +   "authorityInfoAccess:      "  + CaMgm::exp_authorityInfoAccess
-	    + (CaMgm::exp_cri_authorityInfoAccess ? _(" (critical)\n" ) : "\n") ;
-	text = text +   "extendedKeyUsage:         "  + CaMgm::exp_extendedKeyUsage
-	    + (CaMgm::exp_cri_extendedKeyUsage ? _(" (critical)\n" ) : "\n") ;			
+ 	if (size (CaMgm::adv_unstructured_name) > 0)
+	{	
+	    text = text +   "Unstructured Name:        "  + CaMgm::adv_unstructured_name +"\n";
+	}
+ 	if (size (CaMgm::exp_SubjectKeyIdentifier) > 0)
+	{	
+	    text = text +   "Subject Key Identifier:   "  + CaMgm::exp_SubjectKeyIdentifier
+		+ (CaMgm::exp_cri_SubjectKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
+	}
+ 	if (size (CaMgm::exp_AuthorityKeyIdentifier) > 0)
+	{	
+	    text = text +   "Authority Key Identifier: "  + CaMgm::exp_AuthorityKeyIdentifier
+		+ (CaMgm::exp_cri_AuthorityKeyIdentifier ? _(" (critical)\n" ) : "\n") ;
+	}
+ 	if (size (CaMgm::exp_netscape_nsBaseUrl) > 0)
+	{	
+	    text = text +   "nsBaseUrl:                "  + CaMgm::exp_netscape_nsBaseUrl
+		+ (CaMgm::exp_cri_netscape_nsBaseUrl ? _(" (critical)\n" ) : "\n") ;
+	}
+ 	if (size (CaMgm::exp_netscape_nsRevocationUrl) > 0)
+	{	
+	    text = text +   "nsRevocationUrl:          "  + CaMgm::exp_netscape_nsRevocationUrl
+		+ (CaMgm::exp_cri_netscape_nsRevocationUrl ? _(" (critical)\n" ) : "\n") ;
+	}
+ 	if (size (CaMgm::exp_netscape_nsCaRevocationUrl) > 0)
+	{	
+	    text = text +   "nsCaRevocationUrl:        "  + CaMgm::exp_netscape_nsCaRevocationUrl
+		+ (CaMgm::exp_cri_netscape_nsCaRevocationUrl ? _(" (critical)\n" ) : "\n") ;
+	}
+ 	if (size (CaMgm::exp_netscape_nsRenewalUrl) > 0)
+	{	
+	    text = text +   "nsRenewalUrl:             "  + CaMgm::exp_netscape_nsRenewalUrl
+		+ (CaMgm::exp_cri_netscape_nsRenewalUrl ? _(" (critical)\n" ) : "\n") ;
+	}
+ 	if (size (CaMgm::exp_netscape_nsCaPolicyUrl) > 0)
+	{	
+	    text = text +   "nsCaPolicyUrl:            "  + CaMgm::exp_netscape_nsCaPolicyUrl
+		+ (CaMgm::exp_cri_netscape_nsCaPolicyUrl ? _(" (critical)\n" ) : "\n") ;
+	}
+ 	if (size (CaMgm::exp_authorityInfoAccess) > 0)
+	{	
+	    text = text +   "authorityInfoAccess:      "  + CaMgm::exp_authorityInfoAccess
+		+ (CaMgm::exp_cri_authorityInfoAccess ? _(" (critical)\n" ) : "\n") ;
+	}
+ 	if (size (CaMgm::exp_extendedKeyUsage) > 0)
+	{	
+	    text = text +   "extendedKeyUsage:         "  + CaMgm::exp_extendedKeyUsage
+		+ (CaMgm::exp_cri_extendedKeyUsage ? _(" (critical)\n" ) : "\n") ;
+	}
 	
 	text = text + "</pre>";
 
