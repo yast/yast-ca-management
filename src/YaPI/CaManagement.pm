@@ -2274,7 +2274,7 @@ sub ExportCA {
                                                $data->{'destinationFile'}."'",
                                    code => "PARAM_CHECK_FAILED");
         }
-        my $ret = SCR->Read(".target.dir", $1);
+        my $ret = SCR->Read(".target.dir", ["$1", undef]);
         if (not defined $ret) {
             return $self->SetError(summary => "Directory does not exist.",
                                    description => "'$1' does not exist.",
@@ -2306,14 +2306,18 @@ sub ExportCA {
 
     if ($format eq "PEM_CERT") {
         my $file = SCR->Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
+        if(! defined $file) {
+            return $self->SetError(summary => "Can not read CA certificate.",
+                                   description => "'$CAM_ROOT/$caName/cacert.pem': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
+
         if (defined $destinationFile) {
-            if (!open(OUT, "> $destinationFile")) {
-                return $self->SetError(summary => "Can not open destination file",
-                                       description => "'$destinationFile' : $!",
+            if(! SCR->Write(".target.string", $destinationFile, $file)) {
+                return $self->SetError(summary => "Can not write to destination file.",
+                                       description => "'$destinationFile'",
                                        code => "OPEN_FAILED");
             }
-            print OUT $file;
-            close OUT;
             return 1;
         } else {
             return $file;
@@ -2321,6 +2325,11 @@ sub ExportCA {
     } elsif ($format eq "PEM_CERT_KEY") {
 
         my $file1 = SCR->Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
+        if(! defined $file1) {
+            return $self->SetError(summary => "Can not read CA certificate.",
+                                   description => "'$CAM_ROOT/$caName/cacert.pem': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
 
         my $hash = {
                     DATATYPE => "KEY",
@@ -2335,32 +2344,36 @@ sub ExportCA {
             return $self->SetError(%{SCR->Error(".openssl")});
         }
         if (defined $destinationFile) {
-            if (!open(OUT, "> $destinationFile")) {
-                return $self->SetError(summary => "Can not open destination file.",
-                                       description => "'$destinationFile' : $!",
+            if(! SCR->Write(".target.string", $destinationFile, $file1."\n".$file2)) {
+                return $self->SetError(summary => "Can not write to destination file.",
+                                       description => "'$destinationFile'",
                                        code => "OPEN_FAILED");
             }
-            print OUT $file1;
-            print OUT "\n";
-            print OUT $file2;
-            close OUT;
             return 1;
         } else {
             return $file1."\n".$file2;
         }
     } elsif ($format eq "PEM_CERT_ENCKEY") {
         my $file1 = SCR->Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
+        if(! defined $file1) {
+            return $self->SetError(summary => "Can not read CA certificate.",
+                                   description => "'$CAM_ROOT/$caName/cacert.pem': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
+
         my $file2 = SCR->Read(".target.string", "$CAM_ROOT/$caName/cacert.key");
+        if(! defined $file2) {
+            return $self->SetError(summary => "Can not read CA private key.",
+                                   description => "'$CAM_ROOT/$caName/cacert.key': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
+
         if (defined $destinationFile) {
-            if (!open(OUT, "> $destinationFile")) {
-                return $self->SetError(summary => "Can not open destination file.",
-                                       description => "'$destinationFile' : $!",
+            if(! SCR->Write(".target.string", $destinationFile, $file1."\n".$file2)) {
+                return $self->SetError(summary => "Can not write to destination file.",
+                                       description => "'$destinationFile'",
                                        code => "OPEN_FAILED");
             }
-            print OUT $file1;
-            print OUT "\n";
-            print OUT $file2;
-            close OUT;
             return 1;
         } else {
             return $file1."\n".$file2;
@@ -2559,7 +2572,7 @@ sub ExportCertificate {
                                    $data->{'destinationFile'}."'",
                                    code => "PARAM_CHECK_FAILED");
         }
-        my $ret = SCR->Read(".target.dir", $1);
+        my $ret = SCR->Read(".target.dir", ["$1", undef] );
         if (not defined $ret) {
             return $self->SetError(summary => "Directory does not exist.",
                                    description => "'$1' does not exist.",
@@ -2592,14 +2605,17 @@ sub ExportCertificate {
     if ($format eq "PEM_CERT") {
         my $file = SCR->Read(".target.string",
                              "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
+        if(! defined $file) {
+            return $self->SetError(summary => "Can not read certificate.",
+                                   description => "'$CAM_ROOT/$caName/newcerts/".$certificate.".pem': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
         if (defined $destinationFile) {
-            if (!open(OUT, "> $destinationFile")) {
-                return $self->SetError(summary => "Can not open destination file.",
-                                       description => "'$destinationFile' : $!",
+            if(! SCR->Write(".target.string", $destinationFile, $file)) {
+                return $self->SetError(summary => "Can not write to destination file.",
+                                       description => "'$destinationFile'",
                                        code => "OPEN_FAILED");
             }
-            print OUT $file;
-            close OUT;
             return 1;
         } else {
             return $file;
@@ -2612,6 +2628,12 @@ sub ExportCertificate {
         }
 
         my $file1 = SCR->Read(".target.string", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
+        if(! defined $file1) {
+            return $self->SetError(summary => "Can not read certificate.",
+                                   description => "'$CAM_ROOT/$caName/newcerts/".$certificate.".pem': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
+        
         my $hash = {
                     DATATYPE => "KEY",
                     INFORM   => "PEM",
@@ -2625,32 +2647,36 @@ sub ExportCertificate {
             return $self->SetError(%{SCR->Error(".openssl")});
         }
         if (defined $destinationFile) {
-            if (!open(OUT, "> $destinationFile")) {
-                return $self->SetError(summary => "Can not open destination file.",
-                                       description => "'$destinationFile' : $!",
+            if(! SCR->Write(".target.string", $destinationFile, $file1."\n".$file2)) {
+                return $self->SetError(summary => "Can not write to destination file.",
+                                       description => "'$destinationFile'",
                                        code => "OPEN_FAILED");
             }
-            print OUT $file1;
-            print OUT "\n";
-            print OUT $file2;
-            close OUT;
             return 1;
         } else {
             return $file1."\n".$file2;
         }
     } elsif ($format eq "PEM_CERT_ENCKEY") {
         my $file1 = SCR->Read(".target.string", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
+        if(! defined $file1) {
+            return $self->SetError(summary => "Can not read certificate.",
+                                   description => "'$CAM_ROOT/$caName/newcerts/".$certificate.".pem': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
+
         my $file2 = SCR->Read(".target.string", "$CAM_ROOT/$caName/keys/".$keyname.".key");
+        if(! defined $file2) {
+            return $self->SetError(summary => "Can not read private key.",
+                                   description => "'$CAM_ROOT/$caName/keys/".$keyname.".key': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
+
         if (defined $destinationFile) {
-            if (!open(OUT, "> $destinationFile")) {
-                return $self->SetError(summary => "Can not open destination file.",
-                                       description => "'$destinationFile' : $!",
+            if(! SCR->Write(".target.string", $destinationFile, $file1."\n".$file2)) {
+                return $self->SetError(summary => "Can not write to destination file.",
+                                       description => "'$destinationFile'",
                                        code => "OPEN_FAILED");
             }
-            print OUT $file1;
-            print OUT "\n";
-            print OUT $file2;
-            close OUT;
             return 1;
         } else {
             return $file1."\n".$file2;
@@ -2818,7 +2844,7 @@ sub ExportCRL {
                                    $data->{'destinationFile'}."'",
                                    code => "PARAM_CHECK_FAILED");
         }
-        my $ret = SCR->Read(".target.dir", $1);
+        my $ret = SCR->Read(".target.dir", ["$1", undef] );
         if (not defined $ret) {
             return $self->SetError(summary => "Directory does not exist.",
                                    description => "'$1' does not exist",
@@ -2835,15 +2861,17 @@ sub ExportCRL {
     if ($format eq "PEM") {
 
         my $file = SCR->Read(".target.string", "$CAM_ROOT/$caName/crl/crl.pem");
-
+        if(! defined $file) {
+            return $self->SetError(summary => "Can not read CRL.",
+                                   description => "'$CAM_ROOT/$caName/crl/crl.pem': Read failed.",
+                                   code => "OPEN_FAILED");
+        }
         if (defined $destinationFile) {
-            if (!open(OUT, "> $destinationFile")) {
-                return $self->SetError(summary => "Can not open destination file",
-                                       description => "'$destinationFile' : $!",
+            if(! SCR->Write(".target.string", $destinationFile, $file)) {
+                return $self->SetError(summary => "Can not write to destination file.",
+                                       description => "'$destinationFile'",
                                        code => "OPEN_FAILED");
             }
-            print OUT $file;
-            close OUT;
             return 1;
         } else {
             return $file;
