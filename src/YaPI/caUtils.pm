@@ -63,18 +63,22 @@ sub checkValueWithConfig {
         $min = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.".$name."_min");
         $max = SCR->Read(".var.lib.YaST2.CAM.value.$caName.req_distinguished_name.".$name."_max");
     }
-    $policy = SCR->Read(".var.lib.YaST2.CAM.value.$caName.policy_server.$name");
+    if(defined $param->{certType} && $param->{certType} eq "client") {
+        $policy = SCR->Read(".var.lib.YaST2.CAM.value.$caName.policy_client.$name");
+    } else {
+        $policy = SCR->Read(".var.lib.YaST2.CAM.value.$caName.policy_server.$name");
+    }
 
     if( defined $param->{$name} ) {
         if( (defined $min) && length($param->{$name}) < $min ) {
             return $self->SetError( summary => sprintf(
-                                                       _("Value '%s' is to short, must be min %s"),
+                                                       _('Value \'%s\' is to short, must be min %s'),
                                                        $name, $min),
                                     code    => "PARAM_CHECK_FAILED");
         }
         if( (defined $max) && length($param->{$name}) > $max ) {
             return $self->SetError( summary => sprintf(
-                                                       _("Value '%s' is to long, must be max %s"),
+                                                       _('Value \'%s\' is to long, must be max %s'),
                                                        $name, $max),
                                     code    => "PARAM_CHECK_FAILED");
         }
@@ -84,7 +88,7 @@ sub checkValueWithConfig {
     if( (defined $policy) && ($policy eq "supplied") && 
         (! defined $param->{$name} || $param->{$name} eq "")) {
         return $self->SetError( summary => sprintf(
-                                                   _("Value '%s' must be set.",$name)),
+                                                   _('Value \'%s\' must be set.'),$name),
                                 code    => "PARAM_CHECK_FAILED");
     }
     # FIXME: add a "match check" here
