@@ -348,6 +348,12 @@
 		revokeCertificate();
 		ui = `again;		
 	    }
+	    if (ui == `exportFile)
+	    {
+		integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
+		CaMgm::currentCertificate = (string) certificateID[id]:"";
+		exportCertificateToFile (CaMgm::currentCA, CaMgm::currentCertificate);
+	    }
 
         }
         until (contains ([`back, `again, `abort, `addServer, `addClient], ui));
