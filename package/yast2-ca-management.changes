@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Thu Nov 25 13:31:06 CET 2004 - schubi@suse.de
+
+- Bug 47672 - disable X509 extension subjectAltName and issuerAltName if these
+
+-------------------------------------------------------------------
 Thu Aug 19 17:08:12 CEST 2004 - schubi@suse.de
 
 - Checking for KDE session before starting kfiledialog

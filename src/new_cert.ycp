@@ -296,6 +296,27 @@
 			    UI::SetFocus(`id(`id_emailname));			    
 			    ui = `again;			    
 			}
+		    }
+		    if (size (CaMgm::emailList) <= 0)
+		    {
+			// Is has no sense to copy standard email address to subject alt name if there is none.
+			CaMgm::adv_copy_subject_alt_name = false;
+		    }
+		    if (kind == "Root CA")
+		    {
+			// Root Ca
+			// If the own "Subject Alt Name" is defined, the copy will be allowed
+			if (CaMgm::adv_cri_subject_alt_name
+			    || CaMgm::adv_copy_subject_alt_name 
+			    || size (CaMgm::adv_subject_alt_name_list) > 0 )
+			{
+			    CaMgm::adv_copy_issuer_alt_name_enabled = true;
+			}
+			else
+			{
+			    CaMgm::adv_copy_issuer_alt_name = false;
+			    CaMgm::adv_copy_issuer_alt_name_enabled = false;
+			}
 		    }		    
 		}
 	    }
