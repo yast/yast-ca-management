@@ -18,6 +18,7 @@ textdomain("caManagement");
 
 my $exampleCA = "";
 my $exampleReq = "";
+my $exampleCert = "";
 
 sub run {
 #    test_AddRootCA();
@@ -29,7 +30,10 @@ sub run {
 #    test_AddRequest();
 #    test_issueCertificate();
 #    test_AddCertificate();
-    test_ReadCertificateList();
+#    test_ReadCertificateList();
+#    test_ReadCertificate();
+#    test_RevokeCertificate();
+    test_AddCRL();
 
     return 1;
 }
@@ -269,7 +273,69 @@ sub test_ReadCertificateList {
         my $err = CaManagement->Error();
         printError($err);
     } else {
+        $exampleCert = $res->[1]->{'certificate'};
         print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub test_ReadCertificate {
+
+    foreach my $type ("parsed", "plain") {
+        my $data = {
+                    'caName' => $exampleCA,
+                    'type'   => $type,
+                    'certificate' => $exampleCert
+                   };
+        print STDERR "trying to call YaST::caManagement->ReadCertificate($type)\n";
+        print STDERR "with caName = '$exampleCA' and certificate = '$exampleCert'\n";
+        
+        my $res = CaManagement->ReadCertificate($data);
+        if( not defined $res ) {
+            print STDERR "Fehler\n";
+            my $err = CaManagement->Error();
+            printError($err);
+        } else {
+            print STDERR Data::Dumper->Dump([$res])."\n";
+        }
+    }
+}
+
+sub test_RevokeCertificate {
+
+    my $data = {
+                'caName'      => $exampleCA,
+                'caPasswd'    => 'system',
+                'certificate' => $exampleCert
+               };
+    print STDERR "trying to call YaST::caManagement->RevokeCertificate()\n";
+    print STDERR "with caName = '$exampleCA' and certificate = '$exampleCert'\n";
+    
+    my $res = CaManagement->RevokeCertificate($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "Revoke successful\n";
+    }
+}
+
+sub test_AddCRL {
+    my $data = {
+                'caName'      => $exampleCA,
+                'caPasswd'    => 'system',
+                'days'        => 8
+               };
+    print STDERR "trying to call YaST::caManagement->AddCRL()\n";
+    print STDERR "with caName = '$exampleCA'\n";
+    
+    my $res = CaManagement->AddCRL($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR "AddCRL successful\n";
     }
 }
 
