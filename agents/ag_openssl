@@ -36,10 +36,10 @@ sub OtherCommand {
             return $class->SetError(summary => "Can not initialize OPENSSL",
                                     code => "SCR_INIT_ERR");
         }
-        $openssl->setParams(TMPDIR=>$config->{"tmpdir"},
+        $openssl->setParam(TMPDIR=>$config->{"tmpdir"},
                             STDERR=>$config->{"stderr"},
                            );
-        $openssl->setParams(DEBUG=>1) if($config->{'debug'} eq "1");
+        $openssl->setParam(DEBUG=>1) if($config->{'debug'} eq "1");
 
         $privkeyalg = $config->{'privkeyalg'} if( defined $config->{'privkeyalg'});
     }
@@ -57,12 +57,12 @@ sub setConfig {
                              code =>"SCR_INIT_ERR");
             return 0;
         }
-        $openssl->setParams(
+        $openssl->setParam(
                             CONFIG=>"$CAM_ROOT/$caName/openssl.cnf.tmpl"
                            );
         return 1;
     }
-    $openssl->setParams(
+    $openssl->setParam(
                         CONFIG=>"$CAM_ROOT/$caName/openssl.cnf"
                        );
     return 1;
@@ -234,7 +234,6 @@ sub Execute {
     }
 }
 
-
 package main;
-ag_openca_openssl->Run;
+ag_openssl->Run;
 
