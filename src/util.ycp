@@ -861,7 +861,7 @@ Enter the required LDAP password.
 
 
     /**
-     * importCertificateFromDisk() - Importing certificate to floppy
+     * importCertificateFromDisk() - Importing certificate from disk
      * @return success
      */
     define boolean importCertificateFromDisk () ``{
@@ -912,7 +912,7 @@ Certificate password</p>
 	    
 	    if (ret == `browse)
 	    {
-		string name = UI::AskForExistingFile( ".", "*.p12", "Export to ..." );
+		string name = UI::AskForExistingFile( ".", "*.p12", "Import from ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -1065,6 +1065,117 @@ This certificate might be not practical as a common server certificate.
 	
 	return success;
     }
+
+
+    /**
+     * importRequestFromDisk() - Importing request from disk
+     * @param  CaName
+     * @return success
+     */
+    define boolean importRequestFromDisk (string CaName) ``{
+	boolean success = false;
+
+	UI::OpenDialog (`opt(`decorated ),
+			`HBox( `HSpacing(2),
+			       `VBox (
+				      `VSpacing (1),
+				      `Heading (_("Import Request from Disk")),
+				      `VSpacing (1),
+				      `HBox ( 
+					     `HWeight(2, `TextEntry( `id (`filename), _("&File Name:"))),
+					     `HWeight(1,`VBox(
+							      `Label(""),
+							      `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
+							      )
+						      )
+					     ),
+				      `VSpacing (1),					  
+				      `HBox (  // push button label
+					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+					     `HStretch(),
+					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+					     ),				      
+				      `VSpacing (1)
+				      )
+				)
+			);
+
+
+
+
+	any ret = `again;
+	while (ret == `again)
+	{
+	    success = false;
+	    ret = UI::UserInput ();
+	    
+	    if (ret == `browse)
+	    {
+		string name = UI::AskForExistingFile( ".", "*.pem *.der", "Import from ..." );
+		if ( name != nil )
+		{
+		    UI::ChangeWidget(`id(`filename), `Value, name);
+		}
+		ret = `again;		
+	    }
+	    
+	    if (ret == `ok)
+	    {
+		// reading certificate from disk
+		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
+		if (size (filename) == 0)
+		{
+		    Popup::Error(_("File name required."));
+		    ret = `again;
+		}
+		else
+		{
+		    string extention = "";
+		    if (substring (filename, findlastof (filename, ".")) == ".pem" )
+		    {
+			extention = "PEM";
+		    }
+		    if (substring (filename, findlastof (filename, ".")) == ".der" )
+		    {
+			extention = "DER";
+		    }
+
+		    if (extention == "")
+		    {
+			Popup::Error(_("File format not valid. Use PEM or DER files."));
+			ret = `again;
+		    }
+		    else
+		    {
+			UI::BusyCursor();
+			UI::OpenDialog(`VBox(`Label(_("Importing request..."))));
+		    
+			string yapiret = (string) YaPI::CaManagement::ImportRequest ($["caName" : CaName,
+											"inFile" : filename,
+											"importFormat" : extention]);
+			y2milestone ("ImportRequest(%1) return %2",
+				     filename, 
+				     yapiret);
+ 			if (yapiret == nil)
+			{
+			    showErrorCaManagement ();
+			    ret = `again;
+			}
+			else
+ 			{
+			    Popup::Message(_("Request has been imported."));
+			    success = true;
+			}		    
+			UI::CloseDialog ();
+		    }
+		}
+	    }
+	}
+	UI::CloseDialog ();	
+	return success;
+    }
+
+    
     
 // EOF
 }
