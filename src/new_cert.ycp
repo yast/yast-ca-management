@@ -586,7 +586,7 @@
 	    || CaMgm::adv_email
 	    || CaMgm::adv_reserved
 	    || CaMgm::adv_emailCA
-	    || CaMgm::adv_objectSign
+	    || CaMgm::adv_objsign
 	    || CaMgm::adv_objCA)
 	{
 	    text = text + _("nsCertType:               ")
@@ -665,16 +665,16 @@
 		    text = text + "                          " + "emailCA\n";
 		}	    
 	    }
-	    if (CaMgm::adv_objectSign)
+	    if (CaMgm::adv_objsign)
 	    {
 		if (!nextLine)
 		{
 		    nextLine = true;
-		    text = text + "objectSign\n";
+		    text = text + "objsign\n";
 		}
 		else
 		{
-		    text = text + "                          " + "objectSign\n";
+		    text = text + "                          " + "objsign\n";
 		}	    
 	    }
 	    if (CaMgm::adv_objCA)

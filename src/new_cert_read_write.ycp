@@ -77,7 +77,7 @@
 	CaMgm::adv_email = false;
 	CaMgm::adv_reserved = false;
 	CaMgm::adv_emailCA = false;
-	CaMgm::adv_objectSign = false;
+	CaMgm::adv_objsign = false;
 	CaMgm::adv_objCA = false;
 	CaMgm::adv_cri_nsSslServerName = false;
 	CaMgm::adv_nsSslServerName = "";
@@ -304,7 +304,7 @@
 	    }
 	    else if (entry == "objsign")
 	    {
-		CaMgm::adv_objectSign = true;
+		CaMgm::adv_objsign = true;
 	    }
 	    else if (entry == "objCA")
 	    {
@@ -622,7 +622,7 @@
 	    || CaMgm::adv_email
 	    || CaMgm::adv_reserved
 	    || CaMgm::adv_emailCA
-	    || CaMgm::adv_objectSign
+	    || CaMgm::adv_objsign
 	    || CaMgm::adv_objCA)
 	{
 	    boolean firstHit = false;
@@ -691,15 +691,15 @@
 		    firstHit = true;			
 		}
 	    }		
-	    if (CaMgm::adv_objectSign)
+	    if (CaMgm::adv_objsign)
 	    {
 		if (firstHit)
 		{
-		    param["nsCertType"] = param["nsCertType"]:""+ ",objectSign";
+		    param["nsCertType"] = param["nsCertType"]:""+ ",objsign";
 		}
 		else
 		{
-		    param["nsCertType"] = param["nsCertType"]:""+ "objectSign";
+		    param["nsCertType"] = param["nsCertType"]:""+ "objsign";
 		    firstHit = true;			
 		}
 	    }		

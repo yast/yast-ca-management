@@ -90,7 +90,7 @@ global boolean	adv_sslCA = false;
 global boolean  adv_email = false;
 global boolean	adv_reserved = false;
 global boolean	adv_emailCA = false;
-global boolean	adv_objectSign = false;
+global boolean	adv_objsign = false;
 global boolean	adv_objCA = false;
 
 global boolean	adv_cri_nsSslServerName = false;

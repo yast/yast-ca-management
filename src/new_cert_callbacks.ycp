@@ -62,7 +62,7 @@
     define boolean  	sav_adv_email = false;
     define boolean	sav_adv_reserved = false;
     define boolean	sav_adv_emailCA = false;
-    define boolean	sav_adv_objectSign = false;
+    define boolean	sav_adv_objsign = false;
     define boolean	sav_adv_objCA = false;
     
     define boolean	sav_adv_cri_nsSslServerName = false;
@@ -139,7 +139,7 @@
       	sav_adv_email = CaMgm::adv_email;
     	sav_adv_reserved = CaMgm::adv_reserved;
     	sav_adv_emailCA = CaMgm::adv_emailCA;
-    	sav_adv_objectSign = CaMgm::adv_objectSign;
+    	sav_adv_objsign = CaMgm::adv_objsign;
     	sav_adv_objCA = CaMgm::adv_objCA;
     
     	sav_adv_cri_nsSslServerName = CaMgm::adv_cri_nsSslServerName;
@@ -537,7 +537,7 @@
 	UI::ChangeWidget(`id(`email), `Value, CaMgm::adv_email);
 	UI::ChangeWidget(`id(`reserved), `Value, CaMgm::adv_reserved);
 	UI::ChangeWidget(`id(`emailCA), `Value, CaMgm::adv_emailCA);
-	UI::ChangeWidget(`id(`objectSign), `Value, CaMgm::adv_objectSign);
+	UI::ChangeWidget(`id(`objsign), `Value, CaMgm::adv_objsign);
 	UI::ChangeWidget(`id(`objCA), `Value, CaMgm::adv_objCA);	
     }
     define string set_advanced_netscape_nsCertType() ``{
@@ -551,7 +551,7 @@
 	CaMgm::adv_email = (boolean) UI::QueryWidget(`id(`email), `Value);
 	CaMgm::adv_reserved = (boolean) UI::QueryWidget(`id(`reserved), `Value);
 	CaMgm::adv_emailCA = (boolean) UI::QueryWidget(`id(`emailCA), `Value);
-	CaMgm::adv_objectSign = (boolean) UI::QueryWidget(`id(`objectSign), `Value);
+	CaMgm::adv_objsign = (boolean) UI::QueryWidget(`id(`objsign), `Value);
 	CaMgm::adv_objCA = (boolean) UI::QueryWidget(`id(`objCA), `Value);
 	
 	return error;
@@ -566,7 +566,7 @@
 	CaMgm::adv_email = sav_adv_email;
 	CaMgm::adv_reserved = sav_adv_reserved;
 	CaMgm::adv_emailCA = sav_adv_emailCA;
-	CaMgm::adv_objectSign = sav_adv_objectSign;
+	CaMgm::adv_objsign = sav_adv_objsign;
 	CaMgm::adv_objCA = sav_adv_objCA;
     }
 
