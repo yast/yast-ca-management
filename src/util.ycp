@@ -1333,7 +1333,7 @@ This certificate might be not practical as a common server certificate.
 		    boolean yapiret = (boolean) YaPI::CaManagement::ImportCA ($["caName" : caName,
 									      "caCertificate" : caCertificate,
 									      "caKey" : caKey]);
-		    y2milestone ("ImportRequest(%1,%2,%3) return %2",
+		    y2milestone ("ImportRequest(%1,%2,%3) return %4",
 				 caName,
 				 caCertificate,
 				 caKey,
