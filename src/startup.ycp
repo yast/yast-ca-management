@@ -94,7 +94,6 @@
         {
             boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
             UI::ChangeWidget (`id (`enter), `Enabled, anyitems);
-            UI::ChangeWidget (`id (`createRoot), `Enabled, anyitems);
 
             // Kludge, because a `Table still does not have a shortcut. #16116
             UI::SetFocus (`id (`table));
