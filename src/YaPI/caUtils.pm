@@ -198,6 +198,14 @@ sub checkCommonValues {
                 return $self->SetError(summary => _("Wrong value for parameter")." '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
+            if($key eq "emailAddress") {
+                if (!defined $data->{$key} || $data->{$key} !~ /^[^@]+@[^@]+\.[^@]+$/) {
+                    return $self->SetError(summary => sprintf(
+                                                              _("Wrong value'%s' for parameter '%s'."),
+                                                              $data->{$key}, $key),
+                                           code    => "PARAM_CHECK_FAILED");
+                }
+            }
         } elsif ( $key eq "basicConstraints") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
