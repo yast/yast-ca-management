@@ -18,7 +18,8 @@
  *
  */
 {
-
+    textdomain "ca-management";
+    
     include "ca-management/crlDefault.ycp";
 
     // help text 1/4

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Aug  9 15:52:36 CEST 2004 - schubi@suse.de
+
+- Added signing requests and handling crl defaults
+
+-------------------------------------------------------------------
 Mon Jun 14 17:14:34 CEST 2004 - mc@suse.de
 
 - #41994; fix wrong CRL Distribution Point 
