@@ -130,7 +130,7 @@
             ui = (symbol) UI::UserInput ();
 
         }
-        until (contains ([`back, `abort, `certificates, `createSubCA], ui));
+        until (contains ([`back, `abort, `certificates, `createSubCA, `crl], ui));
 
         return ui;
     }

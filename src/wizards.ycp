@@ -20,10 +20,11 @@
     include "ca-management/util.ycp";
     include "ca-management/new_cert_advanced.ycp";
     include "ca-management/ca.ycp";
+    include "ca-management/crl.ycp";    
     include "ca-management/certificate.ycp";
 
 
-define  map certificateSequence = $[
+    define  map certificateSequence = $[
 	"ws_start"	    : "new_certinit",
         "new_certinit"      : $[
                             `next       	: "new_certSaveDef",
@@ -160,6 +161,7 @@ define symbol MainSequence() ``{
 	"new_certClient"	: ``(newClientCertificateSequence()),
 	"new_certSubCA"		: ``(newSubCASequence()),			
         "ca_main"  	 	: ``(ca ()),
+	"crl_main"		: ``(crl ()),
         "certificate"  	 	: ``(certificate ()),		
         ];
 
@@ -179,7 +181,12 @@ define symbol MainSequence() ``{
 				`abort		: "startup",
 				`certificates 	: "certificate",
 				`createSubCA	: "new_certSubCA",
+				`crl		: "crl_main",
                             ],
+        "crl_main"	    : $[
+				`back 		: "ca_main",
+				`abort		: "startup",
+                            ],	
         "certificate"	    : $[
 				`back 		: "ca_main",
 				`abort		: "startup",
