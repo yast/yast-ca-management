@@ -68,9 +68,9 @@
 						  ),
 					    `HBox(
 						  // back pushbutton: the user input is ignored and the last dialog is called
-						  `PushButton(`id(`back), `opt(`key_F8), Label::BackButton()),
-						  `HStretch(),
 						  `PushButton(`id(`abort), `opt(`key_F9), Label::AbortButton()),
+						  `HStretch(),
+						  `PushButton(`id(`back), `opt(`key_F8), Label::BackButton()),
 						  `HStretch(),
 						  `PushButton(`id(`help), `opt(`key_F1), Label::HelpButton()),
 						  `Empty()

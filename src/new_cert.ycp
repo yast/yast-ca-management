@@ -151,7 +151,11 @@
 		ui == `defaultEmail)
             {
 		CaMgm::commonName = (string) UI::QueryWidget(`id(`id_commonName), `Value);
-		CaMgm::CAName = (string) UI::QueryWidget(`id(`id_CAName), `Value);		
+		if (kind == "Root CA"
+		    || kind == "Sub CA")
+		{		
+		    CaMgm::CAName = (string) UI::QueryWidget(`id(`id_CAName), `Value);
+		}
 		CaMgm::organisation = (string) UI::QueryWidget(`id(`id_organisation), `Value);
 		CaMgm::organisationUnit = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
 		CaMgm::locality = (string) UI::QueryWidget(`id(`id_locality), `Value);
