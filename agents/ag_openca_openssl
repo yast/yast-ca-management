@@ -69,13 +69,15 @@ sub Write {
 }
 
 sub Execute {
-    my $class = shift;
-    my ($path, $caName, $hash) = @_;
+    my $class  = shift;
+    my $path   = shift;
+    my $caName = shift;
     $class->check_initialized || return undef;
     
     $class->setConfig($caName) || return undef;
 
     if($path eq ".genKey") {
+        $hash = shift;
         $openssl->genKey( %{$hash} );
         if($openssl->errno() != 0) {
             return $class->SetError(summary => "OpenCA::OpenSSL::genKey failed! (".
@@ -84,6 +86,7 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".genReq") {
+        $hash = shift;
         $openssl->genReq( %{$hash} );
         if($openssl->errno() != 0) {
             return $class->SetError(summary => "OpenCA::OpenSSL::genReq failed! (".
@@ -92,6 +95,7 @@ sub Execute {
         }
         return 1;
     } elsif($path eq ".genCert") {
+        $hash = shift;
         $openssl->genCert( %{$hash} );
         if($openssl->errno() != 0) {
             return $class->SetError(summary => "OpenCA::OpenSSL::genCert failed! (".
@@ -99,6 +103,24 @@ sub Execute {
                                     code => "SCR_EXECUTE_FAILED");
         }
         return 1;
+    } elsif($path eq ".issueCert") {
+        $hash = shift;
+        $openssl->issueCert( %{$hash} );
+        if($openssl->errno() != 0) {
+            return $class->SetError(summary => "OpenCA::OpenSSL::issueCert failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return 1;
+    } elsif($path eq ".getNumericDate") {
+        $date = shift;
+        my $ret = $openssl->getNumericDate( $date );
+        if($openssl->errno() != 0 || not defined $ret) {
+            return $class->SetError(summary => "OpenCA::OpenSSL::getNumericDate failed! (".
+                                    $openssl->errno()."/".$openssl->errval().")",
+                                    code => "SCR_EXECUTE_FAILED");
+        }
+        return $ret;
     } else {
         return $class->SetError(summary => "Wrong path '$path' ",
                                 code => "SCR_WRONG_PATH");
