@@ -1,0 +1,92 @@
+/**
+ * File:
+ *	ca_select_proposal.ycp
+ *
+ * Module:
+ *	ca_select_proposal.ycp
+ *
+ * Authors:
+ *	Stefan Schubert <schubi@suse.de>
+ *
+ * Summary:
+ *	
+ *
+ * $Id$
+ *
+ */
+{
+    textdomain "ca-management";
+    import "CaMgm";
+
+    import "Mode";
+    import "Wizard";
+    import "Label";
+    import "Popup";
+
+
+   /* ----------------------------------------------------------------------
+    * Build dialog
+    * ----------------------------------------------------------------------*/
+
+    Wizard::CreateDialog();
+    Wizard::SetDesktopIcon("ca_mgm");    
+    
+    term heading = `Heading (_("Managing CAs/Certificates"));
+
+
+    term contents = `VBox(
+			heading,
+			`Frame ( _("Selection"),
+				 `RadioButtonGroup(`id(`rb), 
+						   `VBox(
+							 `Left(`RadioButton(`id(`def), _("Creating &default CA/Certificate."))),
+							 `HBox(`HSpacing (3),`Left(`PushButton (`id(`change),
+												`opt( `notify),
+												_("Edit default &Settings")))
+							       ),
+							 `Left(`RadioButton(`id(`none), _("Creating &no CA/Certificate."))),
+							 `Left(`RadioButton(`id(`floppy), _("Import CA/Certificate from &floppy."))),
+							 `Left(`RadioButton(`id(`expert), _("Calling CA-Management for &expert settings.")))
+							 )
+						   )
+				 )
+			);
+
+
+    string help_text = _("<p>
+At this frame you can select the kind of installing <b>CAs</b> and <b>certificates</b>
+while completing the installation
+</p>
+");
+
+    // Screen title for the first interactive dialog
+    Wizard::SetContentsButtons("", contents, help_text,
+			       Label::BackButton(), Label::FinishButton());
+
+    UI::ChangeWidget (`id(`rb), `CurrentButton, CaMgm::prop_selection);
+
+
+    // Get the user input.
+    //
+    any ret = nil;
+
+    repeat
+    {
+	ret = Wizard::UserInput();
+
+	if( ret == `next
+	    || ret == `rb )
+	{
+	    // Get selection
+	    //
+	    CaMgm::prop_selection = (symbol) UI::QueryWidget(`id(`rb), `CurrentButton);
+	}
+    }
+    until ( ret == `next
+	    || ret == `abort
+	    || ret == `back);
+    
+    UI::CloseDialog();
+    
+    return (symbol) ret;
+}

@@ -39,7 +39,7 @@
 	     [
 	      `item(`id(`advanced_basic_constaints),"Basic Constaints"),
 	      `item(`id(`advanced_CRL_distribution_point),"CRL Distribution Point"),
-	      `item(`id(`advanced_challange_password),"Challange Password"),
+	      `item(`id(`advanced_challenge_password),"Challenge Password"),
 	      `item(`id(`advanced_issuer_alt_name),"Issuer Alt Name"),
 	      `item(`id(`advanced_key_usage),"Key Usage"),
 	      `item(`id(`advanced_netscape_settings),"Netscape Settings", true,
@@ -128,18 +128,18 @@
 								  "default"    	: ``(default_advanced_CRL_distribution_point()),		  
 								  ],
 
-			    `advanced_challange_password : 	$["name" : "Challange Password",
+			    `advanced_challenge_password : 	$["name" : "Challenge Password",
 								  "widget"	: `Frame ("", `VBox (
 												     `VSpacing(1.5),
-												     `TextEntry(`id(`id_adv_challange_password),
+												     `TextEntry(`id(`id_adv_challenge_password),
 														"Challage Password",
-														CaMgm::adv_challange_password),
+														CaMgm::adv_challenge_password),
 												     `VSpacing(1.5)
 												     )
 											  ),
-								  "default"    	: ``(default_advanced_challange_password()),
-								  "getCallback" : ``(get_advanced_challange_password()),
-								  "setCallback" : ``(set_advanced_challange_password()),
+								  "default"    	: ``(default_advanced_challenge_password()),
+								  "getCallback" : ``(get_advanced_challenge_password()),
+								  "setCallback" : ``(set_advanced_challenge_password()),
 								  ],
 
 			    `advanced_issuer_alt_name : 	$["name" : "Issuer Alt Name",

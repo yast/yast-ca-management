@@ -1,0 +1,96 @@
+/**
+ * File:
+ *   clients/ca_mgm_proposal.ycp
+ *
+ * Package:
+ *   Configuration of CA Management
+ *
+ * Summary:
+ *   Proposal function dispatcher.
+ *
+ * Authors:
+ *   Stefan Schubert <schubi@suse.de>
+ *
+ * $Id$
+ *
+ * Proposal function dispatcher for CA Management
+ */
+
+{
+    textdomain "ca-management";
+    import "CaMgm";
+    import "HTML";
+    import "Label";
+    import "Mode";
+    import "Popup";
+    import "DNS";
+    import "Language";
+	
+
+    string func  = (string)WFM::Args(0);
+    map    param = (map)WFM::Args(1);
+    map    ret   = $[];
+
+
+    if (func == "MakeProposal")
+    {
+	boolean force_reset = lookup (param, "force_reset", false);
+	string proposal = "";
+	string warning = nil;
+	symbol warning_level = nil;
+
+	string subDomain = ((list<string>) splitstring (DNS::domain, "."))[0]:"";
+
+	CaMgm::prop_ca_commonName = subDomain + " CA";
+	CaMgm::prop_server_commonName = DNS::hostname;
+	CaMgm::prop_CAName = subDomain + "_CA";
+	CaMgm::prop_country = Language::language;
+	
+	if (force_reset)
+	{
+	    CaMgm::prop_selection = `def;
+	}
+
+	if (CaMgm::prop_selection == `def)
+	{
+	    proposal = HTML::Para(_("Creating default CA/Certificate.")
+				  + HTML::Newline()
+				  + _("You can change these settings (especially the password).")); 
+	}
+	else if (CaMgm::prop_selection == `none)
+	{
+	    proposal = HTML::Para(_("Creating no CA/Certificate."));
+	}
+	else if (CaMgm::prop_selection == `floppy)
+	{
+	    proposal = HTML::Para(_("Import CA/Certificate from floppy."));
+	}
+	else if (CaMgm::prop_selection == `expert)
+	{
+	    proposal = HTML::Para(_("Calling CA-Management for expert settings."));
+	}	
+	
+	ret = add (ret, "preformatted_proposal", proposal);
+    }
+    else if (func == "AskUser")
+    {
+	any sequence = WFM::CallFunction ( "ca_select_proposal", [] );
+
+	ret = $[ "workflow_sequence" : sequence ];
+    }
+    else if (func == "Description")
+    {
+	// richtext label
+	ret = $[ "rich_text_title" :	_("CA Management"),
+		// menu title
+		 "menu_title" :		_("&CA Managegent"),
+		 "id" :			"ca_mgm",
+		 ];
+    }
+    else if (func == "Write")
+    {
+	boolean success = true;
+        ret = $[ "success" : success ];
+    }
+    return ret;
+}
