@@ -156,18 +156,33 @@
      * @param "CA" "CRL" "CERT"
      * @return true ( success )
      */
-    define boolean exportToLDAP(string kind, string CAname)``{
+    define boolean exportToLDAP(string kind, string CAname, string commonName, string email, string certificate)``{
 
-	map kindmap = $["CA":"ca", "CRL":"crl", "CERT":"cert"];
+	map kindmap = $["CA":"ca", "CRL":"crl", "CERT":"certificates"];
 	string password = "";
 	string hostname = "";
 	string port = "";
-	string dn = "";
+	list<string> dn = [];
 	string binddn = "";
+	map default = nil;
+	term passwordTerm = `VBox();
 	
+	passwordTerm = add (passwordTerm, `Password(  `id (`password), _("LDAP P&assword:")));	
 	
-	map default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+	if (kind == "CERT")
+	{	
+	    default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+								    "caName":CAname,
+								    "commonName":commonName,
+								    "emailAddress":email]);
+	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("keyPasswd:")));
+	    passwordTerm = add (passwordTerm, `Password(  `id (`p12Passwd), _("p12Passwd:")));	    
+	}
+	else
+	{
+	    default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
 								    "caName":CAname]);
+	}
 
 	if (default == nil)
 	{
@@ -210,8 +225,18 @@
 		    {
 			if (YaPI::CaManagement::InitLDAPcaManagement($["ldapPasswd":password]))
 			{
-			    default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
-										    "caName":CAname]);
+			    if (kind == "CERT")
+			    {	
+				default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+											"caName":CAname,
+											"commonName":commonName,
+											"emailAddress":email]);
+			    }
+			    else
+			    {
+				default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+											"caName":CAname]);
+			    }			    
 			}
 			else
 			{
@@ -232,7 +257,7 @@
 	{
 	    hostname = default["ldapHostname"]:"";
 	    port = default["ldapPort"]:"";
-	    dn = default["destinationDN"]:"";
+	    dn = default["destinationDN"]:[];
 	    binddn = default["BindDN"]:"";
 	}	    
 	
@@ -245,9 +270,9 @@
 				      `VSpacing (1),
 				      `TextEntry( `id (`hostname), _("&Hostname:"), hostname),
 				      `TextEntry( `id (`port), _("&Port:"), port),
-				      `TextEntry( `id (`dn), _("&DN:"), dn),
+				      `ComboBox( `id (`dn), `opt(`editable), _("&DN:"), dn),
 				      `TextEntry( `id (`binddn), _("&Bind DN:"), binddn),
-				      `Password(  `id (`password), _("P&assword:")),
+				      passwordTerm,
 				      `VSpacing (1),					  
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
@@ -269,7 +294,7 @@
 	    password = (string) UI::QueryWidget(`id(`password), `Value);
 	    hostname = (string) UI::QueryWidget(`id(`hostname), `Value);
 	    port = (string) UI::QueryWidget(`id(`port), `Value);
-	    dn = (string) UI::QueryWidget(`id(`dn), `Value);
+	    string stringDN = (string) UI::QueryWidget(`id(`dn), `Value);
 	    binddn = (string) UI::QueryWidget(`id(`binddn), `Value);	    
 	    
 	    if (ui == `cancel)
@@ -285,7 +310,7 @@
 		    ret = (boolean) YaPI::CaManagement::ExportCAToLDAP ($["caName": CAname,
 								    "ldapHostname" : hostname,
 								    "ldapPort" : port,
-								    "destinationDN" : dn,
+								    "destinationDN" : stringDN,
 								    "BindDN" : binddn,
 								    "ldapPasswd" : password
 								  ]);
@@ -295,22 +320,41 @@
 		    ret = (boolean) YaPI::CaManagement::ExportCRLToLDAP ($["caName": CAname,
 								     "ldapHostname" : hostname,
 								     "ldapPort" : port,
-								     "destinationDN" : dn,
+								     "destinationDN" : stringDN,
 								     "BindDN" : binddn,
 								     "ldapPasswd" : password
 								   ]);
 		}
 		if (kind == "CERT")
 		{
-//		    ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CAname,
-//									     "certificate" : 
-//									     "ldapHostname" : hostname,
-//									     "ldapPort" : port,
-//									     "destinationDN" : dn,
-//									     "BindDN" : binddn,
-//									     "ldapPasswd" : password
-//									   ]);
-		    ret = true; // FIXME
+		    string keyPasswd = (string) UI::QueryWidget(`id(`keyPasswd), `Value);
+		    string p12Passwd = (string) UI::QueryWidget(`id(`p12Passwd), `Value);
+
+		    if (size (keyPasswd) > 0)
+		    {
+			// p12Passwd is required is keyPasswd has been given
+			ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CAname,
+										       "certificate" : certificate,
+										       "ldapHostname" : hostname,
+										       "ldapPort" : port,
+										       "destinationDN" : stringDN,
+										       "BindDN" : binddn,
+										       "ldapPasswd" : password,
+										       "keyPasswd" : keyPasswd,
+										       "p12Passwd" : p12Passwd
+										     ]);
+		    }
+		    else
+		    {
+			ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CAname,
+										       "certificate" : certificate,
+										       "ldapHostname" : hostname,
+										       "ldapPort" : port,
+										       "destinationDN" : stringDN,
+										       "BindDN" : binddn,
+										       "ldapPasswd" : password
+										     ]);
+		    }
 		}				
 		if (ret == nil
 		    || ret == false)
