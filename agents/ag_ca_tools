@@ -66,7 +66,7 @@ sub Read {
         if (opendir(CERTDIR, "$CAM_ROOT/$caName/newcerts/")) {
             foreach my $d (readdir(CERTDIR)) {
                 if ($d !~ /^\./ && -e "$CAM_ROOT/$caName/newcerts/$d") {
-                    $d =~ /^([[:xdigit:]]+):([[:xdigit:]]+)\.pem$/;
+                    $d =~ /^([[:xdigit:]]+):([[:xdigit:]]+[\d-]*)\.pem$/;
                     if(!defined $1 || !defined $2) {
                         y2warning("unknown filename $d");
                         next;
@@ -142,15 +142,25 @@ sub Read {
             foreach my $d (readdir(REQDIR)) {
                 if ($d !~ /^\./ && -e "$CAM_ROOT/$caName/req/$d") {
 
-                    $d =~ /^([[:xdigit:]]+)\.req$/;
+                    $d =~ /^([[:xdigit:]]+)-?(\d*)\.req$/;
                     if(!defined $1) {
                         y2warning("unknown filename $d");
                         next;
                     }
                     my $md5 = $1;
+                    my $date = "";
+                    if(defined $2 && $2 ne "") {
+                        $md5 = $md5."-".$2;
+                        my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
+                          localtime($2);
+                        $mon++;
+                        $year = $year + 1900;
+                        $date = "$year-$mon-$mday $hour:$min:$sec";
+                    }
                     my $subject = "";
                     my $reqLine = {};
                     $reqLine->{'request'} = $md5;
+                    $reqLine->{'date'} = $date;
 
                     foreach my $d (@$camdb) {
                         if($d->[0] eq "$md5") {
@@ -222,7 +232,7 @@ sub Read {
                 return 1;
             }
         } elsif(defined $data->{'CERT'}) {
-            $data->{'CERT'} =~ /^[[:xdigit:]]+:([A-Za-z0-9\/=+]+)$/;
+            $data->{'CERT'} =~ /^[[:xdigit:]]+:([[:xdigit:]]+[\d-]*)$/;
             if(not defined $1) {
                 return $class->SetError(summary => "Can not parse certificate name",
                                        code => "PARSING_ERROR");
@@ -504,7 +514,7 @@ sub parseCAMDB {
     close DB;
     
     foreach my $l (@lines) {
-        $l =~ /^([[:xdigit:]]+)\s(.*)$/;
+        $l =~ /^([[:xdigit:]]+[\d-]*)\s(.*)$/;
         my @row = ();
         push @row, $1, $2;
         push @camdb, \@row;

@@ -1270,8 +1270,8 @@ sub AddRequest {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
     
-    #$request = encode_base64($requestString, "");
     $request = md5_hex($requestString);
+    $request = $request."-".time();
 
     # test if this File already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/".$request.".key") != -1) {
@@ -1524,6 +1524,7 @@ sub IssueCertificate {
     # test if the file already exists
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") == -1) {
         return $self->SetError(summary => __("Request does not exist."),
+                               description => "$CAM_ROOT/$caName/req/".$request.".req",
                                code => "FILE_DOES_NOT_EXIST");
     }
 
@@ -2057,7 +2058,7 @@ sub ReadCertificate {
     $type = $data->{"type"};
     
     if (! defined $data->{"certificate"} || 
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code => "PARAM_CHECK_FAILED");
@@ -2735,13 +2736,13 @@ sub ExportCertificate {
     $caName = $data->{"caName"};
 
     if (! defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
-    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+)$/;
+    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+[\d-]*)$/;
     if (not defined $1) {
                                            # parameter check failed
         return $self->SetError(summary => "Can not parse certificate name",
@@ -3149,7 +3150,7 @@ sub Verify {
     $caName = $data->{"caName"};
 
     if (!defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -4435,14 +4436,14 @@ sub ExportCertificateToLDAP {
     $caName = $data->{'caName'};
 
     if (!defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{'certificate'};
 
-    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+)$/;
+    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+[\d-]*)$/;
     if(defined $1 && $1 ne "") {
         $key = $1;
     }
@@ -4668,14 +4669,14 @@ sub DeleteCertificate {
     $caName = $data->{'caName'};
     
     if (!defined $data->{'certificate'} ||
-        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/) {
+        $data->{'certificate'} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
         # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{'certificate'};
     
-    $certificate =~ /^([[:xdigit:]]+):([[:xdigit:]]+)$/;
+    $certificate =~ /^([[:xdigit:]]+):([[:xdigit:]]+[\d-]*)$/;
     if(defined $1 && defined $2 && $1 ne "" && $2 ne "") {
         $serial = $1;
         $req = $2;
@@ -5179,7 +5180,7 @@ sub ReadRequest {
     $type = $data->{"type"};
     
     if (! defined $data->{"request"} || 
-        $data->{'request'} !~ /^[[:xdigit:]]+$/) {
+        $data->{'request'} !~ /^[[:xdigit:]]+[\d-]*$/) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'request'."),
                                code => "PARAM_CHECK_FAILED");
@@ -5244,6 +5245,7 @@ following Hash keys:
 
 * organizationalUnitName
 
+* date
 
 EXAMPLE:
 
@@ -5453,6 +5455,7 @@ sub ImportRequest {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
     my $md5 = md5_hex($subject);
+    $md5    = $md5."-".time();
 
     my $dummy = SCR->Read(".target.size", "$CAM_ROOT/$caName/req/$md5.req");
     if ($dummy != -1) {
@@ -5533,17 +5536,12 @@ sub DeleteRequest {
     $caName = $data->{'caName'};
     
     if (!defined $data->{'request'} ||
-        $data->{'request'} !~ /^[[:xdigit:]]+$/) {
+        $data->{'request'} !~ /^[[:xdigit:]]+[\d-]*$/) {
         # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'request'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    $request = $data->{'request'};
-    
-    $request =~ /^([[:xdigit:]]+)$/;
-    if(defined $1 && $1 ne "" ) {
-        $req = $1;
-    }
+    $req = $data->{'request'};
     
     my $check = SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'},
                                                           CACERT => 1});
