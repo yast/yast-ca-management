@@ -22,8 +22,8 @@ my $exampleCert = "";
 
 sub run {
 #    test_Interface();
-#    test_AddRootCA();
-    test_ReadCAList();
+    test_AddRootCA();
+#    test_ReadCAList();
 #    test_AddRootCA2();
 #    test_ReadCertificateDefaults();
 #    test_ReadCertificateDefaults2();
@@ -35,10 +35,10 @@ sub run {
 #    test_ReadCertificate();
 #    test_RevokeCertificate();
 #    test_AddCRL();
-    test_ReadCRL();
+#    test_ReadCRL();
 #    test_ExportCA();
 #    test_ExportCertificate();
-    test_ExportCRL();
+#    test_ExportCRL();
 #    test_Verify();
 
     return 1;
@@ -381,7 +381,7 @@ sub test_ReadCRL {
 }
 
 sub test_ExportCA {
-    foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12") {#, "PKCS12_CHAIN") {
+    foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
         my $data = {
                     'caName' => $exampleCA,
                     'exportFormat' => $ef,
