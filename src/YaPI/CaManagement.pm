@@ -86,9 +86,10 @@ $bool = ExportCAToLDAP($valueMap)
 
   Export a CA to a LDAP directory
 
-B<common parameter in $valueMap>
+=head1 COMMON PARAMETER
 
-Here is a list of common parameter which are used in $valueMap
+Here is a list of common parameter which are often 
+used in I<$valueMap>
 
 =over 2
 
@@ -303,6 +304,9 @@ use X500::DN;
 use MIME::Base64;
 use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now);
 
+use YaPI;
+@YaPI::CaManagement::ISA = qw( YaPI );
+
 YaST::YCP::Import ("SCR");
 YaST::YCP::Import ("Hostname");
 
@@ -316,20 +320,29 @@ my $CAM_ROOT = "/var/lib/YaST2/CAM";
 =item *
 C<$caList = ReadCAList()>
 
-returns a list of available CAs
+Returns a list of available CAs
 
 EXAMPLE:
 
+ my $caList = YaPI::CaManagement->ReadCAList();
+ if(not defined $caList) {
+     #error
+ }
+
+ foreach my $ca (@$caList) {
+     print $ca."\n";
+ }
 
 =cut
 
 BEGIN { $TYPEINFO{ReadCAList} = ["function", ["list", "string"]]; }
 sub ReadCAList {
+    my $self = shift;
     my $caList = undef;
 
     my $ret = SCR::Read(".caTools.caList");
     if ( not defined $ret ) {
-        return SetError(%{SCR::Error(".caTools")});
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
     return $ret;
 }
@@ -337,27 +350,111 @@ sub ReadCAList {
 =item *
 C<$bool = AddRootCA($valueMap)>
 
-create a new selfsigned root CA
+Create a new selfsigned root CA and creates the
+whole needed infrastructure.
 
+I<$valueMap> supports the following Keys:
+
+* caName (required)
+
+* keyPasswd (required)
+
+* commonName (required)
+
+* emailAddress (depending on CA policy)
+
+* keyLength (default 2048 min: 100 max: 9999)
+
+* days (default 3650)
+
+* countryName (depending on CA policy)
+
+* stateOrProvinceName (depending on CA policy)
+
+* localityName (depending on CA policy)
+
+* organizationName (depending on CA policy)
+
+* organizationalUnitName (depending on CA policy)
+
+* challengePassword
+
+* unstructuredName
+
+* basicConstraints (required)
+
+* nsComment
+
+* nsCertType
+
+* keyUsage
+
+* subjectKeyIdentifier
+
+* authorityKeyIdentifier
+
+* subjectAltName
+
+* issuerAltName
+
+* nsBaseUrl
+
+* nsRevocationUrl
+
+* nsCaRevocationUrl
+
+* nsRenewalUrl
+
+* nsCaPolicyUrl
+
+* nsSslServerName
+
+* extendedKeyUsage
+
+* authorityInfoAccess
+
+* crlDistributionPoints
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
 
 EXAMPLE:
 
+ my $data = {
+             'caName'                => 'My_CA',
+             'keyPasswd'             => 'system',
+             'commonName'            => 'My CA',
+             'emailAddress'          => 'my@example.com',
+             'keyLength'             => '2048',
+             'days'                  => '3650',
+             'countryName'           => 'US',
+             'localityName'          => 'New York',
+             'organizationName'      => 'My Inc.',
+            };
+
+ my $res = YaPI::CaManagement->AddRootCA($data);
+ if( not defined $res ) {
+     # error  
+ } else {
+     print "OK\n";
+ }
 
 =cut
 
 BEGIN { $TYPEINFO{AddRootCA} = ["function", "boolean", ["map", "string", "any"]]; }
 sub AddRootCA {
+    my $self = shift;
     my $data = shift;
     my @dn   = ();
     my $caName  = "";
 
     if(not defined YaST::caUtils->checkCommonValues($data)) {
-        return SetError(%{YaST::caUtils->Error()});
+        return $self->SetError(%{YaST::caUtils->Error()});
     }
 
     # checking requires
     if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
-        return SetError( summary => "Missing value 'caName'",
+        return $self->SetError( summary => "Missing value 'caName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
@@ -365,11 +462,11 @@ sub AddRootCA {
     if (!defined $data->{"keyPasswd"} || $data->{"keyPasswd"} eq "" ||
         length($data->{"keyPasswd"}) <= 4) 
     {
-        return SetError( summary => "Missing value 'keyPasswd' or password is to short",
+        return $self->SetError( summary => "Missing value 'keyPasswd' or password is to short",
                                 code    => "CHECK_PARAM_FAILED");
     }
     if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
-        return SetError( summary => "Missing value 'commonName'",
+        return $self->SetError( summary => "Missing value 'commonName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -383,13 +480,13 @@ sub AddRootCA {
     }
     if(not SCR::Write(".caTools.caInfrastructure", $data->{"caName"}))
     {
-        return SetError(%{SCR::Error(".caTools")});
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
 
     my $retCode = SCR::Execute(".target.bash",
                                "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
     if(not defined $retCode || $retCode != 0) {
-        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
     # check this values, if they were accepted from the openssl command
@@ -402,7 +499,7 @@ sub AddRootCA {
         my $ret = YaST::caUtils->checkValueWithConfig($DN_Part, $data);
         if(not defined $ret ) {
             YaST::caUtils->cleanCaInfrastructure($caName);
-            return SetError(%{YaST::caUtils->Error()});
+            return $self->SetError(%{YaST::caUtils->Error()});
         }
         push @dn, $data->{$DN_Part};
     }
@@ -410,7 +507,7 @@ sub AddRootCA {
     if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.req.x509_extensions", "v3_ca"))
     { 
         YaST::caUtils->cleanCaInfrastructure($caName);
-        return SetError( summary => "Can not write to config file",
+        return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
     #####################################################
@@ -444,14 +541,14 @@ sub AddRootCA {
                                                          $data, $v3ext{$extName}))
         {
             YaST::caUtils->cleanCaInfrastructure($caName);
-            return SetError(%{YaST::caUtils->Error()});
+            return $self->SetError(%{YaST::caUtils->Error()});
         }
     }
 
     if(not SCR::Write(".var.lib.YaST2.CAM", undef)) 
     {
         YaST::caUtils->cleanCaInfrastructure($caName);
-        return SetError( summary => "Can not write to config file",
+        return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
     my $hash = {
@@ -463,7 +560,7 @@ sub AddRootCA {
 
     if (not defined $ret) {
         YaST::caUtils->cleanCaInfrastructure($caName);
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
     
     $hash = {
@@ -474,7 +571,7 @@ sub AddRootCA {
     $ret = SCR::Execute( ".openssl.genReq", $caName, $hash);
     if (not defined $ret) {
         YaST::caUtils->cleanCaInfrastructure($caName);
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
 
     $hash = {
@@ -487,19 +584,19 @@ sub AddRootCA {
     $ret = SCR::Execute( ".openssl.genCert", $caName, $hash);
     if (not defined $ret) {
         YaST::caUtils->cleanCaInfrastructure($caName);
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
 
     $ret = SCR::Execute(".target.bash", "cp $CAM_ROOT/$caName/cacert.pem $CAM_ROOT/.cas/$caName.pem");
     if(not defined $ret || $ret != 0) {
         YaST::caUtils->cleanCaInfrastructure($caName);
-        return SetError( summary => "Can not copy CA certificate",
+        return $self->SetError( summary => "Can not copy CA certificate",
                                 code => "COPY_FAILED");
     }
     $ret = SCR::Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
     if(not defined $ret || $ret != 0) {
         YaST::caUtils->cleanCaInfrastructure($caName);
-        return SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
+        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
                                 code => "C_REHASH_FAILED");
     }
     
@@ -510,10 +607,78 @@ sub AddRootCA {
 =item *
 C<$certValueMap = ReadCertificateDefaults($valueMap)>
 
-returns a map with defaults for the requested certificate type
+In I<$valueMap> you can define the following keys:
+
+* caName (if not defined, read defaults for a Root CA)
+
+* certType
+
+Returns a map with defaults for the requested certificate type.
+The return value is "undef" on an error.
+
+On success the return value is a hash which can contain the following keys:
+
+* basicConstraints
+
+* nsComment
+
+* nsCertType
+
+* keyUsage
+
+* subjectKeyIdentifier
+
+* authorityKeyIdentifier
+
+* subjectAltName
+
+* issuerAltName
+
+* nsBaseUrl
+
+* nsRevocationUrl
+
+* nsCaRevocationUrl
+
+* nsRenewalUrl
+
+* nsCaPolicyUrl
+
+* nsSslServerName
+
+* extendedKeyUsage
+
+* authorityInfoAccess
+
+* crlDistributionPoints
+
+* keyLength
+
+* days
+
+* DN
+
+I<DN> is a hash which contains some values of the 
+subject of the CA Certificate (if caName is defined)
+
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
 
 EXAMPLE:
 
+ use Data::Dumper;
+
+ my $data = {
+             'caName'   => 'My_CA',
+             'certType' => 'client'
+            }
+ $certValueMap = YaPI::CaManagement->ReadCertificateDefaults($data) 
+ if( not defined $certValueMap ) {
+     # error
+ } else {
+     print Data::Dumper->Dump([$certValueMap])."\n";
+ }
 
 =cut
 
@@ -523,13 +688,14 @@ BEGIN { $TYPEINFO{ReadCertificateDefaults} = [
                                               ["map", "string", "any"]
                                                  ]; }
 sub ReadCertificateDefaults {
+    my $self = shift;
     my $data = shift;
     my $caName   = "";
     my $certType = "";
     my $ret = {};
 
     if(not defined YaST::caUtils->checkCommonValues($data)) {
-        return SetError(%{YaST::caUtils->Error()});
+        return $self->SetError(%{YaST::caUtils->Error()});
     }
 
     # checking requires
@@ -539,7 +705,7 @@ sub ReadCertificateDefaults {
     if (defined $data->{"certType"}) {
         $certType = $data->{"certType"};
     } else {
-        return SetError(summary => "Missing parameter 'certType'",
+        return $self->SetError(summary => "Missing parameter 'certType'",
                                code => "PARAM_CHECK_FAILED");
     }
 
@@ -603,7 +769,7 @@ sub ReadCertificateDefaults {
                    };
         my $ca = SCR::Read(".openssl.getParsedCert", $caName, $hash);
         if(not defined $ca) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $ca->{'DN_HASH'}) {
             $ret->{'DN'} = $ca->{'DN_HASH'};
@@ -619,24 +785,52 @@ sub ReadCertificateDefaults {
 =item *
 C<$ca = ReadCA($valueMap)>
 
-returns a CA certificate as plain text or parsed map
+Returns a CA certificate as plain text or parsed map.
+
+In I<$valueMap> you can define the following keys:
+
+* caName (required)
+
+* type (required; can be "plain" or "parsed")
+
+The return value is "undef" on an error.
+
+On success and type = "plain" the plain text view of the CA is returned.
+
+If the type = "parsed" a complex structure with the single values is returned.
+
 
 EXAMPLE:
 
+ use Data::Dumper;
+
+ foreach my $type ("parsed", "plain") {
+     my $data = {
+                 'caName' => 'My_CA',
+                 'type'   => $type
+                };
+     my $res = YaPI::CaManagement->ReadCA($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         print Data::Dumper->Dump([$res])."\n";
+     }
+ }
 
 =cut
 
 BEGIN { $TYPEINFO{ReadCA} = ["function", "any", ["map", "string", "any"]]; }
 sub ReadCA {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
     my $type   = "";
     my $ret = undef;
 
-   # checking requires
+    # checking requires
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Wrong value for parameter 'caName'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -644,14 +838,14 @@ sub ReadCA {
     if (not defined $data->{"type"} || 
         !grep( ( $_ eq $data->{"type"}), ("parsed", "plain"))) 
     {
-        return SetError(summary => "Wrong value for parameter 'type'",
+        return $self->SetError(summary => "Wrong value for parameter 'type'",
                                code => "PARAM_CHECK_FAILED");
     }
     $type = $data->{"type"};
 
     my $size = SCR::Read(".target.size", "$CAM_ROOT/$caName/cacert.pem");
     if($size <= 0) {
-        return SetError(summary => "CA Certificate not available in '$caName'",
+        return $self->SetError(summary => "CA Certificate not available in '$caName'",
                                code => "FILE_DOES_NOT_EXIST");
     }
     my $hash = {
@@ -661,12 +855,12 @@ sub ReadCA {
     if($type eq "parsed") {
         $ret = SCR::Read(".openssl.getParsedCert", $caName, $hash);
         if(not defined $ret) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
     } else {
         $ret = SCR::Read(".openssl.getTXTCert", $caName, $hash);
         if(not defined $ret) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
     }
     return $ret;
@@ -675,27 +869,97 @@ sub ReadCA {
 =item *
 C<$name = AddRequest($valueMap)>
 
-create a request for a special CA and returns the name
+Create a request for a special CA and returns the name.
+
+The keys in I<$valueMap> are:
+
+* caName (required)
+
+* keyPasswd (required)
+
+* commonName (required)
+
+* emailAddress (depending on CA policy)
+
+* keyLength (required)
+
+* countryName (depending on CA policy)
+
+* stateOrProvinceName (depending on CA policy)
+
+* localityName (depending on CA policy)
+
+* organizationName (depending on CA policy)
+
+* oganizationalUnitName (depending on CA policy)
+
+* challengePassword
+
+* unstructuredName
+
+* basicConstraints
+
+* nsComment
+
+* nsCertType
+
+* keyUsage
+
+* subjectKeyIdentifier
+
+* subjectAltName
+
+* nsSslServerName
+
+* extendedKeyUsage
+
+* authorityInfoAccess
+
+The return value is "undef" on an error and the 
+filename(without suffix) of the request on success.
+
+The syntax of these values are explained in the
+B<COMMON PARAMETER> section.
 
 EXAMPLE:
 
+ my $data = {
+             'caName'                => 'My_CA',
+             'keyPasswd'             => 'system',
+             'commonName'            => 'My New Request',
+             'emailAddress'          => 'my@example.com',
+             'keyLength'             => '2048',
+             'days'                  => '365',
+             'countryName'           => 'DE',
+             'localityName'          => 'Nuremberg',
+             'stateOrProvinceName'   => 'Bavaria',
+             'organizationName'      => 'My Linux AG',
+             'nsComment'             => "YaST Generated Certificate"
+            };
+ my $res = YaPI::CaManagement->AddRequest($data);
+ if( not defined $res ) {
+     # error 
+ } else {
+     print "OK Name of the request is: '$res'\n";
+ }
 
 =cut
 
 BEGIN { $TYPEINFO{AddRequest} = ["function", "string", ["map", "string", "any"] ]; }
 sub AddRequest {
+    my $self = shift;
     my $data = shift;
     my @dn   = ();
     my $caName  = "";
     my $request = "";
 
     if(not defined YaST::caUtils->checkCommonValues($data)) {
-        return SetError(%{YaST::caUtils->Error()});
+        return $self->SetError(%{YaST::caUtils->Error()});
     }
 
     # checking requires
     if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
-        return SetError( summary => "Missing value 'caName'",
+        return $self->SetError( summary => "Missing value 'caName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
@@ -703,11 +967,11 @@ sub AddRequest {
     if (!defined $data->{"keyPasswd"} || $data->{"keyPasswd"} eq "" ||
         length($data->{"keyPasswd"}) <= 4) 
     {
-        return SetError( summary => "Missing value 'keyPasswd' or password is to short",
+        return $self->SetError( summary => "Missing value 'keyPasswd' or password is to short",
                                 code    => "CHECK_PARAM_FAILED");
     }
     if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
-        return SetError( summary => "Missing value 'commonName'",
+        return $self->SetError( summary => "Missing value 'commonName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -721,25 +985,25 @@ sub AddRequest {
     my $requestString = YaST::caUtils->stringFromDN($data);
     
     if(not defined $requestString) {
-        return SetError(%{YaST::caUtils->Error()});
+        return $self->SetError(%{YaST::caUtils->Error()});
     }
     
     $request = encode_base64($requestString, "");
 
     # test if this File already exists
     if(SCR::Read(".target.size", "$CAM_ROOT/$caName/keys/".$request.".key") != -1) {
-        return SetError(summary => "Duplicate DN($requestString). Request already exists.",
+        return $self->SetError(summary => "Duplicate DN($requestString). Request already exists.",
                                code => "FILE_ALREADY_EXIST");
     }
     if(SCR::Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") != -1) {
-        return SetError(summary => "Duplicate DN($requestString). Request already exists.",
+        return $self->SetError(summary => "Duplicate DN($requestString). Request already exists.",
                                code => "FILE_ALREADY_EXIST");
     }    
 
     my $retCode = SCR::Execute(".target.bash",
                                "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
     if(not defined $retCode || $retCode != 0) {
-        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
     # check this values, if they were accepted from the openssl command
@@ -752,7 +1016,7 @@ sub AddRequest {
         my $ret = YaST::caUtils->checkValueWithConfig($DN_Part, $data);
         if(not defined $ret ) {
             SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return SetError(%{YaST::caUtils->Error()});
+            return $self->SetError(%{YaST::caUtils->Error()});
         }
         push @dn, $data->{$DN_Part};
     }
@@ -760,7 +1024,7 @@ sub AddRequest {
     if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.req.req_extensions", "v3_req"))
     { 
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError( summary => "Can not write to config file",
+        return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
     #####################################################
@@ -786,14 +1050,14 @@ sub AddRequest {
                                                          $data, $v3ext{$extName}))
         {
             SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return SetError(%{YaST::caUtils->Error()});
+            return $self->SetError(%{YaST::caUtils->Error()});
         }
     }
 
     if(not SCR::Write(".var.lib.YaST2.CAM", undef)) 
     {
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError( summary => "Can not write to config file",
+        return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
     my $hash = {
@@ -805,7 +1069,7 @@ sub AddRequest {
 
     if (not defined $ret) {
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
     
     $hash = {
@@ -817,7 +1081,7 @@ sub AddRequest {
     if (not defined $ret) {
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
 
     SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
@@ -827,15 +1091,83 @@ sub AddRequest {
 =item *
 C<$name = IssueCertificate($valueMap)>
 
-issue a certificate and returns the name of the new certificate
+Issue a certificate and returns the name of the new certificate.
+
+In I<$valueMap> you can define the following keys: 
+
+* caName (required)
+
+* request (required - the name of the request without suffix)
+
+* certType (required - allowed values are: "client", "server" and "ca")
+
+* caPasswd (required)
+
+* days (required)
+
+* basicConstraints (required)
+
+* nsComment
+
+* nsCertType
+
+* keyUsage
+
+* subjectKeyIdentifier
+
+* authorityKeyIdentifier
+
+* subjectAltName
+
+* issuerAltName
+
+* nsBaseUrl
+
+* nsRevocationUrl
+
+* nsCaRevocationUrl
+
+* nsRenewalUrl
+
+* nsCaPolicyUrl
+
+* nsSslServerName
+
+* extendedKeyUsage
+
+* authorityInfoAccess
+
+* crlDistributionPoints
+
+The return value is "undef" on an error and the 
+filename(without suffix) of the certificate on success.
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
 
 EXAMPLE:
 
+ my $data = {
+             'caName'                => 'My_CA',
+             'request'               => $request,
+             'certType'              => 'client',
+             'caPasswd'              => 'system',
+             'days'                  => '365',
+             'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=My_CA%2Cou=PKI%2Cdc=example%2Cdc=com",
+             'nsComment'             => "YaST Generated Certificate",
+            };
+ my $res = YaPI::CaManagement->IssueCertificate($data);
+ if( not defined $res ) {
+     # error
+ } else {
+     print STDERR "OK: '$res'\n";
+ }
 
 =cut
 
 BEGIN { $TYPEINFO{IssueCertificate} = ["function", "string", ["map", "string", "any"] ]; }
 sub IssueCertificate {
+    my $self = shift;
     my $data = shift;
     my @dn   = ();
     my $caName  = "";
@@ -844,17 +1176,17 @@ sub IssueCertificate {
     my $certType = "client";
 
     if(not defined YaST::caUtils->checkCommonValues($data)) {
-        return SetError(%{YaST::caUtils->Error()});
+        return $self->SetError(%{YaST::caUtils->Error()});
     }
 
     # checking requires
     if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
-        return SetError( summary => "Missing value 'caName'",
+        return $self->SetError( summary => "Missing value 'caName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
     if (!defined $data->{"request"} || $data->{"request"} eq "" || $data->{"request"} =~ /\./) {
-        return SetError( summary => "Missing value 'request'",
+        return $self->SetError( summary => "Missing value 'request'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $request = $data->{"request"};
@@ -862,7 +1194,7 @@ sub IssueCertificate {
     if (!defined $data->{"caPasswd"} || $data->{"caPasswd"} eq "" ||
         length($data->{"caPasswd"}) <= 4) 
     {
-        return SetError( summary => "Missing value 'caPasswd' or password is to short",
+        return $self->SetError( summary => "Missing value 'caPasswd' or password is to short",
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -876,14 +1208,14 @@ sub IssueCertificate {
     }
     # test if the file already exists
     if(SCR::Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") == -1) {
-        return SetError(summary => "Request does not exists.",
+        return $self->SetError(summary => "Request does not exists.",
                                code => "FILE_DOES_NOT_EXIST");
     }
 
     # get next serial number and built the certificate file name
     my $serial = SCR::Read(".caTools.nextSerial", $caName);
     if(not defined $serial) {
-        return SetError(%{SCR::Error(".caTools")});
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
     $certificate = $serial.":".$request;
 
@@ -891,12 +1223,12 @@ sub IssueCertificate {
     my $retCode = SCR::Execute(".target.bash",
                                "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
     if(not defined $retCode || $retCode != 0) {
-        return SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
                                 code => "COPY_FAILED");
     }
 
     # check time period of the CA against DAYS to sign this cert
-    my $caP = ReadCA({caName => $caName, type => 'parsed'});
+    my $caP = $self->ReadCA({caName => $caName, type => 'parsed'});
     if(not defined $caP) {
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
         return undef;
@@ -904,13 +1236,13 @@ sub IssueCertificate {
     my $notafter = SCR::Execute(".openssl.getNumericDate", $caName, $caP->{'NOTAFTER'});
     if(not defined $notafter) {
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
 
     #                     year    month  day  hour   min  sec
     if( $notafter !~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError( summary => "Can not parse CA date string '$notafter'",
+        return $self->SetError( summary => "Can not parse CA date string '$notafter'",
                                 code    => "PARSE_ERROR");
     }
     my @expireCA = ($1, $2, $3, $4, $5, $6);
@@ -923,7 +1255,7 @@ sub IssueCertificate {
         my $caStr = sprintf("%s-%s-%s %s:%s:%s", @expireCA);
         my $certStr = sprintf("%s-%s-%s %s:%s:%s", @expireCertDate);
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError( summary => "CA expires before the certificate should expire. ".
+        return $self->SetError( summary => "CA expires before the certificate should expire. ".
                                     "CA expires:'$caStr', Cert should expire:'$certStr'",
                          code  => 'PARAM_CHECK_FAILED');
     }
@@ -932,7 +1264,7 @@ sub IssueCertificate {
                       "v3_".$certType))
     { 
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError( summary => "Can not write to config file",
+        return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
     #####################################################
@@ -966,14 +1298,14 @@ sub IssueCertificate {
                                                          $data, $v3ext{$extName}))
         {
             SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return SetError(%{YaST::caUtils->Error()});
+            return $self->SetError(%{YaST::caUtils->Error()});
         }
     }
 
     if(not SCR::Write(".var.lib.YaST2.CAM", undef)) 
     {
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError( summary => "Can not write to config file",
+        return $self->SetError( summary => "Can not write to config file",
                                 code => "SCR_WRITE_FAILED");
     }
     my $hash = {
@@ -990,7 +1322,7 @@ sub IssueCertificate {
 
     if (not defined $ret) {
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
     
     SCR::Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
@@ -1009,14 +1341,15 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{AddCertificate} = ["function", "string", ["map", "string", "any"] ]; }
 sub AddCertificate {
+    my $self = shift;
     my $data = shift;
 
-    my $request = AddRequest($data);
+    my $request = $self->AddRequest($data);
     if(not defined $request) {
         return undef;
     }
     $data->{'request'} = $request;
-    my $certificate = IssueCertificate($data);
+    my $certificate = $self->IssueCertificate($data);
     if(not defined $certificate) {
         my $caName = $data->{'caName'};
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
@@ -1039,22 +1372,23 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{ReadCertificateList} = ["function", ["list", "any"], ["map", "string", "any"]]; }
 sub ReadCertificateList {
+    my $self = shift;
     my $data = shift;
     my $ret  = undef;
 
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Missing parameter 'caName'.",
+        return $self->SetError(summary => "Missing parameter 'caName'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     my $caName = $data->{'caName'};
     if (defined $data->{'caPasswd'} &&
         length($data->{'caPasswd'}) < 4) {
-        return SetError(summary => "Wrong value for parameter 'caPasswd'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caPasswd'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     if( defined $data->{'caPasswd'} ) {    # needed only for UpdateDB
-        $ret = UpdateDB($data);
+        $ret = $self->UpdateDB($data);
         if ( not defined $ret ) {
             return undef;
         }
@@ -1062,7 +1396,7 @@ sub ReadCertificateList {
 
     $ret = SCR::Read(".caTools.certificateList", $data->{'caName'});
     if ( not defined $ret ) {
-        return SetError(%{SCR::Error(".caTools")});
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
     return $ret;
 }
@@ -1079,17 +1413,18 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{UpdateDB} = ["function", "boolean", ["map", "string", "any"]]; }
 sub UpdateDB {
+    my $self = shift;
     my $data = shift;
     
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Missing parameter 'caName'.",
+        return $self->SetError(summary => "Missing parameter 'caName'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     my $caName = $data->{'caName'};
     if (not defined $data->{'caPasswd'} ||
         length($data->{'caPasswd'}) < 4) {
-        return SetError(summary => "Wrong value for parameter 'caPasswd'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caPasswd'.",
                                code    => "PARAM_CHECK_FAILED");
     }
 
@@ -1100,7 +1435,7 @@ sub UpdateDB {
                };
     my $ret = SCR::Execute(".openssl.updateDB", $data->{'caName'}, $hash);
     if ( not defined $ret ) {
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
     return 1;
 }
@@ -1117,6 +1452,7 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{ReadCertificate} = ["function", "any", ["map", "string", "any"]]; }
 sub ReadCertificate {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
     my $certificate = "";
@@ -1126,7 +1462,7 @@ sub ReadCertificate {
    # checking requires
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Wrong value for parameter 'caName'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -1134,7 +1470,7 @@ sub ReadCertificate {
     if (not defined $data->{"type"} || 
         !grep( ( $_ eq $data->{"type"}), ("parsed", "plain"))) 
       {
-          return SetError(summary => "Wrong value for parameter 'type'",
+          return $self->SetError(summary => "Wrong value for parameter 'type'",
                                  code => "PARAM_CHECK_FAILED");
       }
     $type = $data->{"type"};
@@ -1142,14 +1478,14 @@ sub ReadCertificate {
     if (not defined $data->{"certificate"} || 
         $data->{'certificate'} !~ /^[:A-Za-z0-9\/=+]+$/)
     {
-        return SetError(summary => "Wrong value for parameter 'certificate'",
+        return $self->SetError(summary => "Wrong value for parameter 'certificate'",
                                code => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
 
     my $size = SCR::Read(".target.size", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
     if($size <= 0) {
-        return SetError(summary => "Certificate '$certificate.pem' not available in '$caName'",
+        return $self->SetError(summary => "Certificate '$certificate.pem' not available in '$caName'",
                                code => "FILE_DOES_NOT_EXIST");
     }
     my $hash = {
@@ -1159,12 +1495,12 @@ sub ReadCertificate {
     if($type eq "parsed") {
         $ret = SCR::Read(".openssl.getParsedCert", $caName, $hash);
         if(not defined $ret) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
     } else {
         $ret = SCR::Read(".openssl.getTXTCert", $caName, $hash);
         if(not defined $ret) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
     }
     return $ret;
@@ -1182,34 +1518,35 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{RevokeCertificate} = ["function", "boolean", ["map", "string", "any"]]; }
 sub RevokeCertificate {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
     my $certificate = "";
 
     if(not defined YaST::caUtils->checkCommonValues($data)) {
-        return SetError(%{YaST::caUtils->Error()});
+        return $self->SetError(%{YaST::caUtils->Error()});
     }
 
     # checking requires
     if (!defined $data->{"caName"}) {
-        return SetError( summary => "Missing value 'caName'",
+        return $self->SetError( summary => "Missing value 'caName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
     
     if(!defined $data->{"caPasswd"} ) {
-        return SetError( summary => "Missing value 'caPasswd'",
+        return $self->SetError( summary => "Missing value 'caPasswd'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     if(!defined $data->{"certificate"} ) {
-        return SetError( summary => "Missing value 'certificate'",
+        return $self->SetError( summary => "Missing value 'certificate'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $certificate = $data->{"certificate"};
 
     my $size = SCR::Read(".target.size", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
     if($size <= 0) {
-        return SetError(summary => "Certificate '$certificate.pem' not available in '$caName'",
+        return $self->SetError(summary => "Certificate '$certificate.pem' not available in '$caName'",
                                code => "FILE_DOES_NOT_EXIST");
     }
 
@@ -1224,7 +1561,7 @@ sub RevokeCertificate {
     }
     my $ret = SCR::Execute(".openssl.revoke", $caName, $hash);
     if(not defined $ret) {
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
     return 1;
 }
@@ -1241,26 +1578,27 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{AddCRL} = ["function", "boolean", ["map", "string", "any"]]; }
 sub AddCRL {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
 
     if(not defined YaST::caUtils->checkCommonValues($data)) {
-        return SetError(%{YaST::caUtils->Error()});
+        return $self->SetError(%{YaST::caUtils->Error()});
     }
 
     # checking requires
     if (!defined $data->{"caName"}) {
-        return SetError( summary => "Missing value 'caName'",
+        return $self->SetError( summary => "Missing value 'caName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
     
     if(!defined $data->{"caPasswd"} ) {
-        return SetError( summary => "Missing value 'caPasswd'",
+        return $self->SetError( summary => "Missing value 'caPasswd'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     if(!defined $data->{"days"} ) {
-        return SetError( summary => "Missing value 'days'",
+        return $self->SetError( summary => "Missing value 'days'",
                                 code    => "CHECK_PARAM_FAILED");
     }
 
@@ -1274,18 +1612,18 @@ sub AddCRL {
                };
     my $ret = SCR::Execute(".openssl.issueCrl", $caName, $hash);
     if(not defined $ret) {
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
 
     $ret = SCR::Execute(".target.bash", 
                         "cp $CAM_ROOT/$caName/crl/crl.pem $CAM_ROOT/.cas/crl_$caName.pem");
     if(not defined $ret || $ret != 0) {
-        return SetError( summary => "Can not copy CRL",
+        return $self->SetError( summary => "Can not copy CRL",
                                 code => "COPY_FAILED");
     }
     $ret = SCR::Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
     if(not defined $ret || $ret != 0) {
-        return SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
+        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
                                 code => "C_REHASH_FAILED");
     }
     return 1;
@@ -1303,6 +1641,7 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{ReadCRL} = ["function", "any", ["map", "string", "any"]]; }
 sub ReadCRL {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
     my $type   = "";
@@ -1311,7 +1650,7 @@ sub ReadCRL {
    # checking requires
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Wrong value for parameter 'caName'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -1319,14 +1658,14 @@ sub ReadCRL {
     if (not defined $data->{"type"} || 
         !grep( ($_ eq $data->{"type"}), ("parsed", "plain"))) 
       {
-          return SetError(summary => "Wrong value for parameter 'type'",
+          return $self->SetError(summary => "Wrong value for parameter 'type'",
                                  code => "PARAM_CHECK_FAILED");
       }
     $type = $data->{"type"};
     
     my $size = SCR::Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem");
     if($size <= 0) {
-        return SetError(summary => "CRL not available in '$caName'",
+        return $self->SetError(summary => "CRL not available in '$caName'",
                         code => "FILE_DOES_NOT_EXIST");
     }
     my $hash = {
@@ -1336,12 +1675,12 @@ sub ReadCRL {
     if($type eq "parsed") {
         $ret = SCR::Read(".openssl.getParsedCRL", $caName, $hash);
         if(not defined $ret) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
     } else {
         $ret = SCR::Read(".openssl.getTXTCRL", $caName, $hash);
         if(not defined $ret) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
     }
     return $ret;
@@ -1359,6 +1698,7 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{ExportCA} = ["function", "any", ["map", "string", "any"]]; }
 sub ExportCA {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
     my $destinationFile = undef;
@@ -1367,7 +1707,7 @@ sub ExportCA {
     # checking requires
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Wrong value for parameter 'caName'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
                         code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -1375,12 +1715,12 @@ sub ExportCA {
     if(defined $data->{'destinationFile'}) {
         $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
         if(not defined $1) {
-            return SetError(summary => "Can not parse 'destinationFile' '".$data->{'destinationFile'}."'",
+            return $self->SetError(summary => "Can not parse 'destinationFile' '".$data->{'destinationFile'}."'",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR::Read(".target.dir", $1);
         if(not defined $ret) {
-            return SetError(summary => "Directory '$1' does not exist.",
+            return $self->SetError(summary => "Directory '$1' does not exist.",
                                    code => "DIR_DOES_NOT_EXIST");
         }
         $destinationFile = $data->{'destinationFile'};
@@ -1391,27 +1731,27 @@ sub ExportCA {
                                   ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY",
                                    "DER_CERT", "PKCS12", "PKCS12_CHAIN"))) 
     {
-        return SetError(summary => "Wrong value for parameter 'exportFormat'",
+        return $self->SetError(summary => "Wrong value for parameter 'exportFormat'",
                                code => "PARAM_CHECK_FAILED");
     }
     $format = $data->{"exportFormat"};
 
     if(not defined $data->{'caPasswd'}) {
-        return SetError(summary => "Wrong value for parameter 'caPasswd'",
+        return $self->SetError(summary => "Wrong value for parameter 'caPasswd'",
                                code => "PARAM_CHECK_FAILED");
     }
     
     if(not defined SCR::Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'}, 
                                                              CACERT => 1}))
     {
-        return SetError(%{SCR::Error(".caTools")});
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
 
     if($format eq "PEM_CERT") {
         my $file = SCR::Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                return SetError(summary => "Can not open File '$destinationFile' '$!'",
+                return $self->SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
             print OUT $file;
@@ -1434,11 +1774,11 @@ sub ExportCA {
 
         my $file2 = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file2) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                return SetError(summary => "Can not open File '$destinationFile' '$!'",
+                return $self->SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
             print OUT $file1;
@@ -1454,7 +1794,7 @@ sub ExportCA {
         my $file2 = SCR::Read(".target.string", "$CAM_ROOT/$caName/cacert.key");
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                return SetError(summary => "Can not open File '$destinationFile' '$!'",
+                return $self->SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
             print OUT $file1;
@@ -1480,7 +1820,7 @@ sub ExportCA {
         
         my $file = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             return 1;
@@ -1489,7 +1829,7 @@ sub ExportCA {
         }
     } elsif($format eq "PKCS12") {
         if(!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
-            return SetError(summary =>"Parameter 'P12Password' missing",
+            return $self->SetError(summary =>"Parameter 'P12Password' missing",
                                    code => "PARAM_CHECK_FAILED");
         }
 
@@ -1509,7 +1849,7 @@ sub ExportCA {
 
         my $file = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             return 1;
@@ -1519,7 +1859,7 @@ sub ExportCA {
     } elsif($format eq "PKCS12_CHAIN") {
 
         if(!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
-            return SetError(summary =>"Parameter 'P12Password' missing",
+            return $self->SetError(summary =>"Parameter 'P12Password' missing",
                             code => "PARAM_CHECK_FAILED");
         }
 
@@ -1541,7 +1881,7 @@ sub ExportCA {
 
         my $file = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             return 1;
@@ -1563,6 +1903,7 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{ExportCertificate} = ["function", "any", ["map", "string", "any"]]; }
 sub ExportCertificate {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
     my $certificate = "";
@@ -1572,20 +1913,20 @@ sub ExportCertificate {
     # checking requires
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Wrong value for parameter 'caName'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
 
     if (not defined $data->{'certificate'} ||
         $data->{'certificate'} !~ /^[:A-Za-z0-9\/=+]+$/) {
-        return SetError(summary => "Wrong value for parameter 'certificate'.",
+        return $self->SetError(summary => "Wrong value for parameter 'certificate'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
     $certificate =~ /^[[:xdigit:]]+:([A-Za-z0-9\/=+]+)$/;
     if(not defined $1) {
-        return SetError(summary => "Can not parse certificate name",
+        return $self->SetError(summary => "Can not parse certificate name",
                                code => "PARSING_ERROR");
     }
     my $keyname = $1;
@@ -1593,12 +1934,12 @@ sub ExportCertificate {
     if(defined $data->{'destinationFile'}) {
         $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
         if(not defined $1) {
-            return SetError(summary => "Can not parse 'destinationFile' '".$data->{'destinationFile'}."'",
+            return $self->SetError(summary => "Can not parse 'destinationFile' '".$data->{'destinationFile'}."'",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR::Read(".target.dir", $1);
         if(not defined $ret) {
-            return SetError(summary => "Directory '$1' does not exist.",
+            return $self->SetError(summary => "Directory '$1' does not exist.",
                                    code => "DIR_DOES_NOT_EXIST");
         }
         $destinationFile = $data->{'destinationFile'};
@@ -1609,20 +1950,20 @@ sub ExportCertificate {
                                   ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY",
                                    "DER_CERT", "PKCS12", "PKCS12_CHAIN"))) 
     {
-        return SetError(summary => "Wrong value for parameter 'exportFormat'",
+        return $self->SetError(summary => "Wrong value for parameter 'exportFormat'",
                                code => "PARAM_CHECK_FAILED");
     }
     $format = $data->{"exportFormat"};
 
     if(not defined $data->{'keyPasswd'}) {
-        return SetError(summary => "Wrong value for parameter 'keyPasswd'",
+        return $self->SetError(summary => "Wrong value for parameter 'keyPasswd'",
                                code => "PARAM_CHECK_FAILED");
     }
     
     if(not defined SCR::Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'keyPasswd'}, 
                                                              CERT => $certificate}))
     {
-        return SetError(%{SCR::Error(".caTools")});
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
 
     if($format eq "PEM_CERT") {
@@ -1630,7 +1971,7 @@ sub ExportCertificate {
                              "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                return SetError(summary => "Can not open File '$destinationFile' '$!'",
+                return $self->SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
             print OUT $file;
@@ -1641,7 +1982,7 @@ sub ExportCertificate {
         }
     } elsif($format eq "PEM_CERT_KEY") {
         if(SCR::Read(".target.size", "$CAM_ROOT/$caName/keys/".$keyname.".key") == -1) {
-            return SetError(summary => "Keyfile '$CAM_ROOT/$caName/keys/$keyname.key' does not exist",
+            return $self->SetError(summary => "Keyfile '$CAM_ROOT/$caName/keys/$keyname.key' does not exist",
                                    code => "FILE_DOES_NOT_EXIST");
         }
 
@@ -1656,11 +1997,11 @@ sub ExportCertificate {
 
         my $file2 = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file2) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                return SetError(summary => "Can not open File '$destinationFile' '$!'",
+                return $self->SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
             print OUT $file1;
@@ -1676,7 +2017,7 @@ sub ExportCertificate {
         my $file2 = SCR::Read(".target.string", "$CAM_ROOT/$caName/keys/".$keyname.".key");
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                return SetError(summary => "Can not open File '$destinationFile' '$!'",
+                return $self->SetError(summary => "Can not open File '$destinationFile' '$!'",
                                        code => "OPEN_FAILED");
             }
             print OUT $file1;
@@ -1702,7 +2043,7 @@ sub ExportCertificate {
         
         my $file = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             return 1;
@@ -1711,7 +2052,7 @@ sub ExportCertificate {
         }
     } elsif($format eq "PKCS12") {
         if(!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
-            return SetError(summary =>"Parameter 'P12Password' missing",
+            return $self->SetError(summary =>"Parameter 'P12Password' missing",
                                    code => "PARAM_CHECK_FAILED");
         }
 
@@ -1731,7 +2072,7 @@ sub ExportCertificate {
 
         my $file = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             return 1;
@@ -1740,7 +2081,7 @@ sub ExportCertificate {
         }
     } elsif($format eq "PKCS12_CHAIN") {
         if(!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
-            return SetError(summary =>"Parameter 'P12Password' missing",
+            return $self->SetError(summary =>"Parameter 'P12Password' missing",
                                    code => "PARAM_CHECK_FAILED");
         }
 
@@ -1762,7 +2103,7 @@ sub ExportCertificate {
 
         my $file = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             return 1;
@@ -1784,6 +2125,7 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{ExportCRL} = ["function", "any", ["map", "string", "any"]]; }
 sub ExportCRL {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
     my $destinationFile = undef;
@@ -1792,7 +2134,7 @@ sub ExportCRL {
     # checking requires
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Wrong value for parameter 'caName'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
@@ -1800,7 +2142,7 @@ sub ExportCRL {
     if (not defined $data->{"exportFormat"} || 
         !grep( ( $_ eq $data->{"exportFormat"}), ("PEM", "DER"))) 
     {
-        return SetError(summary => "Wrong value for parameter 'exportFormat'",
+        return $self->SetError(summary => "Wrong value for parameter 'exportFormat'",
                                code => "PARAM_CHECK_FAILED");
     }
     $format = $data->{"exportFormat"};
@@ -1808,19 +2150,19 @@ sub ExportCRL {
     if(defined $data->{'destinationFile'}) {
         $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
         if(not defined $1) {
-            return SetError(summary => "Can not parse 'destinationFile' '".$data->{'destinationFile'}."'",
+            return $self->SetError(summary => "Can not parse 'destinationFile' '".$data->{'destinationFile'}."'",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR::Read(".target.dir", $1);
         if(not defined $ret) {
-            return SetError(summary => "Directory '$1' does not exist.",
+            return $self->SetError(summary => "Directory '$1' does not exist.",
                                    code => "DIR_DOES_NOT_EXIST");
         }
         $destinationFile = $data->{'destinationFile'};
     }
 
     if(SCR::Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem") == -1) {
-        return SetError(summary => "CRL does not exist",
+        return $self->SetError(summary => "CRL does not exist",
                         code => "FILE_DOES_NOT_EXIST");
     }
 
@@ -1830,7 +2172,7 @@ sub ExportCRL {
 
         if(defined $destinationFile) {
             if(!open(OUT, "> $destinationFile")) {
-                return SetError(summary => "Can not open File '$destinationFile' '$!'",
+                return $self->SetError(summary => "Can not open File '$destinationFile' '$!'",
                                 code => "OPEN_FAILED");
             }
             print OUT $file;
@@ -1853,7 +2195,7 @@ sub ExportCRL {
         
         my $file = SCR::Execute(".openssl.dataConvert", $caName, $hash);
         if(not defined $file) {
-            return SetError(%{SCR::Error(".openssl")});
+            return $self->SetError(%{SCR::Error(".openssl")});
         }
         if(defined $destinationFile) {
             return 1;
@@ -1861,7 +2203,7 @@ sub ExportCRL {
             return $file;
         }
     } else {
-        return SetError(summary => "Wrong value for parameter 'exportFormat'",
+        return $self->SetError(summary => "Wrong value for parameter 'exportFormat'",
                         code => "PARAM_CHECK_FAILED");
     }
 }
@@ -1878,6 +2220,7 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{Verify} = ["function", "boolean", ["map", "string", "any"]]; }
 sub Verify {
+    my $self = shift;
     my $data = shift;
     my $caName = "";
     my $certificate = "";
@@ -1885,14 +2228,14 @@ sub Verify {
     # checking requires
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Wrong value for parameter 'caName'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
 
     if (not defined $data->{'certificate'} ||
         $data->{'certificate'} !~ /^[:A-Za-z0-9\/=+]+$/) {
-        return SetError(summary => "Wrong value for parameter 'certificate'.",
+        return $self->SetError(summary => "Wrong value for parameter 'certificate'.",
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
@@ -1904,7 +2247,7 @@ sub Verify {
                };
     my $ret = SCR::Execute(".openssl.verify", $caName, $hash);
     if( not defined $ret ) {
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
     return $ret;
 }
@@ -1922,24 +2265,25 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{AddSubCA} = ["function", "boolean", ["map", "string", "any"] ]; }
 sub AddSubCA {
+    my $self = shift;
     my $data = shift;
     my @dn   = ();
     my $caName  = "";
     my $newCaName  = "";
     
     if(not defined YaST::caUtils->checkCommonValues($data)) {
-        return SetError(%{YaST::caUtils->Error()});
+        return $self->SetError(%{YaST::caUtils->Error()});
     }
 
     # checking requires
     if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
-        return SetError( summary => "Missing value 'caName'",
+        return $self->SetError( summary => "Missing value 'caName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
 
     if (!defined $data->{"newCaName"} || $data->{"newCaName"} eq "" || $data->{"newCaName"} =~ /\./) {
-        return SetError( summary => "Missing value 'newCaName'",
+        return $self->SetError( summary => "Missing value 'newCaName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
     $newCaName = $data->{"newCaName"};
@@ -1947,22 +2291,22 @@ sub AddSubCA {
     if (!defined $data->{"keyPasswd"} || $data->{"keyPasswd"} eq "" ||
         length($data->{"keyPasswd"}) <= 4) 
     {
-        return SetError( summary => "Missing value 'keyPasswd' or password is to short",
+        return $self->SetError( summary => "Missing value 'keyPasswd' or password is to short",
                                 code    => "CHECK_PARAM_FAILED");
     }
 
     if(!defined $data->{'caPasswd'} || $data->{'caPasswd'} eq "") {
-        return SetError( summary => "Missing value 'caPasswd'.",
+        return $self->SetError( summary => "Missing value 'caPasswd'.",
                                 code    => "CHECK_PARAM_FAILED");
     }
 
     if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
-        return SetError( summary => "Missing value 'commonName'",
+        return $self->SetError( summary => "Missing value 'commonName'",
                                 code    => "CHECK_PARAM_FAILED");
     }
 
     if(!defined $data->{"basicConstraints"} || $data->{"basicConstraints"} !~ /CA:TRUE/) {
-        return SetError( summary => "'basicConstraints' says, this is no CA",
+        return $self->SetError( summary => "'basicConstraints' says, this is no CA",
                          code    => "CHECK_PARAM_FAILED");
     }
 
@@ -1974,12 +2318,12 @@ sub AddSubCA {
     if (!defined $data->{"days"} || $data->{"days"} !~ /^\d{1,}$/) {
         $data->{"days"} = 3650;
     }
-    my $request = AddRequest($data);
+    my $request = $self->AddRequest($data);
     if(not defined $request) {
         return undef;
     }
     $data->{'request'} = $request;
-    my $certificate = IssueCertificate($data);
+    my $certificate = $self->IssueCertificate($data);
     if(not defined $certificate) {
         my $caName = $data->{'caName'};
         SCR::Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
@@ -1989,7 +2333,7 @@ sub AddSubCA {
 
     if(not SCR::Write(".caTools.caInfrastructure", $data->{"newCaName"}))
     {
-        return SetError(%{SCR::Error(".caTools")});
+        return $self->SetError(%{SCR::Error(".caTools")});
     }
 
     my $retCode = SCR::Execute(".target.bash", "cp ".
@@ -1997,7 +2341,7 @@ sub AddSubCA {
                                "$CAM_ROOT/$newCaName/cacert.key");
     if(not defined $retCode || $retCode != 0) {
         YaST::caUtils->cleanCaInfrastructure($newCaName);
-        return SetError(summary => "Can not copy the private key.",
+        return $self->SetError(summary => "Can not copy the private key.",
                         code => "COPY_FAILED");
     }
 
@@ -2006,20 +2350,20 @@ sub AddSubCA {
                             "$CAM_ROOT/$newCaName/cacert.pem");
     if(not defined $retCode || $retCode != 0) {
         YaST::caUtils->cleanCaInfrastructure($newCaName);
-        return SetError(summary => "Can not copy the certificate.",
+        return $self->SetError(summary => "Can not copy the certificate.",
                         code => "COPY_FAILED");
     }
 
     $retCode = SCR::Execute(".target.bash", "cp $CAM_ROOT/$newCaName/cacert.pem $CAM_ROOT/.cas/$caName.pem");
     if(not defined $retCode || $retCode != 0) {
 #        YaST::caUtils->cleanCaInfrastructure($newCaName);
-        return SetError( summary => "Can not copy CA certificate",
+        return $self->SetError( summary => "Can not copy CA certificate",
                          code => "COPY_FAILED");
     }
     $retCode = SCR::Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
     if(not defined $retCode || $retCode != 0) {
 #        YaST::caUtils->cleanCaInfrastructure($newCaName);
-        return SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
+        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
                          code => "C_REHASH_FAILED");
     }
     
@@ -2039,6 +2383,7 @@ EXAMPLE:
 
 BEGIN { $TYPEINFO{ExportCAToLDAP} = ["function", "boolean", ["map", "string", "any"] ]; }
 sub ExportCAToLDAP {
+    my $self = shift;
     my $data = shift;
     my $caName  = "";
     my $action = "add";
@@ -2046,64 +2391,64 @@ sub ExportCAToLDAP {
 
     if (not defined $data->{'caName'} ||
         $data->{'caName'} !~ /^[A-Za-z0-9-_]+$/) {
-        return SetError(summary => "Wrong value for parameter 'caName'.",
+        return $self->SetError(summary => "Wrong value for parameter 'caName'.",
                         code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
     
     if (! defined $data->{'ldapHostname'} ||
         ! Hostname::CheckFQ($data->{'ldapHostname'}) ) {
-        return SetError(summary => "Wrong value for parameter 'ldapHostname'.",
+        return $self->SetError(summary => "Wrong value for parameter 'ldapHostname'.",
                         code    => "PARAM_CHECK_FAILED");
     }
 
     if (! defined $data->{'ldapPort'} ||
         $data->{'ldapPort'} !~ /^\d+$/ ) {
-        return SetError(summary => "Wrong value for parameter 'ldapPort'.",
+        return $self->SetError(summary => "Wrong value for parameter 'ldapPort'.",
                         code    => "PARAM_CHECK_FAILED");
     }
 
     if(! defined $data->{'destinationDN'} || 
        $data->{'destinationDN'} eq "") {
-        return SetError(summary => "Wrong value for parameter 'destinationDN'.",
+        return $self->SetError(summary => "Wrong value for parameter 'destinationDN'.",
                         code    => "PARAM_CHECK_FAILED");
     }
 
     if(! defined $data->{'BindDN'} || 
        $data->{'BindDN'} eq "") {
-        return SetError(summary => "Wrong value for parameter 'BindDN'.",
+        return $self->SetError(summary => "Wrong value for parameter 'BindDN'.",
                         code    => "PARAM_CHECK_FAILED");
     }
 
     if(! defined $data->{'password'} || 
        $data->{'password'} eq "") {
-        return SetError(summary => "Wrong value for parameter 'password'.",
+        return $self->SetError(summary => "Wrong value for parameter 'password'.",
                         code    => "PARAM_CHECK_FAILED");
     }
 
     # test if this File already exists
     if(SCR::Read(".target.size", "$CAM_ROOT/$caName/cacert.pem") == -1) {
-        return SetError(summary => "CA Certificate does not exist.",
+        return $self->SetError(summary => "CA Certificate does not exist.",
                                code => "FILE_DOES_NOT_EXIST");
     }
 
     my $ca = SCR::Read(".openssl.getParsedCert", $caName, 
                        {INFILE => "$CAM_ROOT/$caName/cacert.pem",  INFORM => "PEM"});
     if(not defined $ca) {
-        return SetError(%{SCR::Error(".openssl")});
+        return $self->SetError(%{SCR::Error(".openssl")});
     }
     my ($body) = ($ca->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
 print STDERR "BODY:$body\n";
 
     if(! defined $body || $body eq "") {
-        return SetError(summary => "Can not parse the CA certificate",
+        return $self->SetError(summary => "Can not parse the CA certificate",
                         code => "PARSE_ERROR");
     }
 
     if(! SCR::Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
                                 "port"     => $data->{'ldapPort'}}))
     {
-        return SetError(summary => "LDAP init failed",
+        return $self->SetError(summary => "LDAP init failed",
                         code => "SCR_INIT_FAILED");
     }
 
@@ -2111,7 +2456,7 @@ print STDERR "BODY:$body\n";
                                      "bind_pw" => $data->{'password'}}) )
     {
         my $ldapERR = SCR::Read(".ldap.error");
-        return SetError(summary => "LDAP bind failed",
+        return $self->SetError(summary => "LDAP bind failed",
                         code => "SCR_INIT_FAILED",
                         description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
@@ -2124,7 +2469,7 @@ print STDERR "BODY:$body\n";
                                            });
     if(! defined $dnList) {
         my $ldapERR = SCR::Read(".ldap.error");
-        return SetError(summary => "'destinationDN' is not available in the LDAP directory.",
+        return $self->SetError(summary => "'destinationDN' is not available in the LDAP directory.",
                         code => "LDAP_SEARCH_FAILED",
                         description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
@@ -2141,7 +2486,7 @@ print STDERR "BODY:$body\n";
             # code 32 is 'no such object => we have to add a new entry
             $action = "add";
         } else {
-            return SetError(summary => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
+            return $self->SetError(summary => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                             code => "LDAP_SEARCH_FAILED");
         }
     } else {
@@ -2159,7 +2504,7 @@ print STDERR "BODY:$body\n";
 
         if(not SCR::Write(".ldap.add", { dn => "cn=$caName,".$data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR::Read(".ldap.error");
-            return SetError(summary => "Can not add CA certificate to LDAP directory.",
+            return $self->SetError(summary => "Can not add CA certificate to LDAP directory.",
                             code => "LDAP_ADD_FAILED",
                             description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -2171,7 +2516,7 @@ print STDERR "BODY:$body\n";
                     };
         if(not SCR::Write(".ldap.modify", { dn => "cn=$caName,".$data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR::Read(".ldap.error");
-            return SetError(summary => "Can not modify CA certificate in LDAP directory.",
+            return $self->SetError(summary => "Can not modify CA certificate in LDAP directory.",
                             code => "LDAP_MODIFY_FAILED",
                             description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -2185,8 +2530,8 @@ print STDERR "BODY:$body\n";
 }
 
 
-if(not defined do("YaPI.inc")) {
-    die "'$!' Can not include YaPI.inc";
-}
+#if(not defined do("YaPI.inc")) {
+#    die "'$!' Can not include YaPI.inc";
+#}
 
 1;
