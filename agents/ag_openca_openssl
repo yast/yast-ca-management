@@ -38,7 +38,7 @@ sub OtherCommand () {
         }
         $openssl->setParams(TMPDIR=>$config->{"tmpdir"},
                             STDERR=>$config->{"stderr"},
-                            DEBUG=>1
+#                            DEBUG=>1
                            );
         $privkeyalg = $config->{'privkeyalg'};
     }
@@ -78,7 +78,6 @@ sub Execute {
     $class->check_initialized || return undef;
     
     $class->setConfig($caName) || return undef;
-
     if($path eq ".genKey") {
         $hash = shift;
         if(not defined $hash->{'ALGORITHM'}) {
@@ -168,7 +167,7 @@ sub Execute {
                                 code => "SCR_WRONG_PATH");
     }
 }
-  
+
 
 package main;
 ag_openca_openssl->Run;
