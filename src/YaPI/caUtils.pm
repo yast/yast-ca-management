@@ -290,12 +290,12 @@ sub checkCommonValues {
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*URI:(.+)\s*$/) {
-                    if (!defined $1 || !URL->Check($1)) {
+                    if (!defined $1 || !URL->Check("$1")) {
                         return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*DNS:(.+)\s*$/) {
-                    if (!defined $1 || !Hostname->CheckDomain($1)) {
+                    if (!defined $1 || !Hostname->CheckDomain("$1")) {
                         return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                               code    => "PARAM_CHECK_FAILED");
                     }
@@ -305,7 +305,7 @@ sub checkCommonValues {
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*IP:(.+)\s*$/) {
-                    if (!defined $1 || !(IP->Check4($1) || IP->Check6($1)) ) {
+                    if (!defined $1 || !(IP->Check4("$1") || IP->Check6("$1")) ) {
                         return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                               code    => "PARAM_CHECK_FAILED");
                     }
@@ -324,9 +324,9 @@ sub checkCommonValues {
                 return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
                                       code => "PARAM_CHECK_FAILED");
             }
-            $data->{$key} =~ /^\s*critical\s*,\s*(.*)/ ;
-            if (!URL->Check($1)) {
-                return $self->SetError(summary => "Wrong value'$1' for parameter '$key'.",
+            $data->{$key} =~ /^\s*(critical)?\s*,*\s*(.*)/ ;
+            if (!URL->Check("$2")) {
+                return $self->SetError(summary => "Wrong value'$2' for parameter '$key'.",
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "nsSslServerName") {
@@ -372,12 +372,12 @@ sub checkCommonValues {
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*URI:(.+)\s*$/) {
-                        if (!defined $1 || !URL->Check($1)) {
+                        if (!defined $1 || !URL->Check("$1")) {
                             return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*DNS:(.+)\s*$/) {
-                        if (!defined $1 || !Hostname->CheckDomain($1)) {
+                        if (!defined $1 || !Hostname->CheckDomain("$1")) {
                             return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                                   code    => "PARAM_CHECK_FAILED");
                         }
@@ -387,7 +387,7 @@ sub checkCommonValues {
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*IP:(.+)\s*$/) {
-                        if (!defined $1 || !(IP->Check4($1) || IP->Check6($1)) ) {
+                        if (!defined $1 || !(IP->Check4("$1") || IP->Check6("$1")) ) {
                             return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                                   code    => "PARAM_CHECK_FAILED");
                         }
