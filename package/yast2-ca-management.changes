@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Fri Apr 16 14:36:30 CEST 2004 - mc@suse.de
+
+- remove Execute .status from ag_ca_tools; is now in ag_openssl
+- first version of a proposal implemented
+- basicconstraits accept none
+- WriteCertificateDefaults() supports 'days' and 'keylength'
+- At DeleteCertificate remove the certificate entry from cam.txt
+- add "use_tls" to ldap init.
+- some other smal bugfixes 
+
+-------------------------------------------------------------------
 Fri Apr  2 16:27:56 CEST 2004 - schubi@suse.de
 
 - fist complete working version
