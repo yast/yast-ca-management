@@ -15,7 +15,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-
+    import "CaManagement";
 
     /**
      * Popup to confirm after finish is pressed
@@ -49,36 +49,19 @@
         return `back;
     }
 
-    /**
-     * Popup with details error
-     * @return `ok
-     */
-    define symbol DetailsPopup () ``{
-
-                                // To translators: popup label
-        Popup::LongText (_("Error details"), `RichText (CaMgm::error_details), 50, 20 );
-        return `ok;
-    }
 
     /**
-     * Popup displaying configuration result
-     * @return `ok or `details
+     * Popup displaying openssl error messages
+     * @return void
      */
-    define symbol ResultPopup () ``{
-
-        string message = "";
-        if (size (CaMgm::error_msg) > 0)
+    define void showErrorCaManagement () ``{
+        map<string,any> messageMap = (map<string,any>) CaManagement::Error();
+	string message = messageMap["summary"]:"";
+        if (size (message) > 0)
         {
-                                // To translators: popup label
-            message = sformat (_("Error during configuration:\n%1"),
-                               CaMgm::error_msg);
-
-                                // To translators: Error popup
-            return Popup::AnyQuestion (Label::ErrorMsg(), message, Label::OKButton(), _("&Details"), `focus_yes) ? `ok : `details;
-            //Popup::Error (message);
+            Popup::Error (message);
         }
-
-        return `ok;
+	return;
     }
 
 

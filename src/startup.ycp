@@ -39,10 +39,17 @@
 
         list<string> CAList = CaManagement::ReadCAList(); //[ "CA1", "CA2", "CA3" ];
 	y2milestone("Output of ReadCAList: %1", CAList);
-        foreach (string element, CAList, ``{
-            result = add (result, `item (`id (i), element ) );
-            i = i + 1;
-        });
+	if (CAList == nil)
+	{
+	    showErrorCaManagement ();
+	}
+	else
+	{
+	    foreach (string element, CAList, ``{
+		result = add (result, `item (`id (i), element ) );
+		i = i + 1;
+	    });
+	}
         return result;
     }
 

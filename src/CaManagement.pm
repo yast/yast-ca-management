@@ -15,7 +15,7 @@ our %TYPEINFO;
 
 my $CAM_ROOT = "/var/lib/YaST2/CAM";
 
-BEGIN { $TYPEINFO{ReadCAList} = ["function", ["list", "strings"]]; }
+BEGIN { $TYPEINFO{ReadCAList} = ["function", ["list", "string"]]; }
 sub ReadCAList {
     my $self   = shift;
     my $caList = undef;
