@@ -8,6 +8,10 @@ use Errno qw(ENOENT);
 use YaST::YCP;
 use ycp;
 use URI::Escape;
+use X500::DN;
+use MIME::Base64;
+use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now)
+;
 YaST::YCP::Import ("SCR");
 
 #@YaST::Logic::ISA = qw( YaST );
@@ -291,6 +295,300 @@ sub ReadCA {
     return $ret;
 }
 
+BEGIN { $TYPEINFO{AddRequest} = ["function", "string", "any" ]; }
+sub AddRequest {
+    my $self = shift;
+    my $data = shift;
+    my @dn   = ();
+    my $caName  = "";
+    my $request = "";
+
+    return undef if(not defined $self->checkCommonValues($data));
+
+    # checking requires
+    if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
+        return $self->SetError( summary => "Missing value 'caName'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $caName = $data->{"caName"};
+
+    if (!defined $data->{"keyPasswd"} || $data->{"keyPasswd"} eq "" ||
+        length($data->{"keyPasswd"}) <= 4) 
+    {
+        return $self->SetError( summary => "Missing value 'keyPasswd' or password is to short",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    if (!defined $data->{"commonName"} || $data->{"commonName"} eq "") {
+        return $self->SetError( summary => "Missing value 'commonName'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+
+    # Set default values, if the values are not set and modify the
+    # config with this values.
+    if (!defined $data->{"keyLength"} || $data->{"keyLength"} !~ /^\d{3,4}$/ ) {
+        $data->{"keyLength"} = 2048;
+    }
+
+    # generate the request name
+    my $requestString = $self->stringFromDN($data);
+    
+    return undef if(not defined $requestString);
+    
+    $request = encode_base64($requestString, "");
+
+    # test if this File already exists
+    if(SCR::Read(".target.size", "$CAM_ROOT/$caName/keys/".$request.".key") != -1) {
+        return $self->SetError(summary => "Duplicate DN($requestString). Request already exists.",
+                               code => "FILE_ALREADY_EXIST");
+    }
+    if(SCR::Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") != -1) {
+        return $self->SetError(summary => "Duplicate DN($requestString). Request already exists.",
+                               code => "FILE_ALREADY_EXIST");
+    }    
+
+    my $retCode = SCR::Execute(".target.bash",
+                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+    if(not defined $retCode || $retCode != 0) {
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+                                code => "COPY_FAILED");
+    }
+    # check this values, if they were accepted from the openssl command
+    my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
+                     'organizationName', 'organizationalUnitName',
+                     'commonName', 'emailAddress',
+                     'challengePassword', 'unstructuredName');
+
+    foreach my $DN_Part (@DN_Values) {
+        my $ret = $self->checkValueWithConfig($DN_Part, $data);
+        if(not defined $ret ) {
+            return undef;
+        }
+        push @dn, $data->{$DN_Part};
+    }
+
+    if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.req.req_extensions", "v3_req"))
+    { 
+        return $self->SetError( summary => "Can not write to config file",
+                                code => "SCR_WRITE_FAILED");
+    }
+    #####################################################
+    # merge this extentions to the config file
+    # some values have defaults
+    #
+    #             v3 ext. value               default
+    #####################################################
+    my %v3ext = (
+                 'basicConstraints'       => 'CA:false',
+                 'nsComment'              => 'YaMC Generated Certificate',
+                 'nsCertType'             => 'client, email, objsign',
+                 'keyUsage'               => 'nonRepudiation, digitalSignature, keyEncipherment',
+                 'subjectKeyIdentifier'   => 'hash',
+                 'subjectAltName'         => 'email:copy',
+                 'nsSslServerName'        => undef,
+                 'extendedKeyUsage'       => undef,
+                 'authorityInfoAccess'    => undef,
+                );
+
+    foreach my $extName ( keys %v3ext) {
+        $self->mergeToConfig($extName, 'v3_req',
+                             $data, $v3ext{$extName});
+    }
+
+    if(not SCR::Write(".var.lib.YaST2.CAM", undef)) 
+    {
+        return $self->SetError( summary => "Can not write to config file",
+                                code => "SCR_WRITE_FAILED");
+    }
+    my $hash = {
+                OUTFILE  => "$CAM_ROOT/$caName/keys/".$request.".key",
+                PASSWD   => $data->{"keyPasswd"},
+                BITS     => $data->{"keyLength"}
+               };
+    my $ret = SCR::Execute( ".openca.openssl.genKey", $caName, $hash);
+
+    if (not defined $ret) {
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
+    }
+    
+    $hash = {
+             OUTFILE => "$CAM_ROOT/$caName/req/".$request.".req",
+             KEYFILE => "$CAM_ROOT/$caName/keys/".$request.".key",
+             PASSWD  => $data->{"keyPasswd"},
+             DN      => \@dn };
+    $ret = SCR::Execute( ".openca.openssl.genReq", $caName, $hash);
+    if (not defined $ret) {
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
+    }
+
+    return $request;
+}
+
+BEGIN { $TYPEINFO{IssueCertificate} = ["function", "string", "any" ]; }
+sub IssueCertificate {
+    my $self = shift;
+    my $data = shift;
+    my @dn   = ();
+    my $caName  = "";
+    my $request = "";
+    my $certificate = "";
+    my $certType = "client";
+
+    return undef if(not defined $self->checkCommonValues($data));
+
+    # checking requires
+    if (!defined $data->{"caName"} || $data->{"caName"} eq "" || $data->{"caName"} =~ /\./) {
+        return $self->SetError( summary => "Missing value 'caName'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $caName = $data->{"caName"};
+    if (!defined $data->{"request"} || $data->{"request"} eq "" || $data->{"request"} =~ /\./) {
+        return $self->SetError( summary => "Missing value 'request'",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $request = $data->{"request"};
+
+    if (!defined $data->{"caPasswd"} || $data->{"caPasswd"} eq "" ||
+        length($data->{"caPasswd"}) <= 4) 
+    {
+        return $self->SetError( summary => "Missing value 'caPasswd' or password is to short",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+
+    # Set default values, if the values are not set and modify the
+    # config with this values.
+    if (!defined $data->{"days"} || $data->{"days"} !~ /^\d{1,}$/) {
+        $data->{"days"} = 365;
+    }
+    if (defined $data->{"certType"}) {
+        $certType = $data->{"certType"};
+    }
+
+    # test if the file already exists
+    if(SCR::Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") == -1) {
+        return $self->SetError(summary => "Request does not exists.",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+
+    # check time period of the CA against DAYS to sign this cert
+    my $caP = $self->ReadCA({caName => $caName, type => 'parsed'});
+    if(not defined $caP) {
+        return undef;
+    }
+    my $notafter = SCR::Execute(".openca.openssl.getNumericDate", $caName, $caP->{'NOTAFTER'});
+
+    #                     year    month  day  hour   min  sec
+    if( $notafter !~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
+        return $self->SetError( summary => "Can not parse CA date string '$notafter'",
+                                code    => "PARSE_ERROR");
+    }
+    my @expireCA = ($1, $2, $3, $4, $5, $6);
+    my @expireCertDate = Add_Delta_DHMS(Today_and_Now(), $data->{"days"}, 0, 0, 0);
+
+    my $expireCertTime = Date_to_Time(@expireCertDate);
+    my $expireCATime   = Date_to_Time(@expireCA);
+
+    if($expireCertTime > $expireCATime) {
+        my $caStr = sprintf("%s-%s-%s %s:%s:%s", @expireCA);
+        my $certStr = sprintf("%s-%s-%s %s:%s:%s", @expireCertDate);
+        return $self->SetError( summary => "CA expires before the certificate should expire. ".
+                                "CA expires:'$caStr', Cert should expire:'$certStr'",
+                                code  => 'PARAM_CHECK_FAILED');
+    }
+
+    # get next serial number and built the certificate file name
+    my $serial = SCR::Read(".caTools.nextSerial", $caName);
+    if(not defined $serial) {
+        return $self->SetError(%{SCR::Error(".caTools")});
+    }
+    $certificate = $serial.":".$request;
+
+    my $retCode = SCR::Execute(".target.bash",
+                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
+    if(not defined $retCode || $retCode != 0) {
+        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
+                                code => "COPY_FAILED");
+    }
+
+    if(not SCR::Write(".var.lib.YaST2.CAM.value.$caName.".$certType."_cert.x509_extensions", 
+                      "v3_".$certType))
+    { 
+        return $self->SetError( summary => "Can not write to config file",
+                                code => "SCR_WRITE_FAILED");
+    }
+    #####################################################
+    # merge this extentions to the config file
+    # some values have defaults
+    #
+    #             v3 ext. value               default
+    #####################################################
+    my %v3ext = (
+                 'basicConstraints'       => 'CA:FALSE',
+                 'nsComment'              => 'YaMC Generated Certificate',
+                 'nsCertType'             => 'client, email, objsign',
+                 'keyUsage'               => 'nonRepudiation, digitalSignature, keyEncipherment',
+                 'subjectKeyIdentifier'   => 'hash',
+                 'authorityKeyIdentifier' => 'keyid:always,issuer:always',
+                 'subjectAltName'         => 'email:copy',
+                 'issuerAltName'          => 'issuer:copy',
+                 'nsBaseUrl'              => undef,
+                 'nsRevocationUrl'        => undef,
+                 'nsCaRevocationUrl'      => undef,
+                 'nsRenewalUrl'           => undef,
+                 'nsCaPolicyUrl'          => undef,
+                 'nsSslServerName'        => undef,
+                 'extendedKeyUsage'       => undef,
+                 'authorityInfoAccess'    => undef,
+                 'crlDistributionPoints'  => undef,
+                );
+
+    foreach my $extName ( keys %v3ext) {
+        $self->mergeToConfig($extName, 'v3_'.$certType,
+                             $data, $v3ext{$extName});
+    }
+
+    if(not SCR::Write(".var.lib.YaST2.CAM", undef)) 
+    {
+        return $self->SetError( summary => "Can not write to config file",
+                                code => "SCR_WRITE_FAILED");
+    }
+    my $hash = {
+                REQFILE => "$CAM_ROOT/$caName/req/".$request.".req",
+                CAKEY   => "$CAM_ROOT/$caName/cacert.key",
+                CACERT  => "$CAM_ROOT/$caName/cacert.pem",
+                DAYS    => $data->{'days'},
+                PASSWD  => $data->{'caPasswd'},
+                EXTS    => 'v3_'.$certType,
+                OUTDIR  => "$CAM_ROOT/$caName/certs/",
+                OUTFILE => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem"
+               };
+    my $ret = SCR::Execute( ".openca.openssl.issueCert", $caName, $hash);
+
+    if (not defined $ret) {
+        return $self->SetError(%{SCR::Error(".openca.openssl")});
+    }
+    
+    return $certificate;
+}
+
+BEGIN { $TYPEINFO{AddCertificate} = ["function", "string", "any" ]; }
+sub AddCertificate {
+    my $self = shift;
+    my $data = shift;
+
+    my $request = $self->AddRequest($data);
+    if(not defined $request) {
+        return undef;
+    }
+    $data->{'request'} = $request;
+    my $certificate = $self->IssueCertificate($data);
+    if(not defined $request) {
+        return undef;
+    }
+
+    return $certificate;
+}
+
+
 sub cleanCaInfrastructure {
     my $self     = shift || return undef;
     my $caName = shift;
@@ -419,7 +717,7 @@ sub checkCommonValues {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
-        } elsif ( $key eq "keyPasswd") {
+        } elsif ( $key eq "keyPasswd" || $key eq "caPasswd") {
             if (not defined $data->{$key} ||
                 length($data->{$key}) < 4) {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
@@ -453,7 +751,8 @@ sub checkCommonValues {
                 return $self->SetError(summary => "Wrong value for parameter '$key'.",
                                        code    => "PARAM_CHECK_FAILED");
             }
-            $data->{$key} =~ s/([`$"'\\])/\\$1/g ; 
+            # this seems to be not needed
+            #$data->{$key} =~ s/([`$"'\\])/\\$1/g ; 
         } elsif ( $key eq "basicConstraints") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
@@ -464,6 +763,7 @@ sub checkCommonValues {
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
                 next if($p     eq "critical");
                 next if(uc($p) eq "CA:TRUE");
+                next if(uc($p) eq "CA:FALSE");
                 next if($p     =~ /pathlen:\d+/);
                 return $self->SetError( summary => "Unknown value '$p' in '$key'.",
                                         code => "PARAM_CHECK_FAILED");
@@ -724,6 +1024,60 @@ sub checkURI {
         return $url;
     } else {
         return 1;
+    }
+}
+
+sub stringFromDN {
+    my $self = shift || return undef;
+    my $data = shift || return $self->SetError(summary => "Missing parameter 'data'",
+                                               code => "PARAM_CHECK_FAILED");;
+    my @rdn = ();
+
+    my @DN_Values = ('countryName', 
+                     'stateOrProvinceName', 
+                     'localityName',
+                     'organizationName',
+                     'organizationalUnitName',
+                     'commonName',
+                     'emailAddress',
+                    );
+    foreach my $name (@DN_Values) {
+        if($name eq 'countryName') {
+            if(defined $data->{$name} && $data->{$name} ne "" ) {
+                push @rdn, new X500::RDN('C'=>$data->{$name});
+            }
+        } elsif( $name eq 'stateOrProvinceName') {
+            if(defined $data->{$name} && $data->{$name} ne "" ) {
+                push @rdn, new X500::RDN('ST'=>$data->{$name});
+            }
+        } elsif( $name eq 'localityName') {
+            if(defined $data->{$name} && $data->{$name} ne "" ) {
+                push @rdn, new X500::RDN('L'=>$data->{$name});
+            }
+        } elsif( $name eq 'organizationName') {
+            if(defined $data->{$name} && $data->{$name} ne "" ) {
+                push @rdn, new X500::RDN('O'=>$data->{$name});
+            }
+        } elsif( $name eq 'organizationalUnitName') {
+            if(defined $data->{$name} && $data->{$name} ne "" ) {
+                push @rdn, new X500::RDN('OU'=>$data->{$name});
+            }
+        } elsif( $name eq 'commonName') {
+            if(defined $data->{$name} && $data->{$name} ne "" ) {
+                push @rdn, new X500::RDN('CN'=>$data->{$name});
+            }
+        } elsif( $name eq 'emailAddress'){
+            if(defined $data->{$name} && $data->{$name} ne "" ) {
+                push @rdn, new X500::RDN('emailAddress'=>$data->{$name});
+            }
+        }
+    }
+    my $dn = new X500::DN(@rdn);
+    if(defined $dn) {
+        return $dn->getOpenSSLString();
+    } else {
+        return $self->SetError(summary => "Creating DN Object failed.",
+                               code => "INI_OBJECT_FAILED");
     }
 }
 
