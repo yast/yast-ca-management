@@ -59,6 +59,7 @@
 	CaMgm::adv_challenge_password = "";
  	CaMgm::adv_cri_issuer_alt_name = false;
  	CaMgm::adv_copy_issuer_alt_name = false;
+	CaMgm::adv_copy_issuer_alt_name_enabled = false;	
 	CaMgm::adv_issuer_alt_name_list = [];
  	CaMgm::adv_cri_key_usage = false;
  	CaMgm::adv_digitalSignature = false;
@@ -110,6 +111,9 @@
 
 	if (kind == "Root CA")
         {
+
+	    CaMgm::currentCA = ""; // sign that a root CA will be created.
+	    
             ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["certType":"ca"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
 			$["certType":"ca"],
@@ -522,6 +526,49 @@
 		counter = counter +1;			
 	    }
 	});
+
+	//evaluate if "Copy Subject Alt Name from CA" is enabled in Issuer Alt Name
+	if (kind == "Root CA")
+        {
+	    // Root Ca
+	    // If the own "Subject Alt Name" is defined, the copy will be allowed
+	    if (CaMgm::adv_cri_subject_alt_name
+		|| CaMgm::adv_copy_subject_alt_name 
+		|| size (CaMgm::adv_subject_alt_name_list) > 0 )
+	    {
+		CaMgm::adv_copy_issuer_alt_name_enabled = true;	
+	    }
+	    else
+	    {
+		CaMgm::adv_copy_issuer_alt_name = false;
+		CaMgm::adv_copy_issuer_alt_name_enabled = false;			
+	    }
+	}
+	else
+	{
+	    // Certificates, Sub-CAs, Requests
+	    map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CaMgm::currentCA, "type":"parsed"]);
+	    y2milestone("ReadCA(%1): %2", CaMgm::currentCA, ret);	    
+	    if (ret == nil)
+	    {
+		showErrorCaManagement ();
+	    }
+	    else
+	    {
+		map<string,list> opensslExtentions = ret["OPENSSL_EXTENSIONS"]:$[];
+		if (size (opensslExtentions["X509v3 Subject Alternative Name"]:[]) > 0)
+		{
+		    // Subject Alternative Name of the "parent" CA is available. So the user
+		    // can copy it.
+		    CaMgm::adv_copy_issuer_alt_name_enabled = true;			    
+		}
+		else
+		{
+		    CaMgm::adv_copy_issuer_alt_name = false;
+		    CaMgm::adv_copy_issuer_alt_name_enabled = false;			
+		}		
+	    }
+	}
 
 	return `next;
     }

@@ -158,6 +158,7 @@ global string	adv_challenge_password = "";
 
 global boolean 	adv_cri_issuer_alt_name = false;
 global boolean 	adv_copy_issuer_alt_name = false;
+global boolean 	adv_copy_issuer_alt_name_enabled = false;
 global list<map> adv_issuer_alt_name_list = [];
 
 global boolean 	adv_cri_key_usage = false;

@@ -319,7 +319,8 @@
 
 	UI::ChangeWidget(`id(`id_adv_issuer_alt_name), `Items, itemList);
 	UI::ChangeWidget(`id(`id_adv_cri_issuer_alt_name), `Value, CaMgm::adv_cri_issuer_alt_name);
-	UI::ChangeWidget(`id(`id_adv_copy_issuer_alt_name), `Value, CaMgm::adv_copy_issuer_alt_name);			
+	UI::ChangeWidget(`id(`id_adv_copy_issuer_alt_name), `Value, CaMgm::adv_copy_issuer_alt_name);
+	UI::ChangeWidget(`id(`id_adv_copy_issuer_alt_name), `Enabled, CaMgm::adv_copy_issuer_alt_name_enabled);
     }
     define string set_advanced_issuer_alt_name() ``{
 	y2debug("calling set_advanced_issuer_alt_name");
@@ -645,7 +646,16 @@
 
 	UI::ChangeWidget(`id(`id_adv_subject_alt_name), `Items, itemList);
 	UI::ChangeWidget(`id(`id_adv_cri_subject_alt_name), `Value, CaMgm::adv_cri_subject_alt_name);
-	UI::ChangeWidget(`id(`id_adv_copy_subject_alt_name), `Value, CaMgm::adv_copy_subject_alt_name);			
+	UI::ChangeWidget(`id(`id_adv_copy_subject_alt_name), `Value, CaMgm::adv_copy_subject_alt_name);
+	if (size (CaMgm::emailList) <= 0)
+	{
+	    // Do not copy if there is no email address available
+	    UI::ChangeWidget(`id(`id_adv_copy_subject_alt_name), `Enabled, false);	    
+	}
+	else
+	{
+	    UI::ChangeWidget(`id(`id_adv_copy_subject_alt_name), `Enabled, true);	    	    
+	}
     }
     define string set_advanced_subject_alt_name() ``{
 	y2debug("calling set_advanced_subject_alt_name");
@@ -654,6 +664,23 @@
 	CaMgm::adv_cri_subject_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_cri_subject_alt_name), `Value);
 	CaMgm::adv_copy_subject_alt_name = (boolean) UI::QueryWidget(`id(`id_adv_copy_subject_alt_name), `Value);		
 	// The table widget will be filled in the add or delete callback
+
+	if (size(CaMgm::currentCA) <= 0)
+	{
+	    // is a root CA
+	    // If the own "Subject Alt Name" is defined, the copy into will be "Issuer Alt Name" is allowed.
+	    if (CaMgm::adv_cri_subject_alt_name
+		|| CaMgm::adv_copy_subject_alt_name 
+		|| size (CaMgm::adv_subject_alt_name_list) > 0 )
+	    {
+		CaMgm::adv_copy_issuer_alt_name_enabled = true;
+	    }
+	    else
+	    {
+		CaMgm::adv_copy_issuer_alt_name_enabled = false;
+		CaMgm::adv_copy_issuer_alt_name = false;
+	    }
+	}
 	
 	return error;
     }
@@ -671,7 +698,7 @@
 					    `HSpacing(10),
 					    `RadioButtonGroup(`id(`rb), 
 							      `HBox(
-								    `RadioButton(`id("URI"), `opt(`notify), "URI"),
+								    `RadioButton(`id("URI"), `opt(`notify), "URI", true),
 								    `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
 								    `RadioButton(`id("IP"), `opt(`notify), "IP"),
 								    `RadioButton(`id("RID"), `opt(`notify), "RID")
