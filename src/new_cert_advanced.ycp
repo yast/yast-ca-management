@@ -114,6 +114,45 @@
 		UI::UserInput ();
 		UI::CloseDialog ();
 	    }
+	    else if (ret == `add)
+	    {
+		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+		y2milestone ("Add for: %1", selected);
+
+		// Calling Add callback
+		map item = itemMap[lastItem]:$[];
+		any function = item["addCallback"]:nil;
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		}
+	    }
+	    else if (ret == `modify)
+	    {
+		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+		y2milestone ("Modify for: %1", selected);
+
+		// Calling Modify callback
+		map item = itemMap[lastItem]:$[];
+		any function = item["modifyCallback"]:nil;
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		}		
+	    }
+	    else if (ret == `delete)
+	    {
+		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);
+		y2milestone ("Delete for: %1", selected);
+
+		// Calling Delete callback
+		map item = itemMap[lastItem]:$[];
+		any function = item["deleteCallback"]:nil;
+		if (function != nil)
+		{
+		    any ret = eval(function);
+		}		
+	    }
 	    else 
 	    {
 		symbol selected = (symbol)UI::QueryWidget(`id(`tree), `CurrentItem);

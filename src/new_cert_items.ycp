@@ -148,6 +148,11 @@
 														      CaMgm::adv_cri_issuer_alt_name)
 													    ),
 												     `VSpacing(1.5),
+												     `Left (`CheckBox(`id(`id_adv_copy_issuer_alt_name),
+														      _("copy Subject Alt Name from CA"),
+														      CaMgm::adv_copy_issuer_alt_name)
+													    ),
+												     `VSpacing(1.5),
 												     `HBox (`HWeight (3,`Table (`id (`id_adv_issuer_alt_name),
 																`opt (`notify, `immediate),
 																`header (
@@ -180,6 +185,9 @@
 								  "default"    	: true,
 								  "getCallback" : ``(get_advanced_issuer_alt_name()),
 								  "setCallback" : ``(set_advanced_issuer_alt_name()),
+								  "addCallback" : ``(add_advanced_issuer_alt_name()),
+								  "deleteCallback" : ``(delete_advanced_issuer_alt_name()),
+								  "modifyCallback" : ``(modify_advanced_issuer_alt_name()),								  
 								  ],
 
 			    `advanced_key_usage : 		$["name" 	: "Key Usage",
@@ -325,6 +333,11 @@
 														       CaMgm::adv_cri_subject_alt_name
 														       )),
 												     `VSpacing(1.5),
+												     `Left (`CheckBox(`id(`id_adv_copy_subject_alt_name),
+														      _("copy Standard EMAIL Address"),
+														      CaMgm::adv_copy_subject_alt_name)
+													    ),
+												     `VSpacing(1.5),
 												     `HBox(
 													   `VSpacing(5),
 													   `HWeight (3, `Table (`id (`id_adv_subject_alt_name),
@@ -359,6 +372,9 @@
 								  "default"    	: true,
 								  "getCallback" : ``(get_advanced_subject_alt_name()),
 								  "setCallback" : ``(set_advanced_subject_alt_name()),
+								  "addCallback"	: ``(add_advanced_subject_alt_name()),
+								  "deleteCallback" : ``(delete_advanced_subject_alt_name()),
+								  "modifyCallback" : ``(modify_advanced_subject_alt_name()),								  
 								  ],
 
 			    `advanced_unstructured_name : 	$["name" 	: "Unstructured Name",
