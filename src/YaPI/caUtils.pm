@@ -285,7 +285,7 @@ sub checkCommonValues {
                 next if($p eq "email:copy" && $key eq "subjectAltName");
                 next if($p eq "issuer:copy" && $key eq "issuerAltName");
                 if ($p =~ /^\s*email:(.+)\s*$/) {
-                    if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]$/) {
+                    if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]+$/) {
                         return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                               code    => "PARAM_CHECK_FAILED");
                     }
@@ -367,7 +367,7 @@ sub checkCommonValues {
                 if ( $accessOID eq "OCSP" || $accessOID eq "caIssuers" ||
                      $accessOID =~ /^(\d+\.)+\d+$/ ) {
                     if ($location =~ /^\s*email:(.+)\s*$/) {
-                        if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]$/) {
+                        if (!defined $1 || $1 !~ /^[^@]+@[^@]+\.[^@]+$/) {
                             return $self->SetError(summary => "Wrong value'$p' for parameter '$key'.",
                                                   code    => "PARAM_CHECK_FAILED");
                         }
