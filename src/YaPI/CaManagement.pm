@@ -3831,7 +3831,7 @@ sub ReadLDAPExportDefaults {
         if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
             $ldapret = SCR->Read(".ldap.search", {
                                                   "base_dn" => $ldapMap->{'ldap_domain'},
-                                                  "filter" => '(& (objectclass=suseCaConfiguration) (cn=default))',
+                                                  "filter" => '(& (objectclass=suseCaConfiguration) (cn=defaultCA))',
                                                   "scope" => 2,
                                                   "not_found_ok" => 1
                                                  });
@@ -3958,7 +3958,7 @@ sub InitLDAPcaManagement {
 
     $ldapret = SCR->Read(".ldap.search", {
                                           "base_dn" => $ldapMap->{'ldap_domain'},
-                                          "filter" => '(& (objectclass=suseCaConfiguration) (cn=default))',
+                                          "filter" => '(& (objectclass=suseCaConfiguration) (cn=defaultCA))',
                                           "scope" => 2,
                                           "not_found_ok" => 1
                                          });
@@ -4005,10 +4005,10 @@ sub InitLDAPcaManagement {
     
     if($addDefaultConfig) {
         $ldapret = SCR->Write(".ldap.add", 
-                              { dn => "cn=default,".$ldapMap->{'base_config_dn'}},
+                              { dn => "cn=defaultCA,".$ldapMap->{'base_config_dn'}},
                               { 
                                "objectClass" => [ "suseCaConfiguration"],
-                               "cn" => "default",
+                               "cn" => "defaultCA",
                                "suseDefaultBase", "ou=PKI,".$ldapMap->{'ldap_domain'}
                               }
                              );
@@ -4020,10 +4020,10 @@ sub InitLDAPcaManagement {
         }
     }
 
-    # do th CA Base exist?
+    # do the CA Base exist?
     $ldapret = SCR->Read(".ldap.search", {
                                           "base_dn" => $ldapMap->{'ldap_domain'},
-                                          "filter" => '(& (objectclass=suseCaConfiguration) (cn=default))',
+                                          "filter" => '(& (objectclass=suseCaConfiguration) (cn=defaultCA))',
                                           "scope" => 2,
                                           "attrs" => [ 'suseDefaultBase' ]
                                          });
