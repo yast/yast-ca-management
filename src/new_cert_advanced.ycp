@@ -39,7 +39,19 @@
      * @param nextbutton - The dialog has a next button
      * @return `next, 'back, 'cancel, 'again
      */
-    define symbol new_cert_advanced (boolean nextbutton) ``{
+    define symbol new_cert_advanced (boolean nextbutton, string kind) ``{
+	list itemList = [];
+
+	if (kind == "Client Request"
+	    || kind == "Server Request")
+	{
+	    itemList = requestItemList;
+	}
+	else
+	{
+	    itemList = generalItemList;
+	}	    
+	
 	term button = `HBox(
 			    `PushButton(`id(`help), `opt(`key_F1), Label::HelpButton()),
 			    `HStretch(),			    

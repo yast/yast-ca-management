@@ -80,7 +80,7 @@ global string currentRequest = "";
 // Request Extentions of the current Request
 global string requestKind = "";
 global string requestSubject = "";
-global map<string,string> requestExtentionValue = $[];
+global map <string, list> requestExtentionValue = $[];
 global list<string> slectedRequestExtention = [];
 global list<string> validRequestExtention =
     ["X509v3 Subject Key Identifier",

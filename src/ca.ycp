@@ -59,7 +59,7 @@
 			"new_cert1"  	 	: ``(new_cert1 ("Sub CA")),
 			"new_cert2"   		: ``(new_cert2 ("Sub CA")),
 			"new_cert3"   		: ``(new_cert3 ("Sub CA")),
-			"new_cert_advanced"   	: ``(new_cert_advanced (false)),
+			"new_cert_advanced"   	: ``(new_cert_advanced (false,"Sub CA")),
 			];
 
 	Wizard::CreateDialog();
@@ -79,7 +79,7 @@
 
 	map aliases = $[
 			"new_default1"  	: ``(edit_default1 ()),
-			"new_default2"   	: ``(new_cert_advanced (true)),
+			"new_default2"   	: ``(new_cert_advanced (true,"Default")),
 			"new_default3"   	: ``(edit_default2 ())
 			];
 

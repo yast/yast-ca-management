@@ -52,6 +52,7 @@
     
     /**
      * Creating new CA/Certificate ( 1. step )
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request")     
      * @return `next, 'abort, 'again
      */
     define symbol new_cert1 (string kind) ``{
@@ -63,10 +64,21 @@
 	{
 	    helptext = _("<p>To generate a new CA, some entries are needed.</p>");
 	}
-	else
+	else if (kind == "Client Certificate"
+		 || kind == "Server Certificate")
 	{
 	    helptext = _("<p>To generate a new certificate, some entries are needed.</p>");	    
 	}
+	else if (kind == "Client Request"
+		 || kind == "Server Request")
+	{
+	    helptext = _("<p>To generate a new request, some entries are needed.</p>");	    	    
+	}
+	else
+	{
+	    helptext = "<p>ERROR Wrong kind. FIX IT</p>";	    
+	}
+	    
         // help text 2/5 
         helptext = helptext + _("<p>It depends on the policy defined in the configuration file.</p>");
         // help text 3/5
@@ -78,7 +90,8 @@
 	}
 	else
 	{
-	    if (kind == "Client Certificate")
+	    if (kind == "Client Certificate"
+		||kind == "Client Request")
 	    {
 		helptext = helptext + _("<p><b>Common Name</b> is the name of the user for whom to create the certificate.</p>");
 	    }
@@ -314,7 +327,11 @@
         contents = add (contents, `Password( `id (`id_password), _("&Password:"), CaMgm::password));
         contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password:"), CaMgm::verifyPassword));
 	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 100, 9999, CaMgm::keyLength));
-	contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
+	if (kind != "Client Request"
+	    &&kind != "Server Request")
+	{
+	    contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
+	}
         contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
 
                                 // To translators: dialog label
@@ -334,7 +351,11 @@
 		CaMgm::password = (string) UI::QueryWidget(`id(`id_password), `Value);
 		CaMgm::verifyPassword = (string) UI::QueryWidget(`id(`id_verifyPassword), `Value);
 		CaMgm::keyLength = (integer) UI::QueryWidget(`id(`id_keyLength), `Value);
-		CaMgm::validPeriod = (integer) UI::QueryWidget(`id(`id_validPeriod), `Value);
+		if (kind != "Client Request"
+		    &&kind != "Server Request")
+		{
+		    CaMgm::validPeriod = (integer) UI::QueryWidget(`id(`id_validPeriod), `Value);
+		}
 
 		if (CaMgm::password != CaMgm::verifyPassword)
 		{

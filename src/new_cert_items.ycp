@@ -34,7 +34,8 @@
 
     define string expert_help = advanced_help + _("<P>Wrong entries can make the certificate unusable.</P>");
 
-    define list itemList = [
+    // items for CA and Certificates
+    define list generalItemList = [
        `item(`id(`advanced), _("Advanced Settings"), true,
 	     [
 	      `item(`id(`advanced_basic_constaints),"Basic Constaints"),
@@ -69,6 +70,33 @@
 	      `item(`id(`expert_extendedKeyUsage),"extendedKeyUsage"),
 	      ]
 	     )];
+
+    // items for Requests
+    define list requestItemList = [
+       `item(`id(`advanced), _("Advanced Settings"), true,
+	     [
+	      `item(`id(`advanced_basic_constaints),"Basic Constaints"),
+	      `item(`id(`advanced_challenge_password),"Challenge Password"),
+	      `item(`id(`advanced_key_usage),"Key Usage"),
+	      `item(`id(`advanced_netscape_settings),"Netscape Settings", true,
+		    [
+		     `item(`id(`advanced_netscape_nsComment),"nsComment"),
+		     `item(`id(`advanced_netscape_nsCertType),"nsCertType"),
+		     `item(`id(`advanced_netscape_nsSslServerName),"nsSslServerName"),		     
+		     ]
+		    ),
+	      `item(`id(`advanced_subject_alt_name),"Subject Alt Name"),
+	      `item(`id(`advanced_unstructured_name),"Unstructured Name"),
+	      ]
+	     ),
+       `item(`id(`expert), _("Expert Settings"), true,
+	     [
+	      `item(`id(`expert_key_identifier),"Key Identifier"),
+	      `item(`id(`expert_authorityInfoAccess),"authorityInfoAccess"),
+	      `item(`id(`expert_extendedKeyUsage),"extendedKeyUsage"),
+	      ]
+	     )];
+    
 
     define map itemMap = $[ `advanced : 			$["name"	: _("Advanced Settings"),
 								  "widget"	: `RichText(`id(`id_advanced), advanced_help),

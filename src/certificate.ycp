@@ -50,7 +50,7 @@
 	   "new_cert1"  	: ``(new_cert1 ("Server Certificate")),
 	   "new_cert2"   	: ``(new_cert2 ("Server Certificate")),
 	   "new_cert3"   	: ``(new_cert3 ("Server Certificate")),
-	   "new_cert_advanced"  : ``(new_cert_advanced (false)),
+	   "new_cert_advanced"  : ``(new_cert_advanced (false, "Server Certificate")),
 	   ];
 
 	Wizard::CreateDialog();
@@ -74,7 +74,7 @@
 	  "new_cert1"  	 	: ``(new_cert1 ("Client Certificate")),
 	  "new_cert2"   	: ``(new_cert2 ("Client Certificate")),
 	  "new_cert3"   	: ``(new_cert3 ("Client Certificate")),
-	  "new_cert_advanced"   : ``(new_cert_advanced (false)),
+	  "new_cert_advanced"   : ``(new_cert_advanced (false, "Client Certificate")),
 	  ];
 
 	Wizard::CreateDialog();
@@ -85,6 +85,54 @@
 
 	return ret;
     }
+
+    /**
+     * Creating new Client Request sequence
+     * @return sequence result
+     */
+    define symbol newClientRequestSequence() ``{
+
+	map aliases = $[
+          "new_certinit"   	: ``(new_cert_init ("Client Request")),
+	  "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+	  "new_cert1"  	 	: ``(new_cert1 ("Client Request")),
+	  "new_cert2"   	: ``(new_cert2 ("Client Request")),
+	  "new_cert3"   	: ``(new_cert3 ("Client Request")),
+	  "new_cert_advanced"   : ``(new_cert_advanced (false, "Client Request")),
+	  ];
+
+	Wizard::CreateDialog();
+	Wizard::SetDesktopIcon("ca-management");
+	symbol ret = WizardSequencer(aliases, CaMgm::certificateSequence);
+
+	UI::CloseDialog();
+
+	return ret;
+    }
+
+    /**
+     * Creating new Server Request sequence
+     * @return sequence result
+     */
+    define symbol newServerRequestSequence() ``{
+
+	map aliases = $[
+          "new_certinit"   	: ``(new_cert_init ("Server Request")),
+	  "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+	  "new_cert1"  	 	: ``(new_cert1 ("Server Request")),
+	  "new_cert2"   	: ``(new_cert2 ("Server Request")),
+	  "new_cert3"   	: ``(new_cert3 ("Server Request")),
+	  "new_cert_advanced"   : ``(new_cert_advanced (false, "Server Request")),
+	  ];
+
+	Wizard::CreateDialog();
+	Wizard::SetDesktopIcon("ca-management");
+	symbol ret = WizardSequencer(aliases, CaMgm::certificateSequence);
+
+	UI::CloseDialog();
+
+	return ret;
+    }        
 
     
     /**
@@ -325,8 +373,10 @@
 				      `HSpacing (1),
 				      `MenuButton( _("Add"),
 						   [
-						    `item(`id(`addServer), _("Add Server Certificate") ),
-						    `item(`id(`addClient), _("Add Client Certificate") )
+						    `item(`id(`addServerCerti), _("Add Server Certificate") ),
+						    `item(`id(`addClientCerti), _("Add Client Certificate") ),
+						    `item(`id(`addServerRequest), _("Add Server Request") ),
+						    `item(`id(`addClientRequest), _("Add Client Request") )
 						    ]
 						   ),
 				      `PushButton (`id (`view) , _("View")),
@@ -458,16 +508,26 @@
 					   CaMgm::currentCertificate,
 					   (string) select(table_item, 2, ""));
 	}
-	if (ui == `addServer)
+	if (ui == `addServerCerti)
 	{
 	    newServerCertificateSequence ();
 	    ui = `again;			    
 	}
-	if (ui == `addClient)
+	if (ui == `addClientCerti)
 	{
 	    newClientCertificateSequence ();
 	    ui = `again;			    
-	}	    
+	}
+	if (ui == `addServerRequest)
+	{
+	    newServerRequestSequence ();
+	    ui = `again;			    
+	}
+	if (ui == `addClientRequest)
+	{
+	    newClientRequestSequence ();
+	    ui = `again;			    
+	}	    	
 	return (symbol)ui;
     }
 

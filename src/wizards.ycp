@@ -37,7 +37,7 @@ define symbol newCASequence() ``{
         "new_cert1"  	 	: ``(new_cert1 ("Root CA")),
         "new_cert2"   		: ``(new_cert2 ("Root CA")),
         "new_cert3"   		: ``(new_cert3 ("Root CA")),
-        "new_cert_advanced"   	: ``(new_cert_advanced (false)),
+        "new_cert_advanced"   	: ``(new_cert_advanced (false, "Root CA")),
     ];
 
     Wizard::CreateDialog();

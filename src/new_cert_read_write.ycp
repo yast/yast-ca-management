@@ -33,7 +33,7 @@
     
     /**
      * Values initializing for creating CA/Certificate/Request
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate")
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request")
      * @return `next
      */
     define symbol new_cert_init (string kind) ``{
@@ -122,14 +122,16 @@
 			$["caName": CaMgm::currentCA, "certType":"ca"],
 			ret);
 	}
-	if (kind == "Server Certificate")
+	if (kind == "Server Certificate"
+	    ||kind == "Server Request")
 	{
 	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"server"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
 			$["caName": CaMgm::currentCA, "certType":"server"],
 			ret);			
 	}
-	if (kind == "Client Certificate")
+	if (kind == "Client Certificate"
+	    ||kind == "Client Request")
 	{
 	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"client"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
@@ -534,7 +536,9 @@
 
 	// fillup parameters depending on kind
 	
-	if (kind == "Root CA")
+	if (kind == "Root CA"
+	    ||kind == "Server Request"
+	    ||kind == "Client Request")
 	{
 	    param["caName"] =  CaMgm::CAName;
 	}
@@ -543,12 +547,14 @@
 	    param["caName"] =  CaMgm::currentCA;
 	    param["certType"] =  "server";
 	    param["caPasswd"] = getPassword(CaMgm::currentCA);
+	    param["notext"] = "1";	    
 	}
 	if (kind == "Client Certificate")
 	{
 	    param["caName"] =  CaMgm::currentCA;
 	    param["certType"] =  "client";	    
 	    param["caPasswd"] =  getPassword(CaMgm::currentCA);
+	    param["notext"] = "1";
 	}
 
 	if (kind == "Sub CA")
@@ -563,7 +569,8 @@
 	    param["caName"] =  CaMgm::currentCA;
 	    param["request"] =  CaMgm::currentRequest;
 	    param["certType"] =  CaMgm::requestKind;
-	    param["caPasswd"] = getPassword(CaMgm::currentCA);	    
+	    param["caPasswd"] = getPassword(CaMgm::currentCA);
+	    param["notext"] = "1";	    
 	}
 
 	if (kind != "signRequest")
@@ -612,13 +619,90 @@
 		param["unstructuredName"] = CaMgm::adv_unstructured_name;
 	    }
 	}
+
+	if (kind != "Server Request"
+	    &&kind != "Client Request")
+	{
+	    param["days"] = tostring (CaMgm::validPeriod);
+
+	    if (size(CaMgm::exp_authorityKeyIdentifier) > 0)
+	    {
+		if (CaMgm::exp_cri_authorityKeyIdentifier)
+		{
+		    param["authorityKeyIdentifier"] = "critical," + CaMgm::exp_authorityKeyIdentifier;
+		}
+		else
+		{
+		    param["authorityKeyIdentifier"] = CaMgm::exp_authorityKeyIdentifier;   
+		}
+	    }
+	    if (size(CaMgm::adv_issuer_alt_name_list) > 0
+		|| CaMgm::adv_copy_issuer_alt_name )
+	    {
+		boolean prevFound = false;
+		if (CaMgm::adv_cri_issuer_alt_name)
+		{
+		    param["issuerAltName"] = "critical";
+		    prevFound = true;
+		}
+		else
+		{
+		    param["issuerAltName"] = "";
+		}
+		foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
+		    param["issuerAltName"] = param["issuerAltName"]:"" +
+			(prevFound ? "," : "") +
+			element["kind"]:"" + ":" +
+			element["name"]:"";		    
+		    prevFound = true;
+		});				
+		if (CaMgm::adv_copy_issuer_alt_name)
+		{
+		    param["issuerAltName"] = param["issuerAltName"]:"" +
+			(prevFound ? "," : "") +
+			"issuer:copy";
+		}	
+	    }	
+	    if (size(CaMgm::exp_netscape_nsBaseUrl) > 0)
+	    {
+		param["nsBaseUrl"] = CaMgm::exp_cri_netscape_nsBaseUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsBaseUrl;
+	    }
+	    if (size(CaMgm::exp_netscape_nsRevocationUrl) > 0)
+	    {
+		param["nsRevocationUrl"] = CaMgm::exp_cri_netscape_nsRevocationUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsRevocationUrl;
+	    }
+	    if (size(CaMgm::exp_netscape_nsCaRevocationUrl) > 0)
+	    {
+		param["nsCaRevocationUrl"] =
+		    CaMgm::exp_cri_netscape_nsCaRevocationUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsCaRevocationUrl;
+	    }	
+	    if (size(CaMgm::exp_netscape_nsRenewalUrl) > 0)
+	    {
+		param["nsRenewalUrl"] =
+		    CaMgm::exp_cri_netscape_nsRenewalUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsRenewalUrl;
+	    }	
+	    if (size(CaMgm::exp_netscape_nsCaPolicyUrl) > 0)
+	    {
+		param["nsCaPolicyUrl"] =
+		    CaMgm::exp_cri_netscape_nsCaPolicyUrl ? "critical," : "" +
+		    CaMgm::exp_netscape_nsCaPolicyUrl;
+	    }
+	    if (size(CaMgm::adv_distribution_point) > 0)
+	    {
+		param["crlDistributionPoints"] =
+		    CaMgm::adv_cri_distribution_point ? "critical," : "" +
+		    CaMgm::adv_distribution_point;
+	    }
+	
+	}
+	
 	
 	// fillup parameters which are equal
 	
-
-	param["days"] = tostring (CaMgm::validPeriod);
-
-
 	if (CaMgm::adv_ca != "none")
 	{
 	    if (CaMgm::adv_cri_ca)
@@ -882,17 +966,6 @@
 		param["subjectKeyIdentifier"] = CaMgm::exp_subjectKeyIdentifier;   
 	    }
 	}
-	if (size(CaMgm::exp_authorityKeyIdentifier) > 0)
-	{
-	    if (CaMgm::exp_cri_authorityKeyIdentifier)
-	    {
-		param["authorityKeyIdentifier"] = "critical," + CaMgm::exp_authorityKeyIdentifier;
-	    }
-	    else
-	    {
-		param["authorityKeyIdentifier"] = CaMgm::exp_authorityKeyIdentifier;   
-	    }
-	}
 	if (size(CaMgm::adv_subject_alt_name_list) > 0
 	    || size(CaMgm::emailList) > 1 // without default entry
 	    || CaMgm::adv_copy_subject_alt_name )
@@ -932,61 +1005,6 @@
 		    "email:copy";
 	    }	
 	}	
-	if (size(CaMgm::adv_issuer_alt_name_list) > 0
-	    || CaMgm::adv_copy_issuer_alt_name )
-	{
-	    boolean prevFound = false;
-	    if (CaMgm::adv_cri_issuer_alt_name)
-	    {
-		param["issuerAltName"] = "critical";
-		prevFound = true;
-	    }
-	    else
-	    {
-		param["issuerAltName"] = "";
-	    }
-	    foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
-		param["issuerAltName"] = param["issuerAltName"]:"" +
-		    (prevFound ? "," : "") +
-		    element["kind"]:"" + ":" +
-		    element["name"]:"";		    
-		prevFound = true;
-	    });				
-	    if (CaMgm::adv_copy_issuer_alt_name)
-	    {
-		param["issuerAltName"] = param["issuerAltName"]:"" +
-		    (prevFound ? "," : "") +
-		    "issuer:copy";
-		}	
-	}	
-	if (size(CaMgm::exp_netscape_nsBaseUrl) > 0)
-	{
-	    param["nsBaseUrl"] = CaMgm::exp_cri_netscape_nsBaseUrl ? "critical," : "" +
-		CaMgm::exp_netscape_nsBaseUrl;
-	}
-	if (size(CaMgm::exp_netscape_nsRevocationUrl) > 0)
-	{
-	    param["nsRevocationUrl"] = CaMgm::exp_cri_netscape_nsRevocationUrl ? "critical," : "" +
-		CaMgm::exp_netscape_nsRevocationUrl;
-	}
-	if (size(CaMgm::exp_netscape_nsCaRevocationUrl) > 0)
-	{
-	    param["nsCaRevocationUrl"] =
-		CaMgm::exp_cri_netscape_nsCaRevocationUrl ? "critical," : "" +
-		CaMgm::exp_netscape_nsCaRevocationUrl;
-	}	
-	if (size(CaMgm::exp_netscape_nsRenewalUrl) > 0)
-	{
-	    param["nsRenewalUrl"] =
-		CaMgm::exp_cri_netscape_nsRenewalUrl ? "critical," : "" +
-		CaMgm::exp_netscape_nsRenewalUrl;
-	}	
-	if (size(CaMgm::exp_netscape_nsCaPolicyUrl) > 0)
-	{
-	    param["nsCaPolicyUrl"] =
-		CaMgm::exp_cri_netscape_nsCaPolicyUrl ? "critical," : "" +
-		CaMgm::exp_netscape_nsCaPolicyUrl;
-	}
 	if (size(CaMgm::adv_nsSslServerName) > 0)
 	{
 	    param["nsSslServerName"] =
@@ -1004,12 +1022,6 @@
 	    param["authorityInfoAccess"] =
 		CaMgm::exp_cri_authorityInfoAccess ? "critical," : "" +
 		CaMgm::exp_authorityInfoAccess;
-	}
-	if (size(CaMgm::adv_distribution_point) > 0)
-	{
-	    param["crlDistributionPoints"] =
-		CaMgm::adv_cri_distribution_point ? "critical," : "" +
-		CaMgm::adv_distribution_point;
 	}
 	
 	if (kind == "Root CA")
@@ -1040,9 +1052,15 @@
 	}
 	if (kind == "signRequest")
 	{
-	    y2milestone("CaManagement::IssueCertificate(%1)", param);	
+//	    y2milestone("CaManagement::IssueCertificate(%1)", param);	
 	    return YaPI::CaManagement::IssueCertificate (param) == nil ? false:true;	    
-	}	
+	}
+	if (kind == "Server Request"
+	    ||kind == "Client Request")
+	{
+//	    y2milestone("CaManagement::AddRequest(%1)", param);	
+	    return YaPI::CaManagement::AddRequest (param) == nil ? false:true;	    	    
+	}
     }
 
     /**

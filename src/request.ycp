@@ -49,7 +49,7 @@
 	   "req_init"   	: ``(signRequestInit ()),
 	   "req_sign1"  	: ``(signRequest1 ()),
 	   "req_sign2"   	: ``(signRequest2 ()),
-	   "req_advanced"   	: ``(new_cert_advanced (false)),	   
+	   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),	   
 	   ];
 	
 	map requestSequence = $[
