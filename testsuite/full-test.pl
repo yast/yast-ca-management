@@ -24,6 +24,7 @@ my $req4 = "";
 my $crt1 = "";
 my $crt2 = "";
 my $crt3 = "";
+my $subca = "";
 my %rev = ();
 
 sub printError {
@@ -667,6 +668,8 @@ sub T23_AddSubCA {
                 'localityName'          => 'Nuernberg',
                 'organizationName'      => 'My GmbH',
                 'basicConstraints'      => 'CA:TRUE, pathlen:2',
+                'subjectKeyIdentifier'  => 'hash',
+                'authorityKeyIdentifier'=> 'keyid:always,issuer:always',
                 'crlDistributionPoints' => 'URI:http://my.linux.tux/',
                };
 
@@ -676,10 +679,109 @@ sub T23_AddSubCA {
         my $err = YaPI::CaManagement->Error();
         printError($err);
     } else {
+        $subca = $res;
         print "OK\n";
         print STDERR Data::Dumper->Dump([$res])."\n";
     }
 }
+
+sub T23a_enhanced_verify {
+    print STDERR "------------------- T23a_enhanced_verify ---------------------\n";
+    print "------------------- T23a_enhanced_verify ---------------------\n";
+    my $newcert = "";
+    my $data = {};
+
+    $data = {
+             'caName'                => 'Test3_SuSE_CA',
+             'certType'              => 'client', 
+             'keyPasswd'             => 'system',
+             'caPasswd'              => 'tralla',
+             'commonName'            => "My Request 1",
+             'emailAddress'          => 'my@linux.tux',
+             'keyLength'             => '1024',
+             'days'                  => '365', 
+             'countryName'           => 'DE',
+             'localityName'          => 'Nuremberg',
+             'stateOrProvinceName'   => 'Bavaria',
+             'organizationalUnitName'=> 'IT Abteilung',
+             'organizationName'      => 'My Linux Tux GmbH',
+             'days'                  => '365',
+            };
+        
+    my $res = YaPI::CaManagement->AddCertificate($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        $newcert = $res;
+        print "OK: \n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+
+    $data = {
+             'caName'      => 'Test3_SuSE_CA',
+             'caPasswd'    => 'tralla',
+             'days'        => 8
+            };
+   
+    $res = YaPI::CaManagement->AddCRL($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+
+    $data = {
+             'caName'      => 'Test1_SuSE_CA',
+             'caPasswd'    => 'system',
+             'certificate' => $subca
+            };
+    
+    $res = YaPI::CaManagement->RevokeCertificate($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+
+    $data = {
+             'caName'      => 'Test1_SuSE_CA',
+             'caPasswd'    => 'system',
+             'days'        => 8
+            };
+   
+    $res = YaPI::CaManagement->AddCRL($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+
+    $data = {
+             caName => 'Test3_SuSE_CA', 
+             certificate => $newcert 
+            };
+    
+    my $Vret = YaPI::CaManagement->Verify($data);
+    if(not defined $Vret) {
+        my $err = YaPI::CaManagement->Error();
+        print "Verify: false positive ".$err->{description}."\n";
+    } else {
+        print STDERR "ERROR: ".$newcert." == $Vret\nThis certificate should be revoked";
+        exit 1;
+    }
+}
+
 
 sub T24_ExportCAToLDAP {
 
@@ -1934,6 +2036,7 @@ T20_ExportCertificate();
 T21_ExportCRL();
 T22_Verify();
 T23_AddSubCA();
+T23a_enhanced_verify();
 #24_ExportCAToLDAP();
 #25_ExportCRLToLDAP();
 T26_UpdateDB();
