@@ -473,6 +473,11 @@ sub AddRootCA {
                                 code    => "CHECK_PARAM_FAILED");
     }
 
+    if (!defined $data->{"basicConstraints"} || $data->{"basicConstraints"} !~ /CA:TRUE/i) {
+        return $self->SetError( summary => "'basicConstraints' says, this is no CA",
+                                code    => "CHECK_PARAM_FAILED");
+    }
+
     # Set default values, if the values are not set and modify the
     # config with this values.
     if (!defined $data->{"keyLength"} || $data->{"keyLength"} !~ /^\d{3,4}$/ ) {
@@ -1471,7 +1476,7 @@ following Hash keys:
 
 * emailAddress
 
-* country
+* countryName
 
 * stateOrProvinceName
 
@@ -1596,6 +1601,12 @@ sub UpdateDB {
             return $self->SetError(%{SCR->Error(".caTools")});
         }
     } else {
+        # test password first, for a better error message
+        if(not defined SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'}, 
+                                                                 CACERT => 1})
+          ) {
+            return $self->SetError(%{SCR->Error(".caTools")});
+        }
 
         my $hash = {
                     CAKEY  => "$CAM_ROOT/$caName/cacert.key",
@@ -2837,7 +2848,7 @@ sub AddSubCA {
                                 code    => "CHECK_PARAM_FAILED");
     }
 
-    if (!defined $data->{"basicConstraints"} || $data->{"basicConstraints"} !~ /CA:TRUE/) {
+    if (!defined $data->{"basicConstraints"} || $data->{"basicConstraints"} !~ /CA:TRUE/i) {
         return $self->SetError( summary => "'basicConstraints' says, this is no CA",
                                 code    => "CHECK_PARAM_FAILED");
     }
