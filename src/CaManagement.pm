@@ -15,7 +15,7 @@ our %TYPEINFO;
 
 my $CAM_ROOT = "/var/lib/YaST2/CAM";
 
-BEGIN { $TYPEINFO{ReadCAList} = ["function", "list"]; }
+BEGIN { $TYPEINFO{ReadCAList} = ["function", ["list", "strings"]]; }
 sub ReadCAList {
     my $self   = shift;
     my $caList = undef;
@@ -26,7 +26,7 @@ sub ReadCAList {
         #return $self->SetError(code => "SCR_READ_ERROR",
         #                summary => "Can not call SCR::Read(.caTools.caList)");
     }
-    return $ret;
+    return @$ret;
 }
 
 
