@@ -74,6 +74,7 @@ T45_CheckCRL3();
 T46_ReadRequest();
 T47_ReadRequestList();
 T48_ImportRequest();
+T49_DeleteRequest();
 
 sub printError {
     my $err = shift;
@@ -1750,6 +1751,27 @@ nwR1IKGnTcEx4CkTLp4lTISAj/2tE8jMPmTnGEO7dnkX2wW7Eb0Z5gDsVTzGh580
                };
     
     my $res = YaPI::CaManagement->ImportRequest($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = YaPI::CaManagement->Error();
+        printError($err);
+    } else {
+        print "OK:\n";
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
+
+sub T49_DeleteRequest {
+    print STDERR "------------------- T49_DeleteRequest ---------------------\n";
+    print "------------------- T49_DeleteRequest ---------------------\n";
+
+    my $data = {
+                'caName'   => 'Test1_SuSE_CA',
+                'request'  => "ea394b11c9650362cdfbf5f82c59fef9",
+                'caPasswd' => 'system'
+               };
+    
+    my $res = YaPI::CaManagement->DeleteRequest($data);
     if( not defined $res ) {
         print STDERR "Fehler\n";
         my $err = YaPI::CaManagement->Error();
