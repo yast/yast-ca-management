@@ -58,10 +58,25 @@
     define void showErrorCaManagement () ``{
         map<string,any> messageMap = YaPI::Error();
 	string message = messageMap["summary"]:"";
+	string description = messageMap["description"]:"";
         if (size (message) > 0)
         {
-	    y2error ("Showing error: %1", message);
-            Popup::Error (message);
+	    y2error ("Showing error: %1", messageMap);
+	    if (size (description) > 0)
+	    {
+		if (!Popup::AnyQuestion( _("Error"),
+					 message,
+					 Label::OKButton(),
+					 _("Details"),
+					 `focus ))
+		{
+		    Popup::Error (description);
+		}
+	    }
+	    else
+	    {
+		Popup::Error (message);		
+	    }
         }
 	return;
     }
