@@ -121,6 +121,7 @@ global boolean  prop_countryChanged = false;
 global string 	prop_country = "GB";
 global boolean  prop_passwordChanged = false;
 global string 	prop_password = "";
+global boolean  prop_emailChanged = false;
 global string 	prop_email = "";
 global string 	prop_organisation = "";
 global string 	prop_organisationUnit = "";
