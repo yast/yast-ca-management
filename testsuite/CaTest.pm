@@ -20,7 +20,7 @@ my $exampleCA = "";
 my $exampleReq = "";
 
 sub run {
-    test_AddRootCA();
+#    test_AddRootCA();
     test_ReadCAList();
 #    test_AddRootCA2();
 #    test_ReadCertificateDefaults();
@@ -28,8 +28,8 @@ sub run {
 #    test_ReadCA();
 #    test_AddRequest();
 #    test_issueCertificate();
-    test_AddCertificate();
-
+#    test_AddCertificate();
+    test_ReadCertificateList();
 
     return 1;
 }
@@ -228,7 +228,7 @@ sub test_AddCertificate {
                 'certType'              => 'client',
                 'keyPasswd'             => 'system',
                 'caPasswd'              => 'system',
-                'commonName'            => 'My Request6',
+                'commonName'            => 'My Request11',
                 'emailAddress'          => 'my2@tait.linux.tux',
                 'keyLength'             => '2048',
                 'days'                  => '365',
@@ -236,7 +236,7 @@ sub test_AddCertificate {
                 'localityName'          => 'Nuremberg',
                 'stateOrProvinceName'   => 'Bavaria',
                 'organizationalUnitName'=> 'IT Abteilung',
-                'organizationName'      => 'My Linux Tux ',
+                'organizationName'      => 'My Linux Tux / Inc',
                 'days'                  => '365',
                 'crlDistributionPoints' => "URI:ldap://my.linux.tux/?cn=$caName%2Cou=CA%2Cdc=suse%2Cdc=de",
                 'nsComment'             => "\"Heide Witzka, Herr Kapitän\"",
@@ -253,5 +253,24 @@ sub test_AddCertificate {
     }
 }
 
+sub test_ReadCertificateList {
+
+    my $data = {
+                caName => $exampleCA,
+                caPasswd => "system"
+               };
+
+    print STDERR "trying to call YaST::caManagement->ReadCertificateList()\n";
+    print STDERR "with caName = '$exampleCA'\n";
+    
+    my $res = CaManagement->ReadCertificateList($data);
+    if( not defined $res ) {
+        print STDERR "Fehler\n";
+        my $err = CaManagement->Error();
+        printError($err);
+    } else {
+        print STDERR Data::Dumper->Dump([$res])."\n";
+    }
+}
 
 1;
