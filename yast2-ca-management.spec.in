@@ -30,6 +30,8 @@ Summary:	CA Management
 @yncludedir@/ca-management/*
 @clientdir@/ca-mgm.ycp
 @clientdir@/ca_mgm.ycp
+@clientdir@/ca_mgm_proposal.ycp
+@clientdir@/ca_select_proposal.ycp
 @moduledir@/CaMgm.y*
 @moduledir@/YaPI/CaManagement.pm
 @moduledir@/YaST/caUtils.pm
