@@ -22,6 +22,7 @@ myinclude_DATA =		\
 	certDefault.ycp		\
 	crlDefault.ycp		\
 	dialog-ca.ycp		\
+	commandline.ycp		\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	

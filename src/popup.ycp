@@ -17,6 +17,7 @@
     import "Popup";
     import "YaPI";    
     import "YaPI::CaManagement";
+    import "CommandLine";
 
     /**
      * Popup to confirm after finish is pressed
@@ -62,18 +63,20 @@
         if (size (message) > 0)
         {
 	    y2error ("Showing error: %1", messageMap);
-	    if (size (description) > 0)
+	    if(CommandLine::StartGUI())
 	    {
-		if (!Popup::AnyQuestion( Label::ErrorMsg(),
-					 message,
-					 Label::OKButton(),
-					 _("Details"),
-					 `focus ))
+		if (size (description) > 0)
 		{
-		    description = "<pre>" + description + "</pre>";		    
-		    UI::OpenDialog (`opt(`decorated ),
-				    `HBox( `VSpacing(16),
-					   `VBox (
+		    if (!Popup::AnyQuestion( Label::ErrorMsg(),
+					     message,
+					     Label::OKButton(),
+					     _("Details"),
+					     `focus ))
+		    {
+			description = "<pre>" + description + "</pre>";		    
+			UI::OpenDialog (`opt(`decorated ),
+					`HBox( `VSpacing(16),
+					       `VBox (
 						  `HSpacing (100),
 						  // popup window header
 						  `Heading (message),
@@ -83,21 +86,26 @@
 						  // push button label
 						  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
 						  )
-					   )
-				    );
+					       )
+					);
 
-		    UI::SetFocus (`id(`ok));
-		    UI::UserInput ();
-		    UI::CloseDialog ();	    
+			UI::SetFocus (`id(`ok));
+			UI::UserInput ();
+			UI::CloseDialog ();	    
+		    }
+		}
+		else
+		{
+		    Popup::Error (message);		
 		}
 	    }
 	    else
 	    {
-		Popup::Error (message);		
+		// output to tty
+		CommandLine::Print (message);
 	    }
         }
 	return;
     }
-
 
 }
