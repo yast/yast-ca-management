@@ -16,7 +16,7 @@ X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstClonable=true
 
-Icon=ca-management
+Icon=yast-ca_mgm
 Exec=/sbin/yast2 ca_mgm
 
 Name=CA Management

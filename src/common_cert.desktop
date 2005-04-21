@@ -16,7 +16,7 @@ X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstResource=
 
-Icon=ca-management
+Icon=yast-common_cert
 Exec=/sbin/yast2 common_cert
 
 Name=Import Common Server Certificate 
