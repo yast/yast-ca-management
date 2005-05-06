@@ -411,7 +411,7 @@ boolean Import (map settings) {
 	    }
 	    else
 	    {
-		CaMgm::autoYaSTSettings["server_commonName"] = strip(retmap["stdout"]:"");
+		CaMgm::autoYaSTSettings["server_commonName"] = strip(retmap["stdout"]:"linux.site");
 	    }
 	}
 	else
@@ -593,7 +593,7 @@ boolean Write() {
 		Report::Error(_("Cannot evaluate the name of the local machine"));
 		success = false;
 	    }
-	    CaMgm::prop_server_commonName = strip(retmap["stdout"]:"");
+	    CaMgm::prop_server_commonName = strip(retmap["stdout"]:"linux.site");
 	}
 	else
 	{
