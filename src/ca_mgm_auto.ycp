@@ -130,9 +130,6 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 							`HWeight (1,`TextEntry( `id (`id_state), _("&State:"),
 										CaMgm::autoYaSTSettings["state"]:""))
 							),
-						  `Left(`CheckBox(`id(`rootPassword), `opt(`notify),
-								  _("Take root password"),
-								  CaMgm::autoYaSTSettings["takeRootPassword"]:true)),
 						  `HBox(`HWeight (1,`Password(`id(`pw1), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
 							`HSpacing(2), 
 							`HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password:"), confirmPassword))
@@ -332,12 +329,8 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 		}
 		else
 		{
-		    CaMgm::autoYaSTSettings["takeRootPassword"] = (boolean) UI::QueryWidget(`id(`rootPassword), `Value);
 		    CaMgm::autoYaSTSettings["takeLocalServerName"] = (boolean) UI::QueryWidget(`id(`localServerName), `Value);	
-		    if (!CaMgm::autoYaSTSettings["takeRootPassword"]:true)
-		    {
-			CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw1), `Value);
-		    }
+		    CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw1), `Value);
 		    if (!CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
 		    {
 			CaMgm::autoYaSTSettings["server_commonName"] = (string) UI::QueryWidget(`id(`id_serverName), `Value);
@@ -385,17 +378,9 @@ boolean Import (map settings) {
     else
     {
 	//create one
-	CaMgm::autoYaSTSettings["takeRootPassword"] = settings["takeRootPassword"]:true;
-	if (settings["takeRootPassword"]:true)
+	if (haskey (settings, "password"))
 	{
-	    CaMgm::prop_password = Users::GetRootPassword();
-	}
-	else
-	{
-	    if (haskey (settings, "password"))
-	    {
-		CaMgm::autoYaSTSettings["password"] = settings["password"]:"";
-	    }
+	    CaMgm::autoYaSTSettings["password"] = settings["password"]:"";
 	}
     
 	CaMgm::autoYaSTSettings["takeLocalServerName"] = settings["takeLocalServerName"]:true;
@@ -520,13 +505,13 @@ string Summary() {
 	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["state"]:_("[not set]"));
     
 	summary = Summary::AddHeader (summary, _("Password"));
-	if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
+	if (size (CaMgm::autoYaSTSettings["password"]:"") <= 0 )
 	{
-	    summary = Summary::AddLine (summary, _("[root password]"));
+	    summary = Summary::AddLine (summary, _("[not set]"));
 	}
 	else
 	{
-	    summary = Summary::AddLine (summary, _("[manually set]"));
+	    summary = Summary::AddLine (summary, _("[set]"));
 	}
     }
     
@@ -609,15 +594,7 @@ boolean Write() {
 	CaMgm::prop_organisationUnit = CaMgm::autoYaSTSettings["organisationUnit"]:"";
 	CaMgm::prop_locality = CaMgm::autoYaSTSettings["locality"]:"";
 	CaMgm::prop_state = CaMgm::autoYaSTSettings["state"]:"";
-
-	if (CaMgm::autoYaSTSettings["takeRootPassword"]:true)
-	{
-	    CaMgm::prop_password = Users::GetRootPassword();
-	}
-	else
-	{
-	    CaMgm::prop_password = CaMgm::autoYaSTSettings["password"]:Users::GetRootPassword();
-	}
+	CaMgm::prop_password = CaMgm::autoYaSTSettings["password"]:"";
     }
 
     Progress::NextStage();
