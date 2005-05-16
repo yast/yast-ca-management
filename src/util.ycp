@@ -250,7 +250,7 @@
 	string port = "";
 	list<string> dn = [];
 	string binddn = "";
-	map default = nil;
+	map defaultv = nil;
 	term passwordTerm = `VBox();
 
 	y2milestone ("exportToLDAP type: %1; CAname: %2, commonName: %3, email: %4, certificate: %5, subjectAltName: %6",
@@ -262,7 +262,7 @@
 	{
 	    if (size (subjectAltName) > 0)
 	    {
-		default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+		defaultv = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
 									"caName":CAname,
 									"commonName":commonName,
 									"emailAddress":email,
@@ -270,7 +270,7 @@
 	    }
 	    else
 	    {
-		default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+		defaultv = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
 									"caName":CAname,
 									"commonName":commonName,
 									"emailAddress":email]);
@@ -284,11 +284,11 @@
 	}
 	else
 	{
-	    default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+	    defaultv = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
 								    "caName":CAname]);
 	}
 
-	if (default == nil)
+	if (defaultv == nil)
 	{
 	    // Error: Checking if there is have already a config has been established
 	    map<string,any> messageMap = YaPI::Error();
@@ -346,14 +346,14 @@ Enter the required LDAP password.
 			{
 			    if (kind == "CERT")
 			    {	
-				default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+				defaultv = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
 											"caName":CAname,
 											"commonName":commonName,
 											"emailAddress":email]);
 			    }
 			    else
 			    {
-				default = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
+				defaultv = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
 											"caName":CAname]);
 			    }			    
 			}
@@ -368,19 +368,19 @@ Enter the required LDAP password.
 	    }
 	}
 
-	if (default == nil)
+	if (defaultv == nil)
 	{
 	    showErrorCaManagement ();			    	    
 	}	
 	else
 	{
-	    hostname = default["ldapHostname"]:"";
-	    port = default["ldapPort"]:"";
-	    dn = default["destinationDN"]:[];
-	    binddn = default["BindDN"]:"";
+	    hostname = defaultv["ldapHostname"]:"";
+	    port = defaultv["ldapPort"]:"";
+	    dn = defaultv["destinationDN"]:[];
+	    binddn = defaultv["BindDN"]:"";
 	}
 
-	y2milestone("ReadLDAPExportDefaults() returned %1", default);
+	y2milestone("ReadLDAPExportDefaults() returned %1", defaultv);
 	
 	UI::OpenDialog (`opt(`decorated ),
 			`HBox( `HSpacing(2),

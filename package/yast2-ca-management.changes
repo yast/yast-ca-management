@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon May 16 09:49:37 CEST 2005 - jsrain@suse.cz
+
+- renamed 'default' variable
+
+-------------------------------------------------------------------
 Wed Mar 30 15:45:04 CEST 2005 - schubi@suse.de
 
 - Bug 63125 - yast2-ca-mgm: hierarchical display of CAs would be 
