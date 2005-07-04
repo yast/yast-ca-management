@@ -246,7 +246,7 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 		}
 		else if ( size(confirmPassword) < 4)
 		{
-		    Popup::Error(_("Password lenght should be greater than 3 characters."));
+		    Popup::Error(_("Password length should be greater than 3 characters."));
 		    ret = `again;
 		}
 	    }
@@ -292,7 +292,7 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 		}
 		else if ( size(confirmPassword) < 4)
 		{
-		    Popup::Error(_("Password lenght should be greater than 3 characters."));
+		    Popup::Error(_("Password length should be greater than 3 characters."));
 		    ret = `again;
 		}		
 	    }	    
