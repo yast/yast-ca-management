@@ -206,9 +206,7 @@ Here, change these <b>default settings</b>.
 							 `Left(`RadioButton(`id(`none), `opt( `notify),
 									    _("Do &Not Create CA and Certificate"))),
 							 `Left(`RadioButton(`id(`disk), `opt( `notify),
-									    _("Import CA and Certificate from D&isk"))),
-							 `Left(`RadioButton(`id(`expert), `opt( `notify),
-									    _("Call CA Management for &Expert Settings")))
+									    _("Import CA and Certificate from D&isk")))
 							 )
 						   )
 			     );
@@ -216,6 +214,12 @@ Here, change these <b>default settings</b>.
     string help_text = _("<p>
 In this frame, select the desired installation method for <b>CAs</b> and <b>certificates</b>
 while completing the installation.
+</p>
+");
+
+    help_text = help_text + _("<p>
+You also have the possibility of creating the default CA and certificate in installed system, 
+if you do not want to create/import it now.
 </p>
 ");
 

@@ -152,10 +152,6 @@
 	{
 	    proposal = HTML::Para(_("Importing a CA and certificate from file."));
 	}	
-	else if (CaMgm::prop_selection == `expert)
-	{
-	    proposal = HTML::Para(_("Calling CA Management for expert settings."));
-	}	
 	
 	ret = add (ret, "preformatted_proposal", proposal);
 	if ( ((list<string>) splitstring (CaMgm::prop_server_commonName, "."))[0]:"" == "linux")
@@ -200,10 +196,6 @@
 	    else if (CaMgm::prop_selection == `disk)
 	    {
 		success = importCertificateFromDisk ();
-	    }
-	    else if (CaMgm::prop_selection == `expert)
-	    {
-		WFM::CallFunction( "ca_mgm", [] );	    
 	    }
 
 	    CaMgm::prop_settingsWritten = true;
