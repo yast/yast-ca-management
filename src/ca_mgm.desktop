@@ -21,7 +21,7 @@ Icon=yast-ca_mgm
 Exec=/sbin/yast2 ca_mgm
 
 Name=CA Management
-GenericName=Configure CAs, Certificates and Requests
+GenericName=Configure CAs, certificates, and requests
 Name[de]=CA Management
 GenericName[de]=Konfiguration von CAs, Zertifikate und Requests
 
