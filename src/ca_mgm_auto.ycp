@@ -112,7 +112,7 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 							`HWeight (1,`TextEntry( `id (`id_commonName), _("&Common Name:"),
 										CaMgm::autoYaSTSettings["ca_commonName"]:""))
 							),
-						  `HBox(`HWeight (1,`TextEntry(`id(`email), _("Email:"),
+						  `HBox(`HWeight (1,`TextEntry(`id(`email), _("E-Mail"),
 									       CaMgm::autoYaSTSettings["server_email"]:"")),
 							`HSpacing(2), 
 							`HWeight (1,`ComboBox( `id (`id_country), _("C&ountry:"),
@@ -535,14 +535,14 @@ boolean Write() {
     // We do not set help text here, because it was set outside
     Progress::New(caption, " ", steps, [
 	    /* Progress stage 1/2 */
-	    _("Read Server Information..."),
+	    _("Read server information"),
 	    /* Progress stage 2/2 */
-	    _("Creating the Default CA and Server Certificate")
+	    _("Create the default CA and server certificate")
 	], [
 	    /* Progress stage 1/2 */
-	    _("Read Server Information..."),
+	    _("Read server information"),
 	    /* Progress step 2/2 */
-	    _("Creating the Default CA and Server Certificate..."),
+	    _("Creating the default CA and server certificate..."),
 	    /* Progress finished */
 	    _("Finished")
 	],
@@ -575,7 +575,7 @@ boolean Write() {
 	    y2milestone("Hostname :%1", retmap);
 	    if (retmap["exit"]:0 != 0)
 	    {
-		Report::Error(_("Cannot evaluate the name of the local machine"));
+		Report::Error(_("Cannot evaluate the name of the local machine."));
 		success = false;
 	    }
 	    CaMgm::prop_server_commonName = strip(retmap["stdout"]:"linux.site");

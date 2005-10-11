@@ -95,7 +95,7 @@ Here, change these <b>default settings</b>.
 				     `HSpacing(2), 
 				     `HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password:"), confirmPassword))
                                     ),
-			       `HBox(`HWeight (1,`TextEntry(`id(`email), _("Email:"), CaMgm::prop_email)),
+			       `HBox(`HWeight (1,`TextEntry(`id(`email), _("E-Mail"), CaMgm::prop_email)),
 				     `HSpacing(2), 
 				     `HWeight (1,`Empty())
                                      )

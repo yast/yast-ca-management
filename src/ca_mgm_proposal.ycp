@@ -135,12 +135,13 @@
 					       _("Server Name: ") + CaMgm::prop_server_commonName,
 					       _("Country: ") + CaMgm::prop_country,
 					       _("Password: ") + passwordString,
-					       _("Email: ") + CaMgm::prop_email
+					       _("E-Mail") + CaMgm::prop_email
 					       ] );
 	    if ( size(CaMgm::prop_password) < 4)
 	    {
-		ret = add( ret, "warning", _("The root password is to short for using it as password for the certificates. 
- Please enter a valid password for the certificates or disable creating  certificates."));
+		ret = add( ret, "warning", _("The root password is too short for use as the password for the certificates. 
+ Enter a valid password for the certificates or disable certificate creation.
+"));
 		ret = add( ret, "warning_level", `blocker );
 	    }
 	}

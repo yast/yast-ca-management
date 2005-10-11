@@ -278,7 +278,7 @@
 	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("Certificate &Password:")));
 	    passwordTerm = add (passwordTerm, `HBox(
 						    `Password(  `id (`p12Passwd), _("&New Password:")),
-						    `Password( `id (`verifyPassword), _("&verify Password:"))
+						    `Password( `id (`verifyPassword), _("&Verify Password"))
 						    )
 				);
 	}
@@ -538,8 +538,8 @@ Enter the required LDAP password.
 								 )
 					       ),
 				      `HBox(
-					    `Password( `id (`PK12password), _("&new Password:")),
-					    `Password( `id (`verifyPassword), _("&verify Password:"))
+					    `Password( `id (`PK12password), _("&New Password")),
+					    `Password( `id (`verifyPassword), _("&Verify Password"))
 					    ),				      
 				      `HBox ( 
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
@@ -809,8 +809,8 @@ Enter the required LDAP password.
 					       ),
 				      `Password( `id (`keyPassword), _("Certificate &Password:")),
 				      `HBox(
-					    `Password( `id (`PK12password), _("&new Password:")),
-					    `Password( `id (`verifyPassword), _("&verify Password:"))
+					    `Password( `id (`PK12password), _("&New Password")),
+					    `Password( `id (`verifyPassword), _("&Verify Password"))
 					    ),
 				      `HBox ( 
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
