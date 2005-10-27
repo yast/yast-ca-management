@@ -161,8 +161,7 @@ symbol runCADialog () {
 			    ];
 
     term contents =
-	`Top (
-	    `VBox( `opt ( `hvstretch ),
+	      `VBox( `opt ( `hvstretch ),
 		   `Left(`Heading(_("CA Name: ") + CaMgm::currentCA)),
 		   // Here start Tabs
 		   // FIXME: after `Tab implementation
@@ -177,8 +176,7 @@ symbol runCADialog () {
 		    DumbTabs (tab_terms ,
 			      `ReplacePoint (`id (`tabContents ), getDialogCATab (current_tab)))
 		    )
-		   )
-	    );
+		     );
 
     // FIXME: Only one help is used for all tabs. Maybe would be better to change the help for every single tab.
     Wizard::SetContentsButtons ( caption, contents, getHelpText (current_tab),
