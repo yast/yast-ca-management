@@ -1,5 +1,5 @@
 ###############################################################
-# Copyright 2004, Novell, Inc.  All rights reserved.
+# Copyright 2004,2005 Novell, Inc.  All rights reserved.
 #
 # $Id$
 ###############################################################
@@ -380,14 +380,15 @@ crlDistributionPoints URI:<URL>[,URI:<URL>,...]
 use strict;
 use vars qw(@ISA);
 
+use LIMAL::CaMgm;
 use YaST::YCP qw(Boolean);
 use YaST::caUtils;
 use ycp;
 use URI::Escape;
 use X500::DN;
 use MIME::Base64;
-use Digest::MD5 qw(md5_hex);
-use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now);
+#use Digest::MD5 qw(md5_hex);
+#use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now);
 
 
 use YaPI;
@@ -429,13 +430,33 @@ EXAMPLE:
 BEGIN { $TYPEINFO{ReadCAList} = ["function", ["list", "string"]]; }
 sub ReadCAList {
     my $self = shift;
-    my $caList = undef;
+    my $repository = shift || undef;
 
-    my $ret = SCR->Read(".caTools.caList");
-    if ( not defined $ret ) {
-        return $self->SetError(%{SCR->Error(".caTools")});
+    my @ret;
+
+    eval {
+        my $list = undef;
+        if(defined $repository) {
+
+            $list = LIMAL::CaMgm::CA::getCAList($repository);
+        
+        } else {
+
+            $list = LIMAL::CaMgm::CA::getCAList();
+        }
+        for(my $it = $list->begin();
+            !$list->iterator_equal($it, $list->end());
+            $list->iterator_incr($it))
+          {
+              push(@ret, $list->iterator_value($it));
+          }
+    };
+    if($@) {
+        return $self->SetError( summary     => __("Cannot read CA list"), 
+                                description => "$@",
+                                code        => "LIMAL_CALL_FAILED");
     }
-    return $ret;
+    return \ @ret;
 }
 
 =item *
@@ -467,41 +488,37 @@ EXAMPLE:
 BEGIN { $TYPEINFO{ReadCATree} = ["function", ["list", ["list", "string"]]]; }
 sub ReadCATree {
     my $self = shift;
-    my $caName = undef;
-    my %caHash = ();
-    my $result = [];
+    my $repository = shift || undef;
+    my @result ;
 
-    my $caList = $self->ReadCAList();
-    return undef if(! defined $caList);
+    eval {
+        my $tree = undef;
 
-    foreach $caName (@$caList) {
-        my $ca = $self->ReadCA({'caName' => $caName, 'type' => 'parsed'});
-        return undef if(! defined $ca);
-
-        $caHash{$caName} = [$ca->{'DN'}, $ca->{'ISSUER'}]
-    }
-
-    foreach $caName (keys %caHash) {
-
-        if($caHash{$caName}[0] eq $caHash{$caName}[1]) {
-            # root CA
-            unshift(@$result, [$caName, '']);
+        if(defined $repository) {
+            
+            $tree = LIMAL::CaMgm::CA::getCATree($repository);
+        
         } else {
 
-            # sub CA; find caName of the issuer
-            foreach my $d (keys %caHash) {
-                                         
-                if($caHash{$caName}->[1] eq $caHash{$d}->[0]) {
-                    push(@$result, [$caName, $d]);
-                    last;
-                }
-            }
+            $tree = LIMAL::CaMgm::CA::getCATree();
+
         }
+        for(my $it1 = $tree->begin();
+            !$tree->iterator_equal($it1, $tree->end());
+            $tree->iterator_incr($it1))
+          {
+              my $pair = $tree->iterator_value($it1);
+              my @in_list = ($pair->getitem(0), $pair->getitem(1));
+              push(@result, \@in_list);
+          }
+    };
+    if($@) {
+        return $self->SetError( summary     => __("Cannot read CA tree"), 
+                                description => "$@",
+                                code        => "LIMAL_CALL_FAILED");
     }
 
-    $result = [ sort { $a->[0] cmp $b->[0] if(ref($a) and ref($b)) } @$result ];
-
-    return $result;
+    return \@result;
 }
 
 =item *
@@ -642,129 +659,253 @@ sub AddRootCA {
     if (!defined $data->{"days"}) {
         $data->{"days"} = 3650;
     }
-    if (not SCR->Write(".caTools.caInfrastructure", $data->{"caName"})) {
-        return $self->SetError(%{SCR->Error(".caTools")});
-    }
-
-    my $retCode = SCR->Execute(".target.bash",
-                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if (! defined $retCode || $retCode != 0) {
-        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
-    SCR->UnmountAgent(".CAM.openssl_cnf");
-
-    # check this values, if they were accepted from the openssl command
-    my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
-                     'organizationName', 'organizationalUnitName',
-                     'commonName', 'emailAddress',
-                     'challengePassword', 'unstructuredName');
-
-    foreach my $DN_Part (@DN_Values) {
-        my $ret = YaST::caUtils->checkValueWithConfig($DN_Part, $data);
-        if (not defined $ret ) {
-            YaST::caUtils->cleanCaInfrastructure($caName);
-            return $self->SetError(%{YaST::caUtils->Error()});
+    my $rgd = undef;
+    eval {
+        
+        if( defined $data->{'repository'}) {
+            
+            $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults($data->{'repository'});
+            
+        } else {
+            
+            $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults();
+            
         }
-        push @dn, $data->{$DN_Part};
-    }
+        my $dnl = $rgd->getSubject()->getDN();
+        my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
+                         'organizationName', 'organizationalUnitName',
+                         'commonName', 'emailAddress');
+        
+        for(my $dnit = $dnl->begin();
+            !$dnl->iterator_equal($dnit, $dnl->end());
+            $dnl->iterator_incr($dnit))
+        {
+            foreach my $v (@DN_Values) {
 
-    if (not SCR->Write(".CAM.openssl_cnf.value.$caName.req.x509_extensions", "v3_ca")) { 
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
-    }
-    #####################################################
-    # merge this extentions to the config file
-    # some values have defaults
-    #
-    #             v3 ext. value               default
-    #####################################################
-    my %v3ext = (
-                 'basicConstraints'       => undef,
-                 'nsComment'              => undef,
-                 'nsCertType'             => undef,
-                 'keyUsage'               => undef,
-                 'subjectKeyIdentifier'   => undef,
-                 'authorityKeyIdentifier' => undef,
-                 'subjectAltName'         => undef,
-                 'issuerAltName'          => undef,
-                 'nsBaseUrl'              => undef,
-                 'nsRevocationUrl'        => undef,
-                 'nsCaRevocationUrl'      => undef,
-                 'nsRenewalUrl'           => undef,
-                 'nsCaPolicyUrl'          => undef,
-                 'nsSslServerName'        => undef,
-                 'extendedKeyUsage'       => undef,
-                 'authorityInfoAccess'    => undef,
-                 'crlDistributionPoints'  => undef
-                );
+                if($dnl->iterator_value($dnit)->getType() =~ /^$v$/i) {
 
-    foreach my $extName ( keys %v3ext) {
-        if (not defined YaST::caUtils->mergeToConfig($extName, 'v3_ca',
-                                                     $data, $v3ext{$extName})) {
-            YaST::caUtils->cleanCaInfrastructure($caName);
-            return $self->SetError(%{YaST::caUtils->Error()});
+                    if(defined $data->{$v}) {
+                        
+                        $dnl->iterator_value($dnit)->setRDNValue($data->{$v});
+
+                    } else {
+
+                        $dnl->iterator_value($dnit)->setRDNValue("");
+                    }
+                }
+            }
         }
-    }
 
-    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
-    }
-    my $hash = {
-                OUTFILE  => "$CAM_ROOT/$caName/cacert.key",
-                PASSWD   => $data->{"keyPasswd"},
-                BITS     => $data->{"keyLength"}
-               };
-    my $ret = SCR->Execute( ".openssl.genKey", $caName, $hash);
+        my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
+        $rgd->setSubject($dnObject);
 
-    if (not defined $ret) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError(%{SCR->Error(".openssl")});
+        if( defined $data->{'challengePassword'} ) {
+
+            $rgd->setChallengePassword($data->{'challengePassword'});
+
+        } else {
+
+            $rgd->setChallengePassword("");
+
+        }
+
+        if( defined $data->{'unstructuredName'} ) {
+
+            $rgd->setUnstructuredName($data->{'unstructuredName'});
+
+        } else {
+
+            $rgd->setUnstructuredName("");
+
+        }
+
+        $rgd->setKeysize($data->{"keyLength"} +0);
+
+        my $exts = $rgd->getExtensions();
+
+        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+                                                        $data->{'basicConstraints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $rgd->setExtensions($exts);
+
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Modify RequestGenerationData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
     
-    $hash = {
-             OUTFILE => "$CAM_ROOT/$caName/cacert.req",
-             KEYFILE => "$CAM_ROOT/$caName/cacert.key",
-             PASSWD  => $data->{"keyPasswd"},
-             DN      => \@dn };
-    $ret = SCR->Execute( ".openssl.genReq", $caName, $hash);
-    if (not defined $ret) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError(%{SCR->Error(".openssl")});
-    }
-
-    $hash = {
-             OUTFILE => "$CAM_ROOT/$caName/cacert.pem",
-             KEYFILE => "$CAM_ROOT/$caName/cacert.key",
-             REQFILE => "$CAM_ROOT/$caName/cacert.req",
-             PASSWD  => $data->{"keyPasswd"},
-             DAYS    => $data->{"days"} 
-            };
-    $ret = SCR->Execute( ".openssl.genCert", $caName, $hash);
-    if (not defined $ret) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError(%{SCR->Error(".openssl")});
-    }
-
-    $ret = SCR->Execute(".target.bash", "cp $CAM_ROOT/$caName/cacert.pem $CAM_ROOT/.cas/$caName.pem");
-    if (! defined $ret || $ret != 0) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError( summary => "Can not copy CA certificate",
-                                code => "COPY_FAILED");
-    }
-    $ret = SCR->Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
-    if (! defined $ret || $ret != 0) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
-                                code => "C_REHASH_FAILED");
-    }
     
-    SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+    my $cid = undef;
+    eval {
+
+        if( defined $data->{'repository'}) {
+            
+            $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults($data->{'repository'});
+            
+        } else {
+            
+            $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults();
+            
+        }
+
+        my $start = time();
+        my $end   = $start +($data->{"days"} * 24 * 60 * 60);
+
+        $cid->setCertifyPeriode($start, $end);
+
+        my $exts = $cid->getExtensions();
+        
+        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+                                                        $data->{'basicConstraints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsComment",
+                                                     $data->{'nsComment'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsBaseUrl",
+                                                     $data->{'nsBaseUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsRevocationUrl",
+                                                     $data->{'nsRevocationUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsCaRevocationUrl",
+                                                     $data->{'nsCaRevocationUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsRenewalUrl",
+                                                     $data->{'nsRenewalUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsSslServerName",
+                                                     $data->{'nsSslServerName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsCaPolicyUrl",
+                                                     $data->{'nsCaPolicyUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformNsCertType($exts,
+                                                $data->{'nsCertType'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformKeyUsage($exts,
+                                              $data->{'keyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectKeyIdentifier($exts,
+                                                          $data->{'subjectKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformAuthorityKeyIdentifier($exts,
+                                                            $data->{'authorityKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectAltName($exts,
+                                                    $data->{'subjectAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformIssuerAltName($exts,
+                                                   $data->{'issuerAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformExtendedKeyUsage($exts,
+                                                      $data->{'extendedKeyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformAuthorityInfoAccess($exts,
+                                                         $data->{'authorityInfoAccess'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformCrlDistributionPoints($exts,
+                                                           $data->{'crlDistributionPoints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $cid->setExtensions($exts);
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Modify CertificateIssueData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+    }
+
+    eval {
+
+        if( defined $data->{'repository'}) {
+            
+            LIMAL::CaMgm::CA::createRootCA($data->{'caName'},
+                                           $data->{'keyPasswd'},
+                                           $rgd, $cid, 
+                                           $data->{'repository'});
+        } else {
+
+            LIMAL::CaMgm::CA::createRootCA($data->{'caName'},
+                                           $data->{'keyPasswd'},
+                                           $rgd, $cid);
+
+        }
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Create Root CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+    }
+
     return 1;
 }
+
 
 =item *
 C<$certValueMap = ReadCertificateDefaults($valueMap)>
@@ -890,57 +1031,193 @@ sub ReadCertificateDefaults {
             'authorityInfoAccess'    => undef,
             'crlDistributionPoints'  => undef
            };
+    
+    my $ca  = undef;
+    my $rgd = undef;
+    my $cid = undef;
+    
+    my $rType = 0;
+    my $cType = 0;
 
-    foreach my $extName ( keys %{$ret}) {
-        if (defined $caName && $caName ne "") {
-            $ret->{$extName} = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_$certType.$extName");
-            if (not defined $ret->{$extName}) {
-                delete $ret->{$extName};
-            }
-        } else {
-            $ret->{$extName} = SCR->Read(".CAM.opensslroot_tmpl.value.v3_$certType.$extName");
-            if (not defined $ret->{$extName}) {
-                delete $ret->{$extName};
-            }
+    eval {
+
+        if($data->{'certType'} eq "ca") {
+            $rType = $LIMAL::CaMgm::E_CA_Req;
+            $cType = $LIMAL::CaMgm::E_CA_Cert;
+        } elsif($data->{'certType'} eq "client") {
+            $rType = $LIMAL::CaMgm::E_Client_Req;
+            $cType = $LIMAL::CaMgm::E_Client_Cert;
+        } elsif($data->{'certType'} eq "server") {
+            $rType = $LIMAL::CaMgm::E_Server_Req;
+            $cType = $LIMAL::CaMgm::E_Server_Cert;
         }
-    }
-    if (defined $caName && $caName ne "") {
-        $ret->{'keyLength'} = SCR->Read(".CAM.openssl_tmpl.value.$caName.req.default_bits");
-        if ($certType ne "ca") {
-            $ret->{'days'} = SCR->Read(".CAM.openssl_tmpl.value.$caName.".$certType."_cert.default_days");
-        } else {
-            $ret->{'days'} = SCR->Read(".CAM.openssl_tmpl.value.$caName.ca.default_days");
-        }
-    } else {
-        $ret->{'keyLength'} = SCR->Read(".CAM.opensslroot_tmpl.value.req.default_bits");
-        if ($certType ne "ca") {
-            $ret->{'days'} = SCR->Read(".CAM.opensslroot_tmpl.value.".$certType."_cert.default_days");
-        } else {
-            $ret->{'days'} = SCR->Read(".CAM.opensslroot_tmpl.value.ca.default_days");
-        }
+
+        if(defined $data->{'caName'} && $data->{'caName'} ne "") {
         
-    }    
-    delete $ret->{'keyLength'} if(not defined $ret->{'keyLength'});
-    delete $ret->{'days'} if(not defined $ret->{'days'});
-    
-    # try to get default DN values
-    if (defined $caName && $caName ne "") {
-        my $hash = {
-                    INFILE => "$CAM_ROOT/$caName/cacert.pem",
-                    INFORM => "PEM"
-                   };
-        my $ca = SCR->Read(".openssl.getParsedCert", $caName, $hash);
-        if (not defined $ca) {
-            return $self->SetError(%{SCR->Error(".openssl")});
+            if(defined $data->{'repository'}) {
+                
+                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, "",
+                                           $data->{'repository'});
+            } else {
+                
+                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, "");
+                
+            }
+
+            $rgd = $ca->getRequestDefaults($rType);
+            $cid = $ca->getIssueDefaults($cType);
+
+        } else {
+
+            if( defined $data->{'repository'}) {
+                
+                $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults($data->{'repository'});
+                $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults($data->{'repository'});
+                
+            } else {
+                
+                $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults();
+                $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults();
+                
+            }
         }
-        if (defined $ca->{'DN_HASH'}) {
-            $ret->{'DN'} = $ca->{'DN_HASH'};
-            # delete CN and emailAddress; not needed as default
-            delete $ret->{'DN'}->{'CN'} if(defined $ret->{'DN'}->{'CN'});
-            delete $ret->{'DN'}->{'EMAILADDRESS'} if(defined $ret->{'DN'}->{'EMAILADDRESS'});
+
+        my $rext = $rgd->getExtensions();
+        my $cext = $cid->getExtensions();
+
+        my $e = YaST::caUtils->extractBasicConstraits($cext->getBasicConstraints(),
+                                                      $ret);
+        if(!defined $e) {
+            return undef;
         }
-    } 
-    
+
+        $e = YaST::caUtils->extractStringExtension($cext->getNsComment(), 
+                                                   "nsComment", $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractStringExtension($cext->getNsBaseUrl(), 
+                                                   "nsBaseUrl", $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractStringExtension($cext->getNsRevocationUrl(), 
+                                                   "nsRevocationUrl", $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractStringExtension($cext->getNsCaRevocationUrl(),
+                                                   "nsCaRevocationUrl", $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractStringExtension($cext->getNsRenewalUrl(),
+                                                   "nsRenewalUrl", $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractStringExtension($cext->getNsSslServerName(), 
+                                                   "nsSslServerName", $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractStringExtension($cext->getNsCaPolicyUrl(), 
+                                                   "nsCaPolicyUrl", $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractNsCertType($cext->getNsCertType(),
+                                              $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractKeyUsage($cext->getKeyUsage(),
+                                            $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractSubjectKeyIdentifier($cext->getSubjectKeyIdentifier(),
+                                                        $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractAuthorityKeyIdentifier($cext->getAuthorityKeyIdentifier(),
+                                                          $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractSubjectAltName($cext->getSubjectAlternativeName(),
+                                                  $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractIssuerAltName($cext->getIssuerAlternativeName(),
+                                                 $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractExtendedKeyUsage($cext->getExtendedKeyUsage(),
+                                                    $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractAuthorityInfoAccess($cext->getAuthorityInfoAccess(),
+                                                       $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractCrlDistributionPoints($cext->getCRLDistributionPoints(),
+                                                         $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $ret->{'keyLength'} = $rgd->getKeysize();
+        $ret->{'days'} = ($cid->getEndDate() - $cid->getStartDate()) / (60*60*24);
+
+        my $list = $rgd->getSubject()->getDN();
+
+        for(my $it = $list->begin();
+            !$list->iterator_equal($it, $list->end());
+            $list->iterator_incr($it)) 
+          {
+              my $type  = $list->iterator_value($it)->getType();
+              my $value = $list->iterator_value($it)->getValue();
+
+              $type = "C" if($type eq "countryName");
+              $type = "ST" if($type eq "stateOrProvinceName");
+              $type = "L" if($type eq "localityName");
+              $type = "O" if($type eq "organizationName");
+              $type = "OU" if($type eq "organizationalUnitName");
+              next if($type eq "commonName");
+              next if($type eq "emailAddress");
+
+              $ret->{'DN'}->{$type} = $value if(defined $value && $value ne "");
+          }
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Get defaults failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+
+    }
+
     return $ret;
 }
 
@@ -1044,102 +1321,253 @@ sub WriteCertificateDefaults {
     }
     $certType = $data->{"certType"};
 
-    $ret = SCR->Execute(".target.bash",
-                        "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if (! defined $ret || $ret != 0) {
-        return $self->SetError( summary => "Can not create backup file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
-    SCR->UnmountAgent(".CAM.openssl_cnf");
+    my $ca = undef;
+    eval {
 
-    if (not SCR->Write(".CAM.openssl_cnf.value.$caName.".$certType."_cert.x509_extensions", 
-                       "v3_".$certType)) { 
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
-    }
+        if( defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "",
+                                       $data->{"repository"});
+        } else {
 
-    #####################################################
-    # merge this extentions to the config file
-    #
-    #             v3 ext. value               default
-    #####################################################
-    my %v3ext = (
-                 'basicConstraints'       => undef,
-                 'nsComment'              => undef,
-                 'nsCertType'             => undef,
-                 'keyUsage'               => undef,
-                 'subjectKeyIdentifier'   => undef,
-                 'authorityKeyIdentifier' => undef,
-                 'subjectAltName'         => undef,
-                 'issuerAltName'          => undef,
-                 'nsBaseUrl'              => undef,
-                 'nsRevocationUrl'        => undef,
-                 'nsCaRevocationUrl'      => undef,
-                 'nsRenewalUrl'           => undef,
-                 'nsCaPolicyUrl'          => undef,
-                 'nsSslServerName'        => undef,
-                 'extendedKeyUsage'       => undef,
-                 'authorityInfoAccess'    => undef,
-                 'crlDistributionPoints'  => undef
-                );
-    
-    foreach my $extName ( keys %v3ext) {
-        if (not defined YaST::caUtils->mergeToConfig($extName, "v3_$certType",
-                                                     $data, $v3ext{$extName})) {
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError(%{YaST::caUtils->Error()});
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
+
         }
-    }
-    
-    my $default_bits = SCR->Read(".CAM.openssl_cnf.value.$caName.req.default_bits");
-    
-    if(defined $data->{keyLength}) {
-        # write new default_bits
-        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.req.default_bits", $data->{keyLength})) {
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
-        }
-    } elsif(defined $default_bits) {
-        # remove default_bits
-        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.req.default_bits", undef)) {
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
-        }
-    }
-    my $sect = ($certType eq "ca")? $certType : $certType."_cert";
-    my $default_days = SCR->Read(".CAM.openssl_cnf.value.$caName.$sect.default_days");
-    if(defined $data->{days}) {
-        # write new default_days
+    };
+    if($@) {
         
-        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.$sect.default_days", $data->{days})) {
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+    }
+
+    my $type = 0;
+    my $rtype = 0;
+    if($certType eq "client") {
+        $type = $LIMAL::CaMgm::E_Client_Cert;
+        $rtype = $LIMAL::CaMgm::E_Client_Req;
+    } elsif($certType eq "server") {
+        $type = $LIMAL::CaMgm::E_Server_Cert;
+        $rtype = $LIMAL::CaMgm::E_Server_Req;
+    } elsif($certType eq "ca") {
+        $type = $LIMAL::CaMgm::E_CA_Cert;
+        $rtype = $LIMAL::CaMgm::E_CA_Req;
+    }
+
+    my $cid = undef;
+    eval {
+
+        $cid = $ca->getIssueDefaults($type);
+
+        my $start = time();
+        my $end   = $start +($data->{"days"} * 24 * 60 * 60);
+
+        $cid->setCertifyPeriode($start, $end);
+
+        my $exts = $cid->getExtensions();
+        
+        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+                                                        $data->{'basicConstraints'});
+        if(!defined $e) {
+            return undef;
         }
-    } elsif(defined $default_days) {
-        # remove default_days
-        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.$sect.default_days", undef)) {
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsComment",
+                                                     $data->{'nsComment'});
+        if(!defined $e) {
+            return undef;
         }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsBaseUrl",
+                                                     $data->{'nsBaseUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsRevocationUrl",
+                                                     $data->{'nsRevocationUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsCaRevocationUrl",
+                                                     $data->{'nsCaRevocationUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsRenewalUrl",
+                                                     $data->{'nsRenewalUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsSslServerName",
+                                                     $data->{'nsSslServerName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsCaPolicyUrl",
+                                                     $data->{'nsCaPolicyUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformNsCertType($exts,
+                                                $data->{'nsCertType'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformKeyUsage($exts,
+                                              $data->{'keyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectKeyIdentifier($exts,
+                                                          $data->{'subjectKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformAuthorityKeyIdentifier($exts,
+                                                            $data->{'authorityKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectAltName($exts,
+                                                    $data->{'subjectAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformIssuerAltName($exts,
+                                                   $data->{'issuerAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformExtendedKeyUsage($exts,
+                                                      $data->{'extendedKeyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformAuthorityInfoAccess($exts,
+                                                         $data->{'authorityInfoAccess'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformCrlDistributionPoints($exts,
+                                                           $data->{'crlDistributionPoints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $cid->setExtensions($exts);
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Modify CertificateIssueData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
+    my $rgd = undef;
+    eval {
+        
+        $rgd = $ca->getRequestDefaults($rtype);
+
+        $rgd->setKeysize($data->{"keyLength"} +0);
+
+        my $exts = $rgd->getExtensions();
+
+        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+                                                        $data->{'basicConstraints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsComment",
+                                                     $data->{'nsComment'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsSslServerName",
+                                                     $data->{'nsSslServerName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformNsCertType($exts,
+                                                $data->{'nsCertType'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformKeyUsage($exts,
+                                              $data->{'keyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectKeyIdentifier($exts,
+                                                          $data->{'subjectKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectAltName($exts,
+                                                    $data->{'subjectAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformExtendedKeyUsage($exts,
+                                                      $data->{'extendedKeyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $rgd->setExtensions($exts);
+
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Modify RequestGenerationData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    $ret = SCR->Execute(".target.bash", 
-                        "cp $CAM_ROOT/$caName/openssl.cnf $CAM_ROOT/$caName/openssl.cnf.tmpl");
-    if (! defined $ret || $ret != 0) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not create new template file '$CAM_ROOT/$caName/openssl.cnf.tmpl'",
-                                code => "COPY_FAILED");
-    }
-    SCR->UnmountAgent(".CAM.openssl_tmpl");
 
-    SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+    eval {
+
+        $ca->setRequestDefaults($rtype, $rgd);
+        $ca->setIssueDefaults($type, $cid);
+
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Write defaults failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+    }
+    
     return 1;
 }
 
@@ -1209,30 +1637,50 @@ sub ReadCA {
     }
     $type = $data->{"type"};
 
-    my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/cacert.pem");
-    if ($size <= 0) {
-        return $self->SetError(summary => __("CA certificate not available in")." '$caName'",
-                               code => "FILE_DOES_NOT_EXIST");
-    }
-    my $hash = {
-                INFILE => "$CAM_ROOT/$caName/cacert.pem",
-                INFORM => "PEM"
-               };
-    if ($type eq "parsed") {
-        $ret = SCR->Read(".openssl.getParsedCert", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
+    my $ca = undef;
+    eval {
+        if(defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                       "",
+                                       $data->{'repository'});
+            
+        } else {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "");
+            
         }
-    } elsif($type eq "extended") {
-        $ret = SCR->Read(".openssl.getExtendedParsedCert", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
+
+        my $cert = $ca->getCA();
+
+        if ($type eq "parsed" || $type eq "extended") {
+            
+            $ret = YaST::caUtils->getParsed($cert);
+            my $repos = "$CAM_ROOT";
+            if(defined $data->{repository}) {
+                $repos = $data->{repository};
+            }
+            my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/cacert.pem");
+            my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
+            my $endT   = "-----END[\\w\\s]+[-]{5}";
+            ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+
+            if($type eq "extended") {
+
+                $ret = YaST::caUtils->extensionParsing($ret);
+            }
+
+        } else {
+            $ret = $cert->getCertificateAsText();
         }
-    } else {
-        $ret = SCR->Read(".openssl.getTXTCert", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
+        
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Parse CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
     return $ret;
 }
@@ -1283,8 +1731,6 @@ The keys in I<$valueMap> are:
 * nsSslServerName
 
 * extendedKeyUsage
-
-* authorityInfoAccess
 
 The return value is "undef" on an error and the 
 filename(without suffix) of the request on success.
@@ -1353,141 +1799,158 @@ sub AddRequest {
         $data->{"keyLength"} = 2048;
     }
 
-    # generate the request name
-    my $requestString = YaST::caUtils->stringFromDN($data);
-    
-    if (not defined $requestString) {
-        return $self->SetError(%{YaST::caUtils->Error()});
-    }
-    
-    $request = md5_hex($requestString);
-    $request = $request."-".time();
+    my $ca = undef;
+    eval {
 
-    # test if this File already exists
-    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/".$request.".key") != -1) {
-        return $self->SetError(summary => __("Duplicate DN. Request already exists."),
-                               description => "'$requestString' already exists.",
-                               code => "FILE_ALREADY_EXIST");
-    }
-    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") != -1) {
-        return $self->SetError(summary => __("Duplicate DN. Request already exists."),
-                               description => "'$requestString' already exists.",
-                               code => "FILE_ALREADY_EXIST");
-    }    
+        if( defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "",
+                                       $data->{"repository"});
+        } else {
 
-    my $retCode = SCR->Execute(".target.bash",
-                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if (! defined $retCode || $retCode != 0) {
-        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
-    SCR->UnmountAgent(".CAM.openssl_cnf");
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
 
-
-    # check this values, if they were accepted from the openssl command
-    my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
-                     'organizationName', 'organizationalUnitName',
-                     'commonName', 'emailAddress',
-                     'challengePassword', 'unstructuredName');
-
-    foreach my $DN_Part (@DN_Values) {
-        my $ret = YaST::caUtils->checkValueWithConfig($DN_Part, $data);
-        if (not defined $ret ) {
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError(%{YaST::caUtils->Error()});
         }
-        push @dn, $data->{$DN_Part};
-    }
-
-    #####################################################
-    # merge this extentions to the config file
-    # some values have defaults
-    #
-    #             v3 ext. value               default
-    #####################################################
-    my %v3ext = (
-                 'basicConstraints'       => undef,
-                 'nsComment'              => undef,
-                 'nsCertType'             => undef,
-                 'keyUsage'               => undef,
-                 'subjectKeyIdentifier'   => undef,
-                 'subjectAltName'         => undef,
-                 'nsSslServerName'        => undef,
-                 'extendedKeyUsage'       => undef,
-                 'authorityInfoAccess'    => undef,
-                );
-
-    foreach my $extName ( keys %v3ext) {
-        if (not defined YaST::caUtils->mergeToConfig($extName, 'v3_req',
-                                                     $data, $v3ext{$extName})) {
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError(%{YaST::caUtils->Error()});
-        }
-    }
-
-    my $reqSect = SCR->Read(".CAM.openssl_cnf.all.$caName.v3_req");
-    if(! defined $reqSect) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not read request section",
-                                code => "SCR_READ_FAILED");
-    }
-    if(scalar( @{$reqSect->{value}} ) == 0) {
-        # request section is empty => remove req_extension
+    };
+    if($@) {
         
-        if (not SCR->Write(".CAM.openssl_cnf.value.$caName.req.req_extensions", undef)) { 
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
-        }
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+    }
+
+    my $rgd = undef;
+    eval {
         
-    } else {
+        $rgd = $ca->getRequestDefaults($LIMAL::CaMgm::E_Client_Req);
+            
+        my $dnl = $rgd->getSubject()->getDN();
+        my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
+                         'organizationName', 'organizationalUnitName',
+                         'commonName', 'emailAddress');
         
-        if (not SCR->Write(".CAM.openssl_cnf.value.$caName.req.req_extensions", "v3_req")) { 
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
+        for(my $dnit = $dnl->begin();
+            !$dnl->iterator_equal($dnit, $dnl->end());
+            $dnl->iterator_incr($dnit))
+        {
+            foreach my $v (@DN_Values) {
+
+                if($dnl->iterator_value($dnit)->getType() =~ /^$v$/i) {
+
+                    if(defined $data->{$v}) {
+                        
+                        $dnl->iterator_value($dnit)->setRDNValue($data->{$v});
+
+                    } else {
+
+                        $dnl->iterator_value($dnit)->setRDNValue("");
+                    }
+                }
+            }
         }
+
+        my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
+        $rgd->setSubject($dnObject);
+
+        if( defined $data->{'challengePassword'} ) {
+
+            $rgd->setChallengePassword($data->{'challengePassword'});
+
+        } else {
+
+            $rgd->setChallengePassword("");
+
+        }
+
+        if( defined $data->{'unstructuredName'} ) {
+
+            $rgd->setUnstructuredName($data->{'unstructuredName'});
+
+        } else {
+
+            $rgd->setUnstructuredName("");
+
+        }
+
+        $rgd->setKeysize($data->{"keyLength"} +0);
+
+        my $exts = $rgd->getExtensions();
+
+        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+                                                        $data->{'basicConstraints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsComment",
+                                                     $data->{'nsComment'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsSslServerName",
+                                                     $data->{'nsSslServerName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformNsCertType($exts,
+                                                $data->{'nsCertType'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformKeyUsage($exts,
+                                              $data->{'keyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectKeyIdentifier($exts,
+                                                          $data->{'subjectKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectAltName($exts,
+                                                    $data->{'subjectAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformExtendedKeyUsage($exts,
+                                                      $data->{'extendedKeyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $rgd->setExtensions($exts);
+
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Modify RequestGenerationData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
-    }
-    my $hash = {
-                OUTFILE  => "$CAM_ROOT/$caName/keys/".$request.".key",
-                PASSWD   => $data->{"keyPasswd"},
-                BITS     => $data->{"keyLength"}
-               };
-    my $ret = SCR->Execute( ".openssl.genKey", $caName, $hash);
+    my $requestName = "";
+    eval {
 
-    if (not defined $ret) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError(%{SCR->Error(".openssl")});
-    }
-    
-    $hash = {
-             OUTFILE => "$CAM_ROOT/$caName/req/".$request.".req",
-             KEYFILE => "$CAM_ROOT/$caName/keys/".$request.".key",
-             PASSWD  => $data->{"keyPasswd"},
-             DN      => \@dn };
-    $ret = SCR->Execute( ".openssl.genReq", $caName, $hash);
-    if (not defined $ret) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
-        return $self->SetError(%{SCR->Error(".openssl")});
+        $requestName = $ca->createRequest($data->{'keyPasswd'},
+                                          $rgd, $LIMAL::CaMgm::E_Client_Req);
+
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Create Request failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    $ret = SCR->Write(".caTools.addCAM", $caName, { MD5 => $request, DN => $requestString});
-    if( not $ret) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/".$request.".req");
-        return $self->SetError(%{SCR->Error(".caTools")});
-    }
-
-    SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-    return $request;
+    return $requestName;
 }
 
 =item *
@@ -1540,9 +2003,6 @@ In I<$valueMap> you can define the following keys:
 * authorityInfoAccess
 
 * crlDistributionPoints
-
-* notext (optional - if set to "1" do not output the 
-          text version in the PEM file)
 
 The return value is "undef" on an error and the 
 filename(without suffix) of the certificate on success.
@@ -1617,152 +2077,182 @@ sub IssueCertificate {
     if (!defined $data->{"days"}) {
         $data->{"days"} = 365;
     }
-    # test if the file already exists
-    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req") == -1) {
-        return $self->SetError(summary => __("Request does not exist."),
-                               description => "$CAM_ROOT/$caName/req/".$request.".req",
-                               code => "FILE_DOES_NOT_EXIST");
-    }
 
-    # get next serial number and built the certificate file name
-    my $serial = SCR->Read(".caTools.nextSerial", $caName);
-    if (not defined $serial) {
-        return $self->SetError(%{SCR->Error(".caTools")});
-    }
-    $certificate = $serial.":".$request;
+    my $ca = undef;
+    eval {
 
-    # create the configuration file
-    my $retCode = SCR->Execute(".target.bash",
-                               "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if (! defined $retCode || $retCode != 0) {
-        return $self->SetError( summary => "Can not create config file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
-    SCR->UnmountAgent(".CAM.openssl_cnf");
+        if( defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+                                       $data->{"repository"});
+        } else {
 
-    # check time period of the CA against DAYS to sign this cert
-    my $caP = $self->ReadCA({caName => $caName, type => 'parsed'});
-    if (not defined $caP) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return undef;
-    }
-    my $notafter = SCR->Execute(".openssl.getNumericDate", $caName, $caP->{'NOTAFTER'});
-    if (not defined $notafter) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError(%{SCR->Error(".openssl")});
-    }
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
-    #                     year    month  day  hour   min  sec
-    if ( $notafter !~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not parse CA date string",
-                                description => "Date string: '$notafter'",
-                                code    => "PARSE_ERROR");
-    }
-    my @expireCA = ($1, $2, $3, $4, $5, $6);
-    my @expireCertDate = Add_Delta_DHMS(Today_and_Now(), $data->{"days"}, 0, 0, 0);
-
-    my $expireCertTime = Date_to_Time(@expireCertDate);
-    my $expireCATime   = Date_to_Time(@expireCA);
-
-    if ($expireCertTime > $expireCATime) {
-        my $caStr = sprintf("%s-%s-%s %s:%s:%s", @expireCA);
-        my $certStr = sprintf("%s-%s-%s %s:%s:%s", @expireCertDate);
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-                                           # parameter check failed
-        return $self->SetError( summary => __("CA expires before the certificate should expire."),
-                                description => "CA expires:'$caStr', Cert should expire:'$certStr'",
-                                code  => 'PARAM_CHECK_FAILED');
-    }
-
-    #####################################################
-    # merge this extentions to the config file
-    # some values have defaults
-    #
-    #             v3 ext. value               default
-    #####################################################
-    my %v3ext = (
-                 'basicConstraints'       => undef,
-                 'nsComment'              => undef,
-                 'nsCertType'             => undef,
-                 'keyUsage'               => undef,
-                 'subjectKeyIdentifier'   => undef,
-                 'authorityKeyIdentifier' => undef,
-                 'subjectAltName'         => undef,
-                 'issuerAltName'          => undef,
-                 'nsBaseUrl'              => undef,
-                 'nsRevocationUrl'        => undef,
-                 'nsCaRevocationUrl'      => undef,
-                 'nsRenewalUrl'           => undef,
-                 'nsCaPolicyUrl'          => undef,
-                 'nsSslServerName'        => undef,
-                 'extendedKeyUsage'       => undef,
-                 'authorityInfoAccess'    => undef,
-                 'crlDistributionPoints'  => undef,
-                );
-
-    foreach my $extName ( keys %v3ext) {
-        if (not defined YaST::caUtils->mergeToConfig($extName, 'v3_'.$certType,
-                                                     $data, $v3ext{$extName})) {
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError(%{YaST::caUtils->Error()});
         }
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    my $v3Sect = SCR->Read(".CAM.openssl_cnf.all.$caName.v3_".$certType);
-    if(! defined $v3Sect) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not read v3 section",
-                                code => "SCR_READ_FAILED");
+    my $type = 0;
+    if($certType eq "client") {
+        $type = $LIMAL::CaMgm::E_Client_Cert;
+    } elsif($certType eq "server") {
+        $type = $LIMAL::CaMgm::E_Server_Cert;
+    } elsif($certType eq "ca") {
+        $type = $LIMAL::CaMgm::E_CA_Cert;
     }
-    if(scalar( @{$v3Sect->{value}} ) == 0) {
-        # v3 section is empty => remove x509_extension
+
+    my $cid = undef;
+    eval {
+
+        $cid = $ca->getIssueDefaults($type);
+
+        my $start = time();
+        my $end   = $start +($data->{"days"} * 24 * 60 * 60);
+
+        $cid->setCertifyPeriode($start, $end);
+
+        my $exts = $cid->getExtensions();
         
-        if (not SCR->Write(".CAM.openssl_cnf.value.$caName.".$certType."_cert.x509_extensions", 
-                           undef)) { 
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
+        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+                                                        $data->{'basicConstraints'});
+        if(!defined $e) {
+            return undef;
         }
-        
-    } else {
-        
-        if (not SCR->Write(".CAM.openssl_cnf.value.$caName.".$certType."_cert.x509_extensions", 
-                           "v3_".$certType)) { 
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsComment",
+                                                     $data->{'nsComment'});
+        if(!defined $e) {
+            return undef;
         }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsBaseUrl",
+                                                     $data->{'nsBaseUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsRevocationUrl",
+                                                     $data->{'nsRevocationUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsCaRevocationUrl",
+                                                     $data->{'nsCaRevocationUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsRenewalUrl",
+                                                     $data->{'nsRenewalUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsSslServerName",
+                                                     $data->{'nsSslServerName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsCaPolicyUrl",
+                                                     $data->{'nsCaPolicyUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformNsCertType($exts,
+                                                $data->{'nsCertType'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformKeyUsage($exts,
+                                              $data->{'keyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectKeyIdentifier($exts,
+                                                          $data->{'subjectKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformAuthorityKeyIdentifier($exts,
+                                                            $data->{'authorityKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectAltName($exts,
+                                                    $data->{'subjectAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformIssuerAltName($exts,
+                                                   $data->{'issuerAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformExtendedKeyUsage($exts,
+                                                      $data->{'extendedKeyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformAuthorityInfoAccess($exts,
+                                                         $data->{'authorityInfoAccess'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformCrlDistributionPoints($exts,
+                                                           $data->{'crlDistributionPoints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $cid->setExtensions($exts);
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Modify CertificateIssueData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
-    }
-    my $hash = {
-                REQFILE => "$CAM_ROOT/$caName/req/".$request.".req",
-                CAKEY   => "$CAM_ROOT/$caName/cacert.key",
-                CACERT  => "$CAM_ROOT/$caName/cacert.pem",
-                DAYS    => $data->{'days'},
-                PASSWD  => $data->{'caPasswd'},
-                EXTS    => 'v3_'.$certType,
-                OUTDIR  => "$CAM_ROOT/$caName/certs/",
-                OUTFILE => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem"
-               };
-    if($notext eq "1") {
-        $hash->{NOTEXT} = "1";
+    my $certName = "";
+    eval {
+
+        $certName = $ca->issueCertificate($data->{'request'},
+                                          $cid, $type);
+
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Create Request failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    my $ret = SCR->Execute( ".openssl.issueCert", $caName, $hash);
-
-    if (not defined $ret) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError(%{SCR->Error(".openssl")});
-    }
-    
-    SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-    return $certificate;
+    return $certName;
 }
 
 =item *
@@ -1886,13 +2376,31 @@ sub AddCertificate {
 
     my $certificate = $self->IssueCertificate($data);
     if (not defined $certificate) {
-        my $caName = $data->{'caName'};
-        SCR->Write(".caTools.delCAM", $caName, {MD5 => $request});
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/".$request.".req");
+        my $ca = undef;
+        eval {
+
+            if(defined $data->{'repository'}) {
+
+                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                           $data->{'caPasswd'},
+                                           $data->{'repository'});
+
+            } else {
+
+                $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                           $data->{'caPasswd'});
+
+            }
+
+            $ca->deleteRequest($request);
+        };
+        if($@) {
+            
+            # ignore error
+        }
         return undef;
     }
-
+    
     return $certificate;
 }
 
@@ -1905,7 +2413,7 @@ In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
-* caPasswd (optional)
+* caPasswd (required)
 
 The syntax of these values are explained in the 
 B<COMMON PARAMETER> section.
@@ -1969,18 +2477,55 @@ sub ReadCertificateList {
         return $self->SetError(summary => __("Missing parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    my $caName = $data->{'caName'};
-    if ( defined $data->{'caPasswd'} ) { # needed only for UpdateDB
-        $ret = $self->UpdateDB($data);
-        if ( not defined $ret ) {
-            return undef;
-        }
+
+    if (! defined $data->{'caPasswd'} ) {
+        
+        return $self->SetError(summary => __("Missing parameter 'caPasswd'."),
+                               code    => "PARAM_CHECK_FAILED");
     }
 
-    $ret = SCR->Read(".caTools.certificateList", $data->{'caName'});
-    if ( not defined $ret ) {
-        return $self->SetError(%{SCR->Error(".caTools")});
+    my $ca = undef;
+
+    eval {
+        if(defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                       $data->{'caPasswd'},
+                                       $data->{'repository'});
+            
+        } else {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       $data->{'caPasswd'});
+            
+        }
+        
+        my $list = $ca->getCertificateList();
+        
+        for(my $listIT = $list->begin();
+            !$list->iterator_equal($listIT, $list->end());
+            $list->iterator_incr($listIT))
+        {
+            
+            my $hash = undef;
+            my $map = $list->iterator_value($listIT);
+            
+            for(my $mapIT = $map->begin();
+                !$map->iterator_equal($mapIT, $map->end());
+                $map->iterator_incr($mapIT))
+            {
+                $hash->{$map->iterator_key($mapIT)} = $map->iterator_value($mapIT);
+            }
+            push @$ret, $hash;
+        }
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Getting the certificate list failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
+
     return $ret;
 }
 
@@ -2030,43 +2575,37 @@ sub UpdateDB {
         return $self->SetError(summary => __("Missing parameter 'caName'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    my $caName = $data->{'caName'};
+
     if (! defined $data->{'caPasswd'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/index.txt");
-    if($size < 0) {
-        # file does not exist => error
-        return $self->SetError(summary => "Database not found.",
-                               code => "FILE_DOES_NOT_EXIST");
-    } elsif($size == 0) {
-        # no certificate created => test only the caPasswd
-        if(not defined SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'}, 
-                                                                 CACERT => 1})
-          ) {
-            return $self->SetError(%{SCR->Error(".caTools")});
+    my $ca = undef;
+    eval {
+        if(defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                       $data->{'caPasswd'},
+                                       $data->{'repository'});
+            
+        } else {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       $data->{'caPasswd'});
+            
         }
-    } else {
-        # test password first, for a better error message
-        if(not defined SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'}, 
-                                                                 CACERT => 1})
-          ) {
-            return $self->SetError(%{SCR->Error(".caTools")});
-        }
-
-        my $hash = {
-                    CAKEY  => "$CAM_ROOT/$caName/cacert.key",
-                    CACERT => "$CAM_ROOT/$caName/cacert.pem",
-                    PASSWD => $data->{'caPasswd'}
-                   };
-        my $ret = SCR->Execute(".openssl.updateDB", $data->{'caName'}, $hash);
-        if ( not defined $ret ) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
+        
+        my $list = $ca->updateDB();
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("UpdateDB failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
+
     return 1;
 }
 
@@ -2149,31 +2688,50 @@ sub ReadCertificate {
     }
     $certificate = $data->{"certificate"};
 
-    my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
-    if ($size <= 0) {
-        return $self->SetError(summary => __("Certificate not found."),
-                               description => "Certificate '$certificate.pem' not available in '$caName'",
-                               code => "FILE_DOES_NOT_EXIST");
-    }
-    my $hash = {
-                INFILE => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem",
-                INFORM => "PEM"
-               };
-    if ($type eq "parsed") {
-        $ret = SCR->Read(".openssl.getParsedCert", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
+    my $ca = undef;
+    eval {
+        if(defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                       "",
+                                       $data->{'repository'});
+            
+        } else {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "");
+            
         }
-    } elsif($type eq "extended") {
-        $ret = SCR->Read(".openssl.getExtendedParsedCert", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
+
+        my $cert = $ca->getCertificate($certificate);
+
+        if ($type eq "parsed" || $type eq "extended") {
+            
+            $ret = YaST::caUtils->getParsed($cert);
+            my $repos = "$CAM_ROOT";
+            if(defined $data->{repository}) {
+                $repos = $data->{repository};
+            }
+            my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/newcerts/$certificate".".pem");
+            my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
+            my $endT   = "-----END[\\w\\s]+[-]{5}";
+            ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+
+            if($type eq "extended") {
+
+                $ret = YaST::caUtils->extensionParsing($ret);
+            }
+
+        } else {
+            $ret = $cert->getCertificateAsText();
         }
-    } else {
-        $ret = SCR->Read(".openssl.getTXTCert", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
+        
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Parse certificate failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
     return $ret;
 }
@@ -2247,26 +2805,37 @@ sub RevokeCertificate {
     }
     $certificate = $data->{"certificate"};
 
-    my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
-    if ($size <= 0) {
-        return $self->SetError(summary => __("Certificate not found."),
-                               description => "Certificate '$certificate.pem' not available in '$caName'",
-                               code => "FILE_DOES_NOT_EXIST");
+
+    my $ca = undef;
+    eval {
+        if(defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                       $data->{'caPasswd'},
+                                       $data->{'repository'});
+            
+        } else {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       $data->{'caPasswd'});
+            
+        }
+
+        my $reason = new LIMAL::CaMgm::CRLReason();
+
+        if (defined $data->{'crlReason'}) {
+            $reason->setReason($data->{'crlReason'});
+        }
+        
+        $ca->revokeCertificate($certificate, $reason);
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Revoke certificate failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    my $hash = {
-                CAKEY  => "$CAM_ROOT/$caName/cacert.key",
-                CACERT => "$CAM_ROOT/$caName/cacert.pem",
-                PASSWD => $data->{'caPasswd'},
-                INFILE => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem"
-               };
-    if (defined $data->{'crlReason'}) {
-        $hash->{'CRL_REASON'} = $data->{'crlReason'};
-    }
-    my $ret = SCR->Execute(".openssl.revoke", $caName, $hash);
-    if (not defined $ret) {
-        return $self->SetError(%{SCR->Error(".openssl")});
-    }
     return 1;
 }
 
@@ -2331,29 +2900,70 @@ sub AddCRL {
                                 code    => "CHECK_PARAM_FAILED");
     }
 
-    my $hash = {
-                CAKEY   => "$CAM_ROOT/$caName/cacert.key",
-                CACERT  => "$CAM_ROOT/$caName/cacert.pem",
-                PASSWD  => $data->{'caPasswd'},
-                DAYS    => $data->{'days'},
-                OUTFORM => "PEM",
-                OUTFILE => "$CAM_ROOT/$caName/crl/crl.pem"
-               };
-    my $ret = SCR->Execute(".openssl.issueCrl", $caName, $hash);
-    if (not defined $ret) {
-        return $self->SetError(%{SCR->Error(".openssl")});
+    my $ca = undef;
+    eval {
+
+        if( defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+                                       $data->{"repository"});
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+
+        }
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    $ret = SCR->Execute(".target.bash", 
-                        "cp $CAM_ROOT/$caName/crl/crl.pem $CAM_ROOT/.cas/crl_$caName.pem");
-    if (! defined $ret || $ret != 0) {
-        return $self->SetError( summary => "Can not copy CRL.",
-                                code => "COPY_FAILED");
+    my $cgd = undef;
+    eval {
+
+        $cgd = $ca->getCRLDefaults();
+
+        my $hours   = $data->{"days"} * 24;
+
+        $cgd->setCRLLifeTime($hours);
+#
+######   we use only the default extensions
+#
+#         my $exts = $cgd->getExtensions();
+        
+#         my $e = YaST::caUtils->transformAuthorityKeyIdentifier($exts,
+#                                     $data->{'authorityKeyIdentifier'});
+#         if(!defined $e) {
+#             return undef;
+#         }
+
+#         $e = YaST::caUtils->transformIssuerAltName($exts,
+#                                                    $data->{'issuerAltName'});
+#         if(!defined $e) {
+#             return undef;
+#         }
+#         $cgd->setExtensions($exts);
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Modify CRLGenerationData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-    $ret = SCR->Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
-    if (! defined $ret || $ret != 0) {
-        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
-                                code => "C_REHASH_FAILED");
+
+    eval {
+
+        $ca->createCRL($cgd);
+
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Create CRL failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
     return 1;
 }
@@ -2426,32 +3036,54 @@ sub ReadCRL {
     }
     $type = $data->{"type"};
     
-    my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem");
-    if ($size <= 0) {
-        return $self->SetError(summary => __("CRL not available."),
-                               description => "No CRL found in '$caName'",
-                               code => "FILE_DOES_NOT_EXIST");
+    my $ca = undef;
+    eval {
+        if(defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "",
+                                       $data->{'repository'});
+            
+        } else {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "");
+            
+        }
+
+        my $crl = $ca->getCRL();
+
+
+        if ($type eq "parsed" || $type eq "extended") {
+
+            $ret = YaST::caUtils->getParsedCRL($crl);
+            my $repos = "$CAM_ROOT";
+            if(defined $data->{repository}) {
+                $repos = $data->{repository};
+            }
+            my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/crl/crl.pem");
+            my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
+            my $endT   = "-----END[\\w\\s]+[-]{5}";
+            ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+
+            if($type eq "extended") {
+
+                $ret = YaST::caUtils->extensionParsing($ret);
+            }
+
+        } else {
+         
+            $ret = $crl->getCRLAsText();
+   
+        }
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Parse CRL failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-    my $hash = {
-                INFILE => "$CAM_ROOT/$caName/crl/crl.pem",
-                INFORM => "PEM",
-               };
-    if ($type eq "parsed") {
-        $ret = SCR->Read(".openssl.getParsedCRL", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-    } elsif($type eq "extended") {
-        $ret = SCR->Read(".openssl.getExtendedParsedCRL", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-    } else {
-        $ret = SCR->Read(".openssl.getTXTCRL", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-    }
+    
     return $ret;
 }
 
@@ -2569,108 +3201,116 @@ sub ExportCA {
         return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code => "PARAM_CHECK_FAILED");
     }
-    
-    if (not defined SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'}, 
-                                                              CACERT => 1})) {
-        return $self->SetError(%{SCR->Error(".caTools")});
+
+    my $ca = undef;
+    eval {
+
+        if( defined $data->{'repository'}) {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+                                       $data->{"repository"});
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+
+        }
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
+    my $ret = undef;
 
     if ($format eq "PEM_CERT") {
-        my $file = SCR->Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
-        if(! defined $file) {
-            return $self->SetError(summary => "Can not read CA certificate.",
-                                   description => "'$CAM_ROOT/$caName/cacert.pem': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
 
-        if (defined $destinationFile) {
-            if(! SCR->Write(".target.string", $destinationFile, $file)) {
-                return $self->SetError(summary => "Can not write to destination file.",
-                                       description => "'$destinationFile'",
-                                       code => "OPEN_FAILED");
+        eval {
+            
+            my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
+
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
             }
-            return 1;
-        } else {
-            return $file;
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
     } elsif ($format eq "PEM_CERT_KEY") {
 
-        my $file1 = SCR->Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
-        if(! defined $file1) {
-            return $self->SetError(summary => "Can not read CA certificate.",
-                                   description => "'$CAM_ROOT/$caName/cacert.pem': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
+        eval {
+            
+            my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
+            my $buffer2 = $ca->exportCAKeyAsPEM("");
+            
+            if (defined $destinationFile) {
 
-        my $hash = {
-                    DATATYPE => "KEY",
-                    INFORM   => "PEM",
-                    INFILE   => "$CAM_ROOT/$caName/cacert.key",
-                    OUTFORM  => "PEM",
-                    INPASSWD => $data->{'caPasswd'},
-                   };
-
-        my $file2 = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file2) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            if(! SCR->Write(".target.string", $destinationFile, $file1."\n".$file2)) {
-                return $self->SetError(summary => "Can not write to destination file.",
-                                       description => "'$destinationFile'",
-                                       code => "OPEN_FAILED");
+                LIMAL::CaMgm::LocalManagement::writeFile(($buffer1."\n".$buffer2),
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = ($buffer1."\n".$buffer2);
             }
-            return 1;
-        } else {
-            return $file1."\n".$file2;
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
     } elsif ($format eq "PEM_CERT_ENCKEY") {
-        my $file1 = SCR->Read(".target.string", "$CAM_ROOT/$caName/cacert.pem");
-        if(! defined $file1) {
-            return $self->SetError(summary => "Can not read CA certificate.",
-                                   description => "'$CAM_ROOT/$caName/cacert.pem': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
 
-        my $file2 = SCR->Read(".target.string", "$CAM_ROOT/$caName/cacert.key");
-        if(! defined $file2) {
-            return $self->SetError(summary => "Can not read CA private key.",
-                                   description => "'$CAM_ROOT/$caName/cacert.key': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
+        eval {
+            
+            my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
+            my $buffer2 = $ca->exportCAKeyAsPEM($data->{'caPasswd'});
+            
+            if (defined $destinationFile) {
 
-        if (defined $destinationFile) {
-            if(! SCR->Write(".target.string", $destinationFile, $file1."\n".$file2)) {
-                return $self->SetError(summary => "Can not write to destination file.",
-                                       description => "'$destinationFile'",
-                                       code => "OPEN_FAILED");
+                LIMAL::CaMgm::LocalManagement::writeFile(($buffer1."\n".$buffer2),
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = ($buffer1."\n".$buffer2);
             }
-            return 1;
-        } else {
-            return $file1."\n".$file2;
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
+
     } elsif ($format eq "DER_CERT") {
 
-        my $hash = {
-                    DATATYPE => "CERTIFICATE",
-                    INFORM   => "PEM",
-                    INFILE   => "$CAM_ROOT/$caName/cacert.pem",
-                    OUTFORM  => "DER"
-                   };
+        eval {
+            
+            my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_DER);
 
-        if (defined $destinationFile) {
-            $hash->{'OUTFILE'} = $destinationFile;
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
+            }
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
-        
-        my $file = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            return 1;
-        } else {
-            return $file;
-        }
+
     } elsif ($format eq "PKCS12") {
         if (!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
                                            # parameter check failed
@@ -2678,29 +3318,27 @@ sub ExportCA {
                                    code => "PARAM_CHECK_FAILED");
         }
 
-        my $hash = {
-                    DATATYPE  => "CERTIFICATE",
-                    INFORM    => "PEM",
-                    INFILE    => "$CAM_ROOT/$caName/cacert.pem",
-                    KEYFILE   => "$CAM_ROOT/$caName/cacert.key",
-                    OUTFORM   => "PKCS12",
-                    INPASSWD  => $data->{'caPasswd'},
-                    OUTPASSWD => $data->{'P12Password'}
-                   };
+        eval {
+            
+            my $buffer = $ca->exportCAasPKCS12($data->{'P12Password'},
+                                               0);
 
-        if (defined $destinationFile) {
-            $hash->{'OUTFILE'} = $destinationFile;
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
+            }
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
 
-        my $file = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            return 1;
-        } else {
-            return $file;
-        }
     } elsif ($format eq "PKCS12_CHAIN") {
 
         if (!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
@@ -2709,32 +3347,29 @@ sub ExportCA {
                                    code => "PARAM_CHECK_FAILED");
         }
 
-        my $hash = {
-                    DATATYPE  => "CERTIFICATE",
-                    INFORM    => "PEM",
-                    INFILE    => "$CAM_ROOT/$caName/cacert.pem",
-                    KEYFILE   => "$CAM_ROOT/$caName/cacert.key",
-                    OUTFORM   => "PKCS12",
-                    CHAIN     => 1,
-                    CAPATH    => "$CAM_ROOT/.cas",
-                    INPASSWD  => $data->{'caPasswd'},
-                    OUTPASSWD => $data->{'P12Password'}
-                   };
 
-        if (defined $destinationFile) {
-            $hash->{'OUTFILE'} = $destinationFile;
-        }
+        eval {
+            
+            my $buffer = $ca->exportCAasPKCS12($data->{'P12Password'},
+                                               1);
 
-        my $file = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            return 1;
-        } else {
-            return $file;
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
+            }
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
     }
+    return $ret;
 }
 
 =item *
@@ -2829,13 +3464,14 @@ sub ExportCertificate {
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{"certificate"};
-    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+[\d-]*)$/;
-    if (not defined $1) {
-                                           # parameter check failed
-        return $self->SetError(summary => "Can not parse certificate name",
-                               code => "PARSING_ERROR");
-    }
-    my $keyname = $1;
+
+#    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+[\d-]*)$/;
+#    if (not defined $1) {
+#                                           # parameter check failed
+#        return $self->SetError(summary => "Can not parse certificate name",
+#                               code => "PARSING_ERROR");
+#    }
+#    my $keyname = $1;
     
     if (defined $data->{'destinationFile'}) {
         $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
@@ -2869,143 +3505,155 @@ sub ExportCertificate {
         return $self->SetError(summary => __("Invalid value for parameter 'keyPasswd'."),
                                code => "PARAM_CHECK_FAILED");
     }
-    
-    if (not defined SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'keyPasswd'}, 
-                                                              CERT => $certificate})) {
-        return $self->SetError(%{SCR->Error(".caTools")});
+    my $keyPasswd = $data->{'keyPasswd'};
+
+    my $ca = undef;
+    eval {
+
+        if( defined $data->{'repository'}) {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+                                       $data->{"repository"});
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+
+        }
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
+    my $ret = undef;
 
     if ($format eq "PEM_CERT") {
-        my $file = SCR->Read(".target.string",
-                             "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
-        if(! defined $file) {
-            return $self->SetError(summary => "Can not read certificate.",
-                                   description => "'$CAM_ROOT/$caName/newcerts/".$certificate.".pem': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
-        if (defined $destinationFile) {
-            if(! SCR->Write(".target.string", $destinationFile, $file)) {
-                return $self->SetError(summary => "Can not write to destination file.",
-                                       description => "'$destinationFile'",
-                                       code => "OPEN_FAILED");
+        eval {
+            
+            my $buffer = $ca->exportCertificate($certificate,
+                                                $LIMAL::CaMgm::E_PEM);
+
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
             }
-            return 1;
-        } else {
-            return $file;
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
     } elsif ($format eq "PEM_CERT_KEY") {
-        if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/".$keyname.".key") == -1) {
-            return $self->SetError(summary => "Keyfile does not exist",
-                                   description => "'$CAM_ROOT/$caName/keys/$keyname.key' does not exist.",
-                                   code => "FILE_DOES_NOT_EXIST");
-        }
 
-        my $file1 = SCR->Read(".target.string", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
-        if(! defined $file1) {
-            return $self->SetError(summary => "Can not read certificate.",
-                                   description => "'$CAM_ROOT/$caName/newcerts/".$certificate.".pem': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
-        
-        my $hash = {
-                    DATATYPE => "KEY",
-                    INFORM   => "PEM",
-                    INFILE   => "$CAM_ROOT/$caName/keys/".$keyname.".key",
-                    OUTFORM  => "PEM",
-                    INPASSWD => $data->{'keyPasswd'},
-                   };
+        eval {
+            
+            my $buffer1 = $ca->exportCertificate($certificate,
+                                                 $LIMAL::CaMgm::E_PEM);
+            my $buffer2 = $ca->exportCertificateKeyAsPEM($certificate,
+                                                         $keyPasswd,
+                                                         "");
+            
+            if (defined $destinationFile) {
 
-        my $file2 = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file2) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            if(! SCR->Write(".target.string", $destinationFile, $file1."\n".$file2)) {
-                return $self->SetError(summary => "Can not write to destination file.",
-                                       description => "'$destinationFile'",
-                                       code => "OPEN_FAILED");
+                LIMAL::CaMgm::LocalManagement::writeFile(($buffer1."\n".$buffer2),
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = ($buffer1."\n".$buffer2);
             }
-            return 1;
-        } else {
-            return $file1."\n".$file2;
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
+
     } elsif ($format eq "PEM_CERT_ENCKEY") {
-        my $file1 = SCR->Read(".target.string", "$CAM_ROOT/$caName/newcerts/".$certificate.".pem");
-        if(! defined $file1) {
-            return $self->SetError(summary => "Can not read certificate.",
-                                   description => "'$CAM_ROOT/$caName/newcerts/".$certificate.".pem': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
 
-        my $file2 = SCR->Read(".target.string", "$CAM_ROOT/$caName/keys/".$keyname.".key");
-        if(! defined $file2) {
-            return $self->SetError(summary => "Can not read private key.",
-                                   description => "'$CAM_ROOT/$caName/keys/".$keyname.".key': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
+        eval {
+            
+            my $buffer1 = $ca->exportCertificate($certificate,
+                                                 $LIMAL::CaMgm::E_PEM);
+            my $buffer2 = $ca->exportCertificateKeyAsPEM($certificate,
+                                                         $keyPasswd,
+                                                         $keyPasswd);
+            
+            if (defined $destinationFile) {
 
-        if (defined $destinationFile) {
-            if(! SCR->Write(".target.string", $destinationFile, $file1."\n".$file2)) {
-                return $self->SetError(summary => "Can not write to destination file.",
-                                       description => "'$destinationFile'",
-                                       code => "OPEN_FAILED");
+                LIMAL::CaMgm::LocalManagement::writeFile(($buffer1."\n".$buffer2),
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = ($buffer1."\n".$buffer2);
             }
-            return 1;
-        } else {
-            return $file1."\n".$file2;
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
+
     } elsif ($format eq "DER_CERT") {
 
-        my $hash = {
-                    DATATYPE => "CERTIFICATE",
-                    INFORM   => "PEM",
-                    INFILE   => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem",
-                    OUTFORM  => "DER"
-                   };
+        eval {
+            
+            my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_DER);
 
-        if (defined $destinationFile) {
-            $hash->{'OUTFILE'} = $destinationFile;
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
+            }
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
-        
-        my $file = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            return 1;
-        } else {
-            return $file;
-        }
+
     } elsif ($format eq "PKCS12") {
+
         if (!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
                                            # parameter check failed
             return $self->SetError(summary => __("Parameter 'P12Password' missing."),
                                    code => "PARAM_CHECK_FAILED");
         }
 
-        my $hash = {
-                    DATATYPE  => "CERTIFICATE",
-                    INFORM    => "PEM",
-                    INFILE    => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem",
-                    KEYFILE   => "$CAM_ROOT/$caName/keys/".$keyname.".key",
-                    OUTFORM   => "PKCS12",
-                    INPASSWD  => $data->{'keyPasswd'},
-                    OUTPASSWD => $data->{'P12Password'}
-                   };
+        eval {
+            
+            my $buffer = $ca->exportCertificateAsPKCS12($certificate,
+                                                        $keyPasswd,
+                                                        $data->{'P12Password'},
+                                                        0);
 
-        if (defined $destinationFile) {
-            $hash->{'OUTFILE'} = $destinationFile;
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
+            }
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
 
-        my $file = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            return 1;
-        } else {
-            return $file;
-        }
     } elsif ($format eq "PKCS12_CHAIN") {
         if (!defined $data->{'P12Password'} || $data->{'P12Password'} eq "") {
                                            # parameter check failed
@@ -3013,32 +3661,30 @@ sub ExportCertificate {
                                    code => "PARAM_CHECK_FAILED");
         }
 
-        my $hash = {
-                    DATATYPE  => "CERTIFICATE",
-                    INFORM    => "PEM",
-                    INFILE    => "$CAM_ROOT/$caName/newcerts/".$certificate.".pem",
-                    KEYFILE   => "$CAM_ROOT/$caName/keys/".$keyname.".key",
-                    OUTFORM   => "PKCS12",
-                    CHAIN     => 1,
-                    CAPATH    => "$CAM_ROOT/.cas",
-                    INPASSWD  => $data->{'keyPasswd'},
-                    OUTPASSWD => $data->{'P12Password'}
-                   };
+        eval {
+            
+            my $buffer = $ca->exportCertificateAsPKCS12($certificate,
+                                                        $keyPasswd,
+                                                        $data->{'P12Password'},
+                                                        1);
 
-        if (defined $destinationFile) {
-            $hash->{'OUTFILE'} = $destinationFile;
-        }
+            if (defined $destinationFile) {
 
-        my $file = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            return 1;
-        } else {
-            return $file;
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
+            }
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
     }
+    return $ret;
 }
 
 =item *
@@ -3049,6 +3695,8 @@ Export a CRL to a file or returns it in different formats.
 In I<$valueMap> you can define the following keys: 
 
 * caName (required)
+
+* caPasswd (required)
 
 * exportFormat <format> (required)
 
@@ -3067,6 +3715,7 @@ EXAMPLE:
  foreach my $ef ("PEM", "DER") {
      my $data = {
                  'caName'       => 'My_CA',
+                 'caPasswd'     => 'system',
                  'exportFormat' => $ef,
                 };
      
@@ -3129,55 +3778,83 @@ sub ExportCRL {
         $destinationFile = $data->{'destinationFile'};
     }
 
-    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/crl/crl.pem") == -1) {
+    if (SCR->Read(".target.size", $data->{'repository'}."/$caName/crl/crl.pem") == -1) {
         return $self->SetError(summary => __("CRL does not exist."),
                                code => "FILE_DOES_NOT_EXIST");
     }
 
+    my $ca = undef;
+    eval {
+
+        if( defined $data->{'repository'}) {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+                                       $data->{"repository"});
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+
+        }
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+    }
+    my $ret = undef;
+
+
     if ($format eq "PEM") {
 
-        my $file = SCR->Read(".target.string", "$CAM_ROOT/$caName/crl/crl.pem");
-        if(! defined $file) {
-            return $self->SetError(summary => "Can not read CRL.",
-                                   description => "'$CAM_ROOT/$caName/crl/crl.pem': Read failed.",
-                                   code => "OPEN_FAILED");
-        }
-        if (defined $destinationFile) {
-            if(! SCR->Write(".target.string", $destinationFile, $file)) {
-                return $self->SetError(summary => "Can not write to destination file.",
-                                       description => "'$destinationFile'",
-                                       code => "OPEN_FAILED");
+        eval {
+            
+            my $buffer = $ca->exportCRL($LIMAL::CaMgm::E_PEM);
+
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
             }
-            return 1;
-        } else {
-            return $file;
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
+
     } elsif ($format eq "DER") {
-        my $hash = {
-                    DATATYPE => "CRL",
-                    INFORM   => "PEM",
-                    INFILE   => "$CAM_ROOT/$caName/crl/crl.pem",
-                    OUTFORM  => "DER"
-                   };
-        
-        if (defined $destinationFile) {
-            $hash->{'OUTFILE'} = $destinationFile;
+
+        eval {
+            
+            my $buffer = $ca->exportCRL($LIMAL::CaMgm::E_DER);
+
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer;
+            }
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Export failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
-        
-        my $file = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (not defined $file) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        if (defined $destinationFile) {
-            return 1;
-        } else {
-            return $file;
-        }
+
     } else {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'exportFormat'."),
                                code => "PARAM_CHECK_FAILED");
     }
+    return $ret;
 }
 
 =item *
@@ -3265,27 +3942,47 @@ sub Verify {
     if(defined $data->{'disableCRLcheck'} && $data->{'disableCRLcheck'} ) {
         $enableCRLcheck = 0;
     }
-    my $hash = { 
-                CERT => "$CAM_ROOT/$caName/newcerts/$certificate.pem",
-                CAPATH => "$CAM_ROOT/.cas/",
-                CRLCHECK => $enableCRLcheck,
-               };
-    if(defined $data->{'purpose'} && $data->{'purpose'} ne "") {
-        if(!grep( ($_ eq $data->{'purpose'}), ("sslclient", "sslserver", "nssslserver",
-                                               "smimesign", "smimeencrypt", "crlsign",
-                                               "any", "ocsphelper"))) {
-                                                 # parameter check failed
-            return $self->SetError(summary => __("Invalid value for parameter 'purpose'."),
-                                   description => "Value '".$data->{'purpose'}.
-                                                  "' for 'purpose' is not allowed",
-                                   code    => "PARAM_CHECK_FAILED");
+
+    my $ca = undef;
+    my $ret = undef;
+    eval {
+
+        if( defined $data->{'repository'}) {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+                                       $data->{"repository"});
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+
         }
-        $hash->{'PURPOSE'} = $data->{'purpose'};
+
+        my $purpose = "any";
+        if(defined $data->{'purpose'} && $data->{'purpose'} ne "") {
+            if(!grep( ($_ eq $data->{'purpose'}), 
+                      ("sslclient", "sslserver", "nssslserver",
+                       "smimesign", "smimeencrypt", "crlsign",
+                       "any", "ocsphelper"))) {
+                # parameter check failed
+                return $self->SetError(summary => __("Invalid value for parameter 'purpose'."),
+                                       description => "Value '".$data->{'purpose'}.
+                                       "' for 'purpose' is not allowed",
+                                       code    => "PARAM_CHECK_FAILED");
+            } else {
+                $purpose = $data->{'purpose'};
+            }
+        }
+
+        $ret = $ca->verifyCertificate($certificate, $enableCRLcheck, $purpose);
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Verify failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-    my $ret = SCR->Execute(".openssl.verify", $caName, $hash);
-    if ( not defined $ret ) {
-        return $self->SetError(%{SCR->Error(".openssl")});
-    }
+
     return $ret;
 }
 
@@ -3433,7 +4130,8 @@ sub AddSubCA {
                                 code    => "CHECK_PARAM_FAILED");
     }
 
-    if (!defined $data->{"basicConstraints"} || $data->{"basicConstraints"} !~ /CA:TRUE/i) {
+    if (!defined $data->{"basicConstraints"} ||
+        $data->{"basicConstraints"} !~ /CA:TRUE/i) {
         return $self->SetError( summary => __("According to 'basicConstraints', this is not a CA."),
                                 code    => "CHECK_PARAM_FAILED");
     }
@@ -3446,57 +4144,293 @@ sub AddSubCA {
     if (!defined $data->{"days"}) {
         $data->{"days"} = 3650;
     }
-    my $request = $self->AddRequest($data);
-    if (not defined $request) {
-        return undef;
-    }
-    $data->{'request'} = $request;
-    $data->{'certType'} = 'ca';
-    my $certificate = $self->IssueCertificate($data);
-    if (! defined $certificate) {
-        my $caName = $data->{'caName'};
-        SCR->Write(".caTools.delCAM", $caName, {MD5 => $request});
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/".$request.".key");
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/".$request.".req");
-        return undef;
+
+    my $ca = undef;
+    eval {
+
+        if( defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+                                       $data->{"caPasswd"},
+                                       $data->{"repository"});
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+                                       $data->{"caPasswd"});
+
+        }
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    if (not SCR->Write(".caTools.caInfrastructure", $data->{"newCaName"})) {
-        return $self->SetError(%{SCR->Error(".caTools")});
+    my $rgd = undef;
+    eval {
+        
+        $rgd = $ca->getRequestDefaults($LIMAL::CaMgm::E_CA_Req);
+            
+        my $dnl = $rgd->getSubject()->getDN();
+        my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
+                         'organizationName', 'organizationalUnitName',
+                         'commonName', 'emailAddress');
+        
+        for(my $dnit = $dnl->begin();
+            !$dnl->iterator_equal($dnit, $dnl->end());
+            $dnl->iterator_incr($dnit))
+        {
+            foreach my $v (@DN_Values) {
+
+                if($dnl->iterator_value($dnit)->getType() =~ /^$v$/i) {
+
+                    if(defined $data->{$v}) {
+                        
+                        $dnl->iterator_value($dnit)->setRDNValue($data->{$v});
+
+                    } else {
+
+                        $dnl->iterator_value($dnit)->setRDNValue("");
+                    }
+                }
+            }
+        }
+
+        my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
+        $rgd->setSubject($dnObject);
+
+        if( defined $data->{'challengePassword'} ) {
+
+            $rgd->setChallengePassword($data->{'challengePassword'});
+
+        } else {
+
+            $rgd->setChallengePassword("");
+
+        }
+
+        if( defined $data->{'unstructuredName'} ) {
+
+            $rgd->setUnstructuredName($data->{'unstructuredName'});
+
+        } else {
+
+            $rgd->setUnstructuredName("");
+
+        }
+
+        $rgd->setKeysize($data->{"keyLength"} +0);
+
+        my $exts = $rgd->getExtensions();
+
+        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+                                                        $data->{'basicConstraints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsComment",
+                                                     $data->{'nsComment'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsSslServerName",
+                                                     $data->{'nsSslServerName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformNsCertType($exts,
+                                                $data->{'nsCertType'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformKeyUsage($exts,
+                                              $data->{'keyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectKeyIdentifier($exts,
+                                                          $data->{'subjectKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectAltName($exts,
+                                                    $data->{'subjectAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformExtendedKeyUsage($exts,
+                                                      $data->{'extendedKeyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $rgd->setExtensions($exts);
+
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Modify RequestGenerationData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    my $retCode = SCR->Execute(".target.bash", "cp ".
-                               "$CAM_ROOT/$caName/keys/".$request.".key ".
-                               "$CAM_ROOT/$newCaName/cacert.key");
-    if (! defined $retCode || $retCode != 0) {
-        YaST::caUtils->cleanCaInfrastructure($newCaName);
-        return $self->SetError(summary => "Can not copy the private key.",
-                               code => "COPY_FAILED");
+    my $cid = undef;
+    eval {
+
+        $cid = $ca->getIssueDefaults($LIMAL::CaMgm::E_CA_Cert);
+
+        my $start = time();
+        my $end   = $start +($data->{"days"} * 24 * 60 * 60);
+
+        $cid->setCertifyPeriode($start, $end);
+
+        my $exts = $cid->getExtensions();
+        
+        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+                                                        $data->{'basicConstraints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsComment",
+                                                     $data->{'nsComment'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsBaseUrl",
+                                                     $data->{'nsBaseUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsRevocationUrl",
+                                                     $data->{'nsRevocationUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsCaRevocationUrl",
+                                                     $data->{'nsCaRevocationUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsRenewalUrl",
+                                                     $data->{'nsRenewalUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsSslServerName",
+                                                     $data->{'nsSslServerName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformStringExtension($exts, 
+                                                     "nsCaPolicyUrl",
+                                                     $data->{'nsCaPolicyUrl'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformNsCertType($exts,
+                                                $data->{'nsCertType'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformKeyUsage($exts,
+                                              $data->{'keyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectKeyIdentifier($exts,
+                                                          $data->{'subjectKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformAuthorityKeyIdentifier($exts,
+                                                            $data->{'authorityKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformSubjectAltName($exts,
+                                                    $data->{'subjectAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformIssuerAltName($exts,
+                                                   $data->{'issuerAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformExtendedKeyUsage($exts,
+                                                      $data->{'extendedKeyUsage'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformAuthorityInfoAccess($exts,
+                                                         $data->{'authorityInfoAccess'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformCrlDistributionPoints($exts,
+                                                           $data->{'crlDistributionPoints'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $cid->setExtensions($exts);
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Modify CertificateIssueData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
 
-    $retCode = SCR->Execute(".target.bash", "cp ".
-                            "$CAM_ROOT/$caName/newcerts/".$certificate.".pem ".
-                            "$CAM_ROOT/$newCaName/cacert.pem");
-    if (! defined $retCode || $retCode != 0) {
-        YaST::caUtils->cleanCaInfrastructure($newCaName);
-        return $self->SetError(summary => "Can not copy the certificate.",
-                               code => "COPY_FAILED");
-    }
+    my $certName = "";
+    eval {
 
-    $retCode = SCR->Execute(".target.bash", "cp $CAM_ROOT/$newCaName/cacert.pem $CAM_ROOT/.cas/$newCaName.pem");
-    if (!defined $retCode || $retCode != 0) {
-        #        YaST::caUtils->cleanCaInfrastructure($newCaName);
-        return $self->SetError( summary => "Can not copy CA certificate",
-                                code => "COPY_FAILED");
-    }
-    $retCode = SCR->Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
-    if (!defined $retCode || $retCode != 0) {
-        #        YaST::caUtils->cleanCaInfrastructure($newCaName);
-        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
-                                code => "C_REHASH_FAILED");
+        $certName = $ca->createSubCA($newCaName,
+                                     $data->{'keyPasswd'},
+                                     $rgd, $cid);
+        
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Create SubCA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
     
-    return $certificate;
+    return $certName;
 }
 
 =item *
@@ -3638,12 +4572,17 @@ sub ExportCAToLDAP {
                                code => "FILE_DOES_NOT_EXIST");
     }
 
-    my $ca = SCR->Read(".openssl.getParsedCert", $caName, 
-                       {
-                        INFILE => "$CAM_ROOT/$caName/cacert.pem",  INFORM => "PEM"});
-    if (not defined $ca) {
-        return $self->SetError(%{SCR->Error(".openssl")});
+    my $ca = undef;
+    eval {
+        $ca = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/cacert.pem");
+
+    };
+    if($@) {
+        return $self->SetError( summary     => __("Cannot read CA"),
+                                description => "$@",
+                                code        => "LIMAL_CALL_FAILED");
     }
+
     my ($body) = ($ca->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
 
     if (! defined $body || $body eq "") {
@@ -3885,12 +4824,17 @@ sub ExportCRLToLDAP {
                                code => "FILE_DOES_NOT_EXIST");
     }
 
-    my $crl = SCR->Read(".openssl.getParsedCRL", $caName, 
-                        {
-                         INFILE => "$CAM_ROOT/$caName/crl/crl.pem",  INFORM => "PEM"});
-    if (not defined $crl) {
-        return $self->SetError(%{SCR->Error(".openssl")});
+    my $crl = undef;
+    eval {
+        $crl = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/crl/crl.pem");
+
+    };
+    if($@) {
+        return $self->SetError( summary     => __("Cannot read CRL"),
+                                description => "$@",
+                                code        => "LIMAL_CALL_FAILED");
     }
+
     my ($body) = ($crl->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
 
     if (! defined $body || $body eq "") {
@@ -4016,31 +4960,100 @@ sub ExportCRLToLDAP {
         # seems to be the first export, so
         # check for crlDistributionPoint in config template
         
-        my $crlDP_client = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_client.crlDistributionPoints");
-        my $crlDP_server = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_server.crlDistributionPoints");
-        my $crlDP_ca     = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_ca.crlDistributionPoints");
-        
-        if ( (! defined $crlDP_client || $crlDP_client eq "") &&
-             (! defined $crlDP_server || $crlDP_server eq "") &&
-             (! defined $crlDP_ca     || $crlDP_ca     eq "") 
-           ) {
-            # if all crlDP are not defined or empty, than we can add it automaticaly
-            
-            my $crlDP = "URI:";
-            $crlDP   .= "ldap://".$data->{'ldapHostname'}.":".$data->{'ldapPort'}."/";
-            $crlDP   .= uri_escape($data->{'destinationDN'});
-            
-            if ( !SCR->Write(".CAM.openssl_tmpl.value.$caName.v3_client.crlDistributionPoints", $crlDP) ||
-                 !SCR->Write(".CAM.openssl_tmpl.value.$caName.v3_server.crlDistributionPoints", $crlDP) ||
-                 !SCR->Write(".CAM.openssl_tmpl.value.$caName.v3_ca.crlDistributionPoints", $crlDP)
-               ) {
-                y2warning("Writing crlDistributionPoints to openssl.cnf.tmpl failed.");
-                # the main action was successful. So we return 1 and not "undef"
-                return 1; 
+        my $ca = undef;
+        eval {
+            my $crlDP_client = "";
+            my $crlDP_server = "";
+            my $crlDP_ca     = "";
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
+
+            my $defClient = $ca->getIssuerDefaults($LIMAL::CaMgm::E_Client_Cert);
+
+            if($defClient->getExtensions()->getCRLDistributionPoins()->isPresent() &&
+               !$defClient->getExtensions()->getCRLDistributionPoins()->getCRLDistributionPoints()->empty()) {
+
+                $crlDP_client = "found";
             }
+            
+            my $defServer = $ca->getIssuerDefaults($LIMAL::CaMgm::E_Server_Cert);
+
+            if($defServer->getExtensions()->getCRLDistributionPoins()->isPresent() &&
+               !$defServer->getExtensions()->getCRLDistributionPoins()->getCRLDistributionPoints()->empty()) {
+
+                $crlDP_server = "found";
+            }
+
+            my $defCA = $ca->getIssuerDefaults($LIMAL::CaMgm::E_CA_Cert);
+
+            if($defCA->getExtensions()->getCRLDistributionPoins()->isPresent() &&
+               !$defCA->getExtensions()->getCRLDistributionPoins()->getCRLDistributionPoints()->empty()) {
+
+                $crlDP_ca = "found";
+            }
+
+        
+            if ( (! defined $crlDP_client || $crlDP_client eq "") &&
+                 (! defined $crlDP_server || $crlDP_server eq "") &&
+                 (! defined $crlDP_ca     || $crlDP_ca     eq "") 
+               ) {
+                # if all crlDP are not defined or empty, than we can add it automaticaly
+                
+                #my $crlDP = "URI:";
+                my $crlDP   .= "ldap://".$data->{'ldapHostname'}.":".$data->{'ldapPort'}."/";
+                $crlDP   .= uri_escape($data->{'destinationDN'});
+                
+                my $list = new LiteralValueList();
+                $list->push_back(new LiteralValue("URI", $crlDP));
+                
+                # client
+                
+                my $cdp = $defClient->getExtensions()->getCRLDistributionPoins();
+                $cdp->setCRLDistributionPoints($list);
+                
+                my $ext = $defClient->getExtensions();
+                $ext->setCRLDistributionPoints($cdp);
+                
+                $defClient->setExtensions($ext);
+                
+                # server 
+                
+                $cdp = $defServer->getExtensions()->getCRLDistributionPoins();
+                $cdp->setCRLDistributionPoints($list);
+                
+                $ext = $defServer->getExtensions();
+                $ext->setCRLDistributionPoints($cdp);
+                
+                $defServer->setExtensions($ext);
+                
+                # ca
+                
+                $cdp = $defCA->getExtensions()->getCRLDistributionPoins();
+                $cdp->setCRLDistributionPoints($list);
+                
+                $ext = $defCA->getExtensions();
+                $ext->setCRLDistributionPoints($cdp);
+                
+                $defCA->setExtensions($ext);
+                
+                $ca->setIssueDefaults($LIMAL::CaMgm::E_Client_Cert,
+                                      $defClient);
+                
+                $ca->setIssueDefaults($LIMAL::CaMgm::E_Server_Cert,
+                                      $defServer);
+                
+                $ca->setIssueDefaults($LIMAL::CaMgm::E_CA_Cert,
+                                      $defCA);
+                
+            }
+        };
+        if($@) {
+            
+            return $self->SetError( summary => __("Checking for new CRL Distribution Point failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
         }
     }
-    
     return 1;
 }
 
@@ -4481,8 +5494,8 @@ In I<$valueMap> you can define the following keys:
 * ldapPasswd (required)
 
 If the private key of the certificate is available and the
-parameter 'keyPasswd' and 'p12Passwd' are defined, an export 
-in PKCS12 format is also done.
+parameter 'caPasswd', 'keyPasswd' and 'p12Passwd' are defined, 
+an export in PKCS12 format is also done.
 
 The return value is "undef" on an error and "1" on success.
 
@@ -4589,30 +5602,26 @@ sub ExportCertificateToLDAP {
     }
 
     if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/$key.key") > 0) {
-        if(defined $data->{'keyPasswd'} && $data->{'keyPasswd'} ne "") {
-            my $check = SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'keyPasswd'},
-                                                                  CERT => $certificate});
-            if(not defined $check) {
-                return $self->SetError(%{SCR->Error(".caTools")});
-            }
-            if(!defined $data->{'p12Passwd'} || $data->{'p12Passwd'} eq "") {
-                return $self->SetError(summary => "Missing parameter 'p12Passwd'.",
-                                       code => "PARAM_CHECK_FAILED");
-            }
-            $exportPKCS12 = 1;
-        }
+        if(defined $data->{'keyPasswd'} && $data->{'keyPasswd'} ne "" &&
+           defined $data->{'caPasswd'}  && $data->{'caPasswd'} ne "" &&
+           defined $data->{'p12Passwd'} && $data->{'p12Passwd'} eq "")
+          {
+              $exportPKCS12 = 1;
+          }
     }
 
-    my $crt = SCR->Read(".openssl.getParsedCert", $caName, 
-                        {
-                         INFILE => "$CAM_ROOT/$caName/newcerts/$certificate.pem",
-                         INFORM => "PEM"
-                        });
-    if (not defined $crt) {
-        return $self->SetError(%{SCR->Error(".openssl")});
+    my $crt = undef;
+    eval {
+        $crt = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/newcerts/$certificate.pem");
+
+    };
+    if($@) {
+        return $self->SetError( summary     => __("Cannot read certificate"),
+                                description => "$@",
+                                code        => "LIMAL_CALL_FAILED");
     }
     my ($body) = ($crt->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
-
+    
     if (! defined $body || $body eq "") {
         return $self->SetError(summary => "Can not parse the certificate",
                                code => "PARSE_ERROR");
@@ -4671,25 +5680,28 @@ sub ExportCertificateToLDAP {
     }
     
     if ( $exportPKCS12 ) {
-        
-        my $p12 = SCR->Execute(".openssl.dataConvert", $caName, 
-                        {
-                         DATATYPE  => "CERTIFICATE",
-                         INFILE    => "$CAM_ROOT/$caName/newcerts/$certificate.pem",
-                         KEYFILE   => "$CAM_ROOT/$caName/keys/$key.key",
-                         INFORM    => "PEM",
-                         OUTFORM   => "PKCS12",
-                         INPASSWD  => $data->{'keyPasswd'},
-                         OUTPASSWD => $data->{'p12Passwd'}, 
-                        });
-        if (not defined $p12) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
 
+        my $ca = undef;
+        my $p12 = "";
+        eval {
+
+            $ca = new LIMAL::CaMgm::CA($caName, $data->{caPasswd});
+
+            $p12 = $ca->exportCertificateAsPKCS12($certificate,
+                                                  $data->{'keyPasswd'},
+                                                  $data->{'p12Passwd'});
+        };
+        if($@) {
+            return $self->SetError( summary     => __("Export certificate failed"),
+                                    description => "$@",
+                                    code        => "LIMAL_CALL_FAILED");
+        }
+        
         my $entry = {
                      'userPKCS12' => YaST::YCP::Byteblock($p12)
                     };
-        if (not SCR->Write(".ldap.modify", { dn => $data->{'destinationDN'}} , $entry)) {
+        if (not SCR->Write(".ldap.modify",
+                           { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
             return $self->SetError(summary => "Can not modify 'userPKCS12' in LDAP directory.",
                                    code => "LDAP_MODIFY_FAILED",
@@ -4764,63 +5776,40 @@ sub DeleteCertificate {
     }
     $certificate = $data->{'certificate'};
     
-    $certificate =~ /^([[:xdigit:]]+):([[:xdigit:]]+[\d-]*)$/;
-    if(defined $1 && defined $2 && $1 ne "" && $2 ne "") {
-        $serial = $1;
-        $req = $2;
-    }
-    
-    my $check = SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'},
-                                                          CACERT => 1});
-    if(not defined $check) {
-        return $self->SetError(%{SCR->Error(".caTools")});
-    }
-    
-    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/newcerts/$certificate.pem") == -1) {
-        return $self->SetError(summary => __("Certificate does not exist."),
-                               code => "FILE_DOES_NOT_EXIST");
-    }
-    
-    my $st = SCR->Execute(".openssl.status", $caName, {SERIAL => "$serial"});
-    if(! defined $st) {
-        return $self->SetError(%{SCR->Error(".openssl")});
-    } elsif( $st eq "Revoked" || $st eq "Expired" ) {
+    my $ca = undef;
+    eval {
 
-        if( not SCR->Write(".caTools.delCAM", $caName, { MD5 => $req })) {
-            my $desc = "Can not remove the certificate from the database.\n";
-            my $err .= SCR->Error(".caTools");
-            if(defined $err && defined $err->{summary}) {
-                $desc .= $err->{summary}."\n";
-            }
-            if(defined $err && defined $err->{description}) {
-                $desc .= $err->{description}."\n";
-            }
-            return $self->SetError(summary => __("Removing the certificate failed."),
-                                   description => $desc,
-                                   code => "SCR_WRITE_FAILED");
-        }
+        if( defined $data->{'repository'}) {
 
-        if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/newcerts/$certificate.pem")) {
-            return $self->SetError(summary => __("Removing the certificate failed."),
-                                   description => "Can not remove '$CAM_ROOT/$caName/keys/$req.key'",
-                                   code => "SCR_EXECUTE_ERROR");
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+                                       $data->{"caPasswd"},
+                                       $data->{"repository"});
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+                                       $data->{"caPasswd"});
+
         }
-        
-        if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/$req.key") >= 0) {
-            if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/$req.key")) {
-                y2error("Removing key failed. '$CAM_ROOT/$caName/keys/$req.key'");
-            }
-        }
-        if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/$req.req") >= 0) {
-            if(!SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/$req.req")) {
-                y2error("Removing request failed. '$CAM_ROOT/$caName/keys/$req.key'");
-            }
-        }
-    } else {
-        return $self->SetError( summary => __("Only revoked or expired certificates can be deleted."),
-                                description => "The status of the certificate is '$st'",
-                                code => "PARAM_CHECK_FAILED");
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
+
+    eval {
+
+        $ca->deleteCertificate($certificate);
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Delete Certificate failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+    }
+
     return 1;    
 }
 
@@ -4902,174 +5891,17 @@ sub ImportCommonServerCertificate {
                                code => "PARAM_CHECK_FAILED");
     }
 
-    my $hash = {
-                DATATYPE => "CERTIFICATE",
-                INFILE   => $data->{inFile},
-                INFORM   => 'PKCS12',
-                OUTFROM  => 'PEM',
-                INPASSWD => $data->{passwd},
-                OUTPASS  => ""
-               };
+    eval {
 
-    my $certs = SCR->Execute(".openssl.dataConvert", "/", $hash);
-    if(! defined $certs) {
-        return $self->SetError(%{SCR->Error(".openssl")});
+        LIMAL::CaMgm::LocalManagement($data->{inFile},
+                                      $data->{passwd});
+
+    };
+    if($@) {
+        return $self->SetError( summary => __("Import Certificate failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-
-    my @list = ();
-    my $info = undef;
-    my $crt = undef;
-    my $subject = undef;
-    my $issuer = undef;
-    my $keyID = undef;
-
-    foreach my $line (split(/\n/, $certs)) {
-        if(defined($info)) {
-            $crt .= "$line\n";
-            if($line =~ /^[-]{5}END[ ]([A-Z0-9 ]+)+[-]{5}$/) {
-                if($info eq $1) {
-                    push(@list, {
-                                 info    => $info,
-                                 data    => $crt,
-                                 keyID   => $keyID,
-                                 subject => $subject,
-                                 issuer  => $issuer
-                                });
-                }
-                $info = undef;
-                $crt = undef;
-                $keyID = undef;
-                $subject = undef;
-                $issuer = undef;
-            }
-        } else {
-            if($line =~ /^[-]{5}BEGIN[ ]([A-Z0-9 ]+)+[-]{5}$/) {
-                $info = "$1";
-                $crt = "$line\n";
-            } else {
-                if($line =~ /^\s+localKeyID:\s*([0-9a-fA-F\s]+)\s*$/) {
-                    $keyID = "$1";
-                } elsif($line =~ /^subject=(.*)\s*$/) {
-                    $subject = "$1";
-                } elsif($line =~ /^issuer=(.*)\s*$/) {
-                    $issuer = "$1";
-                }
-            }
-        }
-    }
-
-    $keyID = undef;
-    my $serverCertIssuer = undef;
-
-    my $serverCert = undef;
-    my $serverKey = undef;
-    my $srvIssuer = undef;
-    my @restCA = ();
-
-    # search for the server certificate
-    foreach my $certHash (@list) {
-        if(defined $certHash->{keyID} && $certHash->{keyID} ne "" &&
-           defined $certHash->{subject} && $certHash->{subject} ne "") 
-          {
-              $keyID = $certHash->{keyID};
-              $serverCertIssuer = $certHash->{issuer};
-              $serverCert = $certHash->{data};
-              $certHash->{data} = undef;
-              $certHash->{keyID} = undef;
-              last;
-          }
-    }
-
-    # search for the private key
-    foreach my $certHash (@list) {
-        if(defined $certHash->{keyID} && $certHash->{keyID} eq $keyID) 
-          {
-              $serverKey = $certHash->{data};
-              $certHash->{data} = undef;
-              last;
-          }
-    }
-
-    # search for the ca which issuered the server certificate 
-    foreach my $certHash (@list) {
-        if(defined $certHash->{subject} && $certHash->{subject} eq $serverCertIssuer) 
-          {
-              $srvIssuer = $certHash->{data};
-              $certHash->{data} = undef;
-              last;
-          }
-    }
-
-    # collect the rest CAs
-    foreach my $certHash (@list) {
-        if(defined $certHash->{data} && $certHash->{info} =~ /CERTIFICATE/) 
-          {
-              push @restCA, $certHash->{data};
-          }
-    }
-     
-    if(defined $serverCert && defined $serverKey) {
-
-        if(! defined SCR->Read(".target.dir", "/etc/ssl/servercerts")) {
-            if(! SCR->Execute(".target.mkdir", "/etc/ssl/servercerts")) {
-                return $self->SetError(summary => "Can not create 'servercerts' directory",
-                                       code => "SCR_EXECUTE_FAILED");
-            }
-        }
-        
-        if(! SCR->Write(".target.string", "/etc/ssl/servercerts/servercert.pem", $serverCert)) {
-            return $self->SetError(summary => "Can not write 'servercert.pem'",
-                                   code => "SCR_WRITE_FAILED");
-        }
-
-        if(-1 == SCR->Read(".target.size", "/etc/ssl/servercerts/serverkey.pem")) {
-
-            # create empty file
-            if(! SCR->Write(".target.string", "/etc/ssl/servercerts/serverkey.pem", "")) {
-                return $self->SetError(summary => "Can not write 'serverkey.pem'",
-                                       code => "SCR_WRITE_FAILED");
-            }
-            
-            # set the right mode
-            if(0 != SCR->Execute(".target.bash", "chmod 0600 /etc/ssl/servercerts/serverkey.pem")) {
-                return $self->SetError(summary => "Can not change the permissions for 'serverkey.pem'",
-                                       code => "SCR_EXECUTE_FAILED");
-            }
-        }
-
-        if(! SCR->Write(".target.string", "/etc/ssl/servercerts/serverkey.pem", $serverKey)) {
-            return $self->SetError(summary => "Can not write 'serverkey.pem'",
-                                   code => "SCR_WRITE_FAILED");
-        }
-
-        if(defined $srvIssuer) {
-            if(! SCR->Write(".target.string", "/etc/ssl/certs/YaST-CA.pem", $srvIssuer)) {
-                return $self->SetError(summary => "Can not write 'YaST-CA.pem'",
-                                       code => "SCR_WRITE_FAILED");
-            }
-        }
-        
-        my $i = 1;
-        foreach my $ca (@restCA) {
-            if(! SCR->Write(".target.string", "/etc/ssl/certs/YaST-CA-$i.pem", $ca)) {
-                return $self->SetError(summary => "Can not write 'YaST-CA-$i.pem'",
-                                       code => "SCR_WRITE_FAILED");
-            }
-            $i++;
-        }
-        
-        # call c_rehash for /etc/ssl/certs/
-        my $ret = SCR->Execute(".target.bash", "c_rehash /etc/ssl/certs/");
-        if (! defined $ret || $ret != 0) {
-            return $self->SetError( summary => "Can not create hash vaules in '/etc/ssl/certs/'",
-                                    description => "'c_rehash /etc/ssl/certs/' failed",
-                                    code => "C_REHASH_FAILED");
-        }
-    } else {
-        return $self->SetError(summary => __("Invalid certificate file."),
-                               description => "Can not find a server certificate or the private key.",
-                               code => "PARSING_ERROR");
-    }    
     return 1;
 }
 
@@ -5147,12 +5979,13 @@ sub ReadFile {
         return $self->SetError(summary => "Unknown value '".$data->{type}."' in 'type'",
                                code => "PARAM_CHECK_FAILED");
     }
+    my $type = $data->{type};
 
     if(! defined $data->{datatype} || $data->{datatype} eq "") {
         return $self->SetError(summary => "Missing parameter 'datatype'",
                                code => "PARAM_CHECK_FAILED");
     }
-    if(! grep( ($_ eq $data->{datatype}), ("CERTIFICATE", "CRL"))) {
+    if(! grep( ($_ eq $data->{datatype}), ("CERTIFICATE", "CRL", "REQUEST"))) {
         return $self->SetError(summary => "Unknown value '".$data->{datatype}."' in 'datatype'",
                                code => "PARAM_CHECK_FAILED");
     }
@@ -5166,63 +5999,109 @@ sub ReadFile {
                                code => "PARAM_CHECK_FAILED");
     }
 
-    my $hash = {
-                INFILE => $data->{inFile},
-                INFORM => $data->{inForm}
-               };
+    eval {
+        my $inForm = $LIMAL::CaMgm::E_PEM;
 
-    if($data->{datatype} eq "CERTIFICATE") {
+        if($data->{inForm} eq "DER") {
+            $inForm = $LIMAL::CaMgm::E_DER;
+        }
+
+        if($data->{datatype} eq "CERTIFICATE") {
+            
+            my $cert = LIMAL::CaMgm::LocalManagement::getCertificate($data->{inFile},
+                                                                     $inForm);
+
+            if ($type eq "parsed" || $type eq "extended") {
+
+                $ret = YaST::caUtils->getParsed($cert);
+
+                #
+                # FIXME: convert DER to PEM
+                #
+                if($data->{inForm} eq "PEM") {
+
+                    my $bod = LIMAL::CaMgm::LocalManagement::readFile($data->{inFile});
+
+                    my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
+                    my $endT   = "-----END[\\w\\s]+[-]{5}";
+                    ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+                }
+
+                if($type eq "extended") {
+                    
+                    $ret = YaST::caUtils->extensionParsing($ret);
+                }
+                
+            } else {
+                $ret = $cert->getCertificateAsText();
+            }
+        } elsif($data->{datatype} eq "CRL") {
+
+            my $crl = LIMAL::CaMgm::LocalManagement::getCRL($data->{inFile},
+                                                            $inForm);
+
+            if ($type eq "parsed" || $type eq "extended") {
+                
+                $ret = YaST::caUtils->getParsedCRL($crl);
+
+
+                #
+                # FIXME: convert DER to PEM
+                #
+                if($data->{inForm} eq "PEM") {
+
+                    my $bod = LIMAL::CaMgm::LocalManagement::readFile($data->{inFile});
+                    my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
+                    my $endT   = "-----END[\\w\\s]+[-]{5}";
+                    ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+                }
+
+                if($type eq "extended") {
+                    
+                    $ret = YaST::caUtils->extensionParsing($ret);
+                }
+                
+            } else {
+                
+                $ret = $crl->getCRLAsText();
+                
+            }
+            
+        } elsif($data->{datatype} eq "REQUEST") {
+
+            my $req = LIMAL::CaMgm::LocalManagement::getRequest($data->{inFile},
+                                                                $inForm);
+
+            if ($type eq "parsed" || $type eq "extended") {
+
+                $ret = YaST::caUtils->getParsedRequest($req);
+
+                #
+                # FIXME: convert DER to PEM
+                #
+                if($data->{inForm} eq "PEM") {
+
+                    my $bod = LIMAL::CaMgm::LocalManagement::readFile($data->{inFile});
+                    my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
+                    my $endT   = "-----END[\\w\\s]+[-]{5}";
+                    ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+                }
+
+                if($type eq "extended") {
+                    
+                    $ret = YaST::caUtils->extensionParsing($ret);
+                }
+                
+            } else {
+                $ret = $req->getRequestAsText();
+            }
+        }
+    };
+    if($@) {
         
-        if ($data->{type} eq "parsed") {
-            $ret = SCR->Read(".openssl.getParsedCert", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        } elsif($data->{type} eq "extended") {
-            $ret = SCR->Read(".openssl.getExtendedParsedCert", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        } else {
-            $ret = SCR->Read(".openssl.getTXTCert", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        }
-    } elsif($data->{datatype} eq "CRL") {
-        if ($data->{type} eq "parsed") {
-            $ret = SCR->Read(".openssl.getParsedCRL", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        } elsif($data->{type} eq "extended") {
-            $ret = SCR->Read(".openssl.getExtendedParsedCRL", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        } else {
-            $ret = SCR->Read(".openssl.getTXTCRL", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        }
-    } elsif($data->{datatype} eq "REQUEST") {
-        if ($data->{type} eq "parsed") {
-            $ret = SCR->Read(".openssl.getParsedREQ", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        } elsif($data->{type} eq "extended") {
-            $ret = SCR->Read(".openssl.getExtendedParsedREQ", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        } else {
-            $ret = SCR->Read(".openssl.getTXTREQ", "/", $hash);
-            if (not defined $ret) {
-                return $self->SetError(%{SCR->Error(".openssl")});
-            }
-        }
+        return $self->SetError( summary => __("Parsing failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
     return $ret;
 }
@@ -5307,32 +6186,52 @@ sub ReadRequest {
     }
     $request = $data->{"request"};
 
-    my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/req/".$request.".req");
-    if ($size <= 0) {
-        return $self->SetError(summary => __("Request not found."),
-                               description => "Request '$request.req' not available in '$caName'",
-                               code => "FILE_DOES_NOT_EXIST");
+    my $ca = undef;
+    eval {
+        if(defined $data->{'repository'}) {
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "",
+                                       $data->{'repository'});
+
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "");
+
+        }
+
+        my $req = $ca->getRequest($request);
+
+        if ($type eq "parsed" || $type eq "extended") {
+
+            $ret = YaST::caUtils->getParsedRequest($req);
+            my $repos = "$CAM_ROOT";
+            if(defined $data->{repository}) {
+                $repos = $data->{repository};
+            }
+            my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/req/$request".".req");
+            my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
+            my $endT   = "-----END[\\w\\s]+[-]{5}";
+            ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+
+            if($type eq "extended") {
+
+                $ret = YaST::caUtils->extensionParsing($ret);
+            }
+
+        } else {
+            $ret = $req->getRequestAsText();
+        }
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Parse request failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-    my $hash = {
-                INFILE => "$CAM_ROOT/$caName/req/".$request.".req",
-                INFORM => "PEM"
-               };
-    if ($type eq "parsed") {
-        $ret = SCR->Read(".openssl.getParsedREQ", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-    } elsif($type eq "extended") {
-        $ret = SCR->Read(".openssl.getExtendedParsedREQ", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-    } else {
-        $ret = SCR->Read(".openssl.getTXTREQ", $caName, $hash);
-        if (not defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-    }
+
     return $ret;
 }
 
@@ -5407,10 +6306,46 @@ sub ReadRequestList {
     }
     my $caName = $data->{'caName'};
 
-    $ret = SCR->Read(".caTools.requestList", $data->{'caName'});
-    if ( not defined $ret ) {
-        return $self->SetError(%{SCR->Error(".caTools")});
+    my $ca = undef;
+    eval {
+        if(defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                       "",
+                                       $data->{'repository'});
+            
+        } else {
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "");
+            
+        }
+
+        my $list = $ca->getRequestList();
+
+        for(my $listIT = $list->begin();
+            !$list->iterator_equal($listIT, $list->end());
+            $list->iterator_incr($listIT))
+        {
+
+            my $hash = undef;
+            my $map = $list->iterator_value($listIT);
+
+            for(my $mapIT = $map->begin();
+                !$map->iterator_equal($mapIT, $map->end());
+                $map->iterator_incr($mapIT))
+            {
+                $hash->{$map->iterator_key($mapIT)} = $map->iterator_value($mapIT);
+            }
+            push @$ret, $hash;
+        }
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Getting the request list failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
+
     return $ret;
 }
 
@@ -5464,7 +6399,7 @@ BEGIN { $TYPEINFO{ImportRequest} = [
 sub ImportRequest {
     my $self = shift;
     my $data = shift;
-    my $pemReq = "";
+    my $ret  = undef;
 
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
@@ -5495,106 +6430,51 @@ sub ImportRequest {
         return $self->SetError(summary => "No request data found.",
                                code => "OPEN_FAILED");
     }
-    
-    if(defined $data->{importFormat} && $data->{importFormat} eq "DER") {
-        
-        $pemReq = SCR->Execute(".openssl.dataConvert", $caName, { DATATYPE => "REQ",
-                                                                  INFORM   => "DER",
-                                                                  OUTFORM  => "PEM",
-                                                                  DATA     => $data->{data}
-                                                                });
-        if(! defined $pemReq) {
-            return $self->SetError(%{SCR->Error(".openssl")});
+
+    my $ca = undef;
+
+    eval {
+        if(defined $data->{'repository'}) {
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "",
+                                       $data->{'repository'});
+
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       "");
+
         }
-    } else {
-        my $beginReq = "-----BEGIN[\\w\\s]+[-]{5}";
-        my $endReq   = "-----END[\\w\\s]+[-]{5}";
-        ( $pemReq ) = ( $data->{'data'} =~ /($beginReq[\S\s\n]+$endReq)/ );
-        
-        if(! defined $pemReq || $pemReq eq "") {
-            return $self->SetError(summary => "Invalid request data.",
-                                   code => "PARSING_ERROR");
-        }
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-
-    my $hash = {
-                DATA   => $pemReq,
-                INFORM => "PEM"
-               };
-
-    my $parsed = SCR->Read(".openssl.getParsedREQ", $caName, $hash);
-    if (not defined $parsed) {
-        return $self->SetError(%{SCR->Error(".openssl")});
-    }
-    my $dnHash = {};
-
-    if(exists  $parsed->{DN_HASH}->{CN}->[0] &&
-       defined $parsed->{DN_HASH}->{CN}->[0] &&
-       $parsed->{DN_HASH}->{CN}->[0] ne "")
-      {
-          $dnHash->{'commonName'} = $parsed->{DN_HASH}->{CN}->[0];
-      }
-    if(exists  $parsed->{DN_HASH}->{C}->[0] &&
-       defined $parsed->{DN_HASH}->{C}->[0] &&
-       $parsed->{DN_HASH}->{C}->[0] ne "")
-      {
-          $dnHash->{'country'} = $parsed->{DN_HASH}->{C}->[0];
-      }
-    if(exists  $parsed->{DN_HASH}->{OU}->[0] &&
-       defined $parsed->{DN_HASH}->{OU}->[0] &&
-       $parsed->{DN_HASH}->{OU}->[0] ne "")
-      {
-          $dnHash->{'organizationalUnitName'} = $parsed->{DN_HASH}->{OU}->[0];
-      }
-    if(exists  $parsed->{DN_HASH}->{ST}->[0] &&
-       defined $parsed->{DN_HASH}->{ST}->[0] &&
-       $parsed->{DN_HASH}->{ST}->[0] ne "")
-      {
-          $dnHash->{'stateOrProvinceName'} = $parsed->{DN_HASH}->{ST}->[0];
-      }
-    if(exists  $parsed->{DN_HASH}->{O}->[0] &&
-       defined $parsed->{DN_HASH}->{O}->[0] &&
-       $parsed->{DN_HASH}->{O}->[0] ne "")
-      {
-          $dnHash->{'organizationName'} = $parsed->{DN_HASH}->{O}->[0];
-      }
-    if(exists  $parsed->{DN_HASH}->{EMAILADDRESS}->[0] &&
-       defined $parsed->{DN_HASH}->{EMAILADDRESS}->[0] &&
-       $parsed->{DN_HASH}->{EMAILADDRESS}->[0] ne "")
-      {
-          $dnHash->{'emailAddress'} = $parsed->{DN_HASH}->{EMAILADDRESS}->[0];
-      }
-    if(exists  $parsed->{DN_HASH}->{L}->[0] &&
-       defined $parsed->{DN_HASH}->{L}->[0] &&
-       $parsed->{DN_HASH}->{L}->[0] ne "")
-      {
-          $dnHash->{'localityName'} = $parsed->{DN_HASH}->{L}->[0];
-      }
     
-    my $subject = YaST::caUtils->stringFromDN($dnHash);
-    if(!defined $subject) {
-        return $self->SetError(%{YaST::caUtils->Error()});
-    }
-    my $md5 = md5_hex($subject);
-    $md5    = $md5."-".time();
+    eval {
+        if(defined $data->{importFormat} && $data->{importFormat} eq "DER") {
+            
+            $ret = $ca->importRequestData($data->{data}, 
+                                          $LIMAL::CaMgm::E_DER);
+            
+        } else {
+            
+            $ret = $ca->importRequestData($data->{data}, 
+                                          $LIMAL::CaMgm::E_PEM);
+            
+        }
+    };
+    if($@) {
 
-    my $dummy = SCR->Read(".target.size", "$CAM_ROOT/$caName/req/$md5.req");
-    if ($dummy != -1) {
-        return $self->SetError(summary => __("Duplicate DN. Request already exists."),
-                               description => "'$subject' already exists.",
-                               code => "FILE_ALREADY_EXIST");
+        return $self->SetError( summary => __("Import Request failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-
-    if(!SCR->Write(".target.string", "$CAM_ROOT/$caName/req/$md5.req", $pemReq)) {
-        return $self->SetError( summary => "Can not write the request.",
-                                code => "SCR_WRITE_FAILED");
-    }
-
-    if(! SCR->Write(".caTools.addCAM", $caName, { MD5 => $md5, DN => $subject})) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/$md5.req");
-        return $self->SetError(%{SCR->Error(".caTools")});
-    }
-    return $md5;
+    
+    return $ret;
 }
 
 
@@ -5608,9 +6488,9 @@ In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
-* request (required)
-
 * caPasswd (required)
+
+* request (required)
 
 The syntax of these values are explained in the 
 B<COMMON PARAMETER> section.
@@ -5661,36 +6541,28 @@ sub DeleteRequest {
     }
     $req = $data->{'request'};
     
-    my $check = SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'},
-                                                          CACERT => 1});
-    if(not defined $check) {
-        return $self->SetError(%{SCR->Error(".caTools")});
-    }
+    my $ca = undef;
+    eval {
+        if(defined $data->{'repository'}) {
 
-    if( not SCR->Write(".caTools.delCAM", $caName, { MD5 => $req })) {
-        my $desc = "Can not remove the request from the database.\n";
-        my $err .= SCR->Error(".caTools");
-        if(defined $err && defined $err->{summary}) {
-            $desc .= $err->{summary}."\n";
-        }
-        if(defined $err && defined $err->{description}) {
-            $desc .= $err->{description}."\n";
-        }
-        return $self->SetError(summary => __("Removing the request failed."),
-                               description => $desc,
-                               code => "SCR_WRITE_FAILED");
-    }
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       $data->{'caPasswd'},
+                                       $data->{'repository'});
 
-    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/keys/$req.key") >= 0) {
-        if(! SCR->Execute(".target.remove", "$CAM_ROOT/$caName/keys/$req.key")) {
-            y2error("Removing key failed. '$CAM_ROOT/$caName/keys/$req.key'");
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                                       $data->{'caPasswd'});
+
         }
-    }
-    if (SCR->Read(".target.size", "$CAM_ROOT/$caName/req/$req.req") >= 0) {
-        if(!SCR->Execute(".target.remove", "$CAM_ROOT/$caName/req/$req.req")) {
-            return $self->SetError(summary => __("Removing the request failed."),
-                                   code => "SCR_EXECUTE_FAILED");
-        }
+
+        $ca->deleteRequest($req);
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Delete Request failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
     return 1;    
 }
@@ -5754,27 +6626,6 @@ sub ImportCA {
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    my $hash = {
-                'datatype' => "CERTIFICATE",
-                'inFile' => $data->{caCertificate},
-                'inForm' => "PEM",
-                'type'   => 'parsed',
-               };
-    my $res = $self->ReadFile($hash);
-    if (! defined $res) {
-        return $self->SetError(summary => __("CA certificate not available in").
-                               " '$data->{caCertificate}'",
-                               code => "FILE_DOES_NOT_EXIST");
-        return undef;
-    }
-    
-    if (!defined $res->{"IS_CA"} ||
-        $res->{"IS_CA"} != 1) {
-                                           # parameter check failed
-        return $self->SetError( summary => __("According to 'basicConstraints', this is not a CA."),
-                                code    => "CHECK_PARAM_FAILED");
-    }
-    
     if (!defined $data->{caKey} || $data->{caKey} eq "") {
         return $self->SetError(summary => __("Invalid value for parameter 'caKey'."),
                                code    => "PARAM_CHECK_FAILED");
@@ -5785,77 +6636,34 @@ sub ImportCA {
         return $self->SetError(summary => __("CA key not available in")." '$data->{caKey}'",
                                code => "FILE_DOES_NOT_EXIST");
     }
-    
-    my $pem = SCR->Read(".target.string", $data->{caKey});
-    if (!defined $pem) {
-        return $self->SetError(summary => __("CA key not available in")." '$data->{caKey}'",
-                               code => "SCR_READ_FAILED");
-    }
 
-    my $beginKey = "-----BEGIN[\\w\\s]+KEY[-]{5}";
-    my $endKey   = "-----END[\\w\\s]+KEY[-]{5}";
-    my ( $pemKey ) = ( $pem =~ /($beginKey[\S\s\n]+$endKey)/ );
-    
-    if(! defined $pemKey || $pemKey eq "") {
-        return $self->SetError(summary => "Invalid Key data.",
-                               code => "PARSING_ERROR");
-    }
+    eval {
 
-    if($pemKey !~ /ENCRYPTED/si) {
-        if(! defined $data->{caPasswd}) {
-            return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
-                                   code    => "PASSWD_REQUIRED");
+        my $cert = LIMAL::CaMgm::LocalManagement::readFile($data->{caCertificate});
+        my $key  = LIMAL::CaMgm::LocalManagement::readFile($data->{caKey});
+
+        if(!exists $data->{caPasswd} || !defined $data->{caPasswd}) {
+            $data->{caPasswd} = "";
         }
-    }
-    
-    # END OF CHECKS
 
-    if (not SCR->Write(".caTools.caInfrastructure", $caName)) {
-        return $self->SetError(%{SCR->Error(".caTools")});
-    }
+        if( defined $data->{'repository'}) {
 
-    my $ret = SCR->Execute(".target.bash", "cp $data->{caCertificate} $CAM_ROOT/$caName/cacert.pem");
-    if (! defined $ret || $ret != 0) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError( summary => "Can not copy CA certificate",
-                                code => "COPY_FAILED");
-    }
+            LIMAL::CaMgm::CA::importCA($caName, $cert, $key,
+                                       $data->{caPasswd},
+                                       $data->{"repository"});
 
-    if($pemKey =~ /ENCRYPTED/si) {
-        $ret = SCR->Execute(".target.bash", "cp $data->{caKey} $CAM_ROOT/$caName/cacert.key");
-        if (! defined $ret || $ret != 0) {
-            YaST::caUtils->cleanCaInfrastructure($caName);
-            return $self->SetError( summary => "Can not copy CA Key",
-                                    code => "COPY_FAILED");
+        } else {
+
+            LIMAL::CaMgm::CA::importCA($caName, $cert, $key,
+                                       $data->{caPasswd});
         }
-    } else {
-        my $hash = {
-                    DATATYPE  => "KEY",
-                    INFORM    => "PEM",
-                    INFILE    => $data->{caKey},
-                    OUTFORM   => "PEM",
-                    OUTPASSWD => $data->{'caPasswd'},
-                    OUTFILE   => "$CAM_ROOT/$caName/cacert.key",
-                   };
+    };
+    if($@) {
 
-        $ret = SCR->Execute(".openssl.dataConvert", $caName, $hash);
-        if (! defined $ret) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
+        return $self->SetError( summary => __("Import CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-
-    $ret = SCR->Execute(".target.bash", "cp $CAM_ROOT/$caName/cacert.pem $CAM_ROOT/.cas/$caName.pem");
-    if (! defined $ret || $ret != 0) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError( summary => "Can not copy CA certificate",
-                                code => "COPY_FAILED");
-    }
-    $ret = SCR->Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
-    if (! defined $ret || $ret != 0) {
-        YaST::caUtils->cleanCaInfrastructure($caName);
-        return $self->SetError( summary => "Can not create hash vaules in '$CAM_ROOT/.cas/'",
-                                code => "C_REHASH_FAILED");
-    }    
 
     return 1;
 }
@@ -5922,55 +6730,39 @@ sub DeleteCA {
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if(! defined SCR->Read(".caTools.checkKey", $caName, { PASSWORD => $data->{'caPasswd'},
-                                                           CACERT => 1})) 
-      {
-          return $self->SetError(%{SCR->Error(".caTools")});
-      }
-    
-    if(exists $data->{force} && defined $data->{force} && $data->{force} == 1) {
+    if(exists $data->{force}  && 
+       defined $data->{force} &&
+       $data->{force} == 1) {
         # force delete
         $doDelete = 1;
     } else {
-
-        my $size = SCR->Read(".target.size", "$CAM_ROOT/$caName/index.txt");
-        if($size <= 0) {
-            # no certificate signed with this CA or broken infrastucture
-            # delete is OK
-            $doDelete = 1;
-        }
-
-        my $OSSLexpDate = $self->ReadCA({ caName => "$caName",
-                                          type   => 'parsed'})->{NOTAFTER};
-        my $expDate = SCR->Execute(".openssl.getNumericDate", $caName, $OSSLexpDate);
-        if (not defined $expDate) {
-            return $self->SetError(%{SCR->Error(".openssl")});
-        }
-        my ($year,$month,$day, $hour,$min,$sec) = Today_and_Now();
-        my $now = $year.$month.$day.$hour.$min.$sec;
-        
-        if($now > $expDate) {
-            # CA is expired
-            # delete is ok
-            $doDelete = 1;
-        }
+        $doDelete = 0;
     }
 
-    if($doDelete) {
-        if(! defined YaST::caUtils->cleanCaInfrastructure($caName)) {
-            return $self->SetError( summary => __("Deleting the CA failed."),
-                                    code    => "DELETE_FAILED");
+    eval {
+
+        if( defined $data->{'repository'}) {
+
+            LIMAL::CaMgm::CA::deleteCA($caName, 
+                                       $data->{caPasswd},
+                                       $doDelete,
+                                       $data->{"repository"});
+
+        } else {
+
+            LIMAL::CaMgm::CA::importCA($caName,
+                                       $data->{caPasswd},
+                                       $doDelete);
         }
+    };
+    if($@) {
 
-        SCR->Execute(".target.bash", "rm -f $CAM_ROOT/.cas/$caName.pem");
-        SCR->Execute(".target.bash", "rm -f $CAM_ROOT/.cas/crl_$caName.pem");
-        SCR->Execute(".target.bash", "c_rehash $CAM_ROOT/.cas/");
-
-    } else {
-        return $self->SetError( summary => __("Deleting the CA is not allowed."),
-                                description => "The CA must be expired or no certificate was signed with this CA",
-                                code    => "CA_STILL_IN_USE");
+        return $self->SetError( summary => __("Delete CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
+
+    return 1;
 }
 
 
@@ -5982,7 +6774,7 @@ C<$crlValueMap = ReadCRLDefaults($valueMap)>
 Read the default values for a CRL.
 In I<$valueMap> you can define the following keys:
 
-* caName (if not defined, read defaults for new Root CAs)
+* caName (required)
 
 Returns a map with defaults for CRLs in this CA.
 The return value is "undef" on an error.
@@ -6030,35 +6822,62 @@ sub ReadCRLDefaults {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
 
-    if(defined $data->{caName}) {
-        $caName = $data->{caName};
+    if (!defined $data->{'caName'}) {
+                                    # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
     }
+    $caName = $data->{'caName'};
 
     $ret = {
             'authorityKeyIdentifier' => undef,
             'issuerAltName'          => undef,
            };
 
-    foreach my $extName ( keys %{$ret}) {
-        if (defined $caName && $caName ne "") {
-            $ret->{$extName} = SCR->Read(".CAM.openssl_tmpl.value.$caName.v3_crl.$extName");
-            if (not defined $ret->{$extName}) {
-                delete $ret->{$extName};
-            }
+    my $ca  = undef;
+    my $cgd = undef;
+
+    eval {
+
+        if(defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, "",
+                                       $data->{'repository'});
         } else {
-            $ret->{$extName} = SCR->Read(".CAM.opensslroot_tmpl.value.v3_crl.$extName");
-            if (not defined $ret->{$extName}) {
-                delete $ret->{$extName};
-            }
+            
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, "");
+            
         }
+        
+        $cgd = $ca->getCRLDefaults();
+        
+        my $crlExt = $cgd->getExtensions();
+
+        
+        my $e = YaST::caUtils->extractAuthorityKeyIdentifier($crlExt->getAuthorityKeyIdentifier(),
+                                                             $ret);
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->extractIssuerAltName($crlExt->getIssuerAlternativeName(),
+                                                 $ret);
+        if(!defined $e) {
+            return undef;
+        }
+        my $days = int($cgd->getCRLLifeTime() / 24);
+        if($days == 0) {
+            $days = 1;
+        }
+        $ret->{'days'} = $days;
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Get defaults failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+
     }
-    if (defined $caName && $caName ne "") {
-        $ret->{'days'} = SCR->Read(".CAM.openssl_tmpl.value.$caName.ca.default_crl_days");
-    } else {
-        $ret->{'days'} = SCR->Read(".CAM.opensslroot_tmpl.value.ca.default_crl_days");
-    }
-    delete $ret->{'days'} if(not defined $ret->{'days'});
-    
     return $ret;
 }
 
@@ -6121,62 +6940,69 @@ sub WriteCRLDefaults {
     }
     $caName = $data->{"caName"};
     
-    $ret = SCR->Execute(".target.bash",
-                        "cp $CAM_ROOT/$caName/openssl.cnf.tmpl $CAM_ROOT/$caName/openssl.cnf");
-    if (! defined $ret || $ret != 0) {
-        return $self->SetError( summary => "Can not create backup file '$CAM_ROOT/$caName/openssl.cnf'",
-                                code => "COPY_FAILED");
-    }
-    SCR->UnmountAgent(".CAM.openssl_cnf");
-
-    if (not SCR->Write(".CAM.openssl_cnf.value.$caName.ca.crl_extensions", 
-                       "v3_crl")) { 
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
-    }
-
-    #####################################################
-    # merge this extentions to the config file
-    #
-    #             v3 ext. value               default
-    #####################################################
-    my %v3ext = (
-                 'authorityKeyIdentifier' => undef,
-                 'issuerAltName'          => undef,
-                );
-    
-    foreach my $extName ( keys %v3ext) {
-        if (not defined YaST::caUtils->mergeToConfig($extName, "v3_crl",
-                                                     $data, $v3ext{$extName})) {
-            SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-            return $self->SetError(%{YaST::caUtils->Error()});
+    my $ca = undef;
+    eval {
+        
+        if( defined $data->{'repository'}) {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "",
+                                       $data->{"repository"});
+        } else {
+            
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
+            
         }
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Initialize CA failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
-    
-    if(defined $data->{days}) {
-        if(not SCR->Write(".CAM.openssl_cnf.value.$caName.ca.default_crl_days", $data->{days})) {
-            return $self->SetError( summary => "Can not write to config file",
-                                    code => "SCR_WRITE_FAILED");
+
+    my $cgd = undef;
+    eval {
+
+        $cgd = $ca->getCRLDefaults();
+
+        if(defined $data->{days} && $data->{days} ne "") {
+            $cgd->setCRLLifeTime( ($data->{days} * 24) );
         }
-    }
 
-    if (not SCR->Write(".CAM.openssl_cnf", undef)) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not write to config file",
-                                code => "SCR_WRITE_FAILED");
+        my $exts = $cgd->getExtensions();
+        
+        my $e = YaST::caUtils->transformAuthorityKeyIdentifier($exts,
+                                                               $data->{'authorityKeyIdentifier'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $e = YaST::caUtils->transformIssuerAltName($exts,
+                                                   $data->{'issuerAltName'});
+        if(!defined $e) {
+            return undef;
+        }
+
+        $cgd->setExtensions($exts);
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Modify CRLGenerationData failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
     }
     
-    $ret = SCR->Execute(".target.bash", 
-                        "cp $CAM_ROOT/$caName/openssl.cnf $CAM_ROOT/$caName/openssl.cnf.tmpl");
-    if (! defined $ret || $ret != 0) {
-        SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
-        return $self->SetError( summary => "Can not create new template file '$CAM_ROOT/$caName/openssl.cnf.tmpl'",
-                                code => "COPY_FAILED");
-    }
-    SCR->UnmountAgent(".CAM.openssl_tmpl");
+    eval {
 
-    SCR->Execute(".target.remove", "$CAM_ROOT/$caName/openssl.cnf");
+        $ca->setCRLDefaults($cgd);
+    };
+    if($@) {
+        
+        return $self->SetError( summary => __("Write defaults failed"),
+                                description => "$@",
+                                code => "LIMAL_CALL_FAILED");
+    }
+
     return 1;
 }
 
