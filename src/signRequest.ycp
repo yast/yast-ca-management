@@ -48,7 +48,7 @@
             return _("\nRequest not found");
         }
 	text = text + "<pre>";
-	map dn = requestMap["DN_HASH"]:$[];
+	map dn = requestMap["SUBJECT_HASH"]:$[];
 	if (size (dn) > 0)
 	{
 	    text = text + "\nCommon Name:        " + ((list)dn["CN"]:[])[0]:"";
@@ -60,7 +60,7 @@
 	    text = text + "\nLocation:           " + ((list)dn["L"]:[])[0]:"";	    
 	    text = text + "\nState:              " + ((list)dn["ST"]:[])[0]:"";
 	    text = text + "\nCountry:            " + ((list)dn["C"]:[])[0]:"";
-	    text = text + "\nEMAIL:              " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
+	    text = text + "\nEMAIL:              " + ((list)dn["emailAddress"]:[])[0]:"";
 	}
 	if (!onlySubject)
 	{

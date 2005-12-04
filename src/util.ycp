@@ -462,6 +462,7 @@ Enter the required LDAP password.
 			else
 			{
 			    ret = (boolean) YaPI::CaManagement::ExportCertificateToLDAP ($["caName": CAname,
+                                               "caPasswd" : getPassword (CAname),
 											   "certificate" : certificate,
 											   "ldapHostname" : hostname,
 											   "ldapPort" : port,
@@ -751,6 +752,7 @@ Enter the required LDAP password.
 		{
 		    string ret = nil;
 		    ret = (string) YaPI::CaManagement::ExportCRL ($["caName": CAname,
+                                   "caPasswd" : getPassword (CAname),
 								   "exportFormat" : kind,
 								   "destinationFile" : filename
 								 ]);
@@ -907,6 +909,7 @@ Enter the required LDAP password.
 			|| kind == "PKCS12_CHAIN")
 		    {
 			ret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CAname,
+                                                                                "caPasswd" : getPassword (CAname),
 										"certificate" : certificate,
 										"keyPasswd" : UI::QueryWidget (`id(`keyPassword), `Value),
 										"exportFormat" : kind,
@@ -917,6 +920,7 @@ Enter the required LDAP password.
 		    else
 		    {
 			ret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CAname,
+                                                                                "caPasswd" : getPassword (CAname),
 										"certificate" : certificate,
 										"keyPasswd" : UI::QueryWidget (`id(`keyPassword), `Value),
 										"exportFormat" : kind,
@@ -1124,6 +1128,7 @@ This certificate might be not practical as a common server certificate.
 		string filename = (string) SCR::Read (.target.tmpdir) + "/commonCertificate";
 		    
 		string ret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CAname,
+                                                                               "caPasswd" : getPassword (CAname),
 									       "certificate" : certificate,
 									       "keyPasswd" : password,
 									       "exportFormat" : "PKCS12_CHAIN",

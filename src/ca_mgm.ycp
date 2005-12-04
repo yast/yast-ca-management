@@ -132,9 +132,9 @@ map cmdline = $[
 				 "days", "keyLength", "capasswd", "keyPasswd" ],
 		   "createCRL": ["caname" ,"days" ,"capasswd"],
 		   "exportCA": ["caname", "certFormat", "file", "capasswd", "p12passwd"],
-		   "exportCertificate": ["caname", "certname", "certFormat", "file",
+		   "exportCertificate": ["caname", "capasswd", "certname", "certFormat", "file",
 					 "keyPasswd", "p12passwd"],
-		   "exportCRL": [ "caname", "crlFormat", "file"]
+		   "exportCRL": [ "caname", "capasswd", "crlFormat", "file"]
     ]
 ];
 

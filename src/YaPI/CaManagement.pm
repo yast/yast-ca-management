@@ -2466,7 +2466,7 @@ BEGIN { $TYPEINFO{ReadCertificateList} = ["function", ["list", "any"], ["map", "
 sub ReadCertificateList {
     my $self = shift;
     my $data = shift;
-    my $ret  = undef;
+    my $ret  = [];
 
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
@@ -3079,9 +3079,16 @@ sub ReadCRL {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Parse CRL failed"),
-                                description => "$@",
-                                code => "LIMAL_CALL_FAILED");
+        if($@ =~ /RuntimeException: File not found/) {
+
+            return $self->SetError( summary => __("No CRL available"),
+                                    code => "LIMAL_CALL_FAILED");
+        } else {
+
+            return $self->SetError( summary => __("Parse CRL failed"),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
+        }
     }
     
     return $ret;
@@ -3381,6 +3388,8 @@ In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
+* caPassword (required)
+
 * keyPassword (required)
 
 * certificate (required)
@@ -3458,6 +3467,12 @@ sub ExportCertificate {
     }
     $caName = $data->{"caName"};
 
+    if (!defined $data->{'caPasswd'}) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+ 
     if (! defined $data->{'certificate'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
@@ -3465,14 +3480,6 @@ sub ExportCertificate {
     }
     $certificate = $data->{"certificate"};
 
-#    $certificate =~ /^[[:xdigit:]]+:([[:xdigit:]]+[\d-]*)$/;
-#    if (not defined $1) {
-#                                           # parameter check failed
-#        return $self->SetError(summary => "Can not parse certificate name",
-#                               code => "PARSING_ERROR");
-#    }
-#    my $keyname = $1;
-    
     if (defined $data->{'destinationFile'}) {
         $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
         if (not defined $1) {
@@ -3752,6 +3759,12 @@ sub ExportCRL {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
+ 
+    if (!defined $data->{'caPasswd'}) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
  
     if (!defined $data->{"exportFormat"} || 
         !grep( ( $_ eq $data->{"exportFormat"}), ("PEM", "DER"))) {
@@ -6293,7 +6306,7 @@ BEGIN { $TYPEINFO{ReadRequestList} = ["function", ["list", "any"], ["map", "stri
 sub ReadRequestList {
     my $self = shift;
     my $data = shift;
-    my $ret  = undef;
+    my $ret  = [];
 
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
