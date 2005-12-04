@@ -1,3 +1,4 @@
+
 /**
  *
  * File:
@@ -599,14 +600,14 @@
 	    param["caName"] =  CaMgm::currentCA;
 	    param["certType"] =  "server";
 	    param["caPasswd"] = getPassword(CaMgm::currentCA);
-	    param["notext"] = "1";	    
+	    //param["notext"] = "1";	    
 	}
 	if (kind == "Client Certificate")
 	{
 	    param["caName"] =  CaMgm::currentCA;
 	    param["certType"] =  "client";	    
 	    param["caPasswd"] =  getPassword(CaMgm::currentCA);
-	    param["notext"] = "1";
+	    //param["notext"] = "1";
 	}
 
 	if (kind == "Sub CA")
@@ -622,7 +623,7 @@
 	    param["request"] =  CaMgm::currentRequest;
 	    param["certType"] =  CaMgm::requestKind;
 	    param["caPasswd"] = getPassword(CaMgm::currentCA);
-	    param["notext"] = "1";	    
+	    //param["notext"] = "1";	    
 	}
 
 	if (kind != "signRequest")
@@ -1088,7 +1089,7 @@
 	    || kind == "Client Certificate")
 	{
 //	    y2milestone("CaManagement::AddCertificate(%1)", param);
-	    param["notext"] = "1";
+	    //param["notext"] = "1";
 	    string filename = YaPI::CaManagement::AddCertificate (param);
 	    if (filename == nil
 		|| size(filename) == 0)
@@ -1108,7 +1109,7 @@
 	}
 	if (kind == "signRequest")
 	{
-	    param["notext"] = "1";	    
+	    //param["notext"] = "1";	    
 //	    y2milestone("CaManagement::IssueCertificate(%1)", param);	
 	    return YaPI::CaManagement::IssueCertificate (param) == nil ? false:true;	    
 	}
@@ -1599,6 +1600,7 @@ the CA Management.
 		// Exporting to common server certificate
 		string tmpdir = (string) SCR::Read (.target.tmpdir);
 		string yapiret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CaMgm::prop_CAName,
+                                                                                   "caPasswd":CaMgm::prop_password,
 										   "certificate" : (certList[0]:$[])["certificate"]:"", 
 										   "keyPasswd" : CaMgm::prop_password,
 										   "exportFormat" : "PKCS12_CHAIN",

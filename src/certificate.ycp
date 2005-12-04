@@ -240,7 +240,7 @@
 	    text = text + "\nLocation:           " + ((list)dn["L"]:[])[0]:"";	    
 	    text = text + "\nState:              " + ((list)dn["ST"]:[])[0]:"";
 	    text = text + "\nCountry:            " + ((list)dn["C"]:[])[0]:"";
-	    text = text + "\nEMAIL:              " + ((list)dn["EMAILADDRESS"]:[])[0]:"";
+	    text = text + "\nEMAIL:              " + ((list)dn["emailAddress"]:[])[0]:"";
 	}
 	text = text + "\nIs CA:              " + certMap["IS_CA"]:"";
 	text = text + "\nKey Size:           " + certMap["KEYSIZE"]:"";

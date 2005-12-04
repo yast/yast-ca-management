@@ -150,7 +150,7 @@ my $transMap = {
 sub transformBasicConstaints {
     my $self  = shift;
     my $exts  = shift;
-    my $value = shift || undef;
+    my $value = shift || "";
 
     my $crit  = 0;
     my $ca    = undef;
@@ -1272,15 +1272,15 @@ sub getParsed {
 
     if($cert->getPublicKeyAlgorithm() == $LIMAL::CaMgm::E_RSA) {
 
-        $ret->{PUPKEY_ALGORITHM} = "rsaEncryption";
+        $ret->{PUBKEY_ALGORITHM} = "rsaEncryption";
 
     } elsif($cert->getPublicKeyAlgorithm() == $LIMAL::CaMgm::E_DSA) {
 
-        $ret->{PUPKEY_ALGORITHM} = "dsaEncryption";
+        $ret->{PUBKEY_ALGORITHM} = "dsaEncryption";
 
     } elsif($cert->getPublicKeyAlgorithm() == $LIMAL::CaMgm::E_DH) {
 
-        $ret->{PUPKEY_ALGORITHM} = "dhEncryption";
+        $ret->{PUBKEY_ALGORITHM} = "dhEncryption";
 
     }
     if($cert->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1RSA) {
@@ -1300,12 +1300,12 @@ sub getParsed {
 
     if($cert->getExtensions()->getBasicConstraints()->isPresent()) {
         if($cert->getExtensions()->getBasicConstraints()->isCA()) {
-            $ret->{isCA} = 1;
+            $ret->{IS_CA} = 1;
         } else {
-            $ret->{isCA} = 0;
+            $ret->{IS_CA} = 0;
         }
     } else {
-        $ret->{isCA} = 0;
+        $ret->{IS_CA} = 0;
     }
     $ret->{VERSION} = $cert->getVersion();
 
@@ -1482,15 +1482,15 @@ sub getParsedRequest {
 
     if($req->getKeyAlgorithm() == $LIMAL::CaMgm::E_RSA) {
 
-        $ret->{PUPKEY_ALGORITHM} = "rsaEncryption";
+        $ret->{PUBKEY_ALGORITHM} = "rsaEncryption";
 
     } elsif($req->getKeyAlgorithm() == $LIMAL::CaMgm::E_DSA) {
 
-        $ret->{PUPKEY_ALGORITHM} = "dsaEncryption";
+        $ret->{PUBKEY_ALGORITHM} = "dsaEncryption";
 
     } elsif($req->getKeyAlgorithm() == $LIMAL::CaMgm::E_DH) {
 
-        $ret->{PUPKEY_ALGORITHM} = "dhEncryption";
+        $ret->{PUBKEY_ALGORITHM} = "dhEncryption";
 
     }
     if($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1RSA) {
@@ -1510,12 +1510,12 @@ sub getParsedRequest {
     if($req->getExtensions()->getBasicConstraints()->isPresent()) {
 
         if($req->getExtensions()->getBasicConstraints()->isCA()) {
-            $ret->{isCA} = 1;
+            $ret->{IS_CA} = 1;
         } else {
-            $ret->{isCA} = 0;
+            $ret->{IS_CA} = 0;
         }
     } else {
-        $ret->{isCA} = 0;
+        $ret->{IS_CA} = 0;
     }
     $ret->{VERSION} = $req->getVersion();
 

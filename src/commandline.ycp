@@ -205,10 +205,14 @@
 	param["destinationFile"] =  options["file"]:"";
 	param["exportFormat"] = options["crlFormat"]:"";
 	param["caName"] = options["caname"]:"";
+	param["caPasswd"] = options["capasswd"]:"";
 
 	string ret = nil;
 	ret = (string) YaPI::CaManagement::ExportCRL (param);
-		    
+
+    // delete parameter for security reason :-)		    
+	param["caPasswd"] = "<was set>";
+
 	y2milestone ("ExportCRL(%1) return %2", param, ret);
 	if (ret == nil
 	    || ret != "1")
@@ -234,6 +238,7 @@
 	}
 
 	param["caName"] = options["caname"]:"";
+        param["caPasswd"] = options["capasswd"]:"";
 	param["certificate"] = options["certname"]:"";
 	param["exportFormat"] = kind;
 	param["destinationFile"] =  options["file"]:"";	
