@@ -9,7 +9,7 @@ BEGIN {
     push @INC, '/usr/share/YaST2/modules/';
 }
 
-our $VERSION="1.1.0";
+our $VERSION="1.2.0";
 
 
 =head1 NAME
@@ -22,7 +22,7 @@ This package is the public Yast2 API to the CA management.
 
 =head1 VERSION
 
-1.1.0
+1.2.0
 
 =head1 SYNOPSIS
 
