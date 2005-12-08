@@ -3103,7 +3103,7 @@ In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
-* caPassword (required)
+* caPasswd (required)
 
 * exportFormat <format> (required)
 
