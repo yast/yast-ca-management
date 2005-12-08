@@ -3,7 +3,6 @@
 SUBDIRS = YaPI
 
 myincludedir = @yncludedir@/ca-management
-camdir = /var/lib/CAM
 
 myinclude_DATA =		\
 	popup.ycp		\
@@ -26,8 +25,6 @@ myinclude_DATA =		\
 	wizards.ycp
 
 module_DATA = 	CaMgm.ycp	
-
-cam_DATA = 	openssl.cnf.tmpl
 
 client_DATA = 		\
 	ca_mgm.ycp	\
@@ -54,9 +51,5 @@ ca-management:
 ycpchook = ca-management
 
 YCPCFLAGS =
-
-install-data-local:
-	install -d -m 700 $(DESTDIR)/var/lib/CAM
-	install -d -m 700 $(DESTDIR)/var/lib/CAM/.cas
 
 include $(top_srcdir)/Makefile.am.common
