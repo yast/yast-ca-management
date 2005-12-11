@@ -1359,11 +1359,14 @@ sub WriteCertificateDefaults {
 
         $cid = $ca->getIssueDefaults($type);
 
-        my $start = time();
-        my $end   = $start +($data->{"days"} * 24 * 60 * 60);
+        if(defined $data->{"days"}) {
 
-        $cid->setCertifyPeriode($start, $end);
+            my $start = time();
+            my $end   = $start +($data->{"days"} * 24 * 60 * 60);
 
+            $cid->setCertifyPeriode($start, $end);
+        }
+            
         my $exts = $cid->getExtensions();
         
         my $e = YaST::caUtils->transformBasicConstaints($exts, 
@@ -1490,7 +1493,10 @@ sub WriteCertificateDefaults {
         
         $rgd = $ca->getRequestDefaults($rtype);
 
-        $rgd->setKeysize($data->{"keyLength"} +0);
+        if( defined $data->{"keyLength"}) {
+
+            $rgd->setKeysize($data->{"keyLength"} +0);
+        }
 
         my $exts = $rgd->getExtensions();
 
@@ -1562,6 +1568,23 @@ sub WriteCertificateDefaults {
 
     };
     if($@) {
+
+        my $Varray = $rgd->verify();
+        if(!$Varray->empty()) {
+
+            for(my $i = 0; $i < $Varray->size(); ++$i) {
+
+                y2error($Varray->getitem($i));
+            }
+        }
+        $Varray = $cid->verify();
+        if(!$Varray->empty()) {
+
+            for(my $i = 0; $i < $Varray->size(); ++$i) {
+
+                y2error($Varray->getitem($i));
+            }
+        }
         
         return $self->SetError( summary => __("Write defaults failed"),
                                 description => "$@",
@@ -3791,11 +3814,6 @@ sub ExportCRL {
         $destinationFile = $data->{'destinationFile'};
     }
 
-    if (SCR->Read(".target.size", $data->{'repository'}."/$caName/crl/crl.pem") == -1) {
-        return $self->SetError(summary => __("CRL does not exist."),
-                               code => "FILE_DOES_NOT_EXIST");
-    }
-
     my $ca = undef;
     eval {
 
@@ -5906,8 +5924,8 @@ sub ImportCommonServerCertificate {
 
     eval {
 
-        LIMAL::CaMgm::LocalManagement($data->{inFile},
-                                      $data->{passwd});
+        LIMAL::CaMgm::LocalManagement::importCommonServerCertificate($data->{inFile},
+                                                                     $data->{passwd});
 
     };
     if($@) {
@@ -6763,7 +6781,7 @@ sub DeleteCA {
 
         } else {
 
-            LIMAL::CaMgm::CA::importCA($caName,
+            LIMAL::CaMgm::CA::deleteCA($caName,
                                        $data->{caPasswd},
                                        $doDelete);
         }
