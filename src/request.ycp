@@ -312,8 +312,8 @@
 							   `item(`id(`signServer), _("as Server Certificate") ),
 							   `item(`id(`signCA), _("as CA Certificate") )
 							   ]),
-						   `item(`id(`delete), _("Delete") ),
-						   `item(`id(`exportFile), _("Export to File") )
+						   `item(`id(`delete), _("Delete") ) //,
+						   //`item(`id(`exportFile), _("Export to File") )
 						   ]
 						  ),
 				      `HSpacing (1)
