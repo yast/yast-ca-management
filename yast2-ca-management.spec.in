@@ -1,8 +1,8 @@
 @HEADER-COMMENT@
-# neededforbuild yast2-devel-packages perl-gettext perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc perl-URI dosfstools perl-Parse-RecDescent limal limal-ca-mgm
+# neededforbuild yast2-devel-packages perl-gettext perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc perl-URI dosfstools perl-Parse-RecDescent limal limal-perl limal-ca-mgm limal-ca-mgm-perl
 
 @HEADER@
-Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc limal-ca-mgm-perl perl-Config-IniFiles
+Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc limal-ca-mgm-perl limal-perl perl-Config-IniFiles
 
 BuildArchitectures:	noarch
 
@@ -24,9 +24,6 @@ Summary:	CA Management
 %dir @yncludedir@/ca-management
 %dir @moduledir@/YaPI
 %dir @moduledir@/YaST
-#%dir /var/lib/CAM/
-#%dir /var/lib/CAM/.cas
-#%config /var/lib/CAM/openssl.cnf.tmpl
 @yncludedir@/ca-management/*
 @clientdir@/ca-mgm.ycp
 @clientdir@/ca_mgm.ycp
@@ -40,8 +37,6 @@ Summary:	CA Management
 @moduledir@/YaST/caUtils.pm
 @desktopdir@/ca_mgm.desktop
 @desktopdir@/common_cert.desktop
-#@scrconfdir@/*
-#@agentdir@/*
 %doc @docdir@
 /usr/bin/generateCRL.pl
 %attr(600, root, root) %config(noreplace) /etc/generateCRL.conf
