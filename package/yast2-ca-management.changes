@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Dec 12 11:32:35 CET 2005 - mc@suse.de
+
+- 2.13.0
+- rewrite YaPI to use limal-ca-mgm
+- remove unsued dependencies, agents and configfiles 
+
+-------------------------------------------------------------------
 Mon Jul  4 14:51:04 CEST 2005 - schubi@suse.de
 
 - typo fixed Bug 79209
