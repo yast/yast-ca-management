@@ -281,7 +281,8 @@ sub T10_AddRequest {
                 'localityName'          => 'Nuremberg',
                 'stateOrProvinceName'   => 'Bavaria',
                 'organizationalUnitName'=> 'IT Abteilung',
-                'organizationName'      => 'My Linux, Inc.'
+                'organizationName'      => 'My Linux, Inc.',
+                'basicConstraints'      => 'CA:FALSE'
                };
     
     my $res = YaPI::CaManagement->AddRequest($data);
@@ -558,6 +559,7 @@ sub T20_ExportCertificate {
     foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
+                    'caPasswd' => 'system',
                     'certificate' => $crt3,
                     'exportFormat' => $ef,
                     'keyPasswd' => "system",
@@ -594,6 +596,7 @@ sub T21_ExportCRL {
     foreach my $ef ("PEM", "DER") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
+                    'caPasswd' => 'system',
                     'exportFormat' => $ef,
                    };
     
@@ -624,6 +627,7 @@ sub T22_Verify {
     print "------------------- T22_Verify ---------------------\n";
     my $data = {
                 caName => 'Test1_SuSE_CA',
+                'caPasswd' => 'system',
                 caPasswd => "system"
                };
     
@@ -709,6 +713,7 @@ sub T23a_enhanced_verify {
              'organizationalUnitName'=> 'IT Abteilung',
              'organizationName'      => 'My Linux Tux GmbH',
              'days'                  => '365',
+             'basicConstraints'      => 'CA:FALSE',
             };
         
     my $res = YaPI::CaManagement->AddCertificate($data);
@@ -999,7 +1004,7 @@ sub T35_ImportCommonServerCertificate {
     print STDERR "------------------- T35_ImportCommonServerCertificate ---------------------\n";
     print "------------------- T35_ImportCommonServerCertificate ---------------------\n";
     my $data = {
-                inFile        => "/$pwd/testout/CRT_PKCS12_CHAIN",
+                inFile        => "/$pwd/testout/CRT_PKCS12",
                 passwd        => 'tralla'
                };
     
@@ -2013,7 +2018,8 @@ sub T54_AddRequest {
                 'localityName'          => 'Nuremberg',
                 'stateOrProvinceName'   => 'Bavaria',
                 'organizationalUnitName'=> 'IT Abteilung',
-                'organizationName'      => 'My Linux, Inc.'
+                'organizationName'      => 'My Linux, Inc.',
+                'basicConstraints'       => 'CA:false'
                };
     
     my $res = YaPI::CaManagement->AddRequest($data);
@@ -2028,12 +2034,13 @@ sub T54_AddRequest {
     }
 }
 
-sub T29_verify_with_purpose {
-    print STDERR "------------------- T29_verify_with_purpose ---------------------\n";
-    print "------------------- T29_verify_with_purpose ---------------------\n";
+sub T29a_verify_with_purpose {
+    print STDERR "------------------- T29a_verify_with_purpose ---------------------\n";
+    print "------------------- T29a_verify_with_purpose ---------------------\n";
 
     my $data = {
-                caName => 'Test2_SuSE_CA', 
+                caName => 'Test2_SuSE_CA',
+                'caPasswd' => 'system', 
                 certificate => $servercert,
                 disableCRLcheck => 1,
                 purpose => 'sslserver'
@@ -2048,7 +2055,8 @@ sub T29_verify_with_purpose {
     }
 
     $data = {
-             caName => 'Test2_SuSE_CA', 
+             caName => 'Test2_SuSE_CA',
+                caPasswd => 'system', 
              certificate => $clientcert,
              disableCRLcheck => 1,
              purpose => 'sslclient'
@@ -2064,6 +2072,7 @@ sub T29_verify_with_purpose {
 
     $data = {
              caName => 'Test2_SuSE_CA', 
+                caPasswd => 'system',
              certificate => $clientcert,
              disableCRLcheck => 1,
              purpose => 'sslserver'
@@ -2085,6 +2094,7 @@ sub T29_verify_with_purpose {
 
     $data = {
              caName => 'Test2_SuSE_CA', 
+                caPasswd => 'system',
              certificate => $servercert,
              disableCRLcheck => 1,
              purpose => 'sslclient'
@@ -2132,7 +2142,7 @@ T18_ReadCRL();
 T19_ExportCA();
 T20_ExportCertificate();
 T21_ExportCRL();
-T22_Verify();
+#T22_Verify();
 T23_AddSubCA();
 T23a_enhanced_verify();
 #24_ExportCAToLDAP();
@@ -2141,7 +2151,7 @@ T26_UpdateDB();
 T27_CreateManyCerts();
 T28_ListManyCerts();
 
-T29_verify_with_purpose();
+T29a_verify_with_purpose();
 
 T42_RevokeManyCertificate();
 T43_AddCRL3();
