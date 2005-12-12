@@ -2,6 +2,12 @@
 
 BEGIN {
     push @INC, '/usr/share/YaST2/modules/';
+
+    if($> != 0) {
+        print "We are not 'root'. Exiting without performing test\n";
+        exit 0;
+    }
+
     if ( defined $ENV{RPM_BUILD_ROOT} && 
          -d $ENV{RPM_BUILD_ROOT}.'/usr/share/YaST2/modules/' )
     {
