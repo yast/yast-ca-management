@@ -1710,7 +1710,7 @@ sub ReadCA {
             my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/cacert.pem");
             my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
             my $endT   = "-----END[\\w\\s]+[-]{5}";
-            ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+            ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
 
             if($type eq "extended") {
 
@@ -2761,7 +2761,7 @@ sub ReadCertificate {
             my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/newcerts/$certificate".".pem");
             my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
             my $endT   = "-----END[\\w\\s]+[-]{5}";
-            ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+            ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
 
             if($type eq "extended") {
 
@@ -3110,7 +3110,7 @@ sub ReadCRL {
             my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/crl/crl.pem");
             my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
             my $endT   = "-----END[\\w\\s]+[-]{5}";
-            ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+            ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
 
             if($type eq "extended") {
 
@@ -3288,7 +3288,7 @@ sub ExportCA {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3303,14 +3303,18 @@ sub ExportCA {
             
             my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
             my $buffer2 = $ca->exportCAKeyAsPEM("");
+
+            $buffer1->append("\n", 1);
+            $buffer1->append($buffer2->data(), $buffer2->size());
             
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile(($buffer1."\n".$buffer2),
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = ($buffer1."\n".$buffer2);
+                
+                $ret = $buffer1->data();
             }
         };
         if($@) {
@@ -3326,13 +3330,17 @@ sub ExportCA {
             my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
             my $buffer2 = $ca->exportCAKeyAsPEM($data->{'caPasswd'});
             
+            $buffer1->append("\n", 1);
+            $buffer1->append($buffer2->data(), $buffer2->size());
+
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile(($buffer1."\n".$buffer2),
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = ($buffer1."\n".$buffer2);
+
+                $ret = $buffer1->data();
             }
         };
         if($@) {
@@ -3354,7 +3362,7 @@ sub ExportCA {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3382,7 +3390,7 @@ sub ExportCA {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3412,7 +3420,7 @@ sub ExportCA {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3593,7 +3601,7 @@ sub ExportCertificate {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3612,13 +3620,17 @@ sub ExportCertificate {
                                                          $keyPasswd,
                                                          "");
             
+            $buffer1->append("\n", 1);
+            $buffer1->append($buffer2->data(), $buffer2->size());
+
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile(($buffer1."\n".$buffer2),
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = ($buffer1."\n".$buffer2);
+
+                $ret = $buffer1->data();
             }
         };
         if($@) {
@@ -3638,13 +3650,16 @@ sub ExportCertificate {
                                                          $keyPasswd,
                                                          $keyPasswd);
             
+            $buffer1->append("\n", 1);
+            $buffer1->append($buffer2->data(), $buffer2->size());
+
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile(($buffer1."\n".$buffer2),
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = ($buffer1."\n".$buffer2);
+                $ret = $buffer1->data();
             }
         };
         if($@) {
@@ -3666,7 +3681,7 @@ sub ExportCertificate {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3697,7 +3712,7 @@ sub ExportCertificate {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3727,7 +3742,7 @@ sub ExportCertificate {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3871,7 +3886,7 @@ sub ExportCRL {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -3893,7 +3908,7 @@ sub ExportCRL {
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                $ret = $buffer;
+                $ret = $buffer->data();
             }
         };
         if($@) {
@@ -4003,11 +4018,11 @@ sub Verify {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "",
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
 
         }
 
@@ -4637,7 +4652,7 @@ sub ExportCAToLDAP {
                                 code        => "LIMAL_CALL_FAILED");
     }
 
-    my ($body) = ($ca->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
+    my ($body) = ($ca->data() =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
 
     if (! defined $body || $body eq "") {
         return $self->SetError(summary => "Can not parse the CA certificate",
@@ -4889,7 +4904,7 @@ sub ExportCRLToLDAP {
                                 code        => "LIMAL_CALL_FAILED");
     }
 
-    my ($body) = ($crl->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
+    my ($body) = ($crl->data() =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
 
     if (! defined $body || $body eq "") {
         return $self->SetError(summary => "Can not parse the CRL",
@@ -5674,7 +5689,7 @@ sub ExportCertificateToLDAP {
                                 description => "$@",
                                 code        => "LIMAL_CALL_FAILED");
     }
-    my ($body) = ($crt->{'BODY'} =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
+    my ($body) = ($crt->data() =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
     
     if (! defined $body || $body eq "") {
         return $self->SetError(summary => "Can not parse the certificate",
@@ -5752,7 +5767,7 @@ sub ExportCertificateToLDAP {
         }
         
         my $entry = {
-                     'userPKCS12' => YaST::YCP::Byteblock($p12)
+                     'userPKCS12' => YaST::YCP::Byteblock($p12->data())
                     };
         if (not SCR->Write(".ldap.modify",
                            { dn => $data->{'destinationDN'}} , $entry)) {
@@ -6078,7 +6093,7 @@ sub ReadFile {
 
                     my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
                     my $endT   = "-----END[\\w\\s]+[-]{5}";
-                    ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+                    ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
                 }
 
                 if($type eq "extended") {
@@ -6107,7 +6122,7 @@ sub ReadFile {
                     my $bod = LIMAL::CaMgm::LocalManagement::readFile($data->{inFile});
                     my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
                     my $endT   = "-----END[\\w\\s]+[-]{5}";
-                    ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+                    ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
                 }
 
                 if($type eq "extended") {
@@ -6138,7 +6153,7 @@ sub ReadFile {
                     my $bod = LIMAL::CaMgm::LocalManagement::readFile($data->{inFile});
                     my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
                     my $endT   = "-----END[\\w\\s]+[-]{5}";
-                    ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+                    ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
                 }
 
                 if($type eq "extended") {
@@ -6267,7 +6282,7 @@ sub ReadRequest {
             my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/req/$request".".req");
             my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
             my $endT   = "-----END[\\w\\s]+[-]{5}";
-            ( $ret->{BODY} ) = ( $bod =~ /($beginT[\S\s\n]+$endT)/ );
+            ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
 
             if($type eq "extended") {
 
@@ -6509,14 +6524,16 @@ sub ImportRequest {
     }
     
     eval {
+        my $byteBuffer = new LIMAL::ByteBuffer($data->{data}, length($data->{data}));
+        
         if(defined $data->{importFormat} && $data->{importFormat} eq "DER") {
             
-            $ret = $ca->importRequestData($data->{data}, 
+            $ret = $ca->importRequestData($byteBuffer, 
                                           $LIMAL::CaMgm::E_DER);
             
         } else {
             
-            $ret = $ca->importRequestData($data->{data}, 
+            $ret = $ca->importRequestData($byteBuffer, 
                                           $LIMAL::CaMgm::E_PEM);
             
         }

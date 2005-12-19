@@ -1331,7 +1331,7 @@ sub getParsed {
 
     $ret->{EMAILADDRESS} = join("\n", @em);
 
-    my $sig = unpack( "H*", pack("a*", $cert->getSignature()));
+    my $sig = unpack( "H*", pack("a*", $cert->getSignature()->data()));
     $ret->{SIGNATURE} = "";
 
     for(my $i = 0; $i < length($sig); $i = $i+2) {
@@ -1385,7 +1385,7 @@ sub getParsedCRL {
 
     $ret->{VERSION} = $crl->getVersion();
 
-    my $sig = unpack( "H*", pack("a*", $crl->getSignature()));
+    my $sig = unpack( "H*", pack("a*", $crl->getSignature()->data()));
     $ret->{SIGNATURE} = "";
 
     for(my $i = 0; $i < length($sig); $i = $i+2) {
@@ -1542,7 +1542,7 @@ sub getParsedRequest {
 
     $ret->{EMAILADDRESS} = join("\n", @em);
 
-    my $sig = unpack( "H*", pack("a*", $req->getSignature()));
+    my $sig = unpack( "H*", pack("a*", $req->getSignature()->data()));
     $ret->{SIGNATURE} = "";
 
     for(my $i = 0; $i < length($sig); $i = $i+2) {
