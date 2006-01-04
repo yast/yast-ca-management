@@ -73,7 +73,6 @@
 					     _("Details"),
 					     `focus ))
 		    {
-			description = "<pre>" + description + "</pre>";		    
 			UI::OpenDialog (`opt(`decorated ),
 					`HBox( `VSpacing(16),
 					       `VBox (
@@ -81,7 +80,7 @@
 						  // popup window header
 						  `Heading (message),
 						  `VSpacing (0.5),
-						  `RichText (description),
+						  `RichText ( `opt(`plainText), description),
 						  `VSpacing (1.5),
 						  // push button label
 						  `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
