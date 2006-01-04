@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Jan  4 11:06:36 CET 2006 - mc@suse.de
+
+- use new limal methods for SubjectAlternativeNameExt 
+- fix ReadCertificateDefaults: DN has to be a map<string,list>
+- fix error popup; use plainText option instead of <pre>
+
+-------------------------------------------------------------------
 Mon Dec 19 13:46:18 CET 2005 - mc@suse.de
 
 - 2.13.3
