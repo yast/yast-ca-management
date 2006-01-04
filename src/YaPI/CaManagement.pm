@@ -1230,7 +1230,7 @@ sub ReadCertificateDefaults {
               next if($type eq "commonName");
               next if($type eq "emailAddress");
 
-              $ret->{'DN'}->{$type} = $value if(defined $value && $value ne "");
+              push(@{$ret->{'DN'}->{$type}}, $value) if(defined $value && $value ne "");
           }
     };
     if($@) {
