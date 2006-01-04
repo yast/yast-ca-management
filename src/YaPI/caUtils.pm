@@ -601,7 +601,8 @@ sub transformSubjectAltName {
         
     } else {
 
-        $e->setSubjectAlternativeName($emailCopy, $list);
+        $e->setCopyEmail($emailCopy);
+        $e->setAlternativeNameList($list);
         if($crit) {
             $e->setCritical($crit);
         }
