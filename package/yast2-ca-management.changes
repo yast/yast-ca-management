@@ -1,6 +1,7 @@
 -------------------------------------------------------------------
 Wed Jan  4 11:06:36 CET 2006 - mc@suse.de
 
+- version 2.13.4
 - use new limal methods for SubjectAlternativeNameExt 
 - fix ReadCertificateDefaults: DN has to be a map<string,list>
 - fix error popup; use plainText option instead of <pre>
