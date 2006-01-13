@@ -694,7 +694,7 @@ sub AddRootCA {
             $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults();
             
         }
-        my $dnl = $rgd->getSubject()->getDN();
+        my $dnl = $rgd->getSubjectDN()->getDN();
         my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
                          'organizationName', 'organizationalUnitName',
                          'commonName', 'emailAddress');
@@ -720,7 +720,7 @@ sub AddRootCA {
         }
 
         my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
-        $rgd->setSubject($dnObject);
+        $rgd->setSubjectDN($dnObject);
 
         if( defined $data->{'challengePassword'} ) {
 
@@ -1213,7 +1213,7 @@ sub ReadCertificateDefaults {
         $ret->{'keyLength'} = $rgd->getKeysize();
         $ret->{'days'} = ($cid->getEndDate() - $cid->getStartDate()) / (60*60*24);
 
-        my $list = $rgd->getSubject()->getDN();
+        my $list = $rgd->getSubjectDN()->getDN();
 
         for(my $it = $list->begin();
             !$list->iterator_equal($it, $list->end());
@@ -1870,7 +1870,7 @@ sub AddRequest {
         
         $rgd = $ca->getRequestDefaults($LIMAL::CaMgm::E_Client_Req);
             
-        my $dnl = $rgd->getSubject()->getDN();
+        my $dnl = $rgd->getSubjectDN()->getDN();
         my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
                          'organizationName', 'organizationalUnitName',
                          'commonName', 'emailAddress');
@@ -1896,7 +1896,7 @@ sub AddRequest {
         }
 
         my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
-        $rgd->setSubject($dnObject);
+        $rgd->setSubjectDN($dnObject);
 
         if( defined $data->{'challengePassword'} ) {
 
@@ -4241,7 +4241,7 @@ sub AddSubCA {
         
         $rgd = $ca->getRequestDefaults($LIMAL::CaMgm::E_CA_Req);
             
-        my $dnl = $rgd->getSubject()->getDN();
+        my $dnl = $rgd->getSubjectDN()->getDN();
         my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
                          'organizationName', 'organizationalUnitName',
                          'commonName', 'emailAddress');
@@ -4267,7 +4267,7 @@ sub AddSubCA {
         }
 
         my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
-        $rgd->setSubject($dnObject);
+        $rgd->setSubjectDN($dnObject);
 
         if( defined $data->{'challengePassword'} ) {
 
