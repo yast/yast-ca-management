@@ -1449,8 +1449,8 @@ sub getParsedRequest {
     
     $ret->{PLAIN_EXTENSIONS} = $req->getExtensionsAsText();
     
-    $ret->{SUBJECT_HASH} = $self->parseDN($req->getSubject());
-    $ret->{DN}     = $req->getSubject()->getOpenSSLString();
+    $ret->{SUBJECT_HASH} = $self->parseDN($req->getSubjectDN());
+    $ret->{DN}     = $req->getSubjectDN()->getOpenSSLString();
 
     my @a = split('\n', $req->getRequestAsText());
 
