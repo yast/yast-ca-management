@@ -1580,8 +1580,8 @@
 	    CaMgm::country = CaMgm::prop_country;
 	    CaMgm::password = CaMgm::prop_password;
 
-	    y2milestone("Creating default Server Certificate");	    
-	    
+	    y2milestone("Creating default Server Certificate");
+
 	    if (!cert_write ("Server Certificate"))
 	    {
 		UI::CloseDialog();
@@ -1596,7 +1596,7 @@ the CA Management.
 		list<map> certList = (list<map>) YaPI::CaManagement::ReadCertificateList ($["caName":CaMgm::prop_CAName,
 											    "caPasswd":CaMgm::prop_password]);
 		y2milestone("ReadCertificateList(%1): %2", CaMgm::prop_CAName, certList);
-		
+
 		// Exporting to common server certificate
 		string tmpdir = (string) SCR::Read (.target.tmpdir);
 		string yapiret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CaMgm::prop_CAName,
