@@ -26,9 +26,9 @@
     import "DNS";
     import "Language";
     import "Users";
-	
+
     include "ca-management/new_cert_read_write.ycp";
-    
+
     string func  = (string)WFM::Args(0);
     map    param = (map)WFM::Args(1);
     map    ret   = $[];
@@ -54,7 +54,7 @@
 	    ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Please change the values of \"Server Name\" and \"Email\"."));
 	    ret = add( ret, "warning_level", `blocker );
 	}
-	
+
 	string longhostname = strip(retmap["stdout"]:"");
 	string hostname = ((list<string>) splitstring (longhostname, "."))[0]:"";
         string domain = substring (longhostname, findfirstof(longhostname,".")+1);
@@ -63,7 +63,7 @@
 	{
 	    domain = longhostname;
 	}
-	
+
 	if (!CaMgm::prop_ca_commonNameChanged)
 	{
 	    CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";
@@ -88,7 +88,7 @@
 	{
 	    CaMgm::prop_email = "postmaster@" + domain;
 	}
-	
+
 	if (force_reset)
 	{
 	    y2milestone("FORCE RESET");
@@ -101,7 +101,7 @@
 	    else
 	    {
 		CaMgm::prop_selection = `def;
-		CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";	    
+		CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";
 		CaMgm::prop_CAName = "YaST_Default_CA";
 		CaMgm::prop_country = Language::GetLanguageCountry ();
 		CaMgm::prop_password = Users::GetRootPassword();
@@ -113,7 +113,7 @@
 	if (!check_mail_address(CaMgm::prop_email))
 	{
 	    ret = add( ret, "warning", _("Invalid e-mail format. Please change it."));
-	    ret = add( ret, "warning_level", `blocker );	    
+	    ret = add( ret, "warning_level", `blocker );
 	}
 
 	if (CaMgm::prop_selection == `def)
@@ -121,9 +121,9 @@
 	    if (!CaMgm::prop_passwordChanged)
 	    {
 		proposal = HTML::Para(_("Creating default CA and certificate.")
-				      + HTML::Newline() 
+				      + HTML::Newline()
 				      + _("With higher security requirements, you should change the password."));
-	    }	
+	    }
 	    else
 	    {
 		proposal = HTML::Para(_("Creating default CA and certificate.")
@@ -152,8 +152,8 @@
 	else if (CaMgm::prop_selection == `disk)
 	{
 	    proposal = HTML::Para(_("Importing a CA and certificate from file."));
-	}	
-	
+	}
+
 	ret = add (ret, "preformatted_proposal", proposal);
 	if ( ((list<string>) splitstring (CaMgm::prop_server_commonName, "."))[0]:"" == "linux")
 	{
@@ -163,16 +163,21 @@
     }
     else if (func == "AskUser")
     {
-	if (!CaMgm::prop_settingsWritten)
+	any sequence = WFM::CallFunction ( "ca_select_proposal", [] );
+	ret = $[ "workflow_sequence" : sequence ];
+	if (CaMgm::prop_settingsWritten)
 	{
-	    any sequence = WFM::CallFunction ( "ca_select_proposal", [] );
-
-	    ret = $[ "workflow_sequence" : sequence ];
-	}
-	else
-	{
-	    Popup::Warning(_("Settings have already been written."));
-	    ret = $[ "workflow_sequence" : `auto ];
+	  if( !Popup::YesNo(_("Settings have already been written.") + "\n" +
+	                    _("Do you want to delete the old settings?"))
+	  {
+	        ret = $[ "workflow_sequence" : `auto ];
+	  }
+	  else
+	  {
+		YaPI::CaManagement::DeleteCA ($[ "caName":CaMgm::currentCA,
+                                                 "caPasswd":getPassword(CaMgm::currentCA)
+						 "force": true]);
+	  }
 	}
     }
     else if (func == "Description")
@@ -201,7 +206,7 @@
 
 	    CaMgm::prop_settingsWritten = true;
 	}
-	
+
         ret = $[ "success" : success ];
     }
     return ret;

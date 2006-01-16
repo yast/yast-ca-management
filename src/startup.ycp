@@ -29,10 +29,10 @@
     import "Popup";
     import "YaPI::CaManagement";
 
-    include "ca-management/util.ycp";    
+    include "ca-management/util.ycp";
 
     list<list> CAList = []; // CA list tree
-    
+
     /**
      * Creates CA items
      * @param subCA - name ob the sub CA or empty if root
@@ -43,7 +43,7 @@
 
 	if (size (subCA) <= 0)
 	{
-	    CAList = (list<list>) YaPI::CaManagement::ReadCATree(); 
+	    CAList = (list<list>) YaPI::CaManagement::ReadCATree();
 	    y2milestone("Output of ReadCATree: %1", CAList);
 	    if (CAList == nil)
 	    {
@@ -95,13 +95,13 @@
 							    "caPasswd":getPassword(CaMgm::currentCA),
 							    "force":"1"]) == nil)
 			{
-			    showErrorCaManagement ();			    			
+			    showErrorCaManagement ();
 			}
 		    }
 		}
 		else
 		{
-		    showErrorCaManagement ();			    		    
+		    showErrorCaManagement ();
 		}
 	    }
 	}
@@ -128,8 +128,8 @@
         buttons = add (buttons, `VStretch());
                                 // To translators: pushbutton label
         buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`createRoot), `opt (`key_F3), _("&Create Root CA")))));
-                                // To translators: pushbutton label	
-        buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`import), _("&Import CA")))));	
+                                // To translators: pushbutton label
+        buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`import), _("&Import CA")))));
 
         term contents = `HBox ();
         contents = add (contents, `HWeight (9,`Tree(`id(`tree), `opt(`notify, `vstretch),
@@ -146,16 +146,16 @@
 
 	list<string> firstEntry = (list<string>) CAList[0]:["",""];
 	CaMgm::currentCA = firstEntry[0]:"";
-					  
+
 	UI::ChangeWidget (`id (`tree), `CurrentItem, CaMgm::currentCA);
-			  
+
         symbol ui = nil;
 
         repeat
         {
             boolean anyitems = UI::QueryWidget (`id (`tree), `CurrentItem) != nil;
             UI::ChangeWidget (`id (`enter), `Enabled, anyitems);
-            UI::ChangeWidget (`id (`delete), `Enabled, anyitems);	    
+            UI::ChangeWidget (`id (`delete), `Enabled, anyitems);
 
             ui = (symbol) UI::UserInput ();
             if (contains ([`enter,`delete], ui)
@@ -177,8 +177,8 @@
             }
 	    if (ui == `import)
 	    {
-		importCAFromDisk();  
-	    }	    
+		importCAFromDisk();
+	    }
         }
         until (contains ([`createRoot, `enter, `next, `import, `delete], ui));
 
