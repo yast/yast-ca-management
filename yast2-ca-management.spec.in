@@ -2,7 +2,7 @@
 # neededforbuild yast2-devel-packages perl-gettext perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc perl-URI dosfstools perl-Parse-RecDescent limal limal-perl limal-ca-mgm limal-ca-mgm-perl
 
 @HEADER@
-Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc limal-ca-mgm-perl limal-perl perl-Config-IniFiles
+Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc limal-ca-mgm-perl limal-perl perl-Config-IniFiles perl-URI
 
 BuildArchitectures:	noarch
 
