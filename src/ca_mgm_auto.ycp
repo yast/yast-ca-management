@@ -488,7 +488,7 @@ string Summary() {
 	    summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["server_commonName"]:"");
 	}
 	summary = Summary::AddHeader (summary,_("CA Name"));
-	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["CAName"]:_("YaST_Default_CA"));
+	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["CAName"]:"YaST_Default_CA");
 	summary = Summary::AddHeader (summary, _("Common Name"));
 	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["ca_commonName"]:_("[not set]"));
 	summary = Summary::AddHeader (summary, _("Email"));
