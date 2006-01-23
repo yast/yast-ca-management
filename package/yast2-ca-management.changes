@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Mon Jan 23 13:20:16 CET 2006 - mc@suse.de
+
+- version 2.13.7
+- use sprintf for splitted translation strings 
+- remove useless translation tag in _auto file
+
+-------------------------------------------------------------------
+Mon Jan 16 13:52:41 CET 2006 - varkoly@suse.de
+
+- Fixing bug #64635 
+
+-------------------------------------------------------------------
 Fri Jan 13 16:55:27 CET 2006 - mc@suse.de
 
 - version 2.13.6
