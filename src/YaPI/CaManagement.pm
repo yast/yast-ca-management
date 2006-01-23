@@ -6484,7 +6484,9 @@ sub ImportRequest {
     if(defined $data->{inFile} && $data->{inFile} ne "") {
         my $size = SCR->Read(".target.size", $data->{inFile});
         if ($size <= 0) {
-            return $self->SetError(summary => __("Request not found in")." '$data->{inFile}'",
+            return $self->SetError(summary => sprintf(
+	                                              __("Request not found in %s"),
+                                                      $data->{inFile}),
                                    code => "FILE_DOES_NOT_EXIST");
         }
         
@@ -6704,7 +6706,9 @@ sub ImportCA {
     
     my $size = SCR->Read(".target.size", $data->{caKey});
     if ($size <= 0) {
-        return $self->SetError(summary => __("CA key not available in")." '$data->{caKey}'",
+        return $self->SetError(summary => sprintf(
+                                                  __("CA key not available in %s"),
+                                                  $data->{caKey}),
                                code => "FILE_DOES_NOT_EXIST");
     }
 
