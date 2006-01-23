@@ -168,14 +168,14 @@
 	if (CaMgm::prop_settingsWritten)
 	{
 	  if( !Popup::YesNo(_("Settings have already been written.") + "\n" +
-	                    _("Do you want to delete the old settings?"))
+	                    _("Do you want to delete the old settings?")))
 	  {
 	        ret = $[ "workflow_sequence" : `auto ];
 	  }
 	  else
 	  {
 		YaPI::CaManagement::DeleteCA ($[ "caName":CaMgm::currentCA,
-                                                 "caPasswd":getPassword(CaMgm::currentCA)
+                                                 "caPasswd":getPassword(CaMgm::currentCA),
 						 "force": true]);
 	  }
 	}
