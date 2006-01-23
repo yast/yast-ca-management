@@ -10,23 +10,23 @@ BEGIN {
 
     use LIMAL;
 
-    eval {
+    #eval {
 
-        my $comp = new LIMAL::StringArray();
-        $comp->push_back("*");
+    #    my $comp = new LIMAL::StringArray();
+    #    $comp->push_back("*");
         
-        my $cat = new LIMAL::StringArray();
-        $cat->push_back("FATAL");
-        $cat->push_back("ERROR");
-        $cat->push_back("INFO");
+    #    my $cat = new LIMAL::StringArray();
+    #    $cat->push_back("FATAL");
+    #    $cat->push_back("ERROR");
+    #    $cat->push_back("INFO");
         
 
-        my $logref = LIMAL::Logger::createFileLogger("YaPI::CaManagement", $comp, $cat,
-                                                     "[%d] %p %c %l - %m", 
-                                                     "/var/log/YaST2/limal-ca-mgm.log",
-                                                     2048, 2);
-        LIMAL::Logger::setDefaultLogger($logref);
-    };
+    #    my $logref = LIMAL::Logger::createFileLogger("YaPI::CaManagement", $comp, $cat,
+    #                                                 "[%d] %p %c %l - %m", 
+    #                                                 "/var/log/YaST2/limal-ca-mgm.log",
+    #                                                 2048, 2);
+    #    LIMAL::Logger::setDefaultLogger($logref);
+    #};
     # ignore errors here; If we run as none root this happens
     
 
