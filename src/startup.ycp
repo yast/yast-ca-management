@@ -76,7 +76,7 @@
     define void deleteCurrentCA () ``{
 	y2milestone("deleting CA: %1", CaMgm::currentCA );
 
-	string message = sformat(_("Do you realy want to delete CA %1 ?"), CaMgm::currentCA );
+	string message = sformat(_("Really delete CA %1?"), CaMgm::currentCA );
 
 	if (Popup::YesNoHeadline (_("Delete"),
 				  message)
@@ -89,7 +89,7 @@
 		if (messageMap["code"]:"" == "CA_STILL_IN_USE")
 		{
 		    if (Popup::YesNoHeadline (_("Force Delete"),
-					      _("This CA is still in use. Deleting ?")))
+					      _("This CA is still in use. Delete it?")))
 		    {
 			if (YaPI::CaManagement::DeleteCA ($["caName":CaMgm::currentCA,
 							    "caPasswd":getPassword(CaMgm::currentCA),

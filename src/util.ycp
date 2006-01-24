@@ -1073,7 +1073,7 @@ Certificate password</p>
 					       // To translators: ContinueCancel Popup headline
 					       _("Common Server Certificate"),
 					       // To translators: ContinueCancel Popup
-					       _("This is not a server certificate. Do you want to continue ?")))
+					       _("This is not a server certificate. Continue?")))
 	    {
 		return true;
 	    }
@@ -1299,7 +1299,7 @@ This certificate might be not practical as a common server certificate.
 				      `Heading (_("Import CA from Disk")),
 				      `TextEntry( `id (`caName), _("&CA Name:")),
 				      `HBox ( 
-					     `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of Certificate:"))),
+					     `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of Certificate"))),
 					     `HWeight(1,`VBox(
 							      `Label(""),
 							      `PushButton (`id(`browseCert), `opt( `notify), Label::BrowseButton())
@@ -1307,7 +1307,7 @@ This certificate might be not practical as a common server certificate.
 						      )
 					     ),
 				      `HBox ( 
-					     `HWeight(2, `TextEntry( `id (`pathKey), _("&Path of Key:"))),
+					     `HWeight(2, `TextEntry( `id (`pathKey), _("&Path of Key"))),
 					     `HWeight(1,`VBox(
 							      `Label(""),
 							      `PushButton (`id(`browseKey), `opt( `notify), Label::BrowseButton())
@@ -1371,7 +1371,7 @@ This certificate might be not practical as a common server certificate.
 		    ret = `again;
 		} else if (size (caName) == 0)
 		{
-		    Popup::Error(_("CA Name required."));
+		    Popup::Error(_("CA name required."));
 		    ret = `again;
 		}
 		

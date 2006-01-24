@@ -145,7 +145,7 @@ symbol handleDialogCATab (string dialog, map event) {
 symbol runCADialog () {
 
     // Dialog Caption - Expert Settings - Zone Editor
-    string caption = _("Certification Authority (CA)");
+    string caption = _("Certificate Authority (CA)");
 
     string current_tab = "CA";
 

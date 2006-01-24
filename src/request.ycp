@@ -35,13 +35,13 @@
     // help text 1/6
     string requestHelptext = _("<p>First, see a list view with all available requests of this CA. The columns are the DN of the request including the e-mail address.</p>");
     // help text 2/6 
-    requestHelptext = requestHelptext + _("<p>Select one of the request and execute some actions.</p>");
+    requestHelptext = requestHelptext + _("<p>Select one of the requests and execute some actions.</p>");
     // help text 3/6 
     requestHelptext = requestHelptext + _("<p><b>View</b> opens a window with a text representation of the complete request.</p>");
     // help text 4/6
-    requestHelptext = requestHelptext + _("<p>Furthermore, you can <b>Sign</b>, <b>Delete</b> or <b>Export</b> a request.</p>");
+    requestHelptext = requestHelptext + _("<p>You can also <b>Sign</b>, <b>Delete</b>, or <b>Export</b> a request.</p>");
     // help text 5/6
-    requestHelptext = requestHelptext + _("<p>With <b>Import</b>, reading a new request and with <b>Add</b>, generating a new request.</p>");
+    requestHelptext = requestHelptext + _("<p>With <b>Import</b>, read a new request. With <b>Add</b>, generate a new request.</p>");
     // help text 6/6
     requestHelptext = requestHelptext + _("<p>In the area below, see the most important values of the selected request.</p>");
 
@@ -308,9 +308,9 @@
 						   `item(`id(`view), _("View") ),
 						   `menu( _("Sign"),
 							  [
-							   `item(`id(`signClient), _("as Client Certificate") ),
-							   `item(`id(`signServer), _("as Server Certificate") ),
-							   `item(`id(`signCA), _("as CA Certificate") )
+							   `item(`id(`signClient), _("As Client Certificate") ),
+							   `item(`id(`signServer), _("As Server Certificate") ),
+							   `item(`id(`signCA), _("As CA Certificate") )
 							   ]),
 						   `item(`id(`delete), _("Delete") ) //,
 						   //`item(`id(`exportFile), _("Export to File") )
@@ -396,7 +396,7 @@
 	}
 	if (ui == `exportFile)
 	{
-	    Popup::Error(_("currently not supported"));
+	    Popup::Error(_("Currently not supported."));
 	}
 	if (ui == `import)
 	{

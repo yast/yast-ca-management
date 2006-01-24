@@ -67,9 +67,9 @@ any caAutoSequence() {
     string caption = _("CA Configuration");
     string confirmPassword = "";
     	string help_text = _("<p>
-YaST generates a <b>default CA and certificate</b> automatically. This CA and certificate
-is used for communicating with the <b>Apache server</b>.
-Here, change the settings of this CA/certificate or import a CA/certificate from file.
+YaST generates a default CA and certificate automatically. This CA and certificate
+is used for communicating with the Apache server.
+Here, change the settings of this CA and certificate or import a CA and certificate from a file.
 </p>
 ");
 	
@@ -82,12 +82,12 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 			   `RadioButtonGroup(`id(`rb),
 				`VBox(
 				      `Left(`RadioButton(`id(`import), `opt( `notify),
-							 _("Import Common CA/Certificate"),
+							 _("Import Common CA and Certificate"),
 							 CaMgm::autoYaSTSettings["importCertificate"]:true)),
 				      `HBox ( `HSpacing (3),
 					      `VBox(    
 						    `HBox (
-							   `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of Certificate:"),
+							   `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of Certificate"),
 										   CaMgm::autoYaSTSettings["pathCertificate"]:"")),
 							   `HWeight(1,`VBox(
 									    `Label(""),
@@ -97,12 +97,12 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 							   ),
 						    `HBox(`HWeight (1,`Password(`id(`pw3), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
 							  `HSpacing(2), 
-							  `HWeight (1,`Password(`id(`pw4), _("Co&nfirm Password:"), confirmPassword))
+							  `HWeight (1,`Password(`id(`pw4), _("Co&nfirm Password"), confirmPassword))
 							  )
 						    )
 					      ),				      
 				      `Left(`RadioButton(`id(`notImport), `opt( `notify),
-							 _("Generate Common CA/Certificate"),
+							 _("Generate Common CA and Certificate"),
 							 !(CaMgm::autoYaSTSettings["importCertificate"]:false))),
 				      `HBox(`HSpacing (3),
 					    `VBox(    
@@ -132,10 +132,10 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 							),
 						  `HBox(`HWeight (1,`Password(`id(`pw1), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
 							`HSpacing(2), 
-							`HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password:"), confirmPassword))
+							`HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password"), confirmPassword))
 							),
 						  `Left(`CheckBox(`id(`localServerName), `opt(`notify),
-								  _("Take local server name"),
+								  _("Take Local Server Name"),
 								  CaMgm::autoYaSTSettings["takeLocalServerName"]:true)),
 						  `HBox(`HWeight (1,`TextEntry( `id (`id_serverName), _("&Server Name:"),
 										CaMgm::autoYaSTSettings["server_commonName"]:"")),
@@ -246,7 +246,7 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 		}
 		else if ( size(confirmPassword) < 4)
 		{
-		    Popup::Error(_("Password length should be greater than 3 characters."));
+		    Popup::Error(_("Password length should be greater than three characters."));
 		    ret = `again;
 		}
 	    }
@@ -254,14 +254,14 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 		&& size ((string) UI::QueryWidget(`id(`id_CAName), `Value)) <= 0
 		&& ret!=`again)
 	    {
-		Popup::Error(_("CA Name required."));
+		Popup::Error(_("CA name required."));
 		ret = `again;
 	    }	    	    
 	    if (notImport
 		&& size ((string) UI::QueryWidget(`id(`id_commonName), `Value)) <= 0
 		&& ret!=`again)
 	    {
-		Popup::Error(_("Common Name required."));
+		Popup::Error(_("Common name required."));
 		ret = `again;
 	    }
 	    if (notImport
@@ -277,7 +277,7 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 		&& size ((string) UI::QueryWidget(`id(`id_serverName), `Value)) <= 0
 		&& ret!=`again)
 	    {
-		Popup::Error(_("Server Name required."));
+		Popup::Error(_("Server name required."));
 		ret = `again;		
 	    }
 
@@ -292,7 +292,7 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 		}
 		else if ( size(confirmPassword) < 4)
 		{
-		    Popup::Error(_("Password length should be greater than 3 characters."));
+		    Popup::Error(_("Password length should be greater than three characters."));
 		    ret = `again;
 		}		
 	    }	    
@@ -311,7 +311,7 @@ Here, change the settings of this CA/certificate or import a CA/certificate from
 		if (retmap["exit"]:0 != 0)
 		{
 		    y2error("%1 :%2", command, retmap);		    
-		    Popup::Error(_("Cannot Read the certificate."));
+		    Popup::Error(_("Cannot read the certificate."));
 		    ret = `again;		
 		}
 	    }

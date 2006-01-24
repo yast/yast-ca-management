@@ -29,12 +29,12 @@ map cmdline = $[
     "id"	: "ca-mgm",
     "actions"	: $[
 	"createCA" : $[
-	    "help"	: _("Create a Root CA"),
+	    "help"	: _("Create a root CA"),
 	],
 	"createCertificate" : $[
 	    "help"	: _("Create a certificate of a CA") ],
 	"createCRL" : $[
-			"help"	: _("Create CRL of a CA") ],
+			"help"	: _("Create a CRL of a CA") ],
 	"exportCA"  : $[
 			"help"	: _("Export a CA to a file") ],
 	"exportCertificate"  : $[
@@ -56,36 +56,36 @@ map cmdline = $[
 		 "type": "string"
 	],
 	"email" : $[
-		 "help": _("email address"),
+		 "help": _("E-mail address"),
 		 "type": "string",
 		 "example" : "my@email.addr"
 	],
 	"ou" : $[
-		 "help": _("organisation unit"),
+		 "help": _("Organizational unit"),
 		 "type": "string"
 	],
 	"o" : $[
-		 "help": _("organisation"),
+		 "help": _("Organization"),
 		 "type": "string"
 	],
 	"l" : $[
-		 "help": _("locality"),
+		 "help": _("Locality"),
 		 "type": "string"
 	],
 	"st" : $[
-		 "help": _("state"),
+		 "help": _("State"),
 		 "type": "string"
 	],
 	"c" : $[
-		 "help": _("country"),
+		 "help": _("Country"),
 		 "type": "string"
 	],
 	"days" : $[
-		 "help": _("valid days"),
+		 "help": _("Valid days"),
 		 "type": "string"
 	],
 	"keyLength" : $[
-		 "help": _("key length"),
+		 "help": _("Key length"),
 		 "type": "string",
 		 "example" : "2048"
 	],
@@ -121,7 +121,7 @@ map cmdline = $[
 		 "type": "string"
 	],	
 	"file" : $[
-		 "help": _("path of the exported CA/certificate/CRL"),
+		 "help": _("Path of the exported CA, certificate, or CRL"),
 		 "type": "string"
 	]	
     ],
