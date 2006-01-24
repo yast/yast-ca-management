@@ -475,7 +475,7 @@ sub ReadCAList {
           }
     };
     if($@) {
-        return $self->SetError( summary     => __("Cannot read CA list"), 
+        return $self->SetError( summary     => __("Cannot read CA list."), 
                                 description => "$@",
                                 code        => "LIMAL_CALL_FAILED");
     }
@@ -536,7 +536,7 @@ sub ReadCATree {
           }
     };
     if($@) {
-        return $self->SetError( summary     => __("Cannot read CA tree"), 
+        return $self->SetError( summary     => __("Cannot read CA tree."), 
                                 description => "$@",
                                 code        => "LIMAL_CALL_FAILED");
     }
@@ -757,7 +757,7 @@ sub AddRootCA {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Modify RequestGenerationData failed"),
+        return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -897,7 +897,7 @@ sub AddRootCA {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Modify CertificateIssueData failed"),
+        return $self->SetError( summary => __("Modifying CertificateIssueData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -921,7 +921,7 @@ sub AddRootCA {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Create Root CA failed"),
+        return $self->SetError( summary => __("Creating Root CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -1235,7 +1235,7 @@ sub ReadCertificateDefaults {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Get defaults failed"),
+        return $self->SetError( summary => __("Getting defaults failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
 
@@ -1359,7 +1359,7 @@ sub WriteCertificateDefaults {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -1506,7 +1506,7 @@ sub WriteCertificateDefaults {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Modify CertificateIssueData failed"),
+        return $self->SetError( summary => __("Modifying CertificateIssueData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -1578,7 +1578,7 @@ sub WriteCertificateDefaults {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Modify RequestGenerationData failed"),
+        return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -1609,7 +1609,7 @@ sub WriteCertificateDefaults {
             }
         }
         
-        return $self->SetError( summary => __("Write defaults failed"),
+        return $self->SetError( summary => __("Writing the defaults failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -1724,7 +1724,7 @@ sub ReadCA {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Parse CA failed"),
+        return $self->SetError( summary => __("Parsing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -1860,7 +1860,7 @@ sub AddRequest {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -1977,7 +1977,7 @@ sub AddRequest {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Modify RequestGenerationData failed"),
+        return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -1991,7 +1991,7 @@ sub AddRequest {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Create Request failed"),
+        return $self->SetError( summary => __("Creating request failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2139,7 +2139,7 @@ sub IssueCertificate {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2279,7 +2279,7 @@ sub IssueCertificate {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Modify CertificateIssueData failed"),
+        return $self->SetError( summary => __("Modifying CertificateIssueData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2293,7 +2293,7 @@ sub IssueCertificate {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Create Request failed"),
+        return $self->SetError( summary => __("Creating request failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2567,7 +2567,7 @@ sub ReadCertificateList {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Getting the certificate list failed"),
+        return $self->SetError( summary => __("Getting the certificate list failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2647,7 +2647,7 @@ sub UpdateDB {
     };
     if($@) {
         
-        return $self->SetError( summary => __("UpdateDB failed"),
+        return $self->SetError( summary => __("UpdateDB failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2775,7 +2775,7 @@ sub ReadCertificate {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Parse certificate failed"),
+        return $self->SetError( summary => __("Parsing the certificate failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2877,7 +2877,7 @@ sub RevokeCertificate {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Revoke certificate failed"),
+        return $self->SetError( summary => __("Revoking the certificate failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2961,7 +2961,7 @@ sub AddCRL {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -2995,7 +2995,7 @@ sub AddCRL {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Modify CRLGenerationData failed"),
+        return $self->SetError( summary => __("Modifying CRLGenerationData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -3007,7 +3007,7 @@ sub AddCRL {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Create CRL failed"),
+        return $self->SetError( summary => __("Creating the CRL failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -3127,11 +3127,11 @@ sub ReadCRL {
         
         if($@ =~ /RuntimeException: File not found/) {
 
-            return $self->SetError( summary => __("No CRL available"),
+            return $self->SetError( summary => __("No CRL available."),
                                     code => "LIMAL_CALL_FAILED");
         } else {
 
-            return $self->SetError( summary => __("Parse CRL failed"),
+            return $self->SetError( summary => __("Parsing the CRL failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3270,7 +3270,7 @@ sub ExportCA {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -3293,7 +3293,7 @@ sub ExportCA {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3319,7 +3319,7 @@ sub ExportCA {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3345,7 +3345,7 @@ sub ExportCA {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3367,7 +3367,7 @@ sub ExportCA {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3395,7 +3395,7 @@ sub ExportCA {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3425,7 +3425,7 @@ sub ExportCA {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3583,7 +3583,7 @@ sub ExportCertificate {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -3606,7 +3606,7 @@ sub ExportCertificate {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3635,7 +3635,7 @@ sub ExportCertificate {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3664,7 +3664,7 @@ sub ExportCertificate {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3686,7 +3686,7 @@ sub ExportCertificate {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3717,7 +3717,7 @@ sub ExportCertificate {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3747,7 +3747,7 @@ sub ExportCertificate {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3867,7 +3867,7 @@ sub ExportCRL {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -3891,7 +3891,7 @@ sub ExportCRL {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -3913,7 +3913,7 @@ sub ExportCRL {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Export failed"),
+            return $self->SetError( summary => __("Export failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -4047,7 +4047,7 @@ sub Verify {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Verify failed"),
+        return $self->SetError( summary => __("Verification failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -4231,7 +4231,7 @@ sub AddSubCA {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -4348,7 +4348,7 @@ sub AddSubCA {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Modify RequestGenerationData failed"),
+        return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -4479,7 +4479,7 @@ sub AddSubCA {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Modify CertificateIssueData failed"),
+        return $self->SetError( summary => __("Modifying CertificateIssueData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -4494,7 +4494,7 @@ sub AddSubCA {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Create SubCA failed"),
+        return $self->SetError( summary => __("Creating the SubCA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -4647,7 +4647,7 @@ sub ExportCAToLDAP {
 
     };
     if($@) {
-        return $self->SetError( summary     => __("Cannot read CA"),
+        return $self->SetError( summary     => __("Cannot read the CA."),
                                 description => "$@",
                                 code        => "LIMAL_CALL_FAILED");
     }
@@ -4899,7 +4899,7 @@ sub ExportCRLToLDAP {
 
     };
     if($@) {
-        return $self->SetError( summary     => __("Cannot read CRL"),
+        return $self->SetError( summary     => __("Cannot read the CRL."),
                                 description => "$@",
                                 code        => "LIMAL_CALL_FAILED");
     }
@@ -5118,7 +5118,7 @@ sub ExportCRLToLDAP {
         };
         if($@) {
             
-            return $self->SetError( summary => __("Checking for new CRL Distribution Point failed"),
+            return $self->SetError( summary => __("Checking for new CRL Distribution Point failed."),
                                     description => "$@",
                                     code => "LIMAL_CALL_FAILED");
         }
@@ -5685,7 +5685,7 @@ sub ExportCertificateToLDAP {
 
     };
     if($@) {
-        return $self->SetError( summary     => __("Cannot read certificate"),
+        return $self->SetError( summary     => __("Cannot read the certificate."),
                                 description => "$@",
                                 code        => "LIMAL_CALL_FAILED");
     }
@@ -5761,7 +5761,7 @@ sub ExportCertificateToLDAP {
                                                   $data->{'p12Passwd'});
         };
         if($@) {
-            return $self->SetError( summary     => __("Export certificate failed"),
+            return $self->SetError( summary     => __("Exporting the certificate failed."),
                                     description => "$@",
                                     code        => "LIMAL_CALL_FAILED");
         }
@@ -5862,7 +5862,7 @@ sub DeleteCertificate {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -5874,7 +5874,7 @@ sub DeleteCertificate {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Delete Certificate failed"),
+        return $self->SetError( summary => __("Deleting the certificate failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -5967,7 +5967,7 @@ sub ImportCommonServerCertificate {
 
     };
     if($@) {
-        return $self->SetError( summary => __("Import Certificate failed"),
+        return $self->SetError( summary => __("Importing the certificate failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6168,7 +6168,7 @@ sub ReadFile {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Parsing failed"),
+        return $self->SetError( summary => __("Parsing failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6296,7 +6296,7 @@ sub ReadRequest {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Parse request failed"),
+        return $self->SetError( summary => __("Parsing the request failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6410,7 +6410,7 @@ sub ReadRequestList {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Getting the request list failed"),
+        return $self->SetError( summary => __("Getting the request list failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6520,7 +6520,7 @@ sub ImportRequest {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6542,7 +6542,7 @@ sub ImportRequest {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Import Request failed"),
+        return $self->SetError( summary => __("Importing the request failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6633,7 +6633,7 @@ sub DeleteRequest {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Delete Request failed"),
+        return $self->SetError( summary => __("Deleting the request failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6735,7 +6735,7 @@ sub ImportCA {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Import CA failed"),
+        return $self->SetError( summary => __("Importing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6832,7 +6832,7 @@ sub DeleteCA {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Delete CA failed"),
+        return $self->SetError( summary => __("Deleting the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -6948,7 +6948,7 @@ sub ReadCRLDefaults {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Get defaults failed"),
+        return $self->SetError( summary => __("Getting defaults failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
 
@@ -7030,7 +7030,7 @@ sub WriteCRLDefaults {
     };
     if($@) {
 
-        return $self->SetError( summary => __("Initialize CA failed"),
+        return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -7062,7 +7062,7 @@ sub WriteCRLDefaults {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Modify CRLGenerationData failed"),
+        return $self->SetError( summary => __("Modifying CRLGenerationData failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }
@@ -7073,7 +7073,7 @@ sub WriteCRLDefaults {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Write defaults failed"),
+        return $self->SetError( summary => __("Writing the defaults failed."),
                                 description => "$@",
                                 code => "LIMAL_CALL_FAILED");
     }

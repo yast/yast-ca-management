@@ -51,7 +51,7 @@
 		|| !CaMgm::prop_emailChanged
 		|| force_reset))
 	{
-	    ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Please change the values of \"Server Name\" and \"Email\"."));
+	    ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Change the values of Server Name and E-Mail."));
 	    ret = add( ret, "warning_level", `blocker );
 	}
 
@@ -112,7 +112,7 @@
 
 	if (!check_mail_address(CaMgm::prop_email))
 	{
-	    ret = add( ret, "warning", _("Invalid e-mail format. Please change it."));
+	    ret = add( ret, "warning", _("Invalid e-mail format."));
 	    ret = add( ret, "warning_level", `blocker );
 	}
 
@@ -151,14 +151,14 @@
 	}
 	else if (CaMgm::prop_selection == `disk)
 	{
-	    proposal = HTML::Para(_("Importing a CA and certificate from file."));
+	    proposal = HTML::Para(_("Importing a CA and certificate from file"));
 	}
 
 	ret = add (ret, "preformatted_proposal", proposal);
 	if ( ((list<string>) splitstring (CaMgm::prop_server_commonName, "."))[0]:"" == "linux")
 	{
 	    ret = add (ret, "warning" ,
-		       _("<p>Is the default host name <b>linux</b> really unique? The certificate is only valid if the host name is correct.</p>"));
+		       _("<p>Is the default hostname <b>linux</b> really unique? The certificate is only valid if the hostname is correct.</p>"));
 	}
     }
     else if (func == "AskUser")
@@ -168,7 +168,7 @@
 	if (CaMgm::prop_settingsWritten)
 	{
 	  if( !Popup::YesNo(_("Settings have already been written.") + "\n" +
-	                    _("Do you want to delete the old settings?")))
+	                    _("Delete the old settings?")))
 	  {
 	        ret = $[ "workflow_sequence" : `auto ];
 	  }

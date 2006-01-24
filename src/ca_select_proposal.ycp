@@ -93,7 +93,7 @@ Here, change these <b>default settings</b>.
 							     CaMgm::prop_state ))),
 			       `HBox(`HWeight (1,`Password(`id(`pw1), _("&Password:"), CaMgm::prop_password)),
 				     `HSpacing(2), 
-				     `HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password:"), confirmPassword))
+				     `HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password"), confirmPassword))
                                     ),
 			       `HBox(`HWeight (1,`TextEntry(`id(`email), _("E-Mail"), CaMgm::prop_email)),
 				     `HSpacing(2), 
@@ -125,7 +125,7 @@ Here, change these <b>default settings</b>.
 		    }
 		    else if ( size(confirmPassword) < 4)
 		    {
-			Popup::Error(_("Password length should be greater than 3 characters."));
+			Popup::Error(_("Password length should be greater than three characters."));
 			ret = `again;
 		    }
 		    else
@@ -218,8 +218,8 @@ while completing the installation.
 ");
 
     help_text = help_text + _("<p>
-You also have the possibility of creating the default CA and certificate in installed system, 
-if you do not want to create/import it now.
+You also have the possibility of creating the default CA and certificate in the installed system 
+if you do not want to create or import it now.
 </p>
 ");
 

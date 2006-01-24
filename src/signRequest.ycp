@@ -45,7 +45,8 @@
         if (requestMap == nil)
         {
             showErrorCaManagement ();
-            return _("\nRequest not found");
+            return _("\nRequest not found.
+");
         }
 	text = text + "<pre>";
 	map dn = requestMap["SUBJECT_HASH"]:$[];
@@ -217,7 +218,7 @@
 	}	
 	else
 	{
-	    Popup::Error (sformat(_("Extention \"%1\" not found."), extention));
+	    Popup::Error (sformat(_("Extension \"%1\" not found."), extention));
 	}
     }    
     
@@ -526,7 +527,7 @@
 	}	
 	else
 	{
-	    Popup::Error (sformat(_("Extention \"%1\" not found."), extention));
+	    Popup::Error (sformat(_("Extension \"%1\" not found."), extention));
 	}
     }
 
@@ -578,7 +579,7 @@
 	{
 	    if (kind != "CA Request")
 	    {
-		string message = sformat(_("This is a CA Request. Do you really want to sign it as a %1?"),
+		string message = sformat(_("This is a CA request. Really sign it as a %1?"),
 					 kind );
 		if (!Popup::YesNo (message))
 		{
@@ -590,7 +591,7 @@
 	{
 	    if (kind == "CA Request")
 	    {
-		string message = _("This is NOT a CA Request. Do you really want to sign it as a CA Request?");
+		string message = _("This is not a CA request. Really sign it as a CA request?");
 		if (!Popup::YesNo (message))
 		{
 		    return `abort;
@@ -626,7 +627,7 @@
 	    }
 	    else
 	    {
-		Popup::Error (sformat(_("Extention \"%1\" not found."), key));
+		Popup::Error (sformat(_("Extension \"%1\" not found."), key));
 	    }		
 	});
 	    	
@@ -649,18 +650,18 @@
 	helptext = _("<p>This frame shows the signing request.</p>");
 
         // help text 2/3 
-        helptext = helptext + _("<p>The request has special <b>request extentions</b> which you can accept.</p>");
+        helptext = helptext + _("<p>The request has special request extensions, which you can accept.</p>");
         // help text 3/3
-	helptext = helptext + _("<p>If you reject these extentions the default values will be taken instead.</p>");
+	helptext = helptext + _("<p>If you reject these extensions, the default values are taken instead.</p>");
 
         term contents = `VBox (
 			       `Left(`RichText(getRequestDescription (currentRequestMap, true))),
 			       `IntField( `id(`period), _("&Valid Period (days):"),  1, 10000, CaMgm::validPeriod),
-			       `MultiSelectionBox( `id(`extentions), _("Requested Extentions which you can particular accept:"),
+			       `MultiSelectionBox( `id(`extentions), _("Requested Extensions"),
 						   createExtentionItem ())
 			       );
 
-        Wizard::SetContents ( sformat(_("Sign Request as a %1 (step 1/2)"), kind), contents, helptext, true, true);
+        Wizard::SetContents ( sformat(_("Sign Request as a %1 (Step 1/2)"), kind), contents, helptext, true, true);
 	Wizard::RestoreNextButton();
 	Wizard::DisableBackButton();
 	UI::SetFocus(`id(`period));
@@ -1079,7 +1080,7 @@
 	contents = add (contents, `Right(`PushButton (`id (`edit), `opt (`key_F4), _("&Edit Request"))));
 
                                 // To translators: dialog label
-        Wizard::SetContents ( sformat(_("Sign Request as a %1 (step 2/2)"), kind), contents, helptext, true, true);
+        Wizard::SetContents ( sformat(_("Sign Request as a %1 (Step 2/2)"), kind), contents, helptext, true, true);
 	Wizard::SetNextButton(`next, _("Sign Request") );
 
         symbol ui = nil;
@@ -1098,7 +1099,7 @@
 		}
 		else
 		{
-		    Popup::Message(_("Request has been signed."));
+		    Popup::Message(_("The request has been signed."));
 		}
 	    }
         }
