@@ -13,6 +13,7 @@ BEGIN {
 use strict;
 use Errno qw(ENOENT);
 
+use LIMAL;
 use LIMAL::CaMgm;
 use YaST::YCP;
 use ycp;
