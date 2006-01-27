@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Jan 27 11:57:08 CET 2006 - mc@suse.de
+
+- version 2.13.10
+- change the CA during installation 
+
+-------------------------------------------------------------------
 Fri Jan 27 02:34:35 CET 2006 - mls@suse.de
 
 - converted neededforbuild to BuildRequires
