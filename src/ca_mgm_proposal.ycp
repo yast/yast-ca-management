@@ -94,9 +94,19 @@
 	    y2milestone("FORCE RESET");
 	    if (CaMgm::prop_settingsWritten)
 	    {
-		string errorString = _("CA Management") + "\n" +
-		    _("Settings have already been written.");
-		Popup::Warning (errorString);
+		if( !Popup::YesNo(_("CA Management") + "\n" +
+				  _("Settings have already been written.") + "\n" +
+		                  _("Delete the old settings?")))
+		{
+		      ret = $[ "workflow_sequence" : `auto ];
+		}
+		else
+		{
+		      YaPI::CaManagement::DeleteCA ($[   "caName":CaMgm::currentCA,
+		                                       "caPasswd":getPassword(CaMgm::currentCA),
+							  "force": true]);
+		      CaMgm::prop_settingsWritten = false;
+		}
 	    }
 	    else
 	    {
@@ -166,7 +176,8 @@
 	any sequence = WFM::CallFunction ( "ca_select_proposal", [] );
 	if (CaMgm::prop_settingsWritten)
 	{
-	  if( !Popup::YesNo(_("Settings have already been written.") + "\n" +
+	  if( !Popup::YesNo(_("CA Management") + "\n" +
+			    _("Settings have already been written.") + "\n" +
 	                    _("Delete the old settings?")))
 	  {
 	        ret = $[ "workflow_sequence" : `auto ];
