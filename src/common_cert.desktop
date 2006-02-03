@@ -19,8 +19,6 @@ X-SuSE-YaST-AutoInstResource=
 Icon=yast-common_cert
 Exec=/sbin/yast2 common_cert
 
-Name=Common Server Certificate 
+Name=Common Server Certificate
 GenericName=Install an SSL certificate for server services
-Name[de]=Allgemeines Server Zertifikat importieren
-GenericName[de]=Konfigurieren des allemeinen Server Zertifikats
 X-KDE-SubstituteUID=true
