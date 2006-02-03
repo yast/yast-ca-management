@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Fri Feb  3 16:18:58 CET 2006 - mc@suse.de
+
+- version 2.13.12
+- common_cert.desktop:
+  * remove last space in Name attribute to make our translation
+    script happy [#136047]
+- common_cert.desktop, ca_mgm.desktop:
+  * remove german translation; will be re added from our
+    translation process
+
+-------------------------------------------------------------------
 Fri Feb  3 13:27:01 CET 2006 - mc@suse.de
 
 - version 2.13.11
