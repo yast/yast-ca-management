@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Feb  8 15:57:07 CET 2006 - mc@suse.de
+
+- version 2.13.13
+- LIMAL::CaMgm::StringList was renamed to LIMAL::StringList
+  (part of fix for [#149073])
+
+-------------------------------------------------------------------
 Fri Feb  3 16:18:58 CET 2006 - mc@suse.de
 
 - version 2.13.12
