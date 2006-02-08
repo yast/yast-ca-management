@@ -661,7 +661,7 @@ sub transformExtendedKeyUsage {
     my $value = shift || "";
 
     my $crit  = 0;
-    my $list  = new LIMAL::CaMgm::StringList();
+    my $list  = new LIMAL::StringList();
    
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
