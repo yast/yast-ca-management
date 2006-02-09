@@ -24,7 +24,7 @@ my $domain = "ca-management";
 
 use Locale::gettext;
 POSIX::setlocale(LC_MESSAGES, "");
-textdomain($domain);
+textdomain("ca-management");
 
 YaST::YCP::Import ("SCR");
 YaST::YCP::Import ("IP");
