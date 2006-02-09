@@ -20,8 +20,11 @@ use ycp;
 use Date::Calc qw( Date_to_Time );
 use POSIX ();     # Needed for setlocale()
 
+my $domain = "ca-management";
+
 use Locale::gettext;
 POSIX::setlocale(LC_MESSAGES, "");
+textdomain($domain);
 
 YaST::YCP::Import ("SCR");
 YaST::YCP::Import ("IP");
@@ -31,7 +34,7 @@ YaST::YCP::Import ("URL");
 our %TYPEINFO;
 my %__error = ();
 my $CAM_ROOT = "/var/lib/CAM";
-my $domain = "ca-management";
+
 
 my $transMap = {
                 'Netscape CA Revocation Url'      => 'nsCaRevocationUrl',
