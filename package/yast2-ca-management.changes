@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Feb  9 16:02:13 CET 2006 - mc@suse.de
+
+- Better error message when providing a wrong password 
+- add textdomain call to caUtils.pm
+
+-------------------------------------------------------------------
 Wed Feb  8 15:57:07 CET 2006 - mc@suse.de
 
 - version 2.13.13
