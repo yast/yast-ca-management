@@ -2647,11 +2647,22 @@ sub UpdateDB {
     };
     if($@) {
         
-        return $self->SetError( summary => __("UpdateDB failed."),
-                                description => "$@",
-                                code => "LIMAL_CALL_FAILED");
+        if($@ =~ /invalid\s+password/i) 
+        {
+            # error message; displayed in an popup dialog
+            return $self->SetError( summary => __("Invalid Password."),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
+        }
+        else 
+        {
+            # error message; displayed in an popup dialog
+            return $self->SetError( summary => __("UpdateDB failed."),
+                                    description => "$@",
+                                    code => "LIMAL_CALL_FAILED");
+        }
     }
-
+    
     return 1;
 }
 
