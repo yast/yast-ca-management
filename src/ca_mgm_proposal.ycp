@@ -145,7 +145,7 @@
 					       _("Server Name: ") + CaMgm::prop_server_commonName,
 					       _("Country: ") + CaMgm::prop_country,
 					       _("Password: ") + passwordString,
-					       _("E-Mail") + CaMgm::prop_email
+					       _("E-Mail: ") + CaMgm::prop_email
 					       ] );
 	    if ( size(CaMgm::prop_password) < 4)
 	    {
