@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Feb 20 12:05:31 CET 2006 - mc@suse.de
+
+- replace yast2-devel-packages with more specific BuildRequires 
+- fix Summary string [Bug #150155]
+
+-------------------------------------------------------------------
 Thu Feb  9 16:02:13 CET 2006 - mc@suse.de
 
 - Better error message when providing a wrong password 
