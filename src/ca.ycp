@@ -7,7 +7,7 @@
  *   CA Management
  *
  * Summary:
- *   
+ *
  *
  * Authors:
  *   Stefan Schubert <schubi@suse.de>
@@ -26,10 +26,10 @@
     import "Wizard";
     import "Label";
     import "YaPI::CaManagement";
-    
+
     include "ca-management/crlDefault.ycp";
-    include "ca-management/certDefault.ycp";    
-    
+    include "ca-management/certDefault.ycp";
+
     define  map defaultSequence = $[
         "ws_start"	    : "new_default1",
         "new_default1"      : $[
@@ -63,7 +63,7 @@
 
 	map aliases = $[
 			"new_certinit"   	: ``(new_cert_init ("Sub CA")),
-			"new_certSaveDef"  	: ``(new_cert_save_default ()),		
+			"new_certSaveDef"  	: ``(new_cert_save_default ()),
 			"new_cert1"  	 	: ``(new_cert1 ("Sub CA")),
 			"new_cert2"   		: ``(new_cert2 ("Sub CA")),
 			"new_cert3"   		: ``(new_cert3 ("Sub CA")),
@@ -99,7 +99,7 @@
 
 	return ret;
     }
-    
+
 
     /**
      * showLongDescriptionCA - description of a CA in textform
@@ -109,7 +109,7 @@
 
 	string ret = (string) YaPI::CaManagement::ReadCA ($["caName":CAname, "type":"plain"]);
 	y2milestone("ReadCA(%1): %2", CAname, ret);
-	
+
         if (ret == nil)
         {
             showErrorCaManagement ();
@@ -134,11 +134,11 @@
 
 	    UI::SetFocus (`id(`ok));
 	    UI::UserInput ();
-	    UI::CloseDialog ();	    
-	}	
+	    UI::CloseDialog ();
+	}
     }
 
-    
+
     /**
      * getDescriptionCA - description of a CA
      * @param CA name
@@ -162,25 +162,25 @@
 	    text = text + "<pre>";
 	    text = text + "\nCommon Name:  " + ((list)dn["CN"]:[])[0]:"";
 	    text = text + "\nOrganization: " + ((list)dn["O"]:[])[0]:"";
-	    text = text + "\nLocation:     " + ((list)dn["L"]:[])[0]:"";	    
+	    text = text + "\nLocation:     " + ((list)dn["L"]:[])[0]:"";
 	    text = text + "\nState:        " + ((list)dn["ST"]:[])[0]:"";
 	    text = text + "\nCountry:      " + ((list)dn["C"]:[])[0]:"";
 	    text = text + "\nEMAIL:        " + ((list)dn["emailAddress"]:[])[0]:"";
-	    text = text + "</pre>";	    
+	    text = text + "</pre>";
 	}
 
 	map issuer = ret["ISSUER_HASH"]:$[];
 	if (size (issuer) > 0)
 	{
 	    text = text + _("<p><b>Issued By:</b></p>");
-	    text = text + "<pre>";	    
+	    text = text + "<pre>";
 	    text = text + "\nCommon Name:  " + ((list)issuer["CN"]:[])[0]:"";
 	    text = text + "\nOrganization: " + ((list)issuer["O"]:[])[0]:"";
-	    text = text + "\nLocation:     " + ((list)issuer["L"]:[])[0]:"";	    
+	    text = text + "\nLocation:     " + ((list)issuer["L"]:[])[0]:"";
 	    text = text + "\nState:        " + ((list)issuer["ST"]:[])[0]:"";
 	    text = text + "\nCountry:      " + ((list)issuer["C"]:[])[0]:"";
 	    text = text + "\nEMAIL:        " + ((list)issuer["emailAddress"]:[])[0]:"";
-	    text = text + "</pre>";	    
+	    text = text + "</pre>";
 	}
 
 	text = text +  _("\nValid from: ") + ret["NOTBEFORE"]:"";
@@ -188,12 +188,12 @@
 	text = text + "<br>" + "Fingerprint: " + ret["FINGERPRINT"]:"";
 
 	return text;
-	
+
     }
 
 
     /**
-     * Dialog Tab - CA - 
+     * Dialog Tab - CA -
      * @return term the selected CA
      */
     term getCATab () {
@@ -203,7 +203,7 @@
 			       `HBox (
 				      `HSpacing (1),
 				      `RichText(`id(`textinfo),""),
-				      `HSpacing (1)				      
+				      `HSpacing (1)
 				      ),
 			       `HBox (
 				      `HSpacing (1),
@@ -219,16 +219,16 @@
 							   )),
 				      `HSpacing (1)
 				      ),
-			       `VSpacing (1)			       
+			       `VSpacing (1)
                               );
 	return contents;
     }
-    
+
     /**
      * Initialize the tab of the dialog
      */
     void initCATab () {
-        UI::ChangeWidget( `id(`textinfo), `Value, getDescriptionCA (CaMgm::currentCA));	
+        UI::ChangeWidget( `id(`textinfo), `Value, getDescriptionCA (CaMgm::currentCA));
     }
 
     /**
@@ -251,7 +251,7 @@
 	if (ret == `editDefault)
 	{
 	    // initialize global variable
-	    CaMgm::initializeDefault = true;		    		
+	    CaMgm::initializeDefault = true;		    
 	    CaMgm::currentDefault = "Sub CA";
 	    editDefaultSequence();
 	}
@@ -259,7 +259,7 @@
 	{
 	    newSubCASequence();
 	}
-	return nil;	
+	return nil;
     }
 
 }
