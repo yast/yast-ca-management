@@ -135,18 +135,18 @@
 	if (kind == "Root CA"
 	    || kind == "Sub CA")
 	{
-	    contents = add (contents, `TextEntry( `id (`id_CAName), _("&CA Name:"), CaMgm::CAName ));	    
+	    contents = add (contents, `TextEntry( `id (`id_CAName), _("&CA Name:"), CaMgm::CAName ));
 	}
         contents = add (contents, `TextEntry( `id (`id_commonName), _("&Common Name:"), CaMgm::commonName ));
         contents = add (contents, emails);
-        contents = add (contents, `VSpacing(2));	
+        contents = add (contents, `VSpacing(2));
         contents = add (contents, `HBox(`HWeight (1,`TextEntry( `id (`id_organisation), _("O&rganization:"), CaMgm::organisation )),
-					`HSpacing(2), 
+					`HSpacing(2),
 					`HWeight (1,`TextEntry( `id (`id_organisationUnit), _("Or&ganizational Unit:"), CaMgm::organisationUnit ))));
         contents = add (contents, `HBox(`HWeight (1,`TextEntry(`id (`id_locality), _("Loca&lity:"), CaMgm::locality )),
-					`HSpacing(2), 
+					`HSpacing(2),
 					`HWeight (1,`TextEntry(`id (`id_state), _("&State:"), CaMgm::state ))));
-	    
+
         contents = add (contents, `HBox (`HWeight(1,`ComboBox( `id (`id_country), _("C&ountry:"), getCountryList()))));
 
                                 // To translators: dialog label
@@ -154,16 +154,22 @@
         Wizard::SetContents ( _("Create New ") + kind + _(" (step 1/3)"), contents, helptext, true, true);
 	Wizard::RestoreNextButton();
 	Wizard::DisableBackButton();
-	UI::ChangeWidget(`id(`id_CAName), `ValidChars, "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-");	
+	string valid_chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ";
+	UI::ChangeWidget(`id(`id_commonName),       `ValidChars, valid_chars);
+	UI::ChangeWidget(`id(`id_organisation),     `ValidChars, valid_chars);
+	UI::ChangeWidget(`id(`id_organisationUnit), `ValidChars, valid_chars);
+	UI::ChangeWidget(`id(`id_locality),         `ValidChars, valid_chars);
+	UI::ChangeWidget(`id(`id_state),            `ValidChars, valid_chars);
+	UI::ChangeWidget(`id(`id_CAName), `ValidChars, "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-");
 	UI::SetFocus(`id(`id_CAName));
-	
+
         symbol ui = nil;
 
         repeat
         {
             boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
             UI::ChangeWidget (`id (`deleteEmail), `Enabled, anyitems);
-            UI::ChangeWidget (`id (`defaultEmail), `Enabled, anyitems);	    
+            UI::ChangeWidget (`id (`defaultEmail), `Enabled, anyitems);
 
             ui = (symbol) UI::UserInput ();
 
