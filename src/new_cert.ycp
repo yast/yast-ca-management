@@ -49,10 +49,10 @@
     }
 
 
-    
+
     /**
      * Creating new CA/Certificate ( 1. step )
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request","Sub CA Request")     
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request","Sub CA Request")
      * @return `next, 'abort, 'again
      */
     define symbol new_cert1 (string kind) ``{
@@ -67,27 +67,27 @@
 	else if (kind == "Client Certificate"
 		 || kind == "Server Certificate")
 	{
-	    helptext = _("<p>To generate a new certificate, some entries are needed.</p>");	    
+	    helptext = _("<p>To generate a new certificate, some entries are needed.</p>");	
 	}
 	else if (kind == "Client Request"
 		 || kind == "Server Request"
 		 || kind == "Sub CA Request")
 	{
-	    helptext = _("<p>To generate a new request, some entries are needed.</p>");	    	    
+	    helptext = _("<p>To generate a new request, some entries are needed.</p>");	    	
 	}
 	else
 	{
-	    helptext = "<p>ERROR Wrong kind. FIX IT</p>";	    
+	    helptext = "<p>ERROR Wrong kind. FIX IT</p>";	
 	}
-	    
-        // help text 2/5 
+	
+        // help text 2/5
         helptext = helptext + _("<p>It depends on the policy defined in the configuration file.</p>");
         // help text 3/5
 	if (kind == "Root CA"
 	    || kind == "Sub CA")
 	{
 	    helptext = helptext + _("<p><b>CA Name</b> is the name of a CA certificate. Use only ASCII characters, \"-\", and \"_\".</p>");
-	    helptext = helptext + _("<p><b>Common Name</b> is the name of the CA.</p>");	    
+	    helptext = helptext + _("<p><b>Common Name</b> is the name of the CA.</p>");	
 	}
 	else
 	{
@@ -98,7 +98,7 @@
 	    }
 	    else
 	    {
-		helptext = helptext + _("<p><b>Common Name</b> is the fully qualified domain name of the server.</p>");		
+		helptext = helptext + _("<p><b>Common Name</b> is the fully qualified domain name of the server.</p>");
 	    }
 	}
         // help text 4/5
@@ -112,7 +112,7 @@
         term buttons = `VBox ();
 	// To translators: pushbutton label
 	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`deleteEmail), `opt (`key_F5), Label::DeleteButton()))));
-	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`defaultEmail) , _("D&efault")))));	
+	buttons = add (buttons,  `HBox ( `HWeight (1, `PushButton (`id (`defaultEmail) , _("D&efault")))));
         buttons = add (buttons, `VStretch());
 	// To translators: pushbutton label
         buttons = add (buttons,  `HBox ( `HWeight(1, `PushButton (`id (`addEmail), `opt (`key_F3), Label::AddButton()))));
@@ -181,7 +181,7 @@
 		CaMgm::commonName = (string) UI::QueryWidget(`id(`id_commonName), `Value);
 		if (kind == "Root CA"
 		    || kind == "Sub CA")
-		{		
+		{
 		    CaMgm::CAName = (string) UI::QueryWidget(`id(`id_CAName), `Value);
 		}
 		CaMgm::organisation = (string) UI::QueryWidget(`id(`id_organisation), `Value);
@@ -202,7 +202,7 @@
 		    {
 			selection["default"] = true;
 		    }
-			
+
 		    if (size (selection["name"]:"") > 0)
 		    {
 			if (check_mail_address(selection["name"]:""))
@@ -212,7 +212,7 @@
 			else
 			{
 			    Popup::Error(_("Invalid e-mail format."));
-			    UI::SetFocus(`id(`id_emailname));			    
+			    UI::SetFocus(`id(`id_emailname));			
 			}
 		    }
 		    ui = `again;
@@ -231,7 +231,7 @@
 			    dummy_map = add (dummy_map, element);
 			}
 		    });
-		    
+		
 		    CaMgm::emailList = dummy_map;
 
 		    ui = `again;
@@ -253,9 +253,9 @@
 			{
 			    element["default"] = false;
 			}
-			dummy_map = add (dummy_map, element);			
+			dummy_map = add (dummy_map, element);
 		    });
-		    
+		
 		    CaMgm::emailList = dummy_map;
 
 		    ui = `again;
@@ -291,7 +291,7 @@
 			{
 			    selection["default"] = true;
 			}
-			
+
 			if (check_mail_address(selection["name"]:""))
 			{
 			    CaMgm::emailList = add (CaMgm::emailList, selection);
@@ -299,8 +299,8 @@
 			else
 			{
 			    Popup::Error(_("Invalid e-mail format."));
-			    UI::SetFocus(`id(`id_emailname));			    
-			    ui = `again;			    
+			    UI::SetFocus(`id(`id_emailname));			
+			    ui = `again;			
 			}
 		    }
 		    if (size (CaMgm::emailList) <= 0)
@@ -313,7 +313,7 @@
 			// Root Ca
 			// If the own "Subject Alt Name" is defined, the copy will be allowed
 			if (CaMgm::adv_cri_subject_alt_name
-			    || CaMgm::adv_copy_subject_alt_name 
+			    || CaMgm::adv_copy_subject_alt_name
 			    || size (CaMgm::adv_subject_alt_name_list) > 0 )
 			{
 			    CaMgm::adv_copy_issuer_alt_name_enabled = true;
@@ -323,7 +323,7 @@
 			    CaMgm::adv_copy_issuer_alt_name = false;
 			    CaMgm::adv_copy_issuer_alt_name_enabled = false;
 			}
-		    }		    
+		    }		
 		}
 	    }
         }
@@ -335,13 +335,13 @@
 
     /**
      * Creating new CA/Certificate ( 2. step )
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request", "Sub CA Request")          
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request", "Sub CA Request")
      * @return `next, 'back, 'cancel, `advancedOptions
      */
     define symbol new_cert2 (string kind) ``{
 
 	string helptext = "Help text not found; please fix";
-	
+
 	if (kind == "Root CA"
 	    || kind == "Sub CA")
 	{
@@ -384,7 +384,7 @@
 
 	    // help text 3/3
 	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
-	}	
+	}
 
         term contents = `VBox ();
         contents = add (contents, `Password( `id (`id_password), _("&Password:"), CaMgm::password));
@@ -402,7 +402,7 @@
         Wizard::SetContents ( _("Create New ") + kind + _(" (step 2/3)"), contents, helptext, true, true);
 	Wizard::RestoreNextButton();
 	UI::SetFocus(`id(`id_password));
-			 
+			
         symbol ui = nil;
 
         repeat
@@ -424,7 +424,7 @@
 
 		if (CaMgm::password != CaMgm::verifyPassword)
 		{
-		    UI::SetFocus(`id(`id_verifyPassword));		    
+		    UI::SetFocus(`id(`id_verifyPassword));		
 		    Popup::Error(_("Passwords are different."));
 		    ui = `again;
 		}
@@ -432,11 +432,11 @@
 		{
 		    if (size (CaMgm::password) <= 0)
 		    {
-			UI::SetFocus(`id(`id_password));			
+			UI::SetFocus(`id(`id_password));
 			Popup::Error(_("Password required."));
 			ui = `again;
 		    }
-		}		
+		}
 	    }
         }
         until (contains ([`back, `next, `abort, `advancedOptions ], ui));
@@ -446,7 +446,7 @@
 
     /**
      * Creating new CA/Certificate ( 3. step )
-     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request", "Sub CA Request")               
+     * @param kind ("Root CA","Sub CA","Client Certificate","Server Certificate","Client Request","Server Request", "Sub CA Request")
      * @return `next, 'back, 'cancel
      */
     define symbol new_cert3 (string kind) ``{
@@ -478,7 +478,7 @@
 	    // help text 1/2
 	    helptext = _("<p>This frame gives an overview of all settings for the request that will be created.</p>");
 	    // help text 2/2
-	    helptext = helptext + _("<p>Click <b>Create</b> to generate the request.</p>");	    
+	    helptext = helptext + _("<p>Click <b>Create</b> to generate the request.</p>");	
 	}
 
 	string text = _("<p><b>Summary</b></p>");
@@ -499,7 +499,7 @@
 	    text = text +  _("Organization:             ")  + CaMgm::organisation + "\n";
 	}
 	if (size (CaMgm::organisationUnit) > 0)
-	{	
+	{
 	    text = text +  _("Organizational Unit:      ")  + CaMgm::organisationUnit + "\n";
 	}
 
@@ -525,7 +525,7 @@
 		{
 		    text = text + "\n";
 		}
-	    
+	
 		i = i + 1;
 	    });
 	    if (i==0)
@@ -534,15 +534,15 @@
 	    }
 	}
 	if (size (CaMgm::locality) > 0)
-	{		
+	{
 	    text = text +  _("Locality:                 ")  + CaMgm::locality + "\n";
 	}
 	if (size (CaMgm::state) > 0)
-	{			
+	{
 	    text = text + _("State:                    ") + CaMgm::state + "\n";
 	}
 	if (size (CaMgm::country) > 0)
-	{	
+	{
 	    text = text + _("Country:                  ") + CaMgm::country + "\n";
 	}
 	text = text + _("Key Length:               ") + CaMgm::keyLength + " bit\n";
@@ -551,7 +551,7 @@
 	    + (CaMgm::adv_cri_ca ? _(" (critical)\n") : "\n") ;
 	if (CaMgm::adv_pathlen)
 	{
-	    text = text +  "                          "  + _("Path Length ") + CaMgm::adv_pathlenValue + "\n"; 
+	    text = text +  "                          "  + _("Path Length ") + CaMgm::adv_pathlenValue + "\n";
 	}
 	if (size (CaMgm::adv_distribution_point) > 0)
 	{
@@ -559,13 +559,13 @@
 		+ (CaMgm::adv_cri_distribution_point ? _(" (critical)\n") : "\n") ;
 	}
 	if (size (CaMgm::adv_challenge_password) > 0)
-	{	
+	{
 	    text = text + "Challenge Password:        " + CaMgm::adv_challenge_password + "\n";
 	}
 
 	if (size (CaMgm::adv_issuer_alt_name_list) > 0
 	    || CaMgm::adv_copy_issuer_alt_name)
-	{	
+	{
 	    text = text + "Issuer Alt Name:          "
 		+ (CaMgm::adv_cri_issuer_alt_name ? _("(critical) ") : "") ;
 	    text = text + (CaMgm::adv_copy_issuer_alt_name ?  _("Copy Subject Alt Name from CA"): "");
@@ -574,7 +574,7 @@
 		|| CaMgm::adv_copy_issuer_alt_name)
 	    {
 		i = i + 1;
-		text = text + "\n";	    
+		text = text + "\n";	
 	    }
 	    foreach (map element, CaMgm::adv_issuer_alt_name_list, ``{
 		if (i==0)
@@ -603,7 +603,7 @@
 	    || CaMgm::adv_keyAgreement
 	    || CaMgm::adv_keyCertSign
 	    || CaMgm::adv_decipherOnly)
-	{		
+	{
 	    text = text + "Key Usage:                "
 		+ (CaMgm::adv_cri_key_usage ? _("(critical)\n") : "") ;
 	    nextLine = CaMgm::adv_cri_key_usage;
@@ -617,7 +617,7 @@
 		else
 		{
 		    text = text + "                          " + "digitalSignature\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_nonRepudiation)
 	    {
@@ -629,7 +629,7 @@
 		else
 		{
 		    text = text + "                          " + "nonRepudiation\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_cRLSign)
 	    {
@@ -641,7 +641,7 @@
 		else
 		{
 		    text = text + "                          " + "cRLSign\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_keyEncipherment)
 	    {
@@ -653,7 +653,7 @@
 		else
 		{
 		    text = text + "                          " + "keyEncipherment\n";
-		}	    	    
+		}	    	
 	    }
 	    if (CaMgm::adv_dataEncipherment)
 	    {
@@ -665,9 +665,9 @@
 		else
 		{
 		    text = text + "                          " + "dataEncipherment\n";
-		}	    
+		}	
 	    }
-	    
+	
 	    if (CaMgm::adv_encipherOnly)
 	    {
 		if (!nextLine)
@@ -678,7 +678,7 @@
 		else
 		{
 		    text = text + "                          " + "encipherOnly\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_keyAgreement)
 	    {
@@ -690,7 +690,7 @@
 		else
 		{
 		    text = text + "                          " + "keyAgreement\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_keyCertSign)
 	    {
@@ -702,7 +702,7 @@
 		else
 		{
 		    text = text + "                          " + "keyCertSign\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_decipherOnly)
 	    {
@@ -714,7 +714,7 @@
 		else
 		{
 		    text = text + "                          " + "decipherOnly\n";
-		}   	    
+		}   	
 	    }
 	    if (!nextLine)
 	    {
@@ -722,9 +722,9 @@
 		text = text + "\n";
 	    }
 	}
-	    
+	
 	if (size (CaMgm::adv_nsComment) > 0)
-	{	
+	{
 	    text = text + _("nsComment:                ") + CaMgm::adv_nsComment
 		+ (CaMgm::adv_cri_nsComment ? _(" (critical)\n") : "\n") ;
 	}
@@ -751,7 +751,7 @@
 		else
 		{
 		    text = text + "                          " + "client\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_server)
 	    {
@@ -763,7 +763,7 @@
 		else
 		{
 		    text = text + "                          " + "server\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_sslCA)
 	    {
@@ -775,7 +775,7 @@
 		else
 		{
 		    text = text + "                          " + "sslCA\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_email)
 	    {
@@ -787,7 +787,7 @@
 		else
 		{
 		    text = text + "                          " + "email\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_reserved)
 	    {
@@ -797,11 +797,11 @@
 		    text = text + "reserved\n";
 		}
 		else
-		{	
+		{
 		    text = text + "                          " + "reserved\n";
-		}	    
+		}	
 	    }
-	    
+	
 	    if (CaMgm::adv_emailCA)
 	    {
 		if (!nextLine)
@@ -812,7 +812,7 @@
 		else
 		{
 		    text = text + "                          " + "emailCA\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_objsign)
 	    {
@@ -824,7 +824,7 @@
 		else
 		{
 		    text = text + "                          " + "objsign\n";
-		}	    
+		}	
 	    }
 	    if (CaMgm::adv_objCA)
 	    {
@@ -836,7 +836,7 @@
 		else
 		{
 		    text = text + "                          " + "objCA\n";
-		}	    
+		}	
 	    }
 	    if (!nextLine)
 	    {
@@ -845,7 +845,7 @@
 	    }
 	}
 	if (size (CaMgm::adv_nsSslServerName) > 0)
-	{	
+	{
 	    text = text + "nsSslServerName:          " + CaMgm::adv_nsSslServerName
 		+ (CaMgm::adv_cri_nsSslServerName ? _(" (critical)\n") : "\n") ;
 	}
@@ -853,7 +853,7 @@
 	if (size (CaMgm::adv_subject_alt_name_list) > 0
 	    || (CaMgm::adv_copy_subject_alt_name
 		&& size(CaMgm::emailList) > 0))
-	{	
+	{
 	    text = text + "Subject Alt Name:         "
 		+ (CaMgm::adv_cri_subject_alt_name ? _("(critical) ") : "") ;
 	    text = text + (CaMgm::adv_copy_subject_alt_name ?   _("Copy Standard E-Mail Address"): "");
@@ -862,7 +862,7 @@
 		|| CaMgm::adv_copy_subject_alt_name)
 	    {
 		i = i + 1;
-		text = text + "\n";	    
+		text = text + "\n";	
 	    }
 	    foreach (map element, CaMgm::adv_subject_alt_name_list, ``{
 		if (i==0)
@@ -883,55 +883,55 @@
 	}
 
  	if (size (CaMgm::adv_unstructured_name) > 0)
-	{	
+	{
 	    text = text +   "Unstructured Name:        "  + CaMgm::adv_unstructured_name +"\n";
 	}
  	if (size (CaMgm::exp_subjectKeyIdentifier) > 0)
-	{	
+	{
 	    text = text +   "Subject Key Identifier:   "  + CaMgm::exp_subjectKeyIdentifier
 		+ (CaMgm::exp_cri_subjectKeyIdentifier ? _(" (critical)\n") : "\n") ;
 	}
  	if (size (CaMgm::exp_authorityKeyIdentifier) > 0)
-	{	
+	{
 	    text = text +   "Authority Key Identifier: "  + CaMgm::exp_authorityKeyIdentifier
 		+ (CaMgm::exp_cri_authorityKeyIdentifier ? _(" (critical)\n") : "\n") ;
 	}
  	if (size (CaMgm::exp_netscape_nsBaseUrl) > 0)
-	{	
+	{
 	    text = text +   "nsBaseUrl:                "  + CaMgm::exp_netscape_nsBaseUrl
 		+ (CaMgm::exp_cri_netscape_nsBaseUrl ? _(" (critical)\n") : "\n") ;
 	}
  	if (size (CaMgm::exp_netscape_nsRevocationUrl) > 0)
-	{	
+	{
 	    text = text +   "nsRevocationUrl:          "  + CaMgm::exp_netscape_nsRevocationUrl
 		+ (CaMgm::exp_cri_netscape_nsRevocationUrl ? _(" (critical)\n") : "\n") ;
 	}
  	if (size (CaMgm::exp_netscape_nsCaRevocationUrl) > 0)
-	{	
+	{
 	    text = text +   "nsCaRevocationUrl:        "  + CaMgm::exp_netscape_nsCaRevocationUrl
 		+ (CaMgm::exp_cri_netscape_nsCaRevocationUrl ? _(" (critical)\n") : "\n") ;
 	}
  	if (size (CaMgm::exp_netscape_nsRenewalUrl) > 0)
-	{	
+	{
 	    text = text +   "nsRenewalUrl:             "  + CaMgm::exp_netscape_nsRenewalUrl
 		+ (CaMgm::exp_cri_netscape_nsRenewalUrl ? _(" (critical)\n") : "\n") ;
 	}
  	if (size (CaMgm::exp_netscape_nsCaPolicyUrl) > 0)
-	{	
+	{
 	    text = text +   "nsCaPolicyUrl:            "  + CaMgm::exp_netscape_nsCaPolicyUrl
 		+ (CaMgm::exp_cri_netscape_nsCaPolicyUrl ? _(" (critical)\n") : "\n") ;
 	}
  	if (size (CaMgm::exp_authorityInfoAccess) > 0)
-	{	
+	{
 	    text = text +   "authorityInfoAccess:      "  + CaMgm::exp_authorityInfoAccess
 		+ (CaMgm::exp_cri_authorityInfoAccess ? _(" (critical)\n") : "\n") ;
 	}
  	if (size (CaMgm::exp_extendedKeyUsage) > 0)
-	{	
+	{
 	    text = text +   "extendedKeyUsage:         "  + CaMgm::exp_extendedKeyUsage
 		+ (CaMgm::exp_cri_extendedKeyUsage ? _(" (critical)\n") : "\n") ;
 	}
-	
+
 	text = text + "</pre>";
 
         term contents = `VBox ();
