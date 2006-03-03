@@ -214,8 +214,9 @@
 	    {
 		success = importCertificateFromDisk ();
 	    }
-
-	    CaMgm::prop_settingsWritten = true;
+	    if( success ) {
+	      CaMgm::prop_settingsWritten = true;
+	    }
 	}
 
         ret = $[ "success" : success ];
