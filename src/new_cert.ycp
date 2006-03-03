@@ -154,7 +154,7 @@
         Wizard::SetContents ( _("Create New ") + kind + _(" (step 1/3)"), contents, helptext, true, true);
 	Wizard::RestoreNextButton();
 	Wizard::DisableBackButton();
-	string valid_chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ";
+	string valid_chars = ",.:;#'+*~?][(){}/&%$\"!@0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ";
 	UI::ChangeWidget(`id(`id_commonName),       `ValidChars, valid_chars);
 	UI::ChangeWidget(`id(`id_organisation),     `ValidChars, valid_chars);
 	UI::ChangeWidget(`id(`id_organisationUnit), `ValidChars, valid_chars);
