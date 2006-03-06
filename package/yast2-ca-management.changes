@@ -1,7 +1,13 @@
 -------------------------------------------------------------------
+Mon Mar  6 14:08:04 CET 2006 - mc@suse.de
+
+- version 2.13.15
+
+-------------------------------------------------------------------
 Mon Mar  6 11:42:42 CET 2006 - varkoly@suse.de
 
-- only if the settings was written sucessfully set this variable true
+- only if the settings were written sucessfully
+  set CaMgm::prop_settingsWritten to true
 - fxing the parameter checking  [Bug #153300]
 
 -------------------------------------------------------------------
