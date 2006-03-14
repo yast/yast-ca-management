@@ -106,6 +106,16 @@ Here, change these <b>default settings</b>.
 				    contents, help_text,
 				    Label::BackButton(), Label::NextButton());
 
+
+        string valid_chars = ",.:;#'+*~?][(){}/§&%$\"!@0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ";
+        UI::ChangeWidget(`id(`id_commonName),       `ValidChars, valid_chars);
+        UI::ChangeWidget(`id(`id_organisation),     `ValidChars, valid_chars);
+        UI::ChangeWidget(`id(`id_organisationUnit), `ValidChars, valid_chars);
+        UI::ChangeWidget(`id(`id_locality),         `ValidChars, valid_chars);
+        UI::ChangeWidget(`id(`id_state),            `ValidChars, valid_chars);
+y2milestone(valid_chars);
+        UI::ChangeWidget(`id(`id_CAName), `ValidChars, "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-");
+
 	// Get the user input.
 	//
 	any ret = nil;
