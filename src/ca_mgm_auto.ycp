@@ -51,7 +51,7 @@ define list<term> getAutoCountryList () ``{
 	    
     foreach (string name, name_list, ``{
 	result = add (result, `item (`id (country_index[name]:""), name ,
-				     CaMgm::autoYaSTSettings["country"]:Language::GetLanguageCountry () == country_index[name]:"") );
+				     CaMgm::autoYaSTSettings["country"]:Timezone::GetCountryForTimezone("") == country_index[name]:"") );
     });
     return result;	
 }
