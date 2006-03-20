@@ -26,7 +26,7 @@
 
     import "CaMgm";
     import "Popup";
-    import "Language";
+    import "Timezone";
     import "YaPI::CaManagement";
 
     include "ca-management/util.ycp";
@@ -158,7 +158,7 @@
 	CaMgm::organisationUnit = ((list)dn["OU"]:[])[0]:"";
 	CaMgm::locality = ((list)dn["L"]:[])[0]:"";
 	CaMgm::state = ((list)dn["ST"]:[])[0]:"";
-	CaMgm::country = ((list)dn["C"]:[])[0]:Language::GetLanguageCountry ();
+	CaMgm::country = ((list)dn["C"]:[])[0]:Timezone::GetCountryForTimezone("");
 
 	list<string> dummy = splitstring (ret["basicConstraints"]:"", ",");
 	foreach ( string entry, dummy, ``{

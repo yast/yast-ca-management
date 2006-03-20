@@ -24,7 +24,7 @@
     import "Mode";
     import "Popup";
     import "DNS";
-    import "Language";
+    import "Timezone";
     import "Users";
 
     include "ca-management/new_cert_read_write.ycp";
@@ -78,7 +78,7 @@
 	}
 	if (!CaMgm::prop_countryChanged)
 	{
-	    CaMgm::prop_country = Language::GetLanguageCountry ();
+	    CaMgm::prop_country = Timezone::GetCountryForTimezone("");
 	}
 	if (!CaMgm::prop_passwordChanged)
 	{
@@ -113,7 +113,7 @@
 		CaMgm::prop_selection = `def;
 		CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";
 		CaMgm::prop_CAName = "YaST_Default_CA";
-		CaMgm::prop_country = Language::GetLanguageCountry ();
+		CaMgm::prop_country = Timezone::GetCountryForTimezone("");
 		CaMgm::prop_password = Users::GetRootPassword();
 		CaMgm::prop_email = "postmaster@" + domain;
 		CaMgm::prop_server_commonName = longhostname;
