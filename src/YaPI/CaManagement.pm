@@ -5048,26 +5048,26 @@ sub ExportCRLToLDAP {
 
             $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
 
-            my $defClient = $ca->getIssuerDefaults($LIMAL::CaMgm::E_Client_Cert);
+            my $defClient = $ca->getIssueDefaults($LIMAL::CaMgm::E_Client_Cert);
 
-            if($defClient->getExtensions()->getCRLDistributionPoins()->isPresent() &&
-               !$defClient->getExtensions()->getCRLDistributionPoins()->getCRLDistributionPoints()->empty()) {
+            if($defClient->getExtensions()->getCRLDistributionPoints()->isPresent() &&
+               !$defClient->getExtensions()->getCRLDistributionPoints()->getCRLDistributionPoints()->empty()) {
 
                 $crlDP_client = "found";
             }
             
-            my $defServer = $ca->getIssuerDefaults($LIMAL::CaMgm::E_Server_Cert);
+            my $defServer = $ca->getIssueDefaults($LIMAL::CaMgm::E_Server_Cert);
 
-            if($defServer->getExtensions()->getCRLDistributionPoins()->isPresent() &&
-               !$defServer->getExtensions()->getCRLDistributionPoins()->getCRLDistributionPoints()->empty()) {
+            if($defServer->getExtensions()->getCRLDistributionPoints()->isPresent() &&
+               !$defServer->getExtensions()->getCRLDistributionPoints()->getCRLDistributionPoints()->empty()) {
 
                 $crlDP_server = "found";
             }
 
-            my $defCA = $ca->getIssuerDefaults($LIMAL::CaMgm::E_CA_Cert);
+            my $defCA = $ca->getIssueDefaults($LIMAL::CaMgm::E_CA_Cert);
 
-            if($defCA->getExtensions()->getCRLDistributionPoins()->isPresent() &&
-               !$defCA->getExtensions()->getCRLDistributionPoins()->getCRLDistributionPoints()->empty()) {
+            if($defCA->getExtensions()->getCRLDistributionPoints()->isPresent() &&
+               !$defCA->getExtensions()->getCRLDistributionPoints()->getCRLDistributionPoints()->empty()) {
 
                 $crlDP_ca = "found";
             }
@@ -5083,12 +5083,12 @@ sub ExportCRLToLDAP {
                 my $crlDP   .= "ldap://".$data->{'ldapHostname'}.":".$data->{'ldapPort'}."/";
                 $crlDP   .= uri_escape($data->{'destinationDN'});
                 
-                my $list = new LiteralValueList();
-                $list->push_back(new LiteralValue("URI", $crlDP));
+                my $list = new LIMAL::CaMgm::LiteralValueList();
+                $list->push_back(new LIMAL::CaMgm::LiteralValue("URI", $crlDP));
                 
                 # client
                 
-                my $cdp = $defClient->getExtensions()->getCRLDistributionPoins();
+                my $cdp = $defClient->getExtensions()->getCRLDistributionPoints();
                 $cdp->setCRLDistributionPoints($list);
                 
                 my $ext = $defClient->getExtensions();
@@ -5098,7 +5098,7 @@ sub ExportCRLToLDAP {
                 
                 # server 
                 
-                $cdp = $defServer->getExtensions()->getCRLDistributionPoins();
+                $cdp = $defServer->getExtensions()->getCRLDistributionPoints();
                 $cdp->setCRLDistributionPoints($list);
                 
                 $ext = $defServer->getExtensions();
@@ -5108,7 +5108,7 @@ sub ExportCRLToLDAP {
                 
                 # ca
                 
-                $cdp = $defCA->getExtensions()->getCRLDistributionPoins();
+                $cdp = $defCA->getExtensions()->getCRLDistributionPoints();
                 $cdp->setCRLDistributionPoints($list);
                 
                 $ext = $defCA->getExtensions();
