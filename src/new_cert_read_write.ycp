@@ -108,7 +108,9 @@
 	CaMgm::exp_cri_extendedKeyUsage = false;
 	CaMgm::exp_extendedKeyUsage = "";
 
-	map ret = nil;
+	map          ret    = nil;
+	string       sdummy = nil;
+	list<string> dummy  = nil;
 
 	if (kind == "Root CA")
         {
@@ -160,7 +162,15 @@
 	CaMgm::state = ((list)dn["ST"]:[])[0]:"";
 	CaMgm::country = ((list)dn["C"]:[])[0]:Timezone::GetCountryForTimezone("");
 
-	list<string> dummy = splitstring (ret["basicConstraints"]:"", ",");
+	sdummy = ret["basicConstraints"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    list valuelist = splitstring (entry,":");
@@ -190,7 +200,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["crlDistributionPoints"]:"", ",");
+	sdummy = ret["crlDistributionPoints"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 
@@ -204,7 +222,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["issuerAltName"]:"", ",");
+	sdummy = ret["issuerAltName"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    list valuelist = splitstring (entry,":");
@@ -229,7 +255,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["keyUsage"]:"", ",");
+	sdummy = ret["keyUsage"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -274,7 +308,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["nsComment"]:"", ",");
+	sdummy = ret["nsComment"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -287,7 +329,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["nsCertType"]:"", ",");
+	sdummy = ret["nsCertType"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -328,7 +378,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["nsSslServerName"]:"", ",");
+	sdummy = ret["nsSslServerName"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -341,7 +399,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["subjectAltName"]:"", ",");
+	sdummy = ret["subjectAltName"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    list valuelist = splitstring (entry,":");
@@ -366,7 +432,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["subjectKeyIdentifier"]:"", ",");
+	sdummy = ret["subjectKeyIdentifier"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -379,7 +453,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["authorityKeyIdentifier"]:"", ",");
+	sdummy = ret["authorityKeyIdentifier"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	integer counter = 0;
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
@@ -407,7 +489,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["nsBaseUrl"]:"", ",");
+	sdummy = ret["nsBaseUrl"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -420,7 +510,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["nsRevocationUrl"]:"", ",");
+	sdummy = ret["nsRevocationUrl"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -433,7 +531,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["nsCaRevocationUrl"]:"", ",");
+	sdummy = ret["nsCaRevocationUrl"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -446,7 +552,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["nsRenewalUrl"]:"", ",");
+	sdummy = ret["nsRenewalUrl"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -459,7 +573,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["nsCaPolicyUrl"]:"", ",");
+	sdummy = ret["nsCaPolicyUrl"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
 	    if (entry == "critical")
@@ -472,7 +594,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["authorityInfoAccess"]:"", ",");
+	sdummy = ret["authorityInfoAccess"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	counter = 0;
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
@@ -500,7 +630,15 @@
 	    }
 	});
 
-	dummy = splitstring (ret["extendedKeyUsage"]:"", ",");
+	sdummy = ret["extendedKeyUsage"]:"";
+	if( sdummy != nil )
+	{
+	  dummy = splitstring (sdummy, ",");
+	}
+	else
+	{
+	  dummy = [];
+	}
 	counter = 0;
 	foreach ( string entry, dummy, ``{
 	    entry = strip(entry);
