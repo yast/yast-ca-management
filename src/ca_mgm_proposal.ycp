@@ -147,7 +147,12 @@
 					       _("Password: ") + passwordString,
 					       _("E-Mail: ") + CaMgm::prop_email
 					       ] );
-	    if ( size(CaMgm::prop_password) < 4)
+            if ( Users::GetRootPassword() == "" && size(CaMgm::prop_password) == 0)
+            {
+                ret = add( ret, "warning", _("Unable to retrieve the system root password.  Set a CA password to continue."));
+                ret = add( ret, "warning_level", `blocker );
+            }
+	    else if ( size(CaMgm::prop_password) < 4)
 	    {
 		ret = add( ret, "warning", _("The root password is too short for use as the password for the certificates. 
  Enter a valid password for the certificates or disable certificate creation.
