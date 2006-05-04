@@ -1725,8 +1725,7 @@
 		UI::CloseDialog();
 		showErrorCaManagement ();
 		Popup::Message(_("The default certificate can also be created in
-the CA Management.
-"));
+the CA Management module.\n"));
 		return false;
 	    }
 	    else
@@ -1775,8 +1774,7 @@ the CA Management.
 	    UI::CloseDialog();
 	    showErrorCaManagement ();
 	    Popup::Message(_("The default certificate can also be created in
-the CA Management.
-"));
+the CA Management module.\n"));
 	    return false;
 	}
 
