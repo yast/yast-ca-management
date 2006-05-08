@@ -103,8 +103,6 @@
 	CaMgm::exp_netscape_nsRenewalUrl = "";
 	CaMgm::exp_cri_netscape_nsCaPolicyUrl = false;
 	CaMgm::exp_netscape_nsCaPolicyUrl = "";
-	CaMgm::exp_cri_authorityInfoAccess = false;
-	CaMgm::exp_authorityInfoAccess = "";
 	CaMgm::exp_cri_extendedKeyUsage = false;
 	CaMgm::exp_extendedKeyUsage = "";
 
@@ -150,15 +148,6 @@
 	{
 	    showErrorCaManagement ();
 	    return `next;
-	}
-
-	if ( kind == "Sub CA Request"
-	     || kind == "Server Request"
-	     || kind == "Client Request")
-        {
-	    // no authorityInfoAccess
-	    CaMgm::exp_cri_authorityInfoAccess = false;
-	    CaMgm::exp_authorityInfoAccess = "";
 	}
 
 	CaMgm::keyLength = tointeger(ret["keyLength"]:"0");
@@ -603,41 +592,6 @@
 	    }
 	});
 
-	sdummy = ret["authorityInfoAccess"]:"";
-	if( sdummy != nil )
-	{
-	  dummy = splitstring (sdummy, ",");
-	}
-	else
-	{
-	  dummy = [];
-	}
-	counter = 0;
-	foreach ( string entry, dummy, ``{
-	    entry = strip(entry);
-	    list valuelist = splitstring (entry,":");
-	    string ident = strip(valuelist[0]:"");
-	    string value = strip(valuelist[1]:"");
-
-	    if (ident == "critical")
-	    {
-		CaMgm::exp_cri_authorityInfoAccess = true;
-	    }
-	    else
-	    {
-		if (counter == 0)
-		{
-		    CaMgm::exp_authorityInfoAccess = CaMgm::exp_authorityInfoAccess +
-			ident + ((size(value) > 0) ? ":" : "") + value;
-		}
-		else
-		{
-		    CaMgm::exp_authorityInfoAccess = CaMgm::exp_authorityInfoAccess +
-			"," + ident + ((size(value) > 0) ? ":" : "") + value;
-		}
-		counter = counter +1;
-	    }
-	});
 
 	sdummy = ret["extendedKeyUsage"]:"";
 	if( sdummy != nil )
@@ -1220,12 +1174,6 @@
 		CaMgm::exp_cri_extendedKeyUsage ? "critical," : "" +
 		CaMgm::exp_extendedKeyUsage;
 	}
-	if (size(CaMgm::exp_authorityInfoAccess) > 0)
-	{
-	    param["authorityInfoAccess"] =
-		CaMgm::exp_cri_authorityInfoAccess ? "critical," : "" +
-		CaMgm::exp_authorityInfoAccess;
-	}
 
 	if (kind == "Root CA")
 	{
@@ -1668,12 +1616,6 @@
 	    param["extendedKeyUsage"] =
 		CaMgm::exp_cri_extendedKeyUsage ? "critical," : "" +
 		CaMgm::exp_extendedKeyUsage;
-	}
-	if (size(CaMgm::exp_authorityInfoAccess) > 0)
-	{
-	    param["authorityInfoAccess"] =
-		CaMgm::exp_cri_authorityInfoAccess ? "critical," : "" +
-		CaMgm::exp_authorityInfoAccess;
 	}
 	if (size(CaMgm::adv_distribution_point) > 0)
 	{
