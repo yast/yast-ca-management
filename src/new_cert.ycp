@@ -922,11 +922,6 @@ y2milestone(valid_chars);
 	    text = text +   "nsCaPolicyUrl:            "  + CaMgm::exp_netscape_nsCaPolicyUrl
 		+ (CaMgm::exp_cri_netscape_nsCaPolicyUrl ? _(" (critical)\n") : "\n") ;
 	}
- 	if (size (CaMgm::exp_authorityInfoAccess) > 0)
-	{
-	    text = text +   "authorityInfoAccess:      "  + CaMgm::exp_authorityInfoAccess
-		+ (CaMgm::exp_cri_authorityInfoAccess ? _(" (critical)\n") : "\n") ;
-	}
  	if (size (CaMgm::exp_extendedKeyUsage) > 0)
 	{
 	    text = text +   "extendedKeyUsage:         "  + CaMgm::exp_extendedKeyUsage

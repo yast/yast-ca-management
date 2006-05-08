@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon May  8 14:13:41 CEST 2006 - schubi@suse.de
+
+- basicConstraints pathlen works in cerfificate defaults Bug 137984
+- enlarged RichText widget in signRequest Bug 137983 
+- Removed AuthorityInfoAccess Bug 137982
+
+-------------------------------------------------------------------
 Thu May  4 10:57:59 CEST 2006 - mc@suse.de
 
 - version 2.13.22
