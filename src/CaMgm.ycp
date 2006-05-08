@@ -105,8 +105,7 @@ global list<string> validRequestExtention =
      "authorityKeyIdentifier",
      "extendedKeyUsage",
      "subjectKeyIdentifier",
-     "certificatePolicies",
-     "authorityInfoAccess"
+     "certificatePolicies"
      ];
 
 /**

@@ -92,7 +92,6 @@
        `item(`id(`expert), _("Expert Settings"), true,
 	     [
 	      `item(`id(`expert_subject_key_identifier),"Subject Key Identifier"),
-	      `item(`id(`expert_authorityInfoAccess),"authorityInfoAccess"),
 	      `item(`id(`expert_extendedKeyUsage),"extendedKeyUsage"),
 	      ]
 	     )];

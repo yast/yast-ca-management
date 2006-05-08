@@ -152,6 +152,15 @@
 	    return `next;
 	}
 
+	if ( kind == "Sub CA Request"
+	     || kind == "Server Request"
+	     || kind == "Client Request")
+        {
+	    // no authorityInfoAccess
+	    CaMgm::exp_cri_authorityInfoAccess = false;
+	    CaMgm::exp_authorityInfoAccess = "";
+	}
+
 	CaMgm::keyLength = tointeger(ret["keyLength"]:"0");
 	CaMgm::validPeriod = tointeger(ret["days"]:"0");
 

@@ -207,11 +207,6 @@
 	    CaMgm::adv_cri_distribution_point = sav_adv_cri_distribution_point;
 	    CaMgm::adv_distribution_point = sav_adv_distribution_point;
 	}
-	else if (extention == "authorityInfoAccess")
-	{
-	    CaMgm::exp_authorityInfoAccess = sav_exp_authorityInfoAccess;
-	    CaMgm::exp_cri_authorityInfoAccess = sav_exp_cri_authorityInfoAccess;	
-	}
 	else if (extention == "certificatePolicies")
 	{
 	    y2milestone("certificatePolicies ignored");
@@ -493,34 +488,6 @@
 		counter = counter +1;
 	    });
 	}
-	else if (extention == "authorityInfoAccess")
-	{
-	    CaMgm::exp_cri_authorityInfoAccess = extMap["critical"]:"0" == "1";
-	    CaMgm::exp_authorityInfoAccess = "";
-
-	    integer counter = 0;
-
-	    foreach ( map entry, (list<map>) extMap["value"]:[], ``{
-		if (counter == 0)
-		{
-		    CaMgm::exp_authorityInfoAccess = CaMgm::exp_authorityInfoAccess +
-			entry["accessOID"]:"" + ";"
-			+ entry["type"]:""
-			+ ((size(entry["value"]:"") > 0) ? ":" : "")
-			+ entry["value"]:"";
-		}
-		else
-		{
-		    CaMgm::exp_authorityInfoAccess = CaMgm::exp_authorityInfoAccess +
-			","
-			+ entry["accessOID"]:"" + ";"
-			+ entry["type"]:""
-			+ ((size(entry["value"]:"") > 0) ? ":" : "")
-			+ entry["value"]:"";
-		}
-		counter = counter +1;
-	    });	    
-	}	
 	else if (extention == "certificatePolicies")
 	{
 	    y2milestone("certificatePolicies ignored");
@@ -655,7 +622,7 @@
 	helptext = helptext + _("<p>If you reject these extensions, the default values are taken instead.</p>");
 
         term contents = `VBox (
-			       `Left(`RichText(getRequestDescription (currentRequestMap, true))),
+			       `RichText(getRequestDescription (currentRequestMap, true)),			       
 			       `IntField( `id(`period), _("&Valid Period (days):"),  1, 10000, CaMgm::validPeriod),
 			       `MultiSelectionBox( `id(`extentions), _("Requested Extensions"),
 						   createExtentionItem ())
@@ -1067,11 +1034,6 @@
 	    text = text + "CRL Distribution Point:   " + CaMgm::adv_distribution_point
 		+ (CaMgm::adv_cri_distribution_point ? _(" (critical)\n") : "\n") ;
 	}	
- 	if (size (CaMgm::exp_authorityInfoAccess) > 0)
-	{	
-	    text = text +   "authorityInfoAccess:      "  + CaMgm::exp_authorityInfoAccess
-		+ (CaMgm::exp_cri_authorityInfoAccess ? _(" (critical)\n") : "\n") ;
-	}
 	
 	text = text + "</pre>";
 
