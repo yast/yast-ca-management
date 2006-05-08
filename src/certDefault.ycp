@@ -119,6 +119,11 @@
 	text = text + "Basic Constaints:         " + CaMgm::adv_ca
 	    + (CaMgm::adv_cri_ca ? _(" (critical)\n") : "\n") ;
 
+	if (CaMgm::adv_pathlen)
+	{
+	    text = text +  _("Path Length:              ") + CaMgm::adv_pathlenValue + "\n";
+	}	
+
 	if (size (CaMgm::adv_distribution_point) > 0)
 	{
 	    text = text + "CRL Distribution Point:   " + CaMgm::adv_distribution_point

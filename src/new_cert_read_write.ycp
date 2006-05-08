@@ -1306,6 +1306,12 @@
 	    }
 	}
 
+	if (CaMgm::adv_pathlen)
+	{
+	    param["basicConstraints"] = param["basicConstraints"]:"" +
+		", pathlen:" + tostring(CaMgm::adv_pathlenValue);
+	}	
+
 	if (CaMgm::adv_cri_nsComment)
 	{
 	    param["nsComment"] = "critical," + CaMgm::adv_nsComment;
