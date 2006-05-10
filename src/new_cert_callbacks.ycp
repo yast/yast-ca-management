@@ -95,6 +95,9 @@
     define boolean 	sav_exp_cri_netscape_nsCaPolicyUrl = false;
     define string	sav_exp_netscape_nsCaPolicyUrl = "";
 
+    define boolean	sav_exp_cri_authorityInfoAccess = false;
+    define string	sav_exp_authorityInfoAccess = "";
+
     define boolean	sav_exp_cri_extendedKeyUsage = false;
     define string	sav_exp_extendedKeyUsage = "";
 
@@ -189,6 +192,9 @@
 
      	sav_exp_cri_netscape_nsCaPolicyUrl = CaMgm::exp_cri_netscape_nsCaPolicyUrl;
     	sav_exp_netscape_nsCaPolicyUrl = CaMgm::exp_netscape_nsCaPolicyUrl;
+
+    	sav_exp_cri_authorityInfoAccess = CaMgm::exp_cri_authorityInfoAccess;
+    	sav_exp_authorityInfoAccess = CaMgm::exp_authorityInfoAccess;
 
     	sav_exp_cri_extendedKeyUsage = CaMgm::exp_cri_extendedKeyUsage;
     	sav_exp_extendedKeyUsage = CaMgm::exp_extendedKeyUsage;
@@ -883,6 +889,7 @@
 	CaMgm::exp_cri_authorityKeyIdentifier = sav_exp_cri_authorityKeyIdentifier;
 	CaMgm::exp_authorityKeyIdentifier = sav_exp_authorityKeyIdentifier;
 	resetAcceptRequestExtention("subjectKeyIdentifier");
+	resetAcceptRequestExtention("authorityInfoAccess");
     }
 
     define void get_expert_subject_key_identifier() ``{
@@ -1027,6 +1034,30 @@
 	resetAcceptRequestExtention ("nsCaPolicyUrl");		
     }
     
+    
+    define void get_expert_authorityInfoAccess() ``{
+	y2debug("calling get_expert_authorityInfoAccess");
+	
+	UI::ChangeWidget(`id(`id_exp_cri_authorityInfoAccess), `Value, CaMgm::exp_cri_authorityInfoAccess);
+	UI::ChangeWidget(`id(`id_exp_authorityInfoAccess), `Value, CaMgm::exp_authorityInfoAccess);		
+    }
+    define string set_expert_authorityInfoAccess() ``{
+	y2debug("calling set_expert_authorityInfoAccess");
+	string error = "";
+
+	CaMgm::exp_cri_authorityInfoAccess = (boolean) UI::QueryWidget(`id(`id_exp_cri_authorityInfoAccess), `Value);
+	CaMgm::exp_authorityInfoAccess = (string) UI::QueryWidget(`id(`id_exp_authorityInfoAccess), `Value);		
+	
+	return error;
+    }
+    define void default_expert_authorityInfoAccess() ``{
+	y2debug("calling default_expert_authorityInfoAccess");
+
+	CaMgm::exp_cri_authorityInfoAccess = sav_exp_cri_authorityInfoAccess;
+	CaMgm::exp_authorityInfoAccess = sav_exp_authorityInfoAccess;
+	resetAcceptRequestExtention ("authorityInfoAccess");	
+    }	    
+
     
     define void get_expert_extendedKeyUsage() ``{
 	y2debug("calling get_expert_extendedKeyUsage");
