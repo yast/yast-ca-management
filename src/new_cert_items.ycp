@@ -66,6 +66,7 @@
 		     `item(`id(`expert_netscape_nsCaPolicyUrl),"nsCaPolicyUrl")
 		     ]
 		    ),
+	      `item(`id(`expert_authorityInfoAccess),"authorityInfoAccess"),
 	      `item(`id(`expert_extendedKeyUsage),"extendedKeyUsage"),
 	      ]
 	     )];
@@ -538,6 +539,22 @@
 								  "default"	: ``(default_expert_netscape_nsCaPolicyUrl()),
 								  "getCallback" : ``(get_expert_netscape_nsCaPolicyUrl()),
 								  "setCallback" : ``(set_expert_netscape_nsCaPolicyUrl()),
+								  ],
+
+			    `expert_authorityInfoAccess :	$["name"	: "authorityInfoAccess",
+								  "widget"	: `Frame ("", `VBox ( `Left (`CheckBox(`id(`id_exp_cri_authorityInfoAccess),
+														       _("critical"),
+														       CaMgm::exp_cri_authorityInfoAccess)),
+												     `VSpacing(1.5),
+												     `TextEntry(`id(`id_exp_authorityInfoAccess),
+														"authorityInfoAccess",
+														CaMgm::exp_authorityInfoAccess),
+												     `VSpacing(1.5)
+												     )
+											 ),
+								  "default"	: ``(default_expert_authorityInfoAccess()),
+								  "getCallback" : ``(get_expert_authorityInfoAccess()),
+								  "setCallback" : ``(set_expert_authorityInfoAccess()),
 								  ],
 
 			    `expert_extendedKeyUsage :		$["name"	: "extendedKeyUsage",

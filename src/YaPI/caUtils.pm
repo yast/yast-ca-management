@@ -2074,7 +2074,7 @@ sub checkCommonValues {
                 } else {
                     return $self->SetError(summary => sprintf(
                                                           __("Invalid value'%s' for parameter '%s'."),
-                                                          $location, $key),
+                                                          $accessOID, $key),
                                           code    => "PARAM_CHECK_FAILED");
                 }
             }

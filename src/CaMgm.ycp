@@ -220,6 +220,9 @@ global string	exp_netscape_nsRenewalUrl = "";
 global boolean 	exp_cri_netscape_nsCaPolicyUrl = false;
 global string	exp_netscape_nsCaPolicyUrl = "";
 
+global boolean	exp_cri_authorityInfoAccess = false;
+global string	exp_authorityInfoAccess = "";
+
 global boolean	exp_cri_extendedKeyUsage = false;
 global string	exp_extendedKeyUsage = "";
 
