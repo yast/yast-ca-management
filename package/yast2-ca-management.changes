@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed May 10 16:23:35 CEST 2006 - mc@suse.de
+
+- add AuthorityInfoAccess for CA and Certificates again
+  [#137982] 
+
+-------------------------------------------------------------------
 Mon May  8 14:13:41 CEST 2006 - schubi@suse.de
 
 - basicConstraints pathlen works in cerfificate defaults Bug 137984
