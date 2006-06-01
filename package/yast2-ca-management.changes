@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jun  1 09:56:15 CEST 2006 - mc@suse.de
+
+- fix unlocalised text when you edit the default values of a CA 
+  [#179787]
+
+-------------------------------------------------------------------
 Wed May 10 16:23:35 CEST 2006 - mc@suse.de
 
 - add AuthorityInfoAccess for CA and Certificates again
