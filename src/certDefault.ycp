@@ -53,11 +53,11 @@
 					      `RadioButtonGroup(`id(`rb), 
 								`VBox(
 								      `Left(`RadioButton(`id("Sub CA"),
-											 "&Sub CA" )),
+											 _("&Sub CA") )),
 								      `Left(`RadioButton(`id("Client Certificate"),
-											 "&Client Certificate" )),
+											 _("&Client Certificate") )),
 								      `Left(`RadioButton(`id("Server Certificate"),
-											 "S&erver Certificate" ))
+											 _("S&erver Certificate") ))
 								      )
 								)
 					      )
