@@ -212,7 +212,7 @@ sub transformStringExtension {
                  "nsCaRevocationUrl", "nsRenewalUrl",
                  "nsCaPolicyUrl", "nsSslServerName") ) ) {
 
-        return $self->SetError( summary => "Invalid type for StringExtension '$type'",
+        return $self->SetError( summary => sprintf(__("Invalid type for StringExtension '%s'"),$type),
                                 code => "PARAM_CHECK_FAILED");
     }
 
@@ -1722,8 +1722,8 @@ sub time2human {
 
 sub checkCommonValues {
     my $self = shift;
-    my $data = shift || return $self->SetError(summary=>"Missing 'data' map.",
-                                               code => "PARAM_CHECK_FAILED");
+    my $data = shift || return $self->SetError(summary => __("Missing 'data' map."),
+                                               code    => "PARAM_CHECK_FAILED");
     
     foreach my $key (keys %{$data}) {
         # we check only common values. 
@@ -1731,49 +1731,49 @@ sub checkCommonValues {
         if ( $key eq "caName" || $key eq "newCaName") {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[A-Za-z0-9-_]+$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
             if($data->{$key} =~ /^-/ || $data->{$key} =~ /-$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        description => "'-' as first or last character is forbidden.",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "certType") {
             if ( !grep( ($_ eq $data->{$key}), ("client", "server", "ca") ) ) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "request") {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[[:xdigit:]]+[\d-]*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "certificate") {
             if (! defined $data->{$key} ||
                 $data->{$key} !~ /^[[:xdigit:]]+:[[:xdigit:]]+[\d-]*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "keyPasswd" || $key eq "caPasswd") {
             if (! defined $data->{$key} ||
                 length($data->{$key}) < 4) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "keyLength") {
             if ( ! defined $data->{$key} ||
                  $data->{$key} !~ /^\d{3,4}$/ ||
                  $data->{$key} < 512 ) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        description => "Minimal key length is 512 Bit",
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "days") {
             if ( ! defined $data->{$key} ||
                  $data->{$key} !~ /^\d{1,}$/ ) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "crlReason") {
@@ -1782,7 +1782,7 @@ sub checkCommonValues {
                                             "affiliationChanged", "superseded", 
                                             "cessationOfOperation", "certificateHold") ) ) 
             {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "commonName" || $key eq "emailAddress" ||
@@ -1791,7 +1791,7 @@ sub checkCommonValues {
                   $key eq "organizationalUnitName" || $key eq "challengePassword" ||
                   $key eq "unstructuredName") {
             if ($data->{$key} !~ /^[[:print:]]*$/ ) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
             if($key eq "emailAddress") {
@@ -1806,7 +1806,7 @@ sub checkCommonValues {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                        code => "PARAM_CHECK_FAILED");
             }
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
@@ -1820,40 +1820,40 @@ sub checkCommonValues {
                                         code => "PARAM_CHECK_FAILED");
             } 
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "nsComment") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "nsCertType") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                        code => "PARAM_CHECK_FAILED");
             }
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
                 next if($p eq "critical");
                 if ( !grep( ($_ eq $p), ("client", "server", "email", "objsign",
                                          "reserved", "sslCA", "emailCA", "objCA"))) {
-                    return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
-                                          code    => "PARAM_CHECK_FAILED");
+                    return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
+                                           code    => "PARAM_CHECK_FAILED");
                 }
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "keyUsage") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                        code => "PARAM_CHECK_FAILED");
             }
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
@@ -1863,37 +1863,37 @@ sub checkCommonValues {
                                          "keyAgreement", "keyCertSign", "cRLSign",
                                          "encipherOnly", "decipherOnly")))
                 { 
-                    return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                    return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                            code    => "PARAM_CHECK_FAILED");
                 }
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "subjectKeyIdentifier") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
                 next if($p eq "critical");
                 next if($p eq "hash");
                 next if($p =~ /^([[:xdigit:]]{2}:)+[[:xdigit:]]{2}$/);
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "authorityKeyIdentifier") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
@@ -1901,18 +1901,18 @@ sub checkCommonValues {
                 next if(grep( ($_ eq $p), ("issuer:always", "keyid:always",
                                            "issuer", "keyid")));
           
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "subjectAltName" || $key eq "issuerAltName") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                        code => "PARAM_CHECK_FAILED");
             }
             my @san = split(/\s*,\s*/ , $data->{$key});
@@ -1964,7 +1964,7 @@ sub checkCommonValues {
             }
             $data->{$key} = join(",", @san);
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "nsBaseUrl" || $key eq "nsRevocationUrl" ||
@@ -1973,7 +1973,7 @@ sub checkCommonValues {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
             $data->{$key} =~ /^\s*(critical)?\s*,*\s*(.*)/ ;
@@ -1987,18 +1987,18 @@ sub checkCommonValues {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "extendedKeyUsage") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
@@ -2014,7 +2014,7 @@ sub checkCommonValues {
                                       code    => "PARAM_CHECK_FAILED");
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         
@@ -2022,7 +2022,7 @@ sub checkCommonValues {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
@@ -2079,14 +2079,14 @@ sub checkCommonValues {
                 }
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "crlDistributionPoints") {
             # test critical
             if ($data->{$key} =~ /critical/ && 
                 $data->{$key} !~ /^\s*critical/) {
-                return $self->SetError(summary => "Wrong use of 'critical' in '$key'.",
+                return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
             foreach my $p (split(/\s*,\s*/ , $data->{$key})) {
@@ -2106,7 +2106,7 @@ sub checkCommonValues {
                 }
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
-                return $self->SetError(summary => __("Invalid value for parameter")." '$key'.",
+                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         }
