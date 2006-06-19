@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jun 19 17:05:56 CEST 2006 - mc@suse.de
+
+- fix unlocalized error messages [#182066]
+- fix unlocalized Certificates Status [#182371] 
+
+-------------------------------------------------------------------
 Thu Jun  1 09:56:15 CEST 2006 - mc@suse.de
 
 - fix unlocalised text when you edit the default values of a CA 
