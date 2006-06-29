@@ -81,6 +81,7 @@
      */
     define list<term> createExtentionItem () ``{
 	map requestMap = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
+                                  "caPasswd":getPassword(CaMgm::currentCA),
 								  "request":CaMgm::currentRequest,
 								  "type":"parsed"]);
 
@@ -526,6 +527,7 @@
      */
     define symbol signRequestInit (string kind) ``{
 	currentRequestMap = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
+                               "caPasswd":getPassword(CaMgm::currentCA),
 							   "request":CaMgm::currentRequest,
 							   "type":"extended"]);
 	y2milestone("ReadRequest(%1,%2): %3", CaMgm::currentCA, CaMgm::currentRequest, currentRequestMap);
