@@ -2114,6 +2114,45 @@ sub checkCommonValues {
     return 1;
 }
 
+sub exception2String {
+    my $self = shift;
+    my $err  = shift || undef;
+    
+    if(!defined $err) 
+    {
+        return "";
+    }
+    elsif(ref($err) eq "HASH") 
+    {
+        my $msg = "";
+        if(exists $err->{type} && defined $err->{type})
+        {
+            $msg .= $err->{type};
+        }
+        $msg .= ":";
+        if(exists $err->{code} && defined $err->{code})
+        {
+            $msg .= $err->{code};
+        }
+        $msg .= ":";
+        if(exists $err->{message} && defined $err->{message})
+        {
+            $msg .= $err->{message};
+        }
+        if(exists $err->{subexception} && defined $err->{subexception})
+        {
+            $msg .= "\n";
+            $msg .= exception2String($err->{subexception});
+        }
+        return $msg;
+    }
+    else
+    {
+        return "$err";
+    }
+}
+
+
 sub SetError {
     my $self = shift;
     %__error = @_;
