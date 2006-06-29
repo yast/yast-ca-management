@@ -107,7 +107,7 @@
      */
     define string showLongDescriptionCA (string CAname) ``{
 
-	string ret = (string) YaPI::CaManagement::ReadCA ($["caName":CAname, "type":"plain"]);
+	string ret = (string) YaPI::CaManagement::ReadCA ($["caName":CAname, "caPasswd":getPassword(CAname), "type":"plain"]);
 	y2milestone("ReadCA(%1): %2", CAname, ret);
 
         if (ret == nil)
@@ -147,7 +147,7 @@
     define string getDescriptionCA (string CAname) ``{
 	string text = sformat(_("<p><b> Description for %1 </b></p>"), CAname);
 
-	map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CAname, "type":"parsed"]);
+	map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CAname, "caPasswd":getPassword(CAname), "type":"parsed"]);
         if (ret == nil)
         {
             showErrorCaManagement ();
