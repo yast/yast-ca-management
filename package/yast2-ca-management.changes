@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jul 21 14:14:37 CEST 2006 - mc@suse.de
+
+- Version 2.14.2 
+
+-------------------------------------------------------------------
 Thu Jun 29 15:41:18 CEST 2006 - mc@suse.de
 
 - implement new exception handling(backward compatible) 
