@@ -3262,6 +3262,7 @@ sub ExportCA {
             return $self->SetError(summary => sprintf(
                                                       __("Can not parse 'destinationFile' '%s'."),
                                                       $data->{'destinationFile'}),
+                                   description => "Please enter an absolute path and no special characters as filename.",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR->Read(".target.dir", ["$1", undef]);
@@ -3574,6 +3575,7 @@ sub ExportCertificate {
                                            # parameter check failed
             return $self->SetError(summary => sprintf(__("Can not parse 'destinationFile' '%s'."),
                                                       $data->{'destinationFile'}),
+                                   description => "Please enter an absolute path and no special characters as filename.",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR->Read(".target.dir", ["$1", undef] );
@@ -3875,6 +3877,7 @@ sub ExportCRL {
                                            # parameter check failed
             return $self->SetError(summary => sprintf(__("Can not parse 'destinationFile' '%s'."),
                                                       $data->{'destinationFile'}),
+                                   description => "Please enter an absolute path and no special characters as filename.",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR->Read(".target.dir", ["$1", undef] );
