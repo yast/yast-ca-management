@@ -212,7 +212,7 @@ sub transformStringExtension {
                  "nsCaRevocationUrl", "nsRenewalUrl",
                  "nsCaPolicyUrl", "nsSslServerName") ) ) {
 
-        return $self->SetError( summary => sprintf(__("Invalid type for StringExtension '%s'"),$type),
+        return $self->SetError( summary => sprintf(__("Invalid type for StringExtension '%s'."),$type),
                                 code => "PARAM_CHECK_FAILED");
     }
 
