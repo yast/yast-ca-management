@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Oct  6 11:46:49 CEST 2006 - mc@suse.de
+
+- version 2.14.3
+- merge proofreading results 
+
+-------------------------------------------------------------------
 Tue Sep 19 15:28:19 CEST 2006 - mc@suse.de
 
 - Better error message for invalid destinationFile(#205386) 
