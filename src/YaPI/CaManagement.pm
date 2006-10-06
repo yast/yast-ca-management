@@ -3256,7 +3256,7 @@ sub ExportCA {
         if (not defined $1) {
                                            # parameter check failed
             return $self->SetError(summary => sprintf(
-                                                      __("Can not parse 'destinationFile' '%s'."),
+                                                      __("Cannot parse destinationFile %s."),
                                                       $data->{'destinationFile'}),
                                    code => "PARAM_CHECK_FAILED");
         }
@@ -3568,7 +3568,7 @@ sub ExportCertificate {
         $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
         if (not defined $1) {
                                            # parameter check failed
-            return $self->SetError(summary => sprintf(__("Can not parse 'destinationFile' '%s'."),
+            return $self->SetError(summary => sprintf(__("Cannot parse destinationFile %s."),
                                                       $data->{'destinationFile'}),
                                    code => "PARAM_CHECK_FAILED");
         }
@@ -3869,7 +3869,7 @@ sub ExportCRL {
         $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
         if (not defined $1) {
                                            # parameter check failed
-            return $self->SetError(summary => sprintf(__("Can not parse 'destinationFile' '%s'."),
+            return $self->SetError(summary => sprintf(__("Cannot parse destinationFile %s."),
                                                       $data->{'destinationFile'}),
                                    code => "PARAM_CHECK_FAILED");
         }
@@ -4685,7 +4685,7 @@ sub ExportCAToLDAP {
     my ($body) = ($ca->data() =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
 
     if (! defined $body || $body eq "") {
-        return $self->SetError(summary => __("Can not parse the CA certificate"),
+        return $self->SetError(summary => __("Cannot parse the CA certificate."),
                                code => "PARSE_ERROR");
     }
     
@@ -4706,7 +4706,7 @@ sub ExportCAToLDAP {
     if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
                                  "port"     => $data->{'ldapPort'},
                                  "use_tls"  => $use_tls })) {
-        return $self->SetError(summary => __("LDAP init failed."),
+        return $self->SetError(summary => __("LDAP initialization failed."),
                                code => "SCR_INIT_FAILED");
     }
 
@@ -4726,7 +4726,7 @@ sub ExportCAToLDAP {
                                            });
     if (! defined $dnList) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => sprintf(__("Container '%s' is not available in the LDAP directory."),
+        return $self->SetError(summary => sprintf(__("Container %s is not available in the LDAP directory."),
                                                   $container),
                                code => "LDAP_SEARCH_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
@@ -4744,7 +4744,7 @@ sub ExportCAToLDAP {
             # code 32 is 'no such object => we have to add a new entry
             $action = "add";
         } else {
-            return $self->SetError(summary => __("Error while searching in LDAP"),
+            return $self->SetError(summary => __("Error while searching in LDAP."),
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                    code => "LDAP_SEARCH_FAILED");
         }
@@ -4763,7 +4763,7 @@ sub ExportCAToLDAP {
 
         if (not SCR->Write(".ldap.add", { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => __("Can not add CA certificate to LDAP directory."),
+            return $self->SetError(summary => __("Cannot add CA certificate to the LDAP directory."),
                                    code => "LDAP_ADD_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -4775,7 +4775,7 @@ sub ExportCAToLDAP {
                     };
         if (not SCR->Write(".ldap.modify", { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => __("Can not modify CA certificate in LDAP directory."),
+            return $self->SetError(summary => __("Cannot modify CA certificate in the LDAP directory."),
                                    code => "LDAP_MODIFY_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -4939,7 +4939,7 @@ sub ExportCRLToLDAP {
     my ($body) = ($crl->data() =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
 
     if (! defined $body || $body eq "") {
-        return $self->SetError(summary => __("Can not parse the CRL"),
+        return $self->SetError(summary => __("Cannot parse the CRL."),
                                code => "PARSE_ERROR");
     }
 
@@ -4960,14 +4960,14 @@ sub ExportCRLToLDAP {
     if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
                                  "port"     => $data->{'ldapPort'},
                                  "use_tls"  => $use_tls })) {
-        return $self->SetError(summary => __("LDAP init failed"),
+        return $self->SetError(summary => __("LDAP initialization failed."),
                                code => "SCR_INIT_FAILED");
     }
 
     if (! SCR->Execute(".ldap.bind", {"bind_dn" => $data->{'BindDN'},
                                       "bind_pw" => $data->{'ldapPasswd'}}) ) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => __("LDAP bind failed"),
+        return $self->SetError(summary => __("LDAP bind failed."),
                                code => "SCR_INIT_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
@@ -4980,7 +4980,7 @@ sub ExportCRLToLDAP {
                                            });
     if (! defined $dnList) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => sprintf(__("Container '%s' is not available in the LDAP directory."),
+        return $self->SetError(summary => sprintf(__("Container %s is not available in the LDAP directory."),
                                                   $container),
                                code => "LDAP_SEARCH_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
@@ -4999,7 +4999,7 @@ sub ExportCRLToLDAP {
             $action = "add";
             $doCRLdp = 1;
         } else {
-            return $self->SetError(summary => __("Error while searching in LDAP"),
+            return $self->SetError(summary => __("Error while searching in LDAP."),
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                    code => "LDAP_SEARCH_FAILED");
         }
@@ -5016,7 +5016,7 @@ sub ExportCRLToLDAP {
 
         if (! defined $attr) {
             my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => __("Error while searching in LDAP"),
+            return $self->SetError(summary => __("Error while searching in LDAP."),
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                    code => "LDAP_SEARCH_FAILED");
         }
@@ -5037,7 +5037,7 @@ sub ExportCRLToLDAP {
 
         if (not SCR->Write(".ldap.add", { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => __("Can not add CRL to LDAP directory."),
+            return $self->SetError(summary => __("Cannot add the CRL to the LDAP directory."),
                                    code => "LDAP_ADD_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -5050,7 +5050,7 @@ sub ExportCRLToLDAP {
                     };
         if (not SCR->Write(".ldap.modify", { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => __("Can not modify CRL in LDAP directory."),
+            return $self->SetError(summary => __("Cannot modify the CRL in the LDAP directory."),
                                    code => "LDAP_MODIFY_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -5278,7 +5278,7 @@ sub ReadLDAPExportDefaults {
             $ldapMap->{'ldap_server'} = Ldap->GetFirstServer("$dummy");
             $ldapMap->{'ldap_port'} = Ldap->GetFirstPort("$dummy");
         } else {
-            return $self->SetError( summary => __("No LDAP Server configured"),
+            return $self->SetError( summary => __("No LDAP server configured."),
                                     code => "HOST_NOT_FOUND");
         } 
         if(defined $ldapMap->{ldap_tls} ) {
@@ -5293,14 +5293,14 @@ sub ReadLDAPExportDefaults {
     if (! SCR->Execute(".ldap", {"hostname" => $ldapMap->{'ldap_server'},
                                  "port"     => $ldapMap->{'ldap_port'},
                                  "use_tls"  => $use_tls })) {
-        return $self->SetError(summary => __("LDAP init failed"),
+        return $self->SetError(summary => __("LDAP initialization failed."),
                                code => "SCR_INIT_FAILED");
     }
     
     # anonymous bind
     if (! SCR->Execute(".ldap.bind", {}) ) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => __("LDAP bind failed"),
+        return $self->SetError(summary => __("LDAP bind failed."),
                                code => "SCR_INIT_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
@@ -5318,7 +5318,7 @@ sub ReadLDAPExportDefaults {
                                                  });
             if (! defined $ldapret) {
                 my $ldapERR = SCR->Read(".ldap.error");
-                return $self->SetError(summary => __("LDAP search failed!"),
+                return $self->SetError(summary => __("LDAP search failed."),
                                        description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                        code => "LDAP_SEARCH_FAILED");
             }
@@ -5336,7 +5336,7 @@ sub ReadLDAPExportDefaults {
                                                  });
             if (! defined $ldapret) {
                 my $ldapERR = SCR->Read(".ldap.error");
-                return $self->SetError(summary => __("LDAP search failed!"),
+                return $self->SetError(summary => __("LDAP search failed."),
                                        description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                        code => "LDAP_SEARCH_FAILED");
             }
@@ -5381,7 +5381,7 @@ sub ReadLDAPExportDefaults {
                                              });
         if (! defined $ldapret) {
             my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => __("LDAP search failed!"),
+            return $self->SetError(summary => __("LDAP search failed."),
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                    code => "LDAP_SEARCH_FAILED");
         }
@@ -5449,7 +5449,7 @@ sub InitLDAPcaManagement {
             $ldapMap->{'ldap_server'} = Ldap->GetFirstServer("$dummy");
             $ldapMap->{'ldap_port'} = Ldap->GetFirstPort("$dummy");
         } else {
-            return $self->SetError( summary => __("No LDAP Server configured"),
+            return $self->SetError( summary => __("No LDAP server configured."),
                                     code => "HOST_NOT_FOUND");
         } 
     }
@@ -5457,7 +5457,7 @@ sub InitLDAPcaManagement {
     my $ret = Ldap->LDAPInit ();
     if ($ret ne "") {
         
-        return $self->SetError(summary => __("LDAP init failed"),
+        return $self->SetError(summary => __("LDAP initialization failed."),
                                code => "SCR_INIT_FAILED");
     }
     
@@ -5466,7 +5466,7 @@ sub InitLDAPcaManagement {
                                        bind_pw => $data->{ldapPasswd}
                                      }) ) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => __("LDAP bind failed"),
+        return $self->SetError(summary => __("LDAP bind failed."),
                                code => "SCR_INIT_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
@@ -5489,13 +5489,13 @@ sub InitLDAPcaManagement {
             
             if(! Ldap->CheckBaseConfig($ldapMap->{'base_config_dn'})) {
                 Ldap->SetGUI(YaST::YCP::Boolean(1));
-                return $self->SetError(summary => __("Can not add base configuration entry!"),
+                return $self->SetError(summary => __("Cannot add base configuration entry."),
                                        code => "LDAP_ADD_FAILED");
             }
             Ldap->SetGUI(YaST::YCP::Boolean(1));
             
         } else {
-            return $self->SetError(summary => __("LDAP search failed!"),
+            return $self->SetError(summary => __("LDAP search failed."),
                                    code => "LDAP_SEARCH_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -5511,7 +5511,7 @@ sub InitLDAPcaManagement {
                          });
     if (! defined $ldapret) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => __("LDAP search failed!"),
+        return $self->SetError(summary => __("LDAP search failed."),
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                code => "LDAP_SEARCH_FAILED");
     }
@@ -5539,12 +5539,12 @@ sub InitLDAPcaManagement {
             
                 if(! defined $ldapret) {
                     my $ldapERR = SCR->Read(".ldap.error");
-                    return $self->SetError(summary => __("Can not add CA configuration entry!"),
+                    return $self->SetError(summary => __("Cannot add CA configuration entry."),
                                            code => "LDAP_ADD_FAILED",
                                            description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
                 }
             } else {
-                return $self->SetError(summary => __("LDAP search failed!"),
+                return $self->SetError(summary => __("LDAP search failed."),
                                        description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                        code => "LDAP_SEARCH_FAILED");
             }
@@ -5561,7 +5561,7 @@ sub InitLDAPcaManagement {
                              );
         if(! defined $ldapret) {
             my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => __("Can not add CA configuration entry!"),
+            return $self->SetError(summary => __("Cannot add CA configuration entry."),
                                    code => "LDAP_ADD_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -5727,7 +5727,7 @@ sub ExportCertificateToLDAP {
     my ($body) = ($crt->data() =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
     
     if (! defined $body || $body eq "") {
-        return $self->SetError(summary => __("Can not parse the certificate"),
+        return $self->SetError(summary => __("Cannot parse the certificate."),
                                code => "PARSE_ERROR");
     }
 
@@ -5748,14 +5748,14 @@ sub ExportCertificateToLDAP {
     if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
                                  "port"     => $data->{'ldapPort'},
                                  "use_tls"  => $use_tls })) {
-        return $self->SetError(summary => __("LDAP init failed"),
+        return $self->SetError(summary => __("LDAP initialization failed."),
                                code => "SCR_INIT_FAILED");
     }
 
     if (! SCR->Execute(".ldap.bind", {"bind_dn" => $data->{'BindDN'},
                                       "bind_pw" => $data->{'ldapPasswd'}}) ) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => __("LDAP bind failed"),
+        return $self->SetError(summary => __("LDAP bind failed."),
                                code => "SCR_INIT_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
@@ -5768,7 +5768,7 @@ sub ExportCertificateToLDAP {
                                            });
     if (! defined $dnList) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => sprintf(__("'%s' is not available in the LDAP directory."),
+        return $self->SetError(summary => sprintf(__("%s is not available in the LDAP directory."),
                                                   $data->{destinationDN}),
                                code => "LDAP_SEARCH_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
@@ -5779,7 +5779,7 @@ sub ExportCertificateToLDAP {
                 };
     if (not SCR->Write(".ldap.modify", { dn => $data->{'destinationDN'}} , $entry)) {
         my $ldapERR = SCR->Read(".ldap.error");
-        return $self->SetError(summary => __("Can not modify 'userCertificate' in LDAP directory."),
+        return $self->SetError(summary => __("Cannot modify userCertificate in the LDAP directory."),
                                code => "LDAP_MODIFY_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
@@ -5808,7 +5808,7 @@ sub ExportCertificateToLDAP {
         if (not SCR->Write(".ldap.modify",
                            { dn => $data->{'destinationDN'}} , $entry)) {
             my $ldapERR = SCR->Read(".ldap.error");
-            return $self->SetError(summary => __("Can not modify 'userPKCS12' in LDAP directory."),
+            return $self->SetError(summary => __("Cannot modify userPKCS12 in LDAP directory."),
                                    code => "LDAP_MODIFY_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
@@ -6066,7 +6066,7 @@ sub ReadFile {
     }
 
     if(! defined $data->{inFile} || $data->{inFile} eq "") {
-        return $self->SetError(summary => __("Missing parameter 'inFile'"),
+        return $self->SetError(summary => __("Missing parameter 'inFile'."),
                                code => "PARAM_CHECK_FAILED");
     }
     my $size = SCR->Read(".target.size", $data->{inFile});
@@ -6077,32 +6077,32 @@ sub ReadFile {
     }
 
     if(! defined $data->{type} || $data->{type} eq "") {
-        return $self->SetError(summary => __("Missing parameter 'type'"),
+        return $self->SetError(summary => __("Missing parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
     }
     if(! grep( ($_ eq $data->{type}), ("parsed", "plain", "extended"))) {
-        return $self->SetError(summary => sprintf(__("Invalid value '%s' in 'type'"),
+        return $self->SetError(summary => sprintf(__("Invalid value '%s' in 'type'."),
                                                   $data->{type}),
                                code => "PARAM_CHECK_FAILED");
     }
     my $type = $data->{type};
 
     if(! defined $data->{datatype} || $data->{datatype} eq "") {
-        return $self->SetError(summary => __("Missing parameter 'datatype'"),
+        return $self->SetError(summary => __("Missing parameter 'datatype'."),
                                code => "PARAM_CHECK_FAILED");
     }
     if(! grep( ($_ eq $data->{datatype}), ("CERTIFICATE", "CRL", "REQUEST"))) {
-        return $self->SetError(summary => sprintf(__("Unknown value '%s' in 'datatype'"),
+        return $self->SetError(summary => sprintf(__("Unknown value '%s' in 'datatype'."),
                                                   $data->{datatype}),
                                code => "PARAM_CHECK_FAILED");
     }
 
     if(! defined $data->{inForm} || $data->{inForm} eq "") {
-        return $self->SetError(summary => __("Missing parameter 'inForm'"),
+        return $self->SetError(summary => __("Missing parameter 'inForm'."),
                                code => "PARAM_CHECK_FAILED");
     }
     if(! grep( ($_ eq $data->{inForm}), ("PEM", "DER"))) {
-        return $self->SetError(summary => sprintf(__("Unknown value '%s' in 'inForm'"),
+        return $self->SetError(summary => sprintf(__("Unknown value '%s' in 'inForm'."),
                                                   $data->{inForm}),
                                code => "PARAM_CHECK_FAILED");
     }
@@ -6531,7 +6531,7 @@ sub ImportRequest {
         
         $data->{data} = SCR->Read(".target.string",$data->{inFile});
         if(! defined $data->{data}) {
-            return $self->SetError(summary => __("Can not read the request."),
+            return $self->SetError(summary => __("Cannot read the request."),
                                    code => "OPEN_FAILED");
         }
     }
