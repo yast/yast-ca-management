@@ -184,6 +184,7 @@
 					   string Certname) ``{
 
 	string ret = (string) YaPI::CaManagement::ReadCertificate ($["caName":CAname,
+                                     "caPasswd":getPassword(CAname),
 								     "certificate":Certname,
 								     "type":"plain"]);
 	
@@ -371,6 +372,7 @@
 	if (anyitems)
 	{
 	    map ret = (map) YaPI::CaManagement::ReadCertificate ($["caName":CaMgm::currentCA,
+                                   "caPasswd":getPassword(CaMgm::currentCA),
 								   "certificate":CaMgm::currentCertificate,
 								   "type":"parsed"]);
 	    y2milestone("ReadCertificate(%1,%2): %3", CaMgm::currentCA, CaMgm::currentCertificate, ret);	    

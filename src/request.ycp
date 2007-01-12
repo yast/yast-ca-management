@@ -190,6 +190,7 @@
 					      string Request) ``{
 
 	string ret = (string) YaPI::CaManagement::ReadRequest ($["caName":CAname,
+                                 "caPasswd":getPassword(CAname),
 								 "request":Request,
 								 "type":"plain"]);
 	
@@ -235,7 +236,7 @@
 
 	requestID = [];
 	
-	list<map> ret = (list<map>) YaPI::CaManagement::ReadRequestList ($["caName":currentCA]);
+	list<map> ret = (list<map>) YaPI::CaManagement::ReadRequestList ($["caName":currentCA, "caPasswd":getPassword(currentCA)]);
         if (ret == nil)
         {
             showErrorCaManagement ();
@@ -336,6 +337,7 @@
 	if (anyitems)
 	{
 	    map ret = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
+                                   "caPasswd":getPassword(CaMgm::currentCA),
 							       "request":CaMgm::currentRequest,
 							       "type":"parsed"]);
 	    y2milestone("ReadRequest(%1,%2): %3", CaMgm::currentCA, CaMgm::currentRequest, ret);

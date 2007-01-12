@@ -476,7 +476,7 @@ sub ReadCAList {
     };
     if($@) {
         return $self->SetError( summary     => __("Cannot read CA list."), 
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code        => "LIMAL_CALL_FAILED");
     }
     return \ @ret;
@@ -537,7 +537,7 @@ sub ReadCATree {
     };
     if($@) {
         return $self->SetError( summary     => __("Cannot read CA tree."), 
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code        => "LIMAL_CALL_FAILED");
     }
 
@@ -758,7 +758,7 @@ sub AddRootCA {
     if($@) {
         
         return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     
@@ -898,7 +898,7 @@ sub AddRootCA {
     if($@) {
 
         return $self->SetError( summary => __("Modifying CertificateIssueData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -922,7 +922,7 @@ sub AddRootCA {
     if($@) {
 
         return $self->SetError( summary => __("Creating Root CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -1079,11 +1079,12 @@ sub ReadCertificateDefaults {
         
             if(defined $data->{'repository'}) {
                 
-                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, "",
+                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                           $data->{'caPasswd'},
                                            $data->{'repository'});
             } else {
                 
-                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, "");
+                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, $data->{'caPasswd'});
                 
             }
 
@@ -1236,7 +1237,7 @@ sub ReadCertificateDefaults {
     if($@) {
 
         return $self->SetError( summary => __("Getting defaults failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
 
     }
@@ -1349,18 +1350,19 @@ sub WriteCertificateDefaults {
 
         if( defined $data->{'repository'}) {
             
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "",
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+                                       $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
     if($@) {
         
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -1507,7 +1509,7 @@ sub WriteCertificateDefaults {
     if($@) {
 
         return $self->SetError( summary => __("Modifying CertificateIssueData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -1579,7 +1581,7 @@ sub WriteCertificateDefaults {
     if($@) {
         
         return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -1610,7 +1612,7 @@ sub WriteCertificateDefaults {
         }
         
         return $self->SetError( summary => __("Writing the defaults failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     
@@ -1688,13 +1690,13 @@ sub ReadCA {
         if(defined $data->{'repository'}) {
             
             $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
-                                       "",
+                                       $data->{'caPasswd'},
                                        $data->{'repository'});
             
         } else {
             
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "");
+                                       $data->{'caPasswd'});
             
         }
 
@@ -1725,7 +1727,7 @@ sub ReadCA {
     if($@) {
         
         return $self->SetError( summary => __("Parsing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     return $ret;
@@ -1850,18 +1852,19 @@ sub AddRequest {
 
         if( defined $data->{'repository'}) {
             
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "",
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+                                       $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
     if($@) {
         
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -1978,7 +1981,7 @@ sub AddRequest {
     if($@) {
         
         return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -1992,7 +1995,7 @@ sub AddRequest {
     if($@) {
         
         return $self->SetError( summary => __("Creating request failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -2140,7 +2143,7 @@ sub IssueCertificate {
     if($@) {
         
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -2280,7 +2283,7 @@ sub IssueCertificate {
     if($@) {
 
         return $self->SetError( summary => __("Modifying CertificateIssueData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -2294,7 +2297,7 @@ sub IssueCertificate {
     if($@) {
         
         return $self->SetError( summary => __("Creating request failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -2586,7 +2589,7 @@ sub ReadCertificateList {
     if($@) {
         
         return $self->SetError( summary => __("Getting the certificate list failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -2665,18 +2668,19 @@ sub UpdateDB {
     };
     if($@) {
         
-        if($@ =~ /invalid\s+password/i) 
+        if( (ref($@) eq "HASH" && $@->{code} == $LIMAL::CaMgm::E_INVALID_PASSWD) ||
+            $@ =~ /invalid.*password/i) 
         {
             # error message; displayed in an popup dialog
             return $self->SetError( summary => __("Invalid password."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
         else 
         {
             # error message; displayed in an popup dialog
             return $self->SetError( summary => __("UpdateDB failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     }
@@ -2768,13 +2772,13 @@ sub ReadCertificate {
         if(defined $data->{'repository'}) {
             
             $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
-                                       "",
+                                       $data->{'caPasswd'},
                                        $data->{'repository'});
             
         } else {
             
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "");
+                                       $data->{'caPasswd'});
             
         }
 
@@ -2805,7 +2809,7 @@ sub ReadCertificate {
     if($@) {
         
         return $self->SetError( summary => __("Parsing the certificate failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     return $ret;
@@ -2907,7 +2911,7 @@ sub RevokeCertificate {
     if($@) {
         
         return $self->SetError( summary => __("Revoking the certificate failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -2991,7 +2995,7 @@ sub AddCRL {
     if($@) {
         
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -3025,7 +3029,7 @@ sub AddCRL {
     if($@) {
 
         return $self->SetError( summary => __("Modifying CRLGenerationData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -3037,7 +3041,7 @@ sub AddCRL {
     if($@) {
         
         return $self->SetError( summary => __("Creating the CRL failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     return 1;
@@ -3116,14 +3120,13 @@ sub ReadCRL {
         if(defined $data->{'repository'}) {
             
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "",
+                                       $data->{'caPasswd'},
                                        $data->{'repository'});
             
         } else {
             
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "");
-            
+                                       $data->{'caPasswd'});
         }
 
         my $crl = $ca->getCRL();
@@ -3154,14 +3157,15 @@ sub ReadCRL {
     };
     if($@) {
         
-        if($@ =~ /RuntimeException: File not found/) {
-
+        if( (ref($@) eq "HASH" && $@->{code} == $LIMAL::CaMgm::E_FILE_NOT_FOUND) ||
+            $@ =~ /RuntimeException: File not found/i) {
+            
             return $self->SetError( summary => __("No CRL available."),
                                     code => "LIMAL_CALL_FAILED");
         } else {
-
+            
             return $self->SetError( summary => __("Parsing the CRL failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     }
@@ -3258,6 +3262,7 @@ sub ExportCA {
             return $self->SetError(summary => sprintf(
                                                       __("Cannot parse destinationFile %s."),
                                                       $data->{'destinationFile'}),
+                                   description => "Please enter an absolute path and no special characters as filename.",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR->Read(".target.dir", ["$1", undef]);
@@ -3301,7 +3306,7 @@ sub ExportCA {
     if($@) {
 
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     my $ret = undef;
@@ -3324,7 +3329,7 @@ sub ExportCA {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     } elsif ($format eq "PEM_CERT_KEY") {
@@ -3350,7 +3355,7 @@ sub ExportCA {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     } elsif ($format eq "PEM_CERT_ENCKEY") {
@@ -3376,7 +3381,7 @@ sub ExportCA {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -3398,7 +3403,7 @@ sub ExportCA {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -3426,7 +3431,7 @@ sub ExportCA {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -3456,7 +3461,7 @@ sub ExportCA {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     }
@@ -3570,6 +3575,7 @@ sub ExportCertificate {
                                            # parameter check failed
             return $self->SetError(summary => sprintf(__("Cannot parse destinationFile %s."),
                                                       $data->{'destinationFile'}),
+                                   description => "Please enter an absolute path and no special characters as filename.",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR->Read(".target.dir", ["$1", undef] );
@@ -3614,7 +3620,7 @@ sub ExportCertificate {
     if($@) {
 
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     my $ret = undef;
@@ -3637,7 +3643,7 @@ sub ExportCertificate {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     } elsif ($format eq "PEM_CERT_KEY") {
@@ -3666,7 +3672,7 @@ sub ExportCertificate {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -3695,7 +3701,7 @@ sub ExportCertificate {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -3717,7 +3723,7 @@ sub ExportCertificate {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -3748,7 +3754,7 @@ sub ExportCertificate {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -3778,7 +3784,7 @@ sub ExportCertificate {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     }
@@ -3871,6 +3877,7 @@ sub ExportCRL {
                                            # parameter check failed
             return $self->SetError(summary => sprintf(__("Cannot parse destinationFile %s."),
                                                       $data->{'destinationFile'}),
+                                   description => "Please enter an absolute path and no special characters as filename.",
                                    code => "PARAM_CHECK_FAILED");
         }
         my $ret = SCR->Read(".target.dir", ["$1", undef] );
@@ -3898,7 +3905,7 @@ sub ExportCRL {
     if($@) {
 
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     my $ret = undef;
@@ -3922,7 +3929,7 @@ sub ExportCRL {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -3944,7 +3951,7 @@ sub ExportCRL {
         if($@) {
             
             return $self->SetError( summary => __("Export failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
 
@@ -4048,11 +4055,12 @@ sub Verify {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "",
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+                                       $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
 
@@ -4078,7 +4086,7 @@ sub Verify {
     if($@) {
 
         return $self->SetError( summary => __("Verification failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -4262,7 +4270,7 @@ sub AddSubCA {
     if($@) {
         
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -4379,7 +4387,7 @@ sub AddSubCA {
     if($@) {
         
         return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -4510,7 +4518,7 @@ sub AddSubCA {
     if($@) {
 
         return $self->SetError( summary => __("Modifying CertificateIssueData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -4525,7 +4533,7 @@ sub AddSubCA {
     if($@) {
         
         return $self->SetError( summary => __("Creating the SubCA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     
@@ -4673,12 +4681,13 @@ sub ExportCAToLDAP {
 
     my $ca = undef;
     eval {
+        # FIXME: password check for CA?
         $ca = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/cacert.pem");
 
     };
     if($@) {
         return $self->SetError( summary     => __("Cannot read the CA."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code        => "LIMAL_CALL_FAILED");
     }
 
@@ -4927,12 +4936,13 @@ sub ExportCRLToLDAP {
 
     my $crl = undef;
     eval {
+        # FIXME: password check for CA ?
         $crl = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/crl/crl.pem");
 
     };
     if($@) {
         return $self->SetError( summary     => __("Cannot read the CRL."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code        => "LIMAL_CALL_FAILED");
     }
 
@@ -5070,7 +5080,7 @@ sub ExportCRLToLDAP {
             my $crlDP_server = "";
             my $crlDP_ca     = "";
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
             my $defClient = $ca->getIssueDefaults($LIMAL::CaMgm::E_Client_Cert);
 
@@ -5154,7 +5164,7 @@ sub ExportCRLToLDAP {
         if($@) {
             
             return $self->SetError( summary => __("Checking for new CRL Distribution Point failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     }
@@ -5716,12 +5726,13 @@ sub ExportCertificateToLDAP {
 
     my $crt = undef;
     eval {
+        # FIXME: password check for CA ?
         $crt = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/newcerts/$certificate.pem");
 
     };
     if($@) {
         return $self->SetError( summary     => __("Cannot read the certificate."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code        => "LIMAL_CALL_FAILED");
     }
     my ($body) = ($crt->data() =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
@@ -5798,7 +5809,7 @@ sub ExportCertificateToLDAP {
         };
         if($@) {
             return $self->SetError( summary     => __("Exporting the certificate failed."),
-                                    description => "$@",
+                                    description => YaST::caUtils->exception2String($@),
                                     code        => "LIMAL_CALL_FAILED");
         }
         
@@ -5899,7 +5910,7 @@ sub DeleteCertificate {
     if($@) {
 
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -5911,7 +5922,7 @@ sub DeleteCertificate {
     if($@) {
 
         return $self->SetError( summary => __("Deleting the certificate failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -6004,7 +6015,7 @@ sub ImportCommonServerCertificate {
     };
     if($@) {
         return $self->SetError( summary => __("Importing the certificate failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     return 1;
@@ -6208,7 +6219,7 @@ sub ReadFile {
     if($@) {
         
         return $self->SetError( summary => __("Parsing failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     return $ret;
@@ -6299,13 +6310,13 @@ sub ReadRequest {
         if(defined $data->{'repository'}) {
 
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "",
+                                       $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "");
+                                       $data->{'caPasswd'});
 
         }
 
@@ -6336,7 +6347,7 @@ sub ReadRequest {
     if($@) {
 
         return $self->SetError( summary => __("Parsing the request failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -6419,12 +6430,12 @@ sub ReadRequestList {
         if(defined $data->{'repository'}) {
             
             $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
-                                       "",
+                                       $data->{'caPasswd'},
                                        $data->{'repository'});
             
         } else {
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "");
+                                       $data->{'caPasswd'});
             
         }
 
@@ -6450,7 +6461,7 @@ sub ReadRequestList {
     if($@) {
 
         return $self->SetError( summary => __("Getting the request list failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -6547,20 +6558,19 @@ sub ImportRequest {
         if(defined $data->{'repository'}) {
 
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "",
+                                       $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
-                                       "");
-
+                                       $data->{'caPasswd'});
         }
     };
     if($@) {
 
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     
@@ -6582,7 +6592,7 @@ sub ImportRequest {
     if($@) {
 
         return $self->SetError( summary => __("Importing the request failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     
@@ -6673,7 +6683,7 @@ sub DeleteRequest {
     if($@) {
 
         return $self->SetError( summary => __("Deleting the request failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     return 1;    
@@ -6775,7 +6785,7 @@ sub ImportCA {
     if($@) {
 
         return $self->SetError( summary => __("Importing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -6872,7 +6882,7 @@ sub DeleteCA {
     if($@) {
 
         return $self->SetError( summary => __("Deleting the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -6955,11 +6965,12 @@ sub ReadCRLDefaults {
 
         if(defined $data->{'repository'}) {
             
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, "",
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                                       $data->{'caPasswd'},
                                        $data->{'repository'});
         } else {
             
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, "");
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, $data->{'caPasswd'});
             
         }
         
@@ -6988,7 +6999,7 @@ sub ReadCRLDefaults {
     if($@) {
 
         return $self->SetError( summary => __("Getting defaults failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
 
     }
@@ -7059,18 +7070,19 @@ sub WriteCRLDefaults {
         
         if( defined $data->{'repository'}) {
             
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "",
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+                                       $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
             
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, "");
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
             
         }
     };
     if($@) {
 
         return $self->SetError( summary => __("Initializing the CA failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 
@@ -7102,7 +7114,7 @@ sub WriteCRLDefaults {
     if($@) {
         
         return $self->SetError( summary => __("Modifying CRLGenerationData failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
     
@@ -7113,7 +7125,7 @@ sub WriteCRLDefaults {
     if($@) {
         
         return $self->SetError( summary => __("Writing the defaults failed."),
-                                description => "$@",
+                                description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
 

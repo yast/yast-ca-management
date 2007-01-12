@@ -43,7 +43,7 @@
      */
     
     define symbol createCRL(string CAname)``{
-	map ret = (map) YaPI::CaManagement::ReadCRLDefaults ($["caName":CAname]);
+	map ret = (map) YaPI::CaManagement::ReadCRLDefaults ($["caName":CAname, "caPasswd":getPassword(CAname)]);
 	y2milestone ("ReadCRLDefaults(%1) return %2",
 		     $["caName":CAname], ret );
 
@@ -101,7 +101,7 @@
      */
     define string showLongCRLDescription (string CAname) ``{
 
-	string ret = (string) YaPI::CaManagement::ReadCRL ($["caName":CAname,
+	string ret = (string) YaPI::CaManagement::ReadCRL ($["caName":CAname, "caPasswd":getPassword(CAname),
 							     "type":"plain"]);
 	
 	y2milestone("ReadCRL(%1): %3", CAname, ret);
@@ -140,7 +140,7 @@
      * @return a string with the CRL description
      */
     define string getCRLDescription (string CAname) ``{
-	map ret = (map) YaPI::CaManagement::ReadCRL ($["caName":CAname, "type":"parsed"]);
+	map ret = (map) YaPI::CaManagement::ReadCRL ($["caName":CAname, "caPasswd":getPassword(CAname), "type":"parsed"]);
         if (ret == nil)
         {
 	    map<string,any> messageMap = YaPI::Error();

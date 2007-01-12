@@ -38,7 +38,7 @@
      */
     define void editCRLDefaults (string ca) ``{
 
-	map ret = (map) YaPI::CaManagement::ReadCRLDefaults ($["caName":ca]);
+	map ret = (map) YaPI::CaManagement::ReadCRLDefaults ($["caName":ca, "caPasswd":getPassword(ca)]);
 	y2milestone ("ReadCRLDefaults(%1) return %2",
 		     $["caName":ca], ret );
 
@@ -248,8 +248,8 @@
 		    }
 		}
 		
-		param["caName"] = ca;
-
+		param["caName"]   = ca;
+        param["caPasswd"] = getPassword(ca);
 
 		boolean writeret = (boolean) YaPI::CaManagement::WriteCRLDefaults (param);
 		y2milestone ("WriteCRLDefaults(%1) return %2",

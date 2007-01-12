@@ -1061,6 +1061,7 @@ Certificate password</p>
 	
 	boolean success = false;
 	boolean check = YaPI::CaManagement::Verify ($["caName": CAname,
+                      "caPasswd":getPassword(CAname),
 					  "certificate" : certificate,
 					  "disableCRLcheck" : "1", 
 					  "purpose" : "sslserver"
@@ -1260,6 +1261,7 @@ This certificate might be not practical as a common server certificate.
 			UI::OpenDialog(`VBox(`Label(_("Importing request..."))));
 		    
 			string yapiret = (string) YaPI::CaManagement::ImportRequest ($["caName" : CaName,
+                                            "caPasswd":getPassword(CaName),
 											"inFile" : filename,
 											"importFormat" : extention]);
 			y2milestone ("ImportRequest(%1) return %2",
