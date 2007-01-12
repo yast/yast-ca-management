@@ -125,7 +125,9 @@
 	if (kind == "Sub CA"
 	    || kind == "Sub CA Request")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"ca"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, 
+                                                                   "caPasswd":getPassword(CaMgm::currentCA),
+                                                                   "certType":"ca"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
 			$["caName": CaMgm::currentCA, "certType":"ca"],
 			ret);
@@ -133,7 +135,9 @@
 	if (kind == "Server Certificate"
 	    ||kind == "Server Request")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"server"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, 
+                                                                   "caPasswd":getPassword(CaMgm::currentCA),
+                                                                   "certType":"server"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
 			$["caName": CaMgm::currentCA, "certType":"server"],
 			ret);
@@ -141,7 +145,9 @@
 	if (kind == "Client Certificate"
 	    ||kind == "Client Request")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, "certType":"client"]);
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, 
+                                                                   "caPasswd":getPassword(CaMgm::currentCA),
+                                                                   "certType":"client"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
 			$["caName": CaMgm::currentCA, "certType":"client"],
 			ret);
@@ -695,7 +701,9 @@
 	else
 	{
 	    // Certificates, Sub-CAs, Requests
-	    map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CaMgm::currentCA, "type":"parsed"]);
+	    map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CaMgm::currentCA, 
+                                                      "caPasswd":getPassword(CaMgm::currentCA),
+                                                      "type":"parsed"]);
 	    y2milestone("ReadCA(%1): %2", CaMgm::currentCA, ret);
 	    if (ret == nil)
 	    {
@@ -1285,6 +1293,7 @@
 	// fillup parameters depending on kind
 
 	param["caName"] =  CaMgm::currentCA;
+    param["caPasswd"] = getPassword(CaMgm::currentCA);
 	param["certType"] =  kindmap[CaMgm::currentDefault]:"";
 
 	if (CaMgm::adv_ca != "none")
