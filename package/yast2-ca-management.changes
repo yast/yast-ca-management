@@ -1,10 +1,33 @@
 -------------------------------------------------------------------
-Fri Oct  6 11:52:44 CEST 2006 - mc@suse.de
+Fri Jan 12 10:57:45 CET 2007 - mc@suse.de
 
-- merge proofreaded texts 
+- set correct version for SLES10-SP1
+  Version 2.13.27 
 
 -------------------------------------------------------------------
-Mon Jun 26 11:22:08 CEST 2006 - mc@suse.de
+Fri Oct  6 11:46:49 CEST 2006 - mc@suse.de
+
+- version 2.14.3
+- merge proofreading results 
+
+-------------------------------------------------------------------
+Tue Sep 19 15:28:19 CEST 2006 - mc@suse.de
+
+- Better error message for invalid destinationFile(#205386) 
+
+-------------------------------------------------------------------
+Fri Jul 21 14:14:37 CEST 2006 - mc@suse.de
+
+- Version 2.14.2 
+
+-------------------------------------------------------------------
+Thu Jun 29 15:41:18 CEST 2006 - mc@suse.de
+
+- implement new exception handling(backward compatible) 
+- limal-ca-mgm requires caPasswd for all actions in a CA
+
+-------------------------------------------------------------------
+Mon Jun 19 17:05:56 CEST 2006 - mc@suse.de
 
 - fix unlocalized error messages [#182066]
 - fix unlocalized Certificates Status [#182371] 
