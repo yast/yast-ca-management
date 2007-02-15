@@ -55,7 +55,7 @@
 	    ret = add( ret, "warning_level", `blocker );
 	}
 
-	string longhostname = strip(retmap["stdout"]:"");
+	string longhostname = strip(retmap["stdout"]:"linux.site");
 	string hostname = ((list<string>) splitstring (longhostname, "."))[0]:"";
         string domain = substring (longhostname, findfirstof(longhostname,".")+1);
 
