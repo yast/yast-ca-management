@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Feb 15 17:27:42 CET 2007 - mc@suse.de
+
+- use linux.site as fallback when the hostname command 
+  returns nothing [#245604]
+
+-------------------------------------------------------------------
 Fri Jan 12 10:57:45 CET 2007 - mc@suse.de
 
 - set correct version for SLES10-SP1
