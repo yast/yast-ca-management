@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Feb 15 17:32:06 CET 2007 - mc@suse.de
+
+- use linux.site as fallback when the hostname command
+  returns nothing [#245604]
+
+-------------------------------------------------------------------
 Fri Oct  6 11:46:49 CEST 2006 - mc@suse.de
 
 - version 2.14.3
