@@ -56,6 +56,10 @@
 	}
 
 	string longhostname = strip(retmap["stdout"]:"linux.site");
+	if(size(longhostname) <= 0)
+	{
+		longhostname = "linux.site";
+	}
 	string hostname = ((list<string>) splitstring (longhostname, "."))[0]:"";
         string domain = substring (longhostname, findfirstof(longhostname,".")+1);
 
@@ -87,6 +91,11 @@
 	if (!CaMgm::prop_emailChanged)
 	{
 	    CaMgm::prop_email = "postmaster@" + domain;
+	}
+
+	if(ret["warning"]:"" != "")
+	{
+		return ret;
 	}
 
 	if (force_reset)
