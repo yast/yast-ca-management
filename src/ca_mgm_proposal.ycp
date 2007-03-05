@@ -26,6 +26,7 @@
     import "DNS";
     import "Timezone";
     import "Users";
+    import "String";
 
     include "ca-management/new_cert_read_write.ycp";
 
@@ -98,36 +99,83 @@
 		return ret;
 	}
 
-	if (force_reset)
-	{
-	    y2milestone("FORCE RESET");
-	    if (CaMgm::prop_settingsWritten)
-	    {
-		if( !Popup::YesNo(_("CA Management") + "\n" +
-				  _("Settings have already been written.") + "\n" +
-		                  _("Delete the old settings?")))
-		{
-		      ret = $[ "workflow_sequence" : `auto ];
-		}
-		else
-		{
-		      YaPI::CaManagement::DeleteCA ($[   "caName":CaMgm::currentCA,
-		                                       "caPasswd":getPassword(CaMgm::currentCA),
-							  "force": true]);
-		      CaMgm::prop_settingsWritten = false;
-		}
-	    }
-	    else
-	    {
-		CaMgm::prop_selection = `def;
-		CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";
-		CaMgm::prop_CAName = "YaST_Default_CA";
-		CaMgm::prop_country = Timezone::GetCountryForTimezone("");
-		CaMgm::prop_password = Users::GetRootPassword();
-		CaMgm::prop_email = "postmaster@" + domain;
-		CaMgm::prop_server_commonName = longhostname;
-	    }
-	}
+        // new handling of force reset because of (#238754)
+        if (force_reset)
+        {
+            y2milestone("FORCE RESET");
+            if (CaMgm::prop_settingsWritten)
+            {
+                if( !Popup::YesNo(_("CA Management") + "\n" +
+                                  _("Settings have already been written.") + "\n" +
+                                  _("Delete the old settings?")))
+                {
+                    ret = $[ "workflow_sequence" : `auto ];
+                }
+                else
+                {
+                    YaPI::CaManagement::DeleteCA ($[   "caName":CaMgm::currentCA,
+                                                     "caPasswd":getPassword(CaMgm::currentCA),
+                                                        "force": true]);
+                    CaMgm::prop_settingsWritten = false;
+                }
+            }
+            else
+            {
+                CaMgm::prop_selection = `def;
+                CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";
+                CaMgm::prop_CAName = "YaST_Default_CA";
+                CaMgm::prop_country = Timezone::GetCountryForTimezone("");
+                CaMgm::prop_password = Users::GetRootPassword();
+                CaMgm::prop_email = "postmaster@" + domain;
+                CaMgm::prop_server_commonName = longhostname;
+            }
+        }
+        else  // NO FORCE RESET
+        {     // Try to read default Root CA and ask if it should be reused or deleted
+            map defaultRootCA = nil;
+            defaultRootCA = (map) YaPI::CaManagement::ReadFile( $[  "inFile":"/var/lib/CAM/" + CaMgm::prop_CAName + "/cacert.pem",
+                                                                    "type":"parsed",
+								"datatype":"CERTIFICATE",
+								"inForm":"PEM"           ]);
+            CaMgm::prop_settingsWritten = defaultRootCA != nil ? true:false;
+
+
+            if (CaMgm::prop_settingsWritten)
+            {
+                if( !Popup::YesNo(_("CA Management") + "\n" +
+                                  _("Settings have already been written.") + "\n" +
+                                  _("Delete the old settings?")))
+                {
+                    // read the details directly from the server certificate
+                    map defaultServerCert = (map) YaPI::CaManagement::ReadFile( $[
+	                         "inFile":"/etc/ssl/servercerts/servercert.pem",
+                                   "type":"parsed",
+                               "datatype":"CERTIFICATE",
+                                 "inForm":"PEM"           ]);
+
+                    map defaultServerCertIssuer = defaultServerCert["ISSUER_HASH"]:$[];
+                    // CaMgm::prop_selection     = `def;
+                    CaMgm::prop_ca_commonName = ((list)defaultServerCertIssuer["CN"]:[])[0]:"";
+                    CaMgm::prop_country       = ((list)defaultServerCertIssuer["C"]:[])[0]:"";
+                    CaMgm::prop_email         = ((list)defaultServerCertIssuer["emailAddress"]:[])[0]:"";
+                    CaMgm::prop_CAName        = CaMgm::prop_CAName;
+                    CaMgm::prop_password      = Users::GetRootPassword();
+
+
+                    map defaultSCmap =  defaultServerCert["DN_HASH"]:$[];
+
+                    CaMgm::prop_server_commonName = ((list)defaultSCmap["CN"]:[])[0]:"";
+
+
+                    ret = $[ "workflow_sequence" : `auto ];
+                }
+                else
+                {   // delete the default Root CA manually because the root PW may be different in a repeated run of second-Stage
+                    SCR::Execute(.target.bash, sformat(" rm -rf  /var/lib/CAM/%1 ", CaMgm::prop_CAName  ));
+                    CaMgm::prop_settingsWritten = false;
+                }
+            }
+        }
 
 	if (!check_mail_address(CaMgm::prop_email))
 	{
