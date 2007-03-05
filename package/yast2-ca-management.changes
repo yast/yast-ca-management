@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Mar  5 20:50:56 CET 2007 - jdsn@suse.de
+
+- detect existing default Root CA during installation (#238754)
+- Version 2.13.29
+
+-------------------------------------------------------------------
 Thu Feb 15 17:27:42 CET 2007 - mc@suse.de
 
 - version 2.13.28
