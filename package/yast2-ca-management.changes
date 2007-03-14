@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 14 21:20:58 CET 2007 - jdsn@suse.de
+
+- added ca_mgm autoyast rnc schema file (#220816)
+- 2.14.4
+
+-------------------------------------------------------------------
 Thu Feb 15 17:32:06 CET 2007 - mc@suse.de
 
 - use linux.site as fallback when the hostname command

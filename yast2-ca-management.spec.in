@@ -37,6 +37,7 @@ Summary:	CA Management
 @moduledir@/YaST/caUtils.pm
 @desktopdir@/ca_mgm.desktop
 @desktopdir@/common_cert.desktop
+@schemadir@/autoyast/rnc/ca_mgm.rnc
 %doc @docdir@
 /usr/bin/generateCRL.pl
 %attr(600, root, root) %config(noreplace) /etc/generateCRL.conf
