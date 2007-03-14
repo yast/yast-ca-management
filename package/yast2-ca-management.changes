@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Mar 14 21:19:22 CET 2007 - jdsn@suse.de
+
+- added ca_mgm autoyast rnc schema file (#220816)
+- 2.13.30 
+
+-------------------------------------------------------------------
 Mon Mar  5 20:50:56 CET 2007 - jdsn@suse.de
 
 - detect existing default Root CA during installation (#238754)
