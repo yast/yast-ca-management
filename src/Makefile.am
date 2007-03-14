@@ -38,12 +38,16 @@ client_DATA = 		\
 desktop_DATA = ca_mgm.desktop	\
 	       common_cert.desktop
 
+rncdir = $(schemadir)/autoyast/rnc
+rnc_DATA = ca_mgm.rnc
+
 EXTRA_DIST =		\
 	$(module_DATA)	\
 	$(client_DATA)	\
         $(desktop_DATA)	\
 	$(myinclude_DATA) \
-	$(cam_DATA)
+	$(cam_DATA) \
+	$(rnc_DATA)
 
 ca-management:
 	ln -sf . ca-management
