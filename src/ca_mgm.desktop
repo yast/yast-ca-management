@@ -16,6 +16,7 @@ X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstClonable=true
 X-SuSE-YaST-AutoInstRequires=lan,users
+X-SuSE-YaST-AutoInstSchema=ca_mgm.rnc
 
 Icon=yast-ca_mgm
 Exec=/sbin/yast2 ca_mgm

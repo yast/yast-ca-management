@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Mar 19 17:58:58 CET 2007 - jdsn@suse.de
+
+- inserted rnc schema file reference into desktop file (#220816)
+- 2.14.5 
+
+-------------------------------------------------------------------
 Wed Mar 14 21:20:58 CET 2007 - jdsn@suse.de
 
 - added ca_mgm autoyast rnc schema file (#220816)
