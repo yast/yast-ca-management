@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Apr 10 17:46:39 CEST 2007 - jdsn@suse.de
+
+- adjusted valid characters for CA properties (#256392)
+- 2.13.32
+
+-------------------------------------------------------------------
 Mon Mar 19 17:56:29 CET 2007 - jdsn@suse.de
 
 - inserted rnc schema file reference into desktop file (#220816)

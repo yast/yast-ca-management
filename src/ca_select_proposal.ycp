@@ -107,7 +107,8 @@ Here, change these <b>default settings</b>.
 				    Label::BackButton(), Label::NextButton());
 
 
-        string valid_chars = ",.:;#'+*~?][(){}/§&%$\"!@0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ";
+        // a '$' in valid_chars can break creation of a CA - from now on disabled (#256392)
+        string valid_chars = ",.:;#'+*~?][(){}/§&%\"!@0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_- ";
         UI::ChangeWidget(`id(`id_commonName),       `ValidChars, valid_chars);
         UI::ChangeWidget(`id(`id_organisation),     `ValidChars, valid_chars);
         UI::ChangeWidget(`id(`id_organisationUnit), `ValidChars, valid_chars);
