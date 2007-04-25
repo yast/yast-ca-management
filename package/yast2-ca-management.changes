@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Wed Apr 25 15:57:52 CEST 2007 - mc@suse.de
+
+- update Version to 2.15.0 
+
+-------------------------------------------------------------------
 Mon Mar 19 17:58:58 CET 2007 - jdsn@suse.de
 
 - inserted rnc schema file reference into desktop file (#220816)
