@@ -279,7 +279,19 @@
 	
 
 	foreach (map element, ret, ``{
-	    result = add (result, `item (`id (i), element["status"]:"",
+		  // Certificate status displayed in a table (Valid, Revoked, Expired)
+		  string st = _("Valid");
+		  if(element["status"]:"" == "revoked")
+		  {
+			  // Certificate status displayed in a table (Valid, Revoked, Expired)
+			  st = _("Revoked");
+		  }
+		  if(element["status"]:"" == "expired")
+		  {
+			  // Certificate status displayed in a table (Valid, Revoked, Expired)
+			  st = _("Expired");
+		  }
+	    result = add (result, `item (`id (i), st,
 					 element["commonName"]:"",
 					 element["emailAddress"]:"",
 					 element["organizationName"]:"",
@@ -380,7 +392,7 @@
 	    UI::ChangeWidget( `id(`textinfo), `Value, getCertDescription (ret));
 	    
 	    term table_item = (term) UI::QueryWidget(`id(`table), `Item(id));
-	    boolean valid = ((string) table_item[1]:"") == "Valid";
+	    boolean valid = ((string) table_item[1]:"") == _("Valid");
 	    UI::ChangeWidget (`id (`delete), `Enabled, !valid);
 	    UI::ChangeWidget (`id (`revoke), `Enabled, valid);
 	    // do not export certificates which are a CA or revoked certificate
