@@ -2565,18 +2565,7 @@ sub ReadCertificateList {
             {
                 if(lc($map->iterator_key($mapIT)) eq "status")
                 {
-                    if(lc($map->iterator_value($mapIT)) eq "valid")
-                    {
-                        $hash->{status} = __("Valid");
-                    }
-                    elsif(lc($map->iterator_value($mapIT)) eq "revoked")
-                    {
-                        $hash->{status} = __("Revoked");
-                    }
-                    else  # expired
-                    {
-                        $hash->{status} = __("Expired");
-                    }
+                    $hash->{status} = lc($map->iterator_value($mapIT));
                 }
                 else
                 {
