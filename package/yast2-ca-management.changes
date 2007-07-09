@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Jul  9 11:27:53 CEST 2007 - mc@suse.de
+
+- fix always disabled Export Button [#231434] 
+
+-------------------------------------------------------------------
 Tue Apr 10 17:46:39 CEST 2007 - jdsn@suse.de
 
 - adjusted valid characters for CA properties (#256392)
