@@ -17,6 +17,7 @@
 
 textdomain "ca-management";
 import "CaMgm";
+import "CommandLine";
 import "Wizard";
 import "Label";
 import "Popup";
@@ -27,6 +28,11 @@ include "ca-management/util.ycp";
 /* The main () */
 y2milestone ("----------------------------------------");
 y2milestone ("common_cert module started");
+
+/**
+ * Open main dialog sequence
+ */
+define symbol MainSequence () {
 
 Wizard::CreateDialog();
 Wizard::SetDesktopIcon("ca-management");
@@ -82,6 +88,15 @@ repeat
 }
 until (contains ([`back, `next, `abort], ui));
 Wizard::CloseDialog();
+}
+
+map cmdline = $[
+    "id"                : "common_cert",
+    "help"              : _("Common Server Certificate"),
+    "guihandler"        : MainSequence,
+];
+CommandLine::Run (cmdline);
+
 /* Finish */
 y2milestone("common_cert finished");
 y2milestone("----------------------------------------");

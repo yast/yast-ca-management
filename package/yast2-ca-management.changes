@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Aug 14 13:38:04 CEST 2007 - jsuchome@suse.cz
+
+- minimal support for command line interface (#300183)
+- 2.15.2
+
+-------------------------------------------------------------------
 Mon Jul  9 11:11:44 CEST 2007 - mc@suse.de
 
 - update Version to 2.15.1
