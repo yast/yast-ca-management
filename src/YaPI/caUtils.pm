@@ -580,7 +580,8 @@ sub transformSubjectAltName {
     my $self  = shift;
     my $exts  = shift;
     my $value = shift || "";
-
+    my $forDefaults = shift || 0;
+    
     my $crit   = 0;
     my $emailCopy = 0;
     my $list = new LIMAL::CaMgm::LiteralValueList();
@@ -594,7 +595,23 @@ sub transformSubjectAltName {
             $emailCopy = 1;
             next;
         }
-
+        if($p =~ /^MS-UPN:(.+)/)
+        {
+            if(!$forDefaults)
+            {
+                $list->push_back(new LIMAL::CaMgm::LiteralValue("1.3.6.1.4.1.311.20.2.3:$1"));
+            }
+            next;
+        }
+        if($p =~ /^K5PN:(.+)/)
+        {
+            if(!$forDefaults)
+            {
+                $list->push_back(new LIMAL::CaMgm::LiteralValue("1.3.6.1.5.2.2:$1"));
+            }
+            next;
+        }
+                    
         $list->push_back(new LIMAL::CaMgm::LiteralValue($p));
     }
 
@@ -621,7 +638,8 @@ sub transformIssuerAltName {
     my $self  = shift;
     my $exts  = shift;
     my $value = shift || "";
-
+    my $forDefaults = shift || 0;
+    
     my $crit       = 0;
     my $issuerCopy = 0;
     my $list = new LIMAL::CaMgm::LiteralValueList();
@@ -633,6 +651,22 @@ sub transformIssuerAltName {
         }
         if($p eq "issuer:copy") {
             $issuerCopy = 1;
+            next;
+        }
+        if($p =~ /^MS-UPN:(.+)/)
+        {
+            if(!$forDefaults)
+            {
+                $list->push_back(new LIMAL::CaMgm::LiteralValue("1.3.6.1.4.1.311.20.2.3:$1"));
+            }
+            next;
+        }
+        if($p =~ /^K5PN:(.+)/)
+        {
+            if(!$forDefaults)
+            {
+                $list->push_back(new LIMAL::CaMgm::LiteralValue("1.3.6.1.5.2.2:$1"));
+            }
             next;
         }
 
@@ -1044,9 +1078,18 @@ sub extractSubjectAltName {
         !$list->iterator_equal($it, $list->end());
         $list->iterator_incr($it)) 
     {
-
-        push @vals, $list->iterator_value($it)->toString();
-        
+        if($list->iterator_value($it)->getType() eq "1.3.6.1.4.1.311.20.2.3")
+        {
+            push @vals, "MS-UPN:".$list->iterator_value($it)->getValue();
+        }
+        elsif($list->iterator_value($it)->getType() eq "1.3.6.1.5.2.2")
+        {
+            push @vals, "K5PN:".$list->iterator_value($it)->getValue();
+        }
+        else
+        {
+            push @vals, $list->iterator_value($it)->toString();
+        }
     }
     
     $ret->{'subjectAltName'} = join(', ', @vals);
@@ -1085,9 +1128,18 @@ sub extractIssuerAltName {
         !$list->iterator_equal($it, $list->end());
         $list->iterator_incr($it)) 
     {
-
-        push @vals, $list->iterator_value($it)->toString();
-        
+        if($list->iterator_value($it)->getType() eq "1.3.6.1.4.1.311.20.2.3")
+        {
+            push @vals, "MS-UPN:".$list->iterator_value($it)->getValue();
+        }
+        elsif($list->iterator_value($it)->getType() eq "1.3.6.1.5.2.2")
+        {
+            push @vals, "K5PN:".$list->iterator_value($it)->getValue();
+        }
+        else
+        {
+            push @vals, $list->iterator_value($it)->toString();
+        }
     }
     
     $ret->{'issuerAltName'} = join(', ', @vals);
@@ -1591,6 +1643,41 @@ sub simpleExtParsing {
                 $val =~ s/\s+$//g;
                 $i++;
                 next if $val =~ /^$/;
+                if($key eq "X509v3 Subject Alternative Name" || $key eq "X509v3 Issuer Alternative Name:")
+                {
+                    my @pairs = split(/\s*,\s*/, $val);
+                    $val = "";
+                    foreach my $pair (@pairs)
+                    {
+                        my ($k, $v) = split(/:/, $pair, 2);
+                        if($k eq "othername")
+                        {
+                            next;
+                        }
+                        else
+                        {
+                            $val .= "$pair, ";
+                        }
+                    }
+
+                    my $list = $cert->getExtensions()->getSubjectAlternativeName()->getAlternativeNameList();
+
+                    for(my $it = $list->begin();
+                        !$list->iterator_equal($it, $list->end());
+                        $list->iterator_incr($it)) {
+                        
+                        if($list->iterator_value($it)->getType() eq "1.3.6.1.4.1.311.20.2.3") 
+                        {
+                            $val .= "MS-UPN:".$list->iterator_value($it)->getValue().", ";
+                            
+                        }
+                        elsif($list->iterator_value($it)->getType() eq "1.3.6.1.5.2.2") 
+                        {
+                            $val .= "K5PN:".$list->iterator_value($it)->getValue().", ";
+                        }
+                    }
+                }
+                $val =~ s/, $//;
                 push(@{$ret->{$key}}, $val);
             }
         } else {
@@ -1669,6 +1756,12 @@ sub extensionParsing {
 
 
                       my @sp1 = split(/:/, $t, 2);
+                      if($sp1[0] eq "othername")
+                      {
+                          # not supported by openssl
+                          next;
+                      }
+                      
                       my $h = {};
                       $h->{type}  = $transMap->{$sp1[0]};
                       if(!defined $h->{type}) {
@@ -1682,10 +1775,9 @@ sub extensionParsing {
 
                       push( @{$newExt->{$newKey}->{value}}, $h);
                   }
-
               }
             else
-              {
+            {
                   my @sp = split(/\s?,\s?/, $b);
                   foreach my $t (@sp) {
                       if(exists $transMap->{$t}) {
@@ -1954,6 +2046,20 @@ sub checkCommonValues {
                                                            __("Invalid value'%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } elsif ($p =~ /^\s*MS-UPN:(.+)\s*$/) {
+                    if (!defined $1 || $1 !~ /^[^@]+@[^@]+$/) {
+                        return $self->SetError(summary => sprintf(
+                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                            $p, $key),
+                                               code    => "PARAM_CHECK_FAILED");
+                    }
+                } elsif ($p =~ /^\s*K5PN:(.+)\s*$/) {
+                    if (!defined $1 || $1 !~ /^[^@]+@[^@]+$/) {
+                        return $self->SetError(summary => sprintf(
+                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                            $p, $key),
+                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } else {
                     return $self->SetError(summary => sprintf(
