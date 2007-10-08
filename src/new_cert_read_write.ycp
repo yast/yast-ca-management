@@ -749,6 +749,7 @@
 	    ||kind == "Sub CA Request")
 	{
 	    param["caName"] =  CaMgm::currentCA;
+	    param["caPasswd"] = getPassword(CaMgm::currentCA);
 	}
 	if (kind == "Server Certificate")
 	{
