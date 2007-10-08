@@ -1474,13 +1474,13 @@ sub WriteCertificateDefaults {
         }
 
         $e = YaST::caUtils->transformSubjectAltName($exts,
-                                                    $data->{'subjectAltName'});
+                                                    $data->{'subjectAltName'}, 1);
         if(!defined $e) {
             return undef;
         }
 
         $e = YaST::caUtils->transformIssuerAltName($exts,
-                                                   $data->{'issuerAltName'});
+                                                   $data->{'issuerAltName'}, 1);
         if(!defined $e) {
             return undef;
         }

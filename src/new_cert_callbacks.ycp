@@ -350,7 +350,9 @@
 								    `RadioButton(`id("URI"), `opt(`notify), "URI"),
 								    `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
 								    `RadioButton(`id("IP"), `opt(`notify), "IP"),
-								    `RadioButton(`id("RID"), `opt(`notify), "RID")
+								    `RadioButton(`id("RID"), `opt(`notify), "RID"),
+								    `RadioButton(`id("MS-UPN"), `opt(`notify), "MS-UPN"),
+								    `RadioButton(`id("K5PN"), `opt(`notify), "K5PN")
 								    )
 							      ),
 					    `TextEntry(`id(`name), _("&Name:")),
@@ -701,7 +703,9 @@
 								    `RadioButton(`id("URI"), `opt(`notify), "URI", true),
 								    `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
 								    `RadioButton(`id("IP"), `opt(`notify), "IP"),
-								    `RadioButton(`id("RID"), `opt(`notify), "RID")
+								    `RadioButton(`id("RID"), `opt(`notify), "RID"),
+								    `RadioButton(`id("MS-UPN"), `opt(`notify), "MS-UPN"),
+								    `RadioButton(`id("K5PN"), `opt(`notify), "K5PN")
 								    )
 							      ),
 					    `TextEntry(`id(`name), _("&Name:")),
