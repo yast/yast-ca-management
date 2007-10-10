@@ -1129,19 +1129,19 @@ This certificate might be not practical as a common server certificate.
 		string filename = (string) SCR::Read (.target.tmpdir) + "/commonCertificate";
 		    
 		string ret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CAname,
-                                                                               "caPasswd" : getPassword (CAname),
-									       "certificate" : certificate,
-									       "keyPasswd" : password,
-									       "exportFormat" : "PKCS12_CHAIN",
-									       "destinationFile" : filename,
-									       "P12Password" : password
-									     ]);
+																	   "caPasswd" : getPassword (CAname),
+																	   "certificate" : certificate,
+																	   "keyPasswd" : password,
+																	   "exportFormat" : "PKCS12_CHAIN",
+																	   "destinationFile" : filename,
+																	   "P12Password" : password
+																	  ]);
 
 		y2milestone ("ExportCertificate(%1) return %2", $["caName": CAname,
-								  "certificate" : certificate,
-								  "destinationFile" : filename,
-								  "P12Password" : password
-			     ], ret);
+														  "certificate" : certificate,
+														  "exportFormat" : "PKCS12_CHAIN",
+														  "destinationFile" : filename
+														 ], ret);
 		if (ret == nil
 		    || ret != "1")
 		{
