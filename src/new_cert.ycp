@@ -160,7 +160,7 @@
 	UI::ChangeWidget(`id(`id_organisationUnit), `ValidChars, valid_chars);
 	UI::ChangeWidget(`id(`id_locality),         `ValidChars, valid_chars);
 	UI::ChangeWidget(`id(`id_state),            `ValidChars, valid_chars);
-y2milestone(valid_chars);
+	y2milestone("%1", valid_chars);
 	UI::ChangeWidget(`id(`id_CAName), `ValidChars, "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-");
 	UI::SetFocus(`id(`id_CAName));
 
