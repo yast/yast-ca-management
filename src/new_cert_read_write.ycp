@@ -749,6 +749,7 @@
 	    ||kind == "Sub CA Request")
 	{
 	    param["caName"] =  CaMgm::currentCA;
+	    param["caPasswd"] = getPassword(CaMgm::currentCA);
 	}
 	if (kind == "Server Certificate")
 	{
@@ -1272,7 +1273,7 @@
 	    || kind == "Client Request"
 	    || kind == "Sub CA Request")
 	{
-	    y2milestone("CaManagement::AddRequest(%1)", param);
+//	    y2milestone("CaManagement::AddRequest(%1)", param);
 	    return YaPI::CaManagement::AddRequest (param) == nil ? false:true;
 	}
     }
@@ -1293,7 +1294,8 @@
 	// fillup parameters depending on kind
 
 	param["caName"] =  CaMgm::currentCA;
-    param["caPasswd"] = getPassword(CaMgm::currentCA);
+	// set the real password later. 
+    param["caPasswd"] = "<was set>";
 	param["certType"] =  kindmap[CaMgm::currentDefault]:"";
 
 	if (CaMgm::adv_ca != "none")
@@ -1692,6 +1694,10 @@
 	}
 
 	y2milestone("CaManagement::WriteCertificateDefaults(%1)", param);
+
+	// now set the password
+	param["caPasswd"] = getPassword(CaMgm::currentCA);
+
 	return YaPI::CaManagement::WriteCertificateDefaults (param);
     }
 

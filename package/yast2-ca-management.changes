@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Oct 10 12:39:02 CEST 2007 - mc@suse.de
+
+- version 2.13.33
+- fix logging [#332002]
+- fix request generation [#326465] 
+
+-------------------------------------------------------------------
 Mon Jul  9 11:27:53 CEST 2007 - mc@suse.de
 
 - fix always disabled Export Button [#231434] 
