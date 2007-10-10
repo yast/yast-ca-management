@@ -252,6 +252,10 @@
         param["caPasswd"] = getPassword(ca);
 
 		boolean writeret = (boolean) YaPI::CaManagement::WriteCRLDefaults (param);
+
+		// we do not want to log the password
+		param["caPasswd"] = "<was set>";
+
 		y2milestone ("WriteCRLDefaults(%1) return %2",
 			     param, writeret);
 		if (writeret == nil
