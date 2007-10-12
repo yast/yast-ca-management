@@ -1221,7 +1221,7 @@ This certificate might be not practical as a common server certificate.
 	    
 	    if (ret == `browse)
 	    {
-		string name = selectFile ( false, "*.pem *.der", "Import from ..." );
+		string name = selectFile ( false, "*.pem *.req *.csr *.der", "Import from ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
@@ -1241,7 +1241,9 @@ This certificate might be not practical as a common server certificate.
 		else
 		{
 		    string extention = "";
-		    if (substring (filename, findlastof (filename, ".")) == ".pem" )
+		    if (substring (filename, findlastof (filename, ".")) == ".pem" ||
+                        substring (filename, findlastof (filename, ".")) == ".req" ||
+                        substring (filename, findlastof (filename, ".")) == ".csr" )
 		    {
 			extention = "PEM";
 		    }
@@ -1338,7 +1340,7 @@ This certificate might be not practical as a common server certificate.
 	    
 	    if (ret == `browseCert)
 	    {
-		string name = selectFile (false, "*.pem", "Import from ..." );
+		string name = selectFile (false, "*.pem *.crt", "Import from ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`pathCert), `Value, name);
@@ -1348,7 +1350,7 @@ This certificate might be not practical as a common server certificate.
 	    
 	    if (ret == `browseKey)
 	    {
- 		string name = selectFile (false, "*.pem", "Import from ..." );
+ 		string name = selectFile (false, "*.pem *.key", "Import from ..." );
 		if ( name != nil )
 		{
 		    UI::ChangeWidget(`id(`pathKey), `Value, name);
