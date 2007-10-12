@@ -701,6 +701,7 @@
 					    `RadioButtonGroup(`id(`rb), 
 							      `HBox(
 								    `RadioButton(`id("URI"), `opt(`notify), "URI", true),
+								    `RadioButton(`id("email"), `opt(`notify), "email"),
 								    `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
 								    `RadioButton(`id("IP"), `opt(`notify), "IP"),
 								    `RadioButton(`id("RID"), `opt(`notify), "RID"),
@@ -726,6 +727,14 @@
 			subject_box
 			);
 	UI::SetFocus (`id(`ok));
+	if(!CaMgm::adv_subject_alt_name_show_email)
+	{
+	    UI::ChangeWidget(`id("email"), `Enabled, false);
+	}
+	else
+	{
+            UI::ChangeWidget(`id("email"), `Enabled, true);
+	}
 	while (true)
 	{
 	    any ret = UI::UserInput();
