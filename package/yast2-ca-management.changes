@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Oct 12 17:58:47 CEST 2007 - mc@suse.de
+
+- add email for subject_alt_name in special cases 
+- enhance filter list for browser window
+
+-------------------------------------------------------------------
 Wed Oct 10 11:39:26 CEST 2007 - mc@suse.de
 
 - version 2.16.1
