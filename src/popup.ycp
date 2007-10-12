@@ -14,7 +14,7 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    import "YaPI";    
+    import "YaPI";
     import "YaPI::CaManagement";
     import "CommandLine";
 
