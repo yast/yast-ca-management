@@ -670,8 +670,8 @@
 
 	string text = _("<p><b>Summary</b></p>");
 	text = text + "<br><pre>";
-	text = text + "Subject:                  "  + CaMgm::requestSubject;
-	text = text + "Valid Period:             " + CaMgm::validPeriod + _(" days\n");
+	text = text + "Subject:                  "  + CaMgm::requestSubject + "\n";
+	text = text + "Valid Period:             " + CaMgm::validPeriod + _(" days") + "\n";
 	text = text + "<p>Basic Constaints:         " + CaMgm::adv_ca
 	    + (CaMgm::adv_cri_ca ? _(" (critical)</p>") : "</p>") ;
 	if (CaMgm::adv_pathlen)
@@ -1063,8 +1063,13 @@
 		}
 		else
 		{
+		    CaMgm::adv_subject_alt_name_show_email = false;
 		    Popup::Message(_("The request has been signed."));
 		}
+	    }
+	    else if( ui == `edit)
+	    {
+		CaMgm::adv_subject_alt_name_show_email = true;
 	    }
         }
         until (contains ([`back, `next, `abort, `edit], ui));
