@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Oct 29 18:10:12 CET 2007 - mc@suse.de
+
+- merge SP1 changes to trunk
+  * detect existing default Root CA during installation (#238754)
+- popup password dialog if root password cannot be read
+
+-------------------------------------------------------------------
 Mon Oct 29 16:12:36 CET 2007 - mc@suse.de
 
 - version 2.16.2
