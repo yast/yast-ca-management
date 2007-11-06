@@ -6693,7 +6693,7 @@ In I<$valueMap> you can define the following keys:
 
 * caKey (required - path to private key in PEM format)
 
-* caPasswd (required, if the private key is unencrypted)
+* caPasswd (required; password of the private key or a new password if the key is unencrypted)
 
 The return value is "undef" on an error and "1" on success.
 
@@ -6702,7 +6702,8 @@ EXAMPLE:
  my $data = {
              caName        => 'My_CA',
              caCertificate => /path/to/cacert.pem,
-             caKey         => /path/to/cacert.key
+             caKey         => /path/to/cacert.key,
+             caPasswd      => "secret"
             };
 
     my $res = YaPI::CaManagement->ImportCA($data);
@@ -6750,23 +6751,24 @@ sub ImportCA {
                                code => "FILE_DOES_NOT_EXIST");
     }
 
+    if (!exists $data->{caPasswd} || !defined $data->{"caPasswd"} ) {
+        return $self->SetError( summary => __("Missing value 'caPasswd'."),
+                                code    => "CHECK_PARAM_FAILED");
+    }
+
     eval {
 
         my $cert = LIMAL::CaMgm::LocalManagement::readFile($data->{caCertificate});
         my $key  = LIMAL::CaMgm::LocalManagement::readFile($data->{caKey});
 
-        if(!exists $data->{caPasswd} || !defined $data->{caPasswd}) {
-            $data->{caPasswd} = "";
-        }
-
-        if( defined $data->{'repository'}) {
-
+        if( defined $data->{'repository'}) 
+        {
             LIMAL::CaMgm::CA::importCA($caName, $cert, $key,
                                        $data->{caPasswd},
                                        $data->{"repository"});
-
-        } else {
-
+        }
+        else 
+        {
             LIMAL::CaMgm::CA::importCA($caName, $cert, $key,
                                        $data->{caPasswd});
         }
