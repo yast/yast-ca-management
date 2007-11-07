@@ -167,7 +167,6 @@ Here, change the settings of this CA and certificate or import a CA and certific
 	    UI::ChangeWidget (`id (`id_organisationUnit), `Enabled, false);
 	    UI::ChangeWidget (`id (`id_locality), `Enabled, false);
 	    UI::ChangeWidget (`id (`id_state), `Enabled, false);
-	    UI::ChangeWidget (`id (`rootPassword), `Enabled, false);
 	    UI::ChangeWidget (`id (`pw1), `Enabled, false);
 	    UI::ChangeWidget (`id (`pw2), `Enabled, false);
 	    UI::ChangeWidget (`id (`localServerName), `Enabled, false);
@@ -188,23 +187,14 @@ Here, change the settings of this CA and certificate or import a CA and certific
 	    UI::ChangeWidget (`id (`id_organisationUnit), `Enabled, true);
 	    UI::ChangeWidget (`id (`id_locality), `Enabled, true);
 	    UI::ChangeWidget (`id (`id_state), `Enabled, true);
-	    UI::ChangeWidget (`id (`rootPassword), `Enabled, true);
 	    UI::ChangeWidget (`id (`localServerName), `Enabled, true);
 	    UI::ChangeWidget (`id (`pathCert), `Enabled, false); 
 	    UI::ChangeWidget (`id(`browseCert), `Enabled, false);
 	    UI::ChangeWidget (`id (`pw3), `Enabled, false);
 	    UI::ChangeWidget (`id (`pw4), `Enabled, false);
 	    
-	    if ((boolean) UI::QueryWidget(`id(`rootPassword), `Value))
-	    {
-		UI::ChangeWidget (`id (`pw1), `Enabled, false);
-		UI::ChangeWidget (`id (`pw2), `Enabled, false);
-	    }
-	    else
-	    {
 		UI::ChangeWidget (`id (`pw1), `Enabled, true);
 		UI::ChangeWidget (`id (`pw2), `Enabled, true);
-	    }
 
 	    if ((boolean) UI::QueryWidget(`id(`localServerName), `Value))
 	    {
@@ -235,8 +225,7 @@ Here, change the settings of this CA and certificate or import a CA and certific
 	    remove (CaMgm::autoYaSTSettings, "certificate");
 	    
 	    boolean notImport = (boolean) (UI::QueryWidget(`id(`rb), `CurrentButton) == `notImport);
-	    if (notImport
-		&& !((boolean) UI::QueryWidget(`id(`rootPassword), `Value)))
+	    if (notImport)
 	    {
 		confirmPassword = (string) UI::QueryWidget(`id(`pw2), `Value);
 		if ((string) UI::QueryWidget(`id(`pw1), `Value) != confirmPassword)
@@ -637,7 +626,73 @@ boolean Write() {
     return success;
 }
 
+/**
+ * Read ca-management defaults
+ * @return true on success
+ */
+boolean Read() {
 
+	map servercert = nil;
+	servercert = (map) YaPI::CaManagement::ReadFile( $["inFile":"/etc/ssl/servercerts/servercert.pem",
+                                                       "type":"parsed",
+                                                       "datatype":"CERTIFICATE",
+                                                       "inForm":"PEM"]);
+
+	boolean found = servercert != nil?true:false;
+
+	string hostname = "linux";
+	string domain = "site";
+    map retmap = (map) SCR::Execute (.target.bash_output,
+                                     "/bin/hostname -s",
+                                     $[] );
+
+	if (retmap["exit"]:1 == 0)
+	{
+		hostname = strip(retmap["stdout"]:"linux");
+	}
+
+	retmap = (map) SCR::Execute (.target.bash_output,
+                                 "/bin/hostname --domain",
+                                 $[] );
+
+	if (retmap["exit"]:1 == 0)
+	{
+		domain = strip(retmap["stdout"]:"site");
+	}
+		
+	if(found)
+	{
+		map serverCertDN = servercert["DN_HASH"]:$[];
+		map serverCertIssuer = servercert["ISSUER_HASH"]:$[];
+
+		
+		CaMgm::autoYaSTSettings["takeLocalServerName"] = false;	
+		CaMgm::autoYaSTSettings["password"] = "ENTER PASSWORD HERE";
+		CaMgm::autoYaSTSettings["server_commonName"] = ((list)serverCertDN["CN"]:[])[0]:(hostname + "." + domain);
+		CaMgm::autoYaSTSettings["CAName"] = "YaST_Default_CA";
+		CaMgm::autoYaSTSettings["ca_commonName"] = ((list)serverCertIssuer["CN"]:[])[0]:("YaST Default CA " + "(" + domain + ")");
+		CaMgm::autoYaSTSettings["server_email"] = ((list)serverCertDN["emailAddress"]:[])[0]:("postmaster@" + domain);
+		CaMgm::autoYaSTSettings["country"] = ((list)serverCertDN["C"]:[])[0]:"US";
+		CaMgm::autoYaSTSettings["organisation"] = ((list)serverCertDN["O"]:[])[0]:"";
+		CaMgm::autoYaSTSettings["organisationUnit"] = ((list)serverCertDN["OU"]:[])[0]:"";
+		CaMgm::autoYaSTSettings["locality"] = ((list)serverCertDN["L"]:[])[0]:"";
+		CaMgm::autoYaSTSettings["state"] = ((list)serverCertDN["ST"]:[])[0]:"";
+	}
+	else
+	{
+		CaMgm::autoYaSTSettings["takeLocalServerName"] = true;	
+		CaMgm::autoYaSTSettings["password"] = "ENTER PASSWORD HERE";
+		CaMgm::autoYaSTSettings["CAName"] = "YaST_Default_CA";
+		CaMgm::autoYaSTSettings["ca_commonName"] = "YaST Default CA " + "(" + domain + ")";
+		CaMgm::autoYaSTSettings["server_email"] = "postmaster@" + domain;
+		CaMgm::autoYaSTSettings["country"] = Timezone::GetCountryForTimezone("");
+		CaMgm::autoYaSTSettings["organisation"] = "";
+		CaMgm::autoYaSTSettings["organisationUnit"] = "";
+		CaMgm::autoYaSTSettings["locality"] = "";
+		CaMgm::autoYaSTSettings["state"] = "";
+	}
+	return true;
+}
 
 //---------------------------------------------------------------------------
 // MAIN
@@ -692,6 +747,13 @@ else if (func == "Write") {
     import "Progress";
     Progress::off();
     ret = Write();
+    Progress::on();
+}
+/* Read  settings */
+else if (func == "Read") {
+    import "Progress";
+    Progress::off();
+    ret = Read();
     Progress::on();
 }
 else if (func == "GetModified") {
