@@ -1316,6 +1316,7 @@ This certificate might be not practical as a common server certificate.
 							      )
 						      )
 					     ),			       
+				      `Password( `id (`passKey), _("&Key Password")),
 				      `VSpacing (1),					  
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
@@ -1362,17 +1363,28 @@ This certificate might be not practical as a common server certificate.
 		
 		string caCertificate = (string) UI::QueryWidget(`id(`pathCert), `Value);
 		string caKey = (string) UI::QueryWidget(`id(`pathKey), `Value);
+		string caPasswd = (string) UI::QueryWidget(`id(`passKey), `Value);
 		string caName = (string) UI::QueryWidget(`id(`caName), `Value);
 		if (size (caCertificate) == 0)
 		{
+			// Error popup
 		    Popup::Error(_("Path to certificate file required."));
 		    ret = `again;
 		} else if (size (caKey) == 0)
 		{
+			// Error popup
 		    Popup::Error(_("Path of the private key required."));
 		    ret = `again;
-		} else if (size (caName) == 0)
+		}
+		else if (size (caPasswd) == 0)
 		{
+			// Error popup
+			Popup::Error(_("Key Password is required. \nIt must be the password for the encrypted key or a new one in case of a not encrypted key."));
+			ret = `again;
+		}
+		else if (size (caName) == 0)
+		{
+			// Error popup
 		    Popup::Error(_("CA name required."));
 		    ret = `again;
 		}
@@ -1383,37 +1395,26 @@ This certificate might be not practical as a common server certificate.
 		    UI::OpenDialog(`VBox(`Label(_("Importing request..."))));
 		    
 		    boolean yapiret = (boolean) YaPI::CaManagement::ImportCA ($["caName" : caName,
-									      "caCertificate" : caCertificate,
-									      "caKey" : caKey]);
-		    y2milestone ("ImportRequest(%1,%2,%3) return %4",
+																		"caCertificate" : caCertificate,
+																		"caKey" : caKey,
+																		"caPasswd" : caPasswd
+																	   ]);
+		    y2milestone ("ImportRequest(%1,%2,%3, <passwd>) return %4",
 				 caName,
 				 caCertificate,
 				 caKey,
 				 yapiret);
-		    if (!yapiret)
-		    {
-			// Checking if password required only
-			map<string,any> messageMap = YaPI::Error();
-			if (messageMap["code"]:"" == "PASSWD_REQUIRED")
-			{
-			    yapiret = (boolean) YaPI::CaManagement::ImportCA ($["caName" : caName,
-									       "caCertificate" : caCertificate,
-									       "caKey" : caKey,
-									       "caPasswd" : getPassword(caName)
-									     ]);			    
-
-			}
-		    }
 		    if (yapiret == nil)
 		    {
-			showErrorCaManagement ();
-			ret = `again;
+				showErrorCaManagement ();
+				ret = `again;
 		    }
 		    else
 		    {
-			Popup::Message(_("Request has been imported."));
-			success = true;
-		    }		    
+				// Error popup
+				Popup::Message(_("CA has been imported."));
+				success = true;
+		    }
 		    UI::CloseDialog ();
 		}
 	    }

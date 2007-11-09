@@ -1,7 +1,10 @@
 -------------------------------------------------------------------
 Wed Nov  7 10:37:49 CET 2007 - mc@suse.de
 
+- version 2.13.34
+- fix importCA [#337524]
 - Enable cloning of CA-management for use with AutoYaST 
+  [FATE #302080]
 
 -------------------------------------------------------------------
 Wed Oct 10 12:39:02 CEST 2007 - mc@suse.de
