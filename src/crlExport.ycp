@@ -1,0 +1,332 @@
+/**
+ *
+ * File:
+ *   crlExport.ycp
+ *
+ * Module:
+ *   CA Management
+ *
+ * Summary:
+ *   Export a CRL to a local file or an LDAP directory.
+ *   Possibility to setup a cron job to do this automatically.
+ *
+ * Authors:
+ *   J. Daniel Schmidt <jdsn@suse.de>
+ *
+ * $Id: crlExport.ycp 1 2007-11-20 12:15:18Z jdsn $
+ *
+ * Export a CRL for a selected CA
+ *
+ */
+
+
+{
+
+textdomain "ca-management";
+
+import "CaMgm";
+import "Wizard";
+import "Label";
+import "Popup";
+import "YaPI::CaManagement";
+include "ca-management/util.ycp";
+include "ca-management/new_cert_callbacks.ycp";
+
+map uiInfo = UI::GetDisplayInfo();
+boolean textmode = (boolean) uiInfo["TextMode"]:nil;
+
+float hspace = textmode ? 4 : 3;
+float vspace = textmode ? 0 : 1;
+boolean seenSecurityInfo = false;
+
+// here are our settings for the CRL of this CA
+boolean periodic = false;        // default off
+boolean file_active = true;      // default on
+boolean ldap_active = false;     // default off
+symbol  fileformat = `ffpem;     // default is pem
+string  crlfile = "";            // is set from inside the export function
+integer intervalDays = 30;
+integer intervalHours = 0;
+map<string,string>  ldapCred = $[ "hostname":"",  "port":"",  "dn":"",
+                                  "binddn":"",    "password":""       ];
+
+
+map crlConfFormat = $[  "options" : [ "line_can_continue", "global_values", "join_multiline", "comments_last", "flat" ],
+                        "comments": [ "^[ \t]*#.*$", "^[ \t]*$" ],
+                        "params" :  [ $[ "match" :     [ "([a-zA-Z0-9_-]+)[ \t]*=[ \t]*([^ \t]*)", "%s = %s" ] ] ]
+                     ];
+
+
+define void showSecurityInfo()
+{
+    Popup::LongText(
+                   // Translators: window caption 
+                   _("Security Information"),
+                   // Translators: long help text - security information
+                   `RichText(_("Warning!<br>Activating the automatic creation and export of a CRL will write the CA password to a config file on disk. The password will be stored there in plain text as it is needed to create a CRL. The file will only be readable for the root user.<br>Please note that this is a security risk if there are more people that have root access. They all will be able to read the CA password.")),
+                   50, 20
+            );
+    seenSecurityInfo = true;
+}
+
+
+define void updateEnabled()
+{
+    periodic = (boolean) UI::QueryWidget(`id(`mode_periodically), `Value);
+    file_active = (boolean) UI::QueryWidget(`id(`exportFile), `Value);
+    ldap_active = (boolean) UI::QueryWidget(`id(`exportLDAP), `Value);
+    UI::ChangeWidget(`id(`periodicInterval), `Enabled, periodic);
+    UI::ChangeWidget(`id(`fileSettings), `Enabled, file_active);
+    UI::ChangeWidget(`id(`ldapSettings), `Enabled, ldap_active);
+    if (periodic && !seenSecurityInfo) { showSecurityInfo(); }
+}
+
+
+
+define void setSettings()
+{
+    // write settings to the UI
+    UI::ChangeWidget(`id(`mode_periodically), `Value, periodic);
+    UI::ChangeWidget(`id(`periodicInterval),  `Enabled, periodic);
+    UI::ChangeWidget(`id(`interval_days),     `Value,  intervalDays);
+    UI::ChangeWidget(`id(`interval_hours),    `Value,  intervalHours);
+
+    UI::ChangeWidget(`id(`exportFile),  `Value, file_active);
+    UI::ChangeWidget(`id(`exportLDAP),  `Value, ldap_active);
+
+    UI::ChangeWidget(`id(`ffpem),       `Value, fileformat == `ffpem ? true:false);
+    UI::ChangeWidget(`id(`crlfile),     `Value, crlfile);
+
+    UI::ChangeWidget(`id(`hostname),    `Value, ldapCred["hostname"]:"");
+    UI::ChangeWidget(`id(`port),        `Value, ldapCred["port"]:"");
+    UI::ChangeWidget(`id(`dn),          `Value, ldapCred["dn"]:"");
+    UI::ChangeWidget(`id(`binddn),      `Value, ldapCred["binddn"]:"");
+    UI::ChangeWidget(`id(`ldapPassword),`Value, ldapCred["password"]:"");
+}
+
+
+
+define void cleanLdapCred()
+{
+    foreach (string key, string val, ldapCred, {
+            if (val == nil) ldapCred[key]="";
+    });
+}
+
+
+define void readSettings(string ca)
+{
+    string crlConf = sformat("/var/lib/CAM/%1/crl-export.conf", ca);
+    if (SCR::Execute(.target.bash, sformat("[ -f  %1  ]", crlConf) ) == 0 )
+    {
+        SCR::RegisterAgent( .temp_crlexport_agent, `ag_ini(
+                            `IniAgent( crlConf,  crlConfFormat  ))  );
+
+        periodic         = SCR::Read(.temp_crlexport_agent.periodic)      == "true" ? true:false;
+        if (periodic) seenSecurityInfo = true;
+        integer getDays  = (integer) SCR::Read(.temp_crlexport_agent.interval_days);
+        intervalDays    = getDays != nil ? getDays:intervalDays;
+        integer getHours = (integer) SCR::Read(.temp_crlexport_agent.interval_hours);
+        intervalHours   = getHours != nil ? getHours:intervalHours; 
+        file_active      = SCR::Read(.temp_crlexport_agent.export_file)   == "true" ? true:false;
+        ldap_active      = SCR::Read(.temp_crlexport_agent.export_ldap)   == "true" ? true:false;
+        crlfile          = (string) SCR::Read(.temp_crlexport_agent.crlfilename);
+        if (crlfile == nil)  crlfile = "";
+        fileformat       = SCR::Read(.temp_crlexport_agent.crlfileformat) == "der" ? `ffder:`ffpem;
+        ldapCred["hostname"] = (string) SCR::Read(.temp_crlexport_agent.ldap_hostname);
+        ldapCred["port"]     = (string) SCR::Read(.temp_crlexport_agent.ldap_port);
+        ldapCred["dn"]       = (string) SCR::Read(.temp_crlexport_agent.ldap_dn);
+        ldapCred["binddn"]   = (string) SCR::Read(.temp_crlexport_agent.ldap_binddn);
+        ldapCred["password"] = (string) SCR::Read(.temp_crlexport_agent.ldap_password);
+        cleanLdapCred();
+
+        SCR::UnregisterAgent(.temp_crlexport_agent);
+        y2milestone("Found config file for automatic CRL export of CA %1  and read settings.", ca);
+    }
+    else
+    {
+        y2milestone("No config file found for automatic CRL export of CA %1", ca);
+    }
+}
+
+
+
+define void writeSettings(string ca)
+{
+    string crlConf = sformat("/var/lib/CAM/%1/crl-export.conf", ca);
+    if (! (SCR::Execute(.target.bash, sformat("[ -f  %1  ]", crlConf) ) == 0))
+    {
+        SCR::Execute(.target.bash, sformat("umask 0077  &&  touch  %1", crlConf) );
+    }
+
+    SCR::RegisterAgent( .temp_crlexport_agent, `ag_ini(
+                        `IniAgent( crlConf,  crlConfFormat  ))  );
+
+    SCR::Write(.temp_crlexport_agent.periodic,   periodic ? "true":"false");
+    SCR::Write(.temp_crlexport_agent.capassword, periodic ? getPassword(ca):"" );
+
+    SCR::Write(.temp_crlexport_agent.interval_days,  sformat("%1", intervalDays));
+    SCR::Write(.temp_crlexport_agent.interval_hours, sformat("%1",intervalHours));
+
+    SCR::Write(.temp_crlexport_agent.export_file, file_active == true ? "true":"false");
+    SCR::Write(.temp_crlexport_agent.export_ldap, ldap_active == true ? "true":"false");
+
+    SCR::Write(.temp_crlexport_agent.crlfilename,   crlfile);
+    SCR::Write(.temp_crlexport_agent.crlfileformat, fileformat == `ffder ? "der":"pem");
+
+    SCR::Write(.temp_crlexport_agent.ldap_hostname, ldapCred["hostname"]:"");
+    SCR::Write(.temp_crlexport_agent.ldap_port,     ldapCred["port"]:"");
+    SCR::Write(.temp_crlexport_agent.ldap_dn,       ldapCred["dn"]:"");
+    SCR::Write(.temp_crlexport_agent.ldap_binddn,   ldapCred["binddn"]:"");
+    SCR::Write(.temp_crlexport_agent.ldap_password, ldapCred["password"]:"");
+
+    SCR::UnregisterAgent(.temp_crlexport_agent);
+
+    y2milestone("Written settings for automatic CRL export to conf file %1", crlConf);
+}
+
+
+/**
+* Editing CRL defaults of a selected CA
+* @param selected CA
+*/
+define void exportCRL (string ca) {
+
+    map ret = (map) YaPI::CaManagement::ReadCRLDefaults ($["caName":ca, "caPasswd":getPassword(ca)]);
+    y2milestone ("ReadCRLDefaults(%1) return %2", $["caName":ca], ret );
+
+    string caption = _("Export CRL");
+    // this default can only be set inside this function
+    crlfile = sformat("/var/lib/CAM/%1/crl/crl.pem", ca);
+
+
+    string help_para1 = sformat("<p><b>%1</b></p>", caption);
+    string help_para2 = _("<p>Export the CRL of this CA once by selecting <b>Export once</b>.</p>");
+    string help_para3 = _("<p>To setup a repeated recreation of the CRL select <b>Repeated recreation and export</b>. In this case set the interval for the recreation in <b>Periodic interval</b>. The interval is the sum of days and hours you set. To export every few hours set days to 0 and hours to the hourly interval. Please make sure you read and understood the <b>Security Information</b>.</p>");
+    string help_para4 = _("<p>You can activate an export of the CRL to a local file or to a LDAP server or both. Setup the respective parameters in <b>Export to local file</b> and <b>Export to LDAP</b>.</p>");
+
+    string helptext = help_para1 + help_para2 + help_para3 + help_para4;
+
+    term cradiobuttons = `VBox (
+                `RadioButtonGroup( `id(`export_mode),`VBox(
+                `Left( `RadioButton(`id(`mode_once), `opt(`notify), _("Export once"), true )),
+                `Left( `RadioButton(`id(`mode_periodically), `opt(`notify), _("Repeated recreation and export") ))
+            ))
+    );
+
+    term cldapsettings = `VBox ( `id(`ldapSettings),
+                                    `TextEntry( `id(`hostname), _("&Host Name:"), ""),
+                                    `TextEntry( `id(`port), _("&Port:"), ""),
+                                    //`HBox (`HWeight (1, `ComboBox( `id(`dn), `opt(`editable), _("&DN:"), []))),
+                                    `TextEntry( `id(`dn),  _("&DN:")),
+                                    `TextEntry( `id(`binddn), _("&Bind DN:"), ""),
+                                    `Password(  `id(`ldapPassword), _("Pass&word"))
+                               ) ;
+
+    term cfilesettings = `VBox( `id(`fileSettings), `HBox(
+                                        `TextEntry(`id(`crlfile), _("Save &as"), crlfile ),
+                                        `VBox(`VSpacing(1), `PushButton(`id(`askFile), Label::BrowseButton() ))
+                                 ),
+                                `Left( `RadioButtonGroup(`id(`fileformat),
+                                       `HBox( 
+                                              `Label(_("Export Format")),
+                                              `RadioButton(`id(`ffpem), _("PEM Format"), true ),
+                                              `RadioButton(`id(`ffder), _("DER Format") )
+                                       )
+                                 ))
+                         );
+
+    term cinterval = `Left( `id(`periodicInterval),
+                            `HBox(
+                                `VBox(`Label(_("Periodic interval:")), `VSpacing(1)),
+                                `HSpacing(3),
+                                `HSquash( `IntField( `id(`interval_days), "&days", 0, 100, 30 )), 
+                                `Label("+"),
+                                `HSquash( `IntField( `id(`interval_hours), "&hours", 0, 23, 0 )),
+                                `HSpacing(3),
+                                `VBox( `VSpacing(1), `PushButton(`id(`securityInfo), _("&Security Information")) )
+                            )
+                        );
+
+    term contents = `HBox( `HSpacing(1),
+                            `VBox(  `Left( `Heading(_("CA Name: ") + CaMgm::currentCA) ),
+                                    `VSpacing(1),
+                                    cradiobuttons,
+                                    `HBox(
+                                        `HSpacing(3),
+                                        `VBox(
+                                            `VSpacing(vspace),
+                                            `Left( `CheckBox(`id(`exportFile), `opt(`notify), _("Export to local file"), true )),
+                                            `HBox( `HSpacing(hspace), cfilesettings ),
+                                            `VSpacing(vspace),
+                                            `Left( `CheckBox(`id(`exportLDAP), `opt(`notify), _("Export to LDAP"), false )), 
+                                            `HBox( `HSpacing(hspace), cldapsettings ),
+                                            `VSpacing(vspace),
+                                            cinterval
+                                        )
+                                    )
+                                ),
+                            `HSpacing(1)
+                            );
+
+    Wizard::CreateDialog();
+    Wizard::SetContentsButtons ( _("Export CRL"), contents, helptext, Label::BackButton (), Label::OKButton ());
+    Wizard::DisableBackButton();
+
+    // fill UI with settings
+    readSettings(ca);  // read conf file if exists
+    setSettings();     // push data to UI
+    updateEnabled();   // gray out or ungray UI elements
+
+    symbol ui = nil;
+
+    repeat
+    {
+        ui = (symbol) UI::UserInput ();
+
+        if (ui == `add)
+        {
+            string add_advanced_issuer_alt_name="test";
+        }
+        if (ui == `askFile)
+        {
+            string newdirectory = UI::AskForSaveFileName( crlfile, "*.pem", _("Save as") );
+            UI::ChangeWidget(`id(`exportDirectory), `Value, newdirectory);
+        }
+        if ( contains([`mode_once, `mode_periodically, `exportFile, `exportLDAP], ui ))
+        {
+            updateEnabled();
+        }
+        if (ui == `securityInfo)
+        {
+            showSecurityInfo();
+        }
+        if (ui == `next)
+        {
+            updateEnabled();
+            fileformat    = (symbol) UI::QueryWidget(`id(`fileformat),           `Value);
+            crlfile       = (string) UI::QueryWidget(`id(`crlfile),              `Value);
+            intervalDays  = (integer) UI::QueryWidget(`id(`interval_days),       `Value);
+            intervalHours = (integer) UI::QueryWidget(`id(`interval_hours),      `Value);
+            ldapCred["hostname"] = (string) UI::QueryWidget(`id(`hostname),      `Value);
+            ldapCred["port"]     = (string) UI::QueryWidget(`id(`port),          `Value);
+            ldapCred["dn"]       = (string) UI::QueryWidget(`id(`dn),            `Value);
+            ldapCred["binddn"]   = (string) UI::QueryWidget(`id(`binddn),        `Value);
+            ldapCred["password"] = (string) UI::QueryWidget(`id(`ldapPassword),  `Value);
+            cleanLdapCred();
+
+            // TODO only write settings if export should happen periodically
+            writeSettings(ca);
+            // else export the crl once
+              // exportOnce(ca, `file)
+              // exportOnce(ca, `ldap)
+        }
+
+    }
+    until (contains ([`next, `abort], ui));
+
+    UI::CloseDialog();
+}
+
+
+}
