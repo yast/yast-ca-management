@@ -25,6 +25,7 @@
     import "YaPI::CaManagement";
     
     include "ca-management/crlDefault.ycp";
+    include "ca-management/crlExport.ycp";
 
     // help text 1/4
     string CRLHelptext = _("<p>Here, see the most important values of the CRL.</p>");
@@ -199,12 +200,14 @@
 				      `PushButton (`id (`view) , _("&View")),
 				      `PushButton (`id (`defaults) , _("&Default")),
 				      `HStretch(),
-				      `MenuButton (_("Export"),
-						   [
-						    `item(`id(`exportFile), _("to &File") ),
-						    `item(`id(`exportLDAP), _("to &LDAP"))
-						    ]
-						   ),
+                                      // Fate (#2613)
+				      `PushButton (`id (`exportDialog) , _("Export")),
+				      //`MenuButton (_("Export"),
+					//	   [
+					//	    `item(`id(`exportFile), _("to &File") ),
+					//	    `item(`id(`exportLDAP), _("to &LDAP"))
+					//	    ]
+					//	   ),
 				      `HSpacing (1)
 				      )
 			       );
@@ -223,7 +226,7 @@
      * Handle events in a tab of a dialog
      */
     symbol handleCRLTab (map event) {
-	any ui = event["ID"]:nil;    
+	any ui = event["ID"]:nil;
 	if (ui == `gererateCRL)
 	{
 	    createCRL (CaMgm::currentCA);
@@ -232,20 +235,24 @@
 	if (ui == `view)
 	{
 	    showLongCRLDescription (CaMgm::currentCA);
-	}	    	
-	if (ui == `exportLDAP)
-	{
-	    exportToLDAP ("CRL", CaMgm::currentCA, "" ,"", "", "");
 	}
-	if (ui == `exportFile)
-	{
-	    exportCRLtoFile (CaMgm::currentCA); 
-	}
+//	if (ui == `exportLDAP)
+//	{
+//	    exportToLDAP ("CRL", CaMgm::currentCA, "" ,"", "", "");
+//	}
+//	if (ui == `exportFile)
+//	{
+//	    exportCRLtoFile (CaMgm::currentCA);
+//	}
+        if (ui == `exportDialog)   // (Fate #2613)
+        {
+            exportCRL(CaMgm::currentCA);
+        }
 	if (ui == `defaults)
 	{
-	    editCRLDefaults (CaMgm::currentCA); 
-	}	
-	return (symbol) ui;	
+	    editCRLDefaults (CaMgm::currentCA);
+	}
+	return (symbol) ui;
     }
 
 }
