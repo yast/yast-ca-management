@@ -95,6 +95,7 @@ define void setSettings()
     UI::ChangeWidget(`id(`exportLDAP),  `Value, ldap_active);
 
     UI::ChangeWidget(`id(`ffpem),       `Value, fileformat == `ffpem ? true:false);
+    UI::ChangeWidget(`id(`ffder),       `Value, fileformat == `ffder ? true:false);
     UI::ChangeWidget(`id(`crlfile),     `Value, crlfile);
 
     UI::ChangeWidget(`id(`hostname),    `Value, ldapCred["hostname"]:"");
@@ -108,6 +109,7 @@ define void setSettings()
 
 define void cleanLdapCred()
 {
+    // cleanup ldap credetials hash ... remove nil values
     foreach (string key, string val, ldapCred, {
             if (val == nil) ldapCred[key]="";
     });
@@ -130,14 +132,15 @@ define void readSettings(string ca)
         intervalHours   = getHours != nil ? getHours:intervalHours; 
         file_active      = SCR::Read(.temp_crlexport_agent.export_file)   == "true" ? true:false;
         ldap_active      = SCR::Read(.temp_crlexport_agent.export_ldap)   == "true" ? true:false;
-        crlfile          = (string) SCR::Read(.temp_crlexport_agent.crlfilename);
-        if (crlfile == nil)  crlfile = "";
+        string getCrlfile  = (string) SCR::Read(.temp_crlexport_agent.crlfilename);
+        if (getCrlfile != nil && getCrlfile != "")  crlfile = getCrlfile;
         fileformat       = SCR::Read(.temp_crlexport_agent.crlfileformat) == "der" ? `ffder:`ffpem;
         ldapCred["hostname"] = (string) SCR::Read(.temp_crlexport_agent.ldap_hostname);
         ldapCred["port"]     = (string) SCR::Read(.temp_crlexport_agent.ldap_port);
         ldapCred["dn"]       = (string) SCR::Read(.temp_crlexport_agent.ldap_dn);
         ldapCred["binddn"]   = (string) SCR::Read(.temp_crlexport_agent.ldap_binddn);
         ldapCred["password"] = (string) SCR::Read(.temp_crlexport_agent.ldap_password);
+        if (! ldap_active) ldapCred = $[];
         cleanLdapCred();
 
         SCR::UnregisterAgent(.temp_crlexport_agent);
@@ -171,9 +174,10 @@ define void writeSettings(string ca)
     SCR::Write(.temp_crlexport_agent.export_file, file_active == true ? "true":"false");
     SCR::Write(.temp_crlexport_agent.export_ldap, ldap_active == true ? "true":"false");
 
-    SCR::Write(.temp_crlexport_agent.crlfilename,   crlfile);
+    SCR::Write(.temp_crlexport_agent.crlfilename,   file_active ? crlfile:"");
     SCR::Write(.temp_crlexport_agent.crlfileformat, fileformat == `ffder ? "der":"pem");
 
+    if (! ldap_active) ldapCred = $[];
     SCR::Write(.temp_crlexport_agent.ldap_hostname, ldapCred["hostname"]:"");
     SCR::Write(.temp_crlexport_agent.ldap_port,     ldapCred["port"]:"");
     SCR::Write(.temp_crlexport_agent.ldap_dn,       ldapCred["dn"]:"");
@@ -230,15 +234,15 @@ define void exportCRL (string ca) {
                                 `Left( `RadioButtonGroup(`id(`fileformat),
                                        `HBox( 
                                               `Label(_("Export Format")),
-                                              `RadioButton(`id(`ffpem), _("PEM Format"), true ),
-                                              `RadioButton(`id(`ffder), _("DER Format") )
+                                              `RadioButton(`id(`ffpem), `opt(`notify), _("PEM Format"), true ),
+                                              `RadioButton(`id(`ffder), `opt(`notify), _("DER Format") )
                                        )
                                  ))
                          );
 
     term cinterval = `Left( `id(`periodicInterval),
                             `HBox(
-                                `VBox(`Label(_("Periodic interval:")), `VSpacing(1)),
+                                `VBox(`Label(_("Periodic interval")), `VSpacing(1)),
                                 `HSpacing(3),
                                 `HSquash( `IntField( `id(`interval_days), "&days", 0, 100, 30 )), 
                                 `Label("+"),
@@ -256,7 +260,7 @@ define void exportCRL (string ca) {
                                         `HSpacing(3),
                                         `VBox(
                                             `VSpacing(vspace),
-                                            `Left( `CheckBox(`id(`exportFile), `opt(`notify), _("Export to local file"), true )),
+                                            `Left( `CheckBox(`id(`exportFile), `opt(`notify), _("Export to file"), true )),
                                             `HBox( `HSpacing(hspace), cfilesettings ),
                                             `VSpacing(vspace),
                                             `Left( `CheckBox(`id(`exportLDAP), `opt(`notify), _("Export to LDAP"), false )), 
@@ -290,12 +294,32 @@ define void exportCRL (string ca) {
         }
         if (ui == `askFile)
         {
-            string newdirectory = UI::AskForSaveFileName( crlfile, "*.pem", _("Save as") );
-            UI::ChangeWidget(`id(`exportDirectory), `Value, newdirectory);
+            string fformat = "*.pem";
+            if (fileformat == `ffder) fformat = "*.der"; 
+            string newcrlfile = UI::AskForSaveFileName( crlfile, fformat, _("Save as") );
+            if (newcrlfile != nil && newcrlfile != "") crlfile = newcrlfile;
         }
         if ( contains([`mode_once, `mode_periodically, `exportFile, `exportLDAP], ui ))
         {
             updateEnabled();
+        }
+        if (ui == `ffpem || ui == `ffder)
+        {
+            fileformat = (symbol) UI::QueryWidget(`id(`fileformat), `Value);
+            string formatstr = "";
+            string outputstr = "";
+            if (fileformat == `ffpem)
+            {
+                formatstr = "^(.*\.)der$";
+                outputstr = "\\1pem";
+            }
+            else if (fileformat == `ffder)
+            {
+                formatstr = "^(.*\.)pem$";
+                outputstr = "\\1der";
+            }
+            string newfile = regexpsub(crlfile, formatstr, outputstr);
+            if (newfile != nil && newfile != "")  crlfile = newfile;
         }
         if (ui == `securityInfo)
         {
@@ -315,12 +339,15 @@ define void exportCRL (string ca) {
             ldapCred["password"] = (string) UI::QueryWidget(`id(`ldapPassword),  `Value);
             cleanLdapCred();
 
-            // TODO only write settings if export should happen periodically
             writeSettings(ca);
             // else export the crl once
               // exportOnce(ca, `file)
               // exportOnce(ca, `ldap)
+
+            // TODO : setup Cronjob when periodically is configured
+
         }
+        setSettings();
 
     }
     until (contains ([`next, `abort], ui));
