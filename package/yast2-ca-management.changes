@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Feb  4 22:11:57 CET 2008 - jdsn@suse.de
+
+- version 2.13.35
+- support for repeated export of CRLs via cron (Fate #2613) 
+
+-------------------------------------------------------------------
 Wed Nov  7 10:37:49 CET 2007 - mc@suse.de
 
 - version 2.13.34

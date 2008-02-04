@@ -5,7 +5,7 @@
 bindir = ${exec_prefix}/bin
 sysconfdir = /etc
 
-bin_SCRIPTS = generateCRL.pl
+bin_SCRIPTS = generateCRL.pl exportCRL.pl
 
 sysconf_DATA = generateCRL.conf
 
