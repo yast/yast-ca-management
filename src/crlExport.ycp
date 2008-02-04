@@ -261,7 +261,6 @@ define void exportCRL (string ca) {
 
     term contents = `HBox( `HSpacing(1),
                             `VBox(  `Left( `Heading(_("CA Name: ") + CaMgm::currentCA) ),
-                                    `VSpacing(1),
                                     cradiobuttons,
                                     `HBox(
                                         `HSpacing(3),
