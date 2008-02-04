@@ -45,8 +45,8 @@ boolean file_active = true;      // default on
 boolean ldap_active = false;     // default off
 symbol  fileformat = `ffpem;     // default is pem
 string  crlfile = "";            // is set from inside the export function
-integer intervalDays = 30;
-integer intervalHours = 0;
+integer intervalAtHour = 0;
+integer intervalHours  = 0;
 map<string,string>  ldapCred = $[ "hostname":"",  "port":"",  "dn":"",
                                   "binddn":"",    "password":""       ];
 
@@ -63,8 +63,8 @@ define void showSecurityInfo()
                    // Translators: window caption 
                    _("Security Information"),
                    // Translators: long help text - security information
-                   `RichText(_("Warning!<br>Activating the automatic creation and export of a CRL will write the CA password to a config file on disk. The password will be stored there in plain text as it is needed to create a CRL. The file will only be readable for the root user.<br>Please note that this is a security risk if there are more people that have root access. They all will be able to read the CA password.")),
-                   50, 20
+                   `RichText(_("Warning!<br>Activating the automatic creation and export of a CRL will write the CA password to a configuration file on disk. The password will be stored there in plain text as it is needed to create a CRL. The file will only be readable for the root user.")),
+                   50, 12
             );
     seenSecurityInfo = true;
 }
@@ -88,8 +88,9 @@ define void setSettings()
     // write settings to the UI
     UI::ChangeWidget(`id(`mode_periodically), `Value, periodic);
     UI::ChangeWidget(`id(`periodicInterval),  `Enabled, periodic);
-    UI::ChangeWidget(`id(`interval_days),     `Value,  intervalDays);
+    UI::ChangeWidget(`id(`interval_athour),   `Value,  intervalAtHour);
     UI::ChangeWidget(`id(`interval_hours),    `Value,  intervalHours);
+    UI::ChangeWidget(`id(`atHourSetting),     `Enabled,  intervalHours == 24 ? true:false);
 
     UI::ChangeWidget(`id(`exportFile),  `Value, file_active);
     UI::ChangeWidget(`id(`exportLDAP),  `Value, ldap_active);
@@ -118,7 +119,7 @@ define void cleanLdapCred()
 
 define void readSettings(string ca)
 {
-    string crlConf = sformat("/var/lib/CAM/%1/crl-export.conf", ca);
+    string crlConf = sformat("/var/lib/CAM/%1/exportcrl.conf", deletechars(ca, " "));
     if (SCR::Execute(.target.bash, sformat("[ -f  %1  ]", crlConf) ) == 0 )
     {
         SCR::RegisterAgent( .temp_crlexport_agent, `ag_ini(
@@ -126,10 +127,12 @@ define void readSettings(string ca)
 
         periodic         = SCR::Read(.temp_crlexport_agent.periodic)      == "true" ? true:false;
         if (periodic) seenSecurityInfo = true;
-        integer getDays  = (integer) SCR::Read(.temp_crlexport_agent.interval_days);
-        intervalDays    = getDays != nil ? getDays:intervalDays;
-        integer getHours = (integer) SCR::Read(.temp_crlexport_agent.interval_hours);
-        intervalHours   = getHours != nil ? getHours:intervalHours; 
+        integer getAtHour = tointeger( (string)SCR::Read(.temp_crlexport_agent.interval_athour));
+        intervalAtHour    = getAtHour != nil ? getAtHour:intervalAtHour;
+        integer getHours  = tointeger( (string)SCR::Read(.temp_crlexport_agent.interval_hours));
+        intervalHours     = getHours != nil ? getHours:intervalHours;
+        if (intervalHours != 24) intervalAtHour = 0;
+
         file_active      = SCR::Read(.temp_crlexport_agent.export_file)   == "true" ? true:false;
         ldap_active      = SCR::Read(.temp_crlexport_agent.export_ldap)   == "true" ? true:false;
         string getCrlfile  = (string) SCR::Read(.temp_crlexport_agent.crlfilename);
@@ -156,7 +159,7 @@ define void readSettings(string ca)
 
 define void writeSettings(string ca)
 {
-    string crlConf = sformat("/var/lib/CAM/%1/crl-export.conf", ca);
+    string crlConf = sformat("/var/lib/CAM/%1/exportcrl.conf", deletechars(ca, " "));
     if (! (SCR::Execute(.target.bash, sformat("[ -f  %1  ]", crlConf) ) == 0))
     {
         SCR::Execute(.target.bash, sformat("umask 0077  &&  touch  %1", crlConf) );
@@ -168,8 +171,8 @@ define void writeSettings(string ca)
     SCR::Write(.temp_crlexport_agent.periodic,   periodic ? "true":"false");
     SCR::Write(.temp_crlexport_agent.capassword, periodic ? getPassword(ca):"" );
 
-    SCR::Write(.temp_crlexport_agent.interval_days,  sformat("%1", intervalDays));
-    SCR::Write(.temp_crlexport_agent.interval_hours, sformat("%1",intervalHours));
+    SCR::Write(.temp_crlexport_agent.interval_athour, intervalHours == 24 ? "0":sformat("%1", intervalAtHour));
+    SCR::Write(.temp_crlexport_agent.interval_hours,  sformat("%1", intervalHours));
 
     SCR::Write(.temp_crlexport_agent.export_file, file_active == true ? "true":"false");
     SCR::Write(.temp_crlexport_agent.export_ldap, ldap_active == true ? "true":"false");
@@ -201,12 +204,12 @@ define void exportCRL (string ca) {
 
     string caption = _("Export CRL");
     // this default can only be set inside this function
-    crlfile = sformat("/var/lib/CAM/%1/crl/crl.pem", ca);
+    crlfile = sformat("/var/lib/CAM/%1/crl/crl.pem", deletechars(ca, " "));
 
 
     string help_para1 = sformat("<p><b>%1</b></p>", caption);
     string help_para2 = _("<p>Export the CRL of this CA once by selecting <b>Export once</b>.</p>");
-    string help_para3 = _("<p>To setup a repeated recreation of the CRL select <b>Repeated recreation and export</b>. In this case set the interval for the recreation in <b>Periodic interval</b>. The interval is the sum of days and hours you set. To export every few hours set days to 0 and hours to the hourly interval. Please make sure you read and understood the <b>Security Information</b>.</p>");
+    string help_para3 = _("<p>To setup a repeated recreation of the CRL select <b>Repeated recreation and export</b>. In this case set the interval for the recreation in <b>Periodic interval</b>. If you set the interval to 24 hours you can additionally select the hour when the export should happen. Please make sure you read and understood the <b>Security Information</b>.</p>");
     string help_para4 = _("<p>You can activate an export of the CRL to a local file or to a LDAP server or both. Setup the respective parameters in <b>Export to local file</b> and <b>Export to LDAP</b>.</p>");
 
     string helptext = help_para1 + help_para2 + help_para3 + help_para4;
@@ -244,9 +247,13 @@ define void exportCRL (string ca) {
                             `HBox(
                                 `VBox(`Label(_("Periodic interval")), `VSpacing(1)),
                                 `HSpacing(3),
-                                `HSquash( `IntField( `id(`interval_days), "&days", 0, 100, 30 )), 
-                                `Label("+"),
-                                `HSquash( `IntField( `id(`interval_hours), "&hours", 0, 23, 0 )),
+                                //`HSquash( `IntField( `id(`interval_days), "&days", 0, 100, 30 )),
+                                // Translators: this is used to express a setting of  "every XX hour(s)"
+                                `Label(_("every")),
+                                `HSquash( `IntField( `id(`interval_hours), `opt(`notify), "&hour(s)", 1, 24, 12 )),
+                                // Translators: in case "every XX hour(s)" is set to 24, the user can set "at XX o'clock"
+                                `HBox(`id(`atHourSetting), `Label(_("at")),
+                                `HSquash( `IntField( `id(`interval_athour), "&o'clock", 0, 23, 3 ))),
                                 `HSpacing(3),
                                 `VBox( `VSpacing(1), `PushButton(`id(`securityInfo), _("&Security Information")) )
                             )
@@ -321,6 +328,11 @@ define void exportCRL (string ca) {
             string newfile = regexpsub(crlfile, formatstr, outputstr);
             if (newfile != nil && newfile != "")  crlfile = newfile;
         }
+        if (ui == `interval_hours  || ui == `interval_athour)
+        {
+            intervalHours = (integer) UI::QueryWidget(`id(`interval_hours),  `Value);
+            intervalAtHour= (integer) UI::QueryWidget(`id(`interval_athour), `Value);
+        }
         if (ui == `securityInfo)
         {
             showSecurityInfo();
@@ -330,7 +342,7 @@ define void exportCRL (string ca) {
             updateEnabled();
             fileformat    = (symbol) UI::QueryWidget(`id(`fileformat),           `Value);
             crlfile       = (string) UI::QueryWidget(`id(`crlfile),              `Value);
-            intervalDays  = (integer) UI::QueryWidget(`id(`interval_days),       `Value);
+            intervalAtHour= (integer) UI::QueryWidget(`id(`interval_athour),       `Value);
             intervalHours = (integer) UI::QueryWidget(`id(`interval_hours),      `Value);
             ldapCred["hostname"] = (string) UI::QueryWidget(`id(`hostname),      `Value);
             ldapCred["port"]     = (string) UI::QueryWidget(`id(`port),          `Value);
@@ -338,13 +350,66 @@ define void exportCRL (string ca) {
             ldapCred["binddn"]   = (string) UI::QueryWidget(`id(`binddn),        `Value);
             ldapCred["password"] = (string) UI::QueryWidget(`id(`ldapPassword),  `Value);
             cleanLdapCred();
-
             writeSettings(ca);
-            // else export the crl once
-              // exportOnce(ca, `file)
-              // exportOnce(ca, `ldap)
 
-            // TODO : setup Cronjob when periodically is configured
+            string cronConfFile = sformat("/etc/cron.d/yast2-ca-mgm-exportcrl-%1",ca);
+
+            if (!periodic)
+            {
+                if (file_active)
+                {
+                    string exportFormat = "PEM";
+                    if (fileformat == `ffder) exportFormat = "DER";
+                    string strret = (string) YaPI::CaManagement::ExportCRL ($[  "caName": ca,           "caPasswd" : getPassword(ca),
+                                                                                "exportFormat" : exportFormat, "destinationFile" : crlfile]);
+                    y2milestone ("ExportCRL(%1) returned %2",   $["caName": ca, "exportFormat" : exportFormat, "destinationFile" : crlfile], ret);
+                    if (strret == nil || strret != "1")
+                    {
+                        if ( Popup::YesNoHeadline(_("Export to file failed"), _("Do you want to retry?")) )
+                        {
+                            ui = `retry;
+                        }
+                    }
+                    else { Popup::Message(_("Saved to file successfully")); }
+                }
+
+                if (ldap_active)
+                {
+                    boolean boolret = (boolean) YaPI::CaManagement::ExportCRLToLDAP ($[ "caName": ca, 
+                                                                                "ldapHostname"  : ldapCred["hostname"]:"", "ldapPort" : ldapCred["port"]:"",
+                                                                                "destinationDN" : ldapCred["dn"]:"",        "BindDN"  : ldapCred["binddn"]:"",
+                                                                                 "ldapPasswd"   : ldapCred["ldap_password"]:""      ]);
+                    if (boolret)
+                    {
+                        Popup::Message(_("Saved to LDAP successfully."));
+                    }
+                    else
+                    {
+                        if ( Popup::YesNoHeadline(_("Export to LDAP failed"), _("Do you want to retry?")) )
+                        {
+                            ui = `retry;
+                        }
+                    }
+                }
+
+                // Remove the cronjob if the setting was reset
+                SCR::Execute(.target.remove, cronConfFile);
+            }
+            else
+            {
+                string configString = sformat("## Configuration of a cron job to export the CRL of the CA: %1", ca);
+                configString = configString + "\n##";
+                configString = configString + "\n## Created by yast2-ca-management";
+                configString = configString + "\n## Changes to this file will be overwritten by yast2-ca-management";
+                configString = configString + sformat("\n## Either use yast or change settings here AND in /var/lib/CAM/%1/exportcrl.conf", deletechars(ca, " "));
+                configString = configString + "\n\n\n";
+                string hourset = intervalHours == 24  ?  sformat("%1",intervalAtHour) : sformat("*/%1",intervalHours);
+                configString = configString + sformat("* %1 * * *    root    /usr/bin/exportCRL.pl -c /var/lib/CAM/%2/exportcrl.conf", hourset, deletechars(ca, " "));
+                if ( SCR::Execute(.target.bash, sformat("cat > %1 <<EOCAT\n%2\nEOCAT", cronConfFile, configString )) == 0 )
+                    y2milestone("Setup cron job for periodic recreation and export of CRLs of CA %1", ca);
+                else
+                    y2error("Failed to set up a cron job for periodic recreation and export of CRLs of CA %1", ca);
+            }
 
         }
         setSettings();

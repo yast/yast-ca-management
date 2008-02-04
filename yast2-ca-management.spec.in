@@ -41,4 +41,5 @@ Summary:	CA Management
 @schemadir@/autoyast/rnc/ca_mgm.rnc
 %doc @docdir@
 /usr/bin/generateCRL.pl
+/usr/bin/exportCRL.pl
 %attr(600, root, root) %config(noreplace) /etc/generateCRL.conf
