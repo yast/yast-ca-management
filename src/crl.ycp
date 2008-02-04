@@ -7,7 +7,7 @@
  *   CA Management
  *
  * Summary:
- *   
+ *
  *
  * Authors:
  *   Stefan Schubert <schubi@suse.de>
@@ -21,10 +21,11 @@
     textdomain "ca-management";
 
     import "Label";
-    import "CaMgm";       
+    import "CaMgm";
     import "YaPI::CaManagement";
-    
+
     include "ca-management/crlDefault.ycp";
+    include "ca-management/crlExport.ycp";
 
     // help text 1/4
     string CRLHelptext = _("<p>Here, see the most important values of the CRL.</p>");
@@ -34,14 +35,14 @@
     CRLHelptext = CRLHelptext + _("<p><b>View</b> shows a complete description.</p>");	
     // help text 4/4
     CRLHelptext = CRLHelptext + _("<p>You can <b>Export</b> the CRL to a file or LDAP Directory.</p>");
-    
+
 
     /**
      * createCRL -  creating new CRL
      * @param CA name
      * @return `again
      */
-    
+
     define symbol createCRL(string CAname)``{
 	map ret = (map) YaPI::CaManagement::ReadCRLDefaults ($["caName":CAname, "caPasswd":getPassword(CAname)]);
 	y2milestone ("ReadCRLDefaults(%1) return %2",
@@ -71,7 +72,7 @@
 	UI::SetFocus (`id(`entry));
 	symbol ui = nil;
 	repeat
- 	{
+	{
 	    ui = (symbol) UI::UserInput ();
 	    integer days = (integer) UI::QueryWidget(`id(`entry), `Value);
 	    if (ui == `ok)
@@ -90,7 +91,7 @@
 	}
 	until (contains ([`ok, `cancel], ui));
 	UI::CloseDialog ();
-	
+
 	return `again;
     }
 
@@ -199,12 +200,14 @@
 				      `PushButton (`id (`view) , _("&View")),
 				      `PushButton (`id (`defaults) , _("&Default")),
 				      `HStretch(),
-				      `MenuButton (_("Export"),
-						   [
-						    `item(`id(`exportFile), _("to &File") ),
-						    `item(`id(`exportLDAP), _("to &LDAP"))
-						    ]
-						   ),
+                       // Fate (#2613)
+                      `PushButton (`id (`exportDialog) , _("Export")),
+				      //`MenuButton (_("Export"),
+						//   [
+						//    `item(`id(`exportFile), _("to &File") ),
+						//    `item(`id(`exportLDAP), _("to &LDAP"))
+						//    ]
+						//   ),
 				      `HSpacing (1)
 				      )
 			       );
@@ -223,7 +226,7 @@
      * Handle events in a tab of a dialog
      */
     symbol handleCRLTab (map event) {
-	any ui = event["ID"]:nil;    
+	any ui = event["ID"]:nil;
 	if (ui == `gererateCRL)
 	{
 	    createCRL (CaMgm::currentCA);
@@ -232,20 +235,24 @@
 	if (ui == `view)
 	{
 	    showLongCRLDescription (CaMgm::currentCA);
-	}	    	
-	if (ui == `exportLDAP)
-	{
-	    exportToLDAP ("CRL", CaMgm::currentCA, "" ,"", "", "");
 	}
-	if (ui == `exportFile)
-	{
-	    exportCRLtoFile (CaMgm::currentCA); 
-	}
+//	if (ui == `exportLDAP)
+//	{
+//	    exportToLDAP ("CRL", CaMgm::currentCA, "" ,"", "", "");
+//	}
+//	if (ui == `exportFile)
+//	{
+//	    exportCRLtoFile (CaMgm::currentCA);
+//	}
+    if (ui == `exportDialog)   // (Fate #2613)
+    {
+        exportCRL(CaMgm::currentCA);
+    }
 	if (ui == `defaults)
 	{
-	    editCRLDefaults (CaMgm::currentCA); 
-	}	
-	return (symbol) ui;	
+	    editCRLDefaults (CaMgm::currentCA);
+	}
+	return (symbol) ui;
     }
 
 }
