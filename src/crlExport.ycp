@@ -404,7 +404,7 @@ define void exportCRL (string ca) {
                 configString = configString + "\n\n\n";
                 string hourset = intervalHours == 24  ?  sformat("%1",intervalAtHour) : sformat("*/%1",intervalHours);
                 configString = configString + sformat("* %1 * * *    root    /usr/bin/exportCRL.pl -c /var/lib/CAM/%2/exportcrl.conf", hourset, deletechars(ca, " "));
-                if ( SCR::Execute(.target.bash, sformat("cat > %1 <<EOCAT\n%2\nEOCAT", cronConfFile, configString )) == 0 )
+                if ( SCR::Execute(.target.bash, sformat("cat > %1 <<ENDOFCATsANDDOGs\n%2\nENDOFCATsANDDOGs", cronConfFile, configString )) == 0 )
                     y2milestone("Setup cron job for periodic recreation and export of CRLs of CA %1", ca);
                 else
                     y2error("Failed to set up a cron job for periodic recreation and export of CRLs of CA %1", ca);
