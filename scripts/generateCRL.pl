@@ -34,7 +34,7 @@ if(!defined $cfg) {
 @toDo = $cfg->Sections();
 
 foreach my $gencrl (@toDo) {
-    
+
     print "Process '$gencrl' ... ";
     my $ret = doit($gencrl);
     if($ret eq "") {
@@ -47,7 +47,7 @@ foreach my $gencrl (@toDo) {
 
 sub doit {
     my $caName = shift;
-    
+
     my $caPasswd   = $cfg->val($caName, "caPasswd");
     my $host       = $cfg->val($caName, "ldapHostname");
     my $port       = $cfg->val($caName, "ldapPort", 389);
@@ -70,7 +70,7 @@ sub doit {
                 'caPasswd'    => $caPasswd,
                 'days'        => $res->{days}
                };
-    
+
     $res = YaPI::CaManagement->AddCRL($data);
     if( not defined $res ) {
         $err = YaPI::CaManagement->Error();
