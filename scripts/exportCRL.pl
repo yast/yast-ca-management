@@ -7,15 +7,14 @@ BEGIN {
 use strict;
 use Getopt::Long;
 use YaPI::CaManagement;
-use Data::Dumper;
 
 
-my $err;
-my $msg;
-my $res;
-my $config     = undef;
-my $help       = undef;
-my %conf = ();
+my $err    = undef;
+my $msg    = undef;
+my $res    = undef;
+my $config = undef;
+my $help   = undef;
+my %conf   = ();
 
 
 Getopt::Long::Configure("no_ignore_case", "no_auto_abbrev");
@@ -54,7 +53,7 @@ while (<CONF>)
 {
     if ($_ =~ /^\s*([a-zA-Z0-9_-]+)\s*=\s*(\S*)\s*$/) 
     {
-        if (defined $1 && $1 ne '') 
+        if (defined $1 && $1 ne '')
         {
             if (not defined $2) {$2 = "";}
             $conf{"$1"}="$2";
@@ -78,7 +77,7 @@ if ($conf{"ldap_port"} eq "") { $conf{"ldap_port"} = 389; }
 #
 # reading default values for specified CRL
 #
-$res = YaPI::CaManagement->ReadCRLDefaults({caName => $conf{"caname"}, caPasswd  => $conf{"capassword"} });
+$res = YaPI::CaManagement->ReadCRLDefaults({'caName' => $conf{"caname"}, 'caPasswd'  => $conf{"capassword"} });
 if( not defined $res ) {
     $err = YaPI::CaManagement->Error();
     $msg = $err->{summary};
@@ -93,9 +92,9 @@ if( not defined $res ) {
 my $data = {
             'caName'      => $conf{"caname"},
             'caPasswd'    => $conf{"capassword"},
-            'days'        => $res->{days}
+            'days'        => $res->{"days"}
             };
-if (! defined ${$data}{days}  ||  ${$data}{days} eq '') { ${$data}{days} = 30; }
+if (! defined ${$data}{"days"}  ||  ${$data}{"days"} eq '') { ${$data}{"days"} = 30; }
 
 $res = YaPI::CaManagement->AddCRL($data);
 if( not defined $res ) {
@@ -146,6 +145,11 @@ if ($conf{"export_file"} eq "true")
         $err = YaPI::CaManagement->Error();
         $msg = $err->{summary};
         $msg .= "[".$err->{description}."]" if(defined $err->{description});
-        return $msg;
+        print $msg;
     }
 }
+
+if (not defined $msg)
+{ exit 0; }
+else
+{ exit 1; }
