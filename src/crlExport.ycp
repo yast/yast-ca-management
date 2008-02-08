@@ -168,6 +168,7 @@ define void writeSettings(string ca)
     SCR::RegisterAgent( .temp_crlexport_agent, `ag_ini(
                         `IniAgent( crlConf,  crlConfFormat  ))  );
 
+    SCR::Write(.temp_crlexport_agent.caname, ca);
     SCR::Write(.temp_crlexport_agent.periodic,   periodic ? "true":"false");
     SCR::Write(.temp_crlexport_agent.capassword, periodic ? getPassword(ca):"" );
 
