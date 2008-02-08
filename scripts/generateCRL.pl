@@ -57,7 +57,7 @@ sub doit {
     my $err;
     my $msg;
 
-    my $res = YaPI::CaManagement->ReadCRLDefaults({caName => $caName});
+    my $res = YaPI::CaManagement->ReadCRLDefaults({'caName' => $caName, 'caPasswd'    => $caPasswd});
     if( not defined $res ) {
         $err = YaPI::CaManagement->Error();
         $msg = $err->{summary};
