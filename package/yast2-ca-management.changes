@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Feb 18 16:04:09 CET 2008 - jdsn@suse.de
+
+- fix exportCRL.pl support for new config file and cronjobs
+- version 2.13.36
+
+-------------------------------------------------------------------
 Mon Feb  4 22:11:57 CET 2008 - jdsn@suse.de
 
 - version 2.13.35
