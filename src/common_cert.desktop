@@ -22,3 +22,4 @@ Exec=/sbin/yast2 common_cert
 Name=Common Server Certificate
 GenericName=Install an SSL certificate for server services
 X-KDE-SubstituteUID=true
+StartupNotify=true
