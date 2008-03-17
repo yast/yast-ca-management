@@ -25,3 +25,4 @@ Name=CA Management
 GenericName=Configure CAs, certificates, and requests
 
 X-KDE-SubstituteUID=true
+StartupNotify=true
