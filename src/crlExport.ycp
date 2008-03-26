@@ -352,7 +352,7 @@ define void exportCRL (string ca) {
             cleanLdapCred();
             writeSettings(ca);
 
-            string cronConfFile = sformat("/etc/cron.d/yast2-ca-mgm-exportcrl-%1",ca);
+            string cronConfFile = sformat("/etc/cron.d/suse.de-yast2-ca-mgm-exportcrl-%1",ca);
 
             if (!periodic)
             {
@@ -375,7 +375,7 @@ define void exportCRL (string ca) {
 
                 if (ldap_active)
                 {
-                    boolean boolret = (boolean) YaPI::CaManagement::ExportCRLToLDAP ($[ "caName": ca, 
+                    boolean boolret = (boolean) YaPI::CaManagement::ExportCRLToLDAP ($[ "caName": ca,
                                                                                 "ldapHostname"  : ldapCred["hostname"]:"", "ldapPort" : ldapCred["port"]:"",
                                                                                 "destinationDN" : ldapCred["dn"]:"",        "BindDN"  : ldapCred["binddn"]:"",
                                                                                  "ldapPasswd"   : ldapCred["ldap_password"]:""      ]);
