@@ -2296,7 +2296,7 @@ sub IssueCertificate {
     };
     if($@) {
         
-        return $self->SetError( summary => __("Signing Certificate failed."),
+        return $self->SetError( summary => __("Signing certificate failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
