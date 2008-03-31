@@ -359,7 +359,7 @@
 	    helptext = helptext + _("<p>The CA is valid for only specific period (<b>Valid Period</b>). Enter the time frame in days.</p>");
 
 	    // help text 4/4
-	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
+	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarantee that the generated certificate will work correctly.</p>");
 	}
 	else if (kind == "Client Certificate"
 		 || kind == "Server Certificate")
@@ -374,7 +374,7 @@
 	    helptext = helptext + _("<p>The certificate is valid for only specific period (<b>Valid Period</b>). Enter the time frame in days.</p>");
 
 	    // help text 4/4
-	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
+	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarantee that the generated certificate will work correctly.</p>");
 	}
 	else if (kind == "Client Request"
 		 || kind == "Server Request"
@@ -387,7 +387,7 @@
 	    helptext = helptext + _("<p>Each request has its own <b>Key Length</b>. Some applications that use certificates need special key lengths.</p>");
 
 	    // help text 3/3
-	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarentee that the generated certificate will work correctly.</p>");
+	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarantee that the generated certificate will work correctly.</p>");
 	}
 
         term contents = `VBox ();
