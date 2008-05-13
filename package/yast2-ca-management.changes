@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue May 13 17:59:38 CEST 2008 - mc@suse.de
+
+- 2.16.7
+- stretch password entries
+- fix closing ca management window (bnc#179781)
+
+-------------------------------------------------------------------
 Fri Mar 28 17:57:38 CET 2008 - jdsn@suse.de
 
 - integrated changes from proofreading
