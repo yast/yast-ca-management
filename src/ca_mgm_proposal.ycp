@@ -196,8 +196,8 @@
 									  `VBox (
 											 `Label("Unable to retrieve the system root password. Set a CA password to continue."),
 											 `HSpacing(10),
-											 `Password(`id(`pw1), _("&Password:"), ""),
-											 `Password(`id(`pw2), _("Co&nfirm Password"), ""),
+											 `Password(`id(`pw1), `opt(`hstretch), _("&Password:"), ""),
+											 `Password(`id(`pw2), `opt(`hstretch), _("Co&nfirm Password"), ""),
 											 `HSpacing(10),
 											 `HBox(`PushButton (`id(`cancel), `opt(`key_F9), Label::CancelButton()),
 												   `HStretch(),

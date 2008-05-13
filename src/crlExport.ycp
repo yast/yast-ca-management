@@ -228,7 +228,7 @@ define void exportCRL (string ca) {
                                     //`HBox (`HWeight (1, `ComboBox( `id(`dn), `opt(`editable), _("&DN:"), []))),
                                     `TextEntry( `id(`dn),  _("&DN:")),
                                     `TextEntry( `id(`binddn), _("&Bind DN:"), ""),
-                                    `Password(  `id(`ldapPassword), _("Pass&word"))
+                                    `Password(  `id(`ldapPassword), `opt(`hstretch),_("Pass&word"))
                                ) ;
 
     term cfilesettings = `VBox( `id(`fileSettings), `HBox(

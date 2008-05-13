@@ -182,7 +182,7 @@
 					  // popup window header
 					  `Heading (_("Enter CA Password")),
 					  `VSpacing (1),
-					  `Password( `id (`entry), _("&Password:")),
+					  `Password( `id (`entry), `opt(`hstretch), _("&Password:")),
 					  `VSpacing (1),					  
 					  `HBox (  // push button label
 						 `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
@@ -256,7 +256,7 @@
 	y2milestone ("exportToLDAP type: %1; CAname: %2, commonName: %3, email: %4, certificate: %5, subjectAltName: %6",
 		     kind,CAname,commonName,email,certificate,subjectAltName);
 	
-	passwordTerm = add (passwordTerm, `Password(  `id (`password), _("LDAP P&assword:")));	
+	passwordTerm = add (passwordTerm, `Password(`id (`password), `opt(`hstretch), _("LDAP P&assword:")));	
 	
 	if (kind == "CERT")
 	{
@@ -275,10 +275,10 @@
 									"commonName":commonName,
 									"emailAddress":email]);
 	    }		
-	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), _("Certificate &Password:")));
+	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), `opt(`hstretch), _("Certificate &Password:")));
 	    passwordTerm = add (passwordTerm, `HBox(
-						    `Password(  `id (`p12Passwd), _("&New Password:")),
-						    `Password( `id (`verifyPassword), _("&Verify Password"))
+						    `Password( `id (`p12Passwd), `opt(`hstretch), _("&New Password:")),
+						    `Password( `id (`verifyPassword), `opt(`hstretch), _("&Verify Password"))
 						    )
 				);
 	}
@@ -321,7 +321,7 @@
 Enter the required LDAP password.
 ")),
 					      `VSpacing (1),
-					      `Password(  `id (`password), _("P&assword:")),
+					      `Password( `id (`password), `opt(`hstretch), _("P&assword:")),
  					      `VSpacing (1),					  
 					      `HBox (  // push button label
 						     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
@@ -539,8 +539,8 @@ Enter the required LDAP password.
 								 )
 					       ),
 				      `HBox(
-					    `Password( `id (`PK12password), _("&New Password")),
-					    `Password( `id (`verifyPassword), _("&Verify Password"))
+					    `Password( `id (`PK12password), `opt(`hstretch), _("&New Password")),
+					    `Password( `id (`verifyPassword), `opt(`hstretch), _("&Verify Password"))
 					    ),				      
 				      `HBox ( 
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
@@ -809,10 +809,10 @@ Enter the required LDAP password.
 								       )
 								 )
 					       ),
-				      `Password( `id (`keyPassword), _("Certificate &Password:")),
+				      `Password( `id (`keyPassword), `opt(`hstretch), _("Certificate &Password:")),
 				      `HBox(
-					    `Password( `id (`PK12password), _("&New Password")),
-					    `Password( `id (`verifyPassword), _("&Verify Password"))
+					    `Password( `id (`PK12password), `opt(`hstretch), _("&New Password")),
+					    `Password( `id (`verifyPassword), `opt(`hstretch), _("&Verify Password"))
 					    ),
 				      `HBox ( 
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
@@ -968,7 +968,7 @@ Enter the required LDAP password.
 					     )
 				       ),				      
 				`VSpacing (1),
-				`Password( `id (`password), _("&Password:")),
+				`Password( `id (`password), `opt(`hstretch), _("&Password:")),
 				`VSpacing (1)
 				);
 
@@ -1103,7 +1103,7 @@ This certificate might be not practical as a common server certificate.
 				      // popup window header
 				      `Heading (_("Exporting as Common Server Certificate")),
 				      `VSpacing (1),
-				      `Password( `id (`keyPassword), _("Certificate &Password:")),
+				      `Password( `id (`keyPassword), `opt(`hstretch), _("Certificate &Password:")),
 				      `VSpacing (1),
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
@@ -1318,7 +1318,7 @@ This certificate might be not practical as a common server certificate.
 							      )
 						      )
 					     ),			       
-				      `Password( `id (`passKey), _("&Key Password")),
+				      `Password( `id (`passKey), `opt(`hstretch),_("&Key Password")),
 				      `VSpacing (1),					  
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),

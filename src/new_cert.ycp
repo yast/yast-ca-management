@@ -391,8 +391,8 @@
 	}
 
         term contents = `VBox ();
-        contents = add (contents, `Password( `id (`id_password), _("&Password:"), CaMgm::password));
-        contents = add (contents, `Password( `id (`id_verifyPassword), _("V&erify Password:"), CaMgm::verifyPassword));
+        contents = add (contents, `Password( `id (`id_password), `opt(`hstretch), _("&Password:"), CaMgm::password));
+        contents = add (contents, `Password( `id (`id_verifyPassword), `opt(`hstretch), _("V&erify Password:"), CaMgm::verifyPassword));
 	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 100, 9999, CaMgm::keyLength));
 	if (kind != "Client Request"
 	    && kind != "Server Request"

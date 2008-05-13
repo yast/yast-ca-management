@@ -95,9 +95,9 @@ Here, change the settings of this CA and certificate or import a CA and certific
 									    )
 								    )
 							   ),
-						    `HBox(`HWeight (1,`Password(`id(`pw3), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
+						    `HBox(`HWeight (1,`Password(`id(`pw3), `opt(`hstretch), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
 							  `HSpacing(2), 
-							  `HWeight (1,`Password(`id(`pw4), _("Co&nfirm Password"), confirmPassword))
+							  `HWeight (1,`Password(`id(`pw4), `opt(`hstretch), _("Co&nfirm Password"), confirmPassword))
 							  )
 						    )
 					      ),				      
@@ -130,9 +130,9 @@ Here, change the settings of this CA and certificate or import a CA and certific
 							`HWeight (1,`TextEntry( `id (`id_state), _("&State:"),
 										CaMgm::autoYaSTSettings["state"]:""))
 							),
-						  `HBox(`HWeight (1,`Password(`id(`pw1), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
+						  `HBox(`HWeight (1,`Password(`id(`pw1), `opt(`hstretch), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
 							`HSpacing(2), 
-							`HWeight (1,`Password(`id(`pw2), _("Co&nfirm Password"), confirmPassword))
+							`HWeight (1,`Password(`id(`pw2), `opt(`hstretch), _("Co&nfirm Password"), confirmPassword))
 							),
 						  `Left(`CheckBox(`id(`localServerName), `opt(`notify),
 								  _("Take Local Server Name"),
