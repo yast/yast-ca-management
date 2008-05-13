@@ -118,6 +118,11 @@
 	{
 	    ret = (symbol) UI::UserInput ();
 
+		if(ret == `cancel)
+		{
+			ret = `abort;
+		}
+		
 	    // "Default" button
 	    if (ret == `default)
 	    {

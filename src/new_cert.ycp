@@ -330,6 +330,10 @@
 		    }		
 		}
 	    }
+			if(ui == `cancel)
+			{
+				ui = `abort;
+			}
         }
         until (contains ([`back, `again, `next, `abort], ui));
 
@@ -442,8 +446,13 @@
 		    }
 		}
 	    }
+			if(ui == `cancel)
+			{
+				ui = `abort;
+			}
+
         }
-        until (contains ([`back, `next, `abort, `advancedOptions ], ui));
+        until (contains ([`back, `next, `abort, `advancedOptions, ], ui));
 
         return ui;
     }
@@ -960,6 +969,11 @@
 		    ui = `again;
 		}
 	    }
+			if(ui == `cancel)
+			{
+				ui = `abort;
+			}
+
         }
         until (contains ([`back, `next, `abort], ui));
 

@@ -72,7 +72,7 @@ define symbol MainSequence() ``{
 				`delete		: "startup"
                             ],
         "new_certCA"        : $[
-				`next       	: "startup",
+				`next       : "startup",
 				`abort		: "startup",
                             ],
         "ca_main"	    : $[

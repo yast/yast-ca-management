@@ -180,7 +180,7 @@
 		importCAFromDisk();
 	    }
         }
-        until (contains ([`createRoot, `enter, `next, `import, `delete], ui));
+        until (contains ([`createRoot, `enter, `next, `import, `delete, `cancel], ui));
 
         return ui;
     }
