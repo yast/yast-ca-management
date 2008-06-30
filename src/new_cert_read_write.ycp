@@ -757,6 +757,9 @@
 	    param["certType"] =  "server";
 	    param["caPasswd"] = getPassword(CaMgm::currentCA);
 	    //param["notext"] = "1";
+		foreach(map elem, CaMgm::prop_subject_alt_name_list, {
+																  CaMgm::adv_subject_alt_name_list = add (CaMgm::adv_subject_alt_name_list, elem);	
+															  });
 	}
 	if (kind == "Client Certificate")
 	{

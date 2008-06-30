@@ -29,6 +29,7 @@
     import "String";
 
     include "ca-management/new_cert_read_write.ycp";
+	include "ca-management/util.ycp";
 
     string func  = (string)WFM::Args(0);
     map    param = (map)WFM::Args(1);
@@ -41,7 +42,18 @@
 		string proposal = "";
 		string warning = nil;
 		symbol warning_level = nil;
-			
+
+		list<map> host_ips = getHostIPs ();
+		string hostname_bak = "";
+		
+		foreach(map elem, host_ips, {
+										 if(elem["kind"]:"" == "DNS")
+										 {
+											 hostname_bak = elem["name"]:"";
+										 }
+										 CaMgm::prop_subject_alt_name_list = add (CaMgm::prop_subject_alt_name_list, elem);	
+									 });
+		
 		map retmap = (map) SCR::Execute (.target.bash_output,
 										 "/bin/hostname --long",
 										 $[] );
@@ -52,8 +64,15 @@
 				|| !CaMgm::prop_emailChanged
 				|| force_reset))
 		{
-			ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Change the values of Server Name and E-Mail."));
-			ret = add( ret, "warning_level", `blocker );
+			if(hostname_bak == "")
+			{
+				ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Change the values of Server Name and E-Mail."));
+				ret = add( ret, "warning_level", `blocker );
+			}
+			else
+			{
+				retmap["stdout"] = hostname_bak;
+			}				
 		}
 			
 		string longhostname = strip(retmap["stdout"]:"linux.site");
