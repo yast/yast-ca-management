@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Mon Jun 30 17:45:35 CEST 2008 - mc@suse.de
+
+- version 2.17.0
+- ca_mgm_proposal: 
+          get all ip addresses of the system and try to resolve the
+          hostname of them. Write IPs and Hostnames into
+          SubjectAlternativeName if the Server Certificate. 
+          This hopefully make the created Certificate usable even 
+          if hostname --long returns the wrong hostname. 
+
+-------------------------------------------------------------------
 Fri May 16 16:40:22 CEST 2008 - jsrain@suse.cz
 
 - added categories Settings and System into desktop file
