@@ -1426,24 +1426,29 @@ This certificate might be not practical as a common server certificate.
     }
 
 
-	define list<map> getHostIPs () ``{
-		list<map> ret = [];
+	define map<string,string> getHostIPs () ``{
 
+		map<string,string> ret = $[];
+		
 		list <string> ip_addresses = splitstring(
 			 ((map<string, any>)SCR::Execute(.target.bash_output, "ip -f inet -o addr | awk '{print $4}' | awk -F \/ '{print $1}' | tr '\n' ','"))["stdout"]:"", ",") ;
 
+		list <string> ip6_addresses = splitstring(
+			 ((map<string, any>)SCR::Execute(.target.bash_output, "ip -f inet6 -o addr | awk '{print $4}' | awk -F \/ '{print $1}' | tr '\n' ','"))["stdout"]:"", ",") ;
 
+		foreach(string ip6, ip6_addresses, {
+												if(ip6 != "::1" && ip6 != "")
+												{
+													ip_addresses = add( ip_addresses, ip6);
+												}
+											});
 		foreach(string ip, ip_addresses, {
 			  // skip localhost addresses
 		      if(ip != "127.0.0.1" && ip != "127.0.0.2" && ip != "")
 			  {
 				  // add the IP address
-				  map new_entry = $[];
-				  new_entry["kind"] = "IP";
-				  new_entry["name"] = ip;
-
-				  ret = add (ret, new_entry);
-
+				  ret[ip] = "IP";
+				  
 				  // first ask the DNS server about the name for this IP address
 				  list<string> hostnames = splitstring(
 													   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("dig +noall +answer -x %1 | awk '{print $5}' | sed 's/\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
@@ -1454,11 +1459,7 @@ This certificate might be not practical as a common server certificate.
 														{
 															// add the names
 															found = true;
-															map new_entry = $[];
-															new_entry["kind"] = "DNS";
-															new_entry["name"] = hname;
-															
-															ret = add (ret, new_entry);
+															ret[hname] = "DNS";
 														}
 													});
 				  // If not found, ask the hosts file about the IP address
@@ -1471,11 +1472,7 @@ This certificate might be not practical as a common server certificate.
 															if(hname != "")
 															{
 																// add the names
-																map new_entry = $[];
-																new_entry["kind"] = "DNS";
-																new_entry["name"] = hname;
-																
-																ret = add (ret, new_entry);
+																ret[hname] = "DNS";
 															}
 														});
 				  }

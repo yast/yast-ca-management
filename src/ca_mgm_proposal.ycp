@@ -43,16 +43,20 @@
 		string warning = nil;
 		symbol warning_level = nil;
 
-		list<map> host_ips = getHostIPs ();
+		map<string,string> host_ips = getHostIPs ();
 		string hostname_bak = "";
+		CaMgm::prop_subject_alt_name_list = [];
 		
-		foreach(map elem, host_ips, {
-										 if(elem["kind"]:"" == "DNS")
+		foreach(string key, string value, host_ips, {
+										 if(value == "DNS")
 										 {
-											 hostname_bak = elem["name"]:"";
+											 hostname_bak = key;
 										 }
+										 map elem = $[];
+										 elem["kind"] = value;
+										 elem["name"] = key;
 										 CaMgm::prop_subject_alt_name_list = add (CaMgm::prop_subject_alt_name_list, elem);	
-									 });
+			 });
 		
 		map retmap = (map) SCR::Execute (.target.bash_output,
 										 "/bin/hostname --long",
@@ -274,15 +278,21 @@
 			}
 				
 			string passwordString = (string) (CaMgm::prop_passwordChanged ? _("[manually set]") : _("[root password]"));
+
+			string subAltName = "";
+			foreach(map elem, CaMgm::prop_subject_alt_name_list, {
+																	 subAltName = subAltName + elem["kind"]:"" + ":" + elem["name"]:"" + " ";
+																 });
+			
 			proposal = proposal+ HTML::List( [ _("CA Name: ") + CaMgm::prop_CAName,
 											  _("Common Name: ") + CaMgm::prop_ca_commonName,
 											  _("Server Name: ") + CaMgm::prop_server_commonName,
 											  _("Country: ") + CaMgm::prop_country,
 											  _("Password: ") + passwordString,
-											  _("E-Mail: ") + CaMgm::prop_email
+											  _("E-Mail: ") + CaMgm::prop_email,
+											  _("Alternative Names: ") + subAltName,
 											 ] );
-				
-		
+			
 			if ( size(CaMgm::prop_password) < 4)
 			{
 				ret = add( ret, "warning", _("The root password is too short for use as the password for the certificates. 
