@@ -394,9 +394,17 @@
 	    helptext = helptext + _("<p><b>Advanced Options</b> are very special options. If you change these options, SUSE cannot guarantee that the generated certificate will work correctly.</p>");
 	}
 
-        term contents = `VBox ();
-        contents = add (contents, `Password( `id (`id_password), `opt(`hstretch), _("&Password:"), CaMgm::password));
-        contents = add (contents, `Password( `id (`id_verifyPassword), `opt(`hstretch), _("V&erify Password:"), CaMgm::verifyPassword));
+	term contents = `VBox ();
+	string capasswd = "";
+	
+	if(CaMgm::currentCA != "" && CaMgm::passwdMap[CaMgm::currentCA]:"" != "")
+	{
+		capasswd = CaMgm::passwdMap[CaMgm::currentCA]:"";
+		contents = add (contents, `Left( `CheckBox( `id (`id_useCaPw), `opt (`notify, `immediate), _("&Use CA Password as Certificate Password"), false)));
+	}
+	
+	contents = add (contents, `Password( `id (`id_password), `opt(`hstretch), _("&Password:"), CaMgm::password));
+	contents = add (contents, `Password( `id (`id_verifyPassword), `opt(`hstretch), _("V&erify Password:"), CaMgm::verifyPassword));
 	contents = add (contents, `IntField( `id (`id_keyLength), _("&Key Length (bit):"), 100, 9999, CaMgm::keyLength));
 	if (kind != "Client Request"
 	    && kind != "Server Request"
@@ -404,57 +412,79 @@
 	{
 	    contents = add (contents, `IntField( `id (`id_validPeriod), _("&Valid Period (days):"), 1, 10000, CaMgm::validPeriod));
 	}
-        contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
+	contents = add (contents, `Left (`PushButton (`id (`advancedOptions),  _("&Advanced Options"))));
 
-                                // To translators: dialog label
-        Wizard::SetContents ( _("Create New ") + kind + _(" (step 2/3)"), contents, helptext, true, true);
+                          // To translators: dialog label
+	Wizard::SetContents ( _("Create New ") + kind + _(" (step 2/3)"), contents, helptext, true, true);
 	Wizard::RestoreNextButton();
-	UI::SetFocus(`id(`id_password));
+
+	if(CaMgm::currentCA != "" && CaMgm::passwdMap[CaMgm::currentCA]:"" != "")
+	{
+		UI::SetFocus(`id(`id_useCaPw));
+	}
+	else
+	{
+		UI::SetFocus(`id(`id_password));
+	}
 			
-        symbol ui = nil;
-
-        repeat
-        {
-            ui = (symbol) UI::UserInput ();
-
-            if (ui == `next ||
-		ui == `advancedOptions)
-            {
-		CaMgm::password = (string) UI::QueryWidget(`id(`id_password), `Value);
-		CaMgm::verifyPassword = (string) UI::QueryWidget(`id(`id_verifyPassword), `Value);
-		CaMgm::keyLength = (integer) UI::QueryWidget(`id(`id_keyLength), `Value);
-		if (kind != "Client Request"
-		    &&kind != "Server Request"
-		    &&kind != "Sub CA Request")
+	symbol ui = nil;
+	
+	repeat
+	{
+		ui = (symbol) UI::UserInput ();
+		
+		if (ui == `next ||
+			ui == `advancedOptions)
 		{
-		    CaMgm::validPeriod = (integer) UI::QueryWidget(`id(`id_validPeriod), `Value);
-		}
-
-		if (CaMgm::password != CaMgm::verifyPassword)
-		{
-		    UI::SetFocus(`id(`id_verifyPassword));		
-		    Popup::Error(_("Passwords are different."));
-		    ui = `again;
-		}
-		if (ui == `next)
-		{
-		    if (size (CaMgm::password) <= 0)
-		    {
-			UI::SetFocus(`id(`id_password));
-			Popup::Error(_("Password required."));
-			ui = `again;
-		    }
-		}
-	    }
-			if(ui == `cancel)
+			if(capasswd != "" && (boolean)UI::QueryWidget(`id(`id_useCaPw), `Value))
 			{
-				ui = `abort;
+				CaMgm::password       = capasswd;
+				CaMgm::verifyPassword = capasswd;
 			}
-
-        }
-        until (contains ([`back, `next, `abort, `advancedOptions, ], ui));
-
-        return ui;
+			else
+			{
+				CaMgm::password = (string) UI::QueryWidget(`id(`id_password), `Value);
+				CaMgm::verifyPassword = (string) UI::QueryWidget(`id(`id_verifyPassword), `Value);
+			}
+			CaMgm::keyLength = (integer) UI::QueryWidget(`id(`id_keyLength), `Value);
+			
+			if (kind != "Client Request"
+				&&kind != "Server Request"
+				&&kind != "Sub CA Request")
+			{
+				CaMgm::validPeriod = (integer) UI::QueryWidget(`id(`id_validPeriod), `Value);
+			}
+			
+			if (CaMgm::password != CaMgm::verifyPassword)
+			{
+				UI::SetFocus(`id(`id_verifyPassword));		
+				Popup::Error(_("Passwords are different."));
+				ui = `again;
+			}
+			if (ui == `next)
+			{
+				if (size (CaMgm::password) <= 0)
+				{
+					UI::SetFocus(`id(`id_password));
+					Popup::Error(_("Password required."));
+					ui = `again;
+				}
+			}
+	    }
+		if(ui == `cancel)
+		{
+			ui = `abort;
+		}
+		if(ui == `id_useCaPw)
+		{
+			UI::ChangeWidget(`id(`id_password), `Enabled, !((boolean)UI::QueryWidget(`id(`id_useCaPw), `Value)));
+			UI::ChangeWidget(`id(`id_verifyPassword), `Enabled, !((boolean)UI::QueryWidget(`id(`id_useCaPw), `Value)));
+		}
+		
+	}
+	until (contains ([`back, `next, `abort, `advancedOptions, ], ui));
+	
+	return ui;
     }
 
     /**
