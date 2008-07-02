@@ -349,7 +349,8 @@
 						    `item(`id(`addClientCerti), _("Add Client Certificate") )
 						    ]
 						   ),
-				      `PushButton (`id (`view) , _("&View")),
+				      `PushButton (`id (`view) ,   _("&View")),
+					  `PushButton (`id (`certcpw), _("&Change Password") ),
 				      `PushButton (`id (`revoke) , _("&Revoke")),
 				      `PushButton (`id (`delete) , _("&Delete")),
 				      `HStretch(),
@@ -376,6 +377,7 @@
 	UI::ChangeWidget (`id (`delete), `Enabled, anyitems);
 	UI::ChangeWidget (`id (`revoke), `Enabled, anyitems);
 	UI::ChangeWidget (`id (`view), `Enabled, anyitems);
+	UI::ChangeWidget (`id (`certcpw), `Enabled, anyitems);
 	UI::ChangeWidget (`id (`export), `Enabled, anyitems);
 	
 	integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
@@ -411,7 +413,7 @@
 		{
 		    currentSubjectAltName = currentSubjectAltName + "," + entry;		    
 		}
-	    });		
+	    });
 	}
 	else
 	{
@@ -434,9 +436,12 @@
 	if (ui == `view)
 	{
 	    showLongCertDescription (CaMgm::currentCA,
-				     CaMgm::currentCertificate);		
+				     CaMgm::currentCertificate);
 	}	    	
-	    
+	if(ui == `certcpw)
+	{
+		changePassword(CaMgm::currentCA, CaMgm::currentCertificate);
+	}
 	if (ui == `delete)
 	{
 	    if (Popup::ContinueCancelHeadline (_("Delete"), _("Delete current certificate?")))

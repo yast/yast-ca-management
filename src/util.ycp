@@ -161,6 +161,101 @@
 	    Hostname::CheckDomain (parts[1]:"");
     }
 
+	/**
+	 * Change password Dialog
+	 *
+	 */
+	define boolean changePassword(string CAname, string certificate)``{
+
+		string title = _("Change Certificate Password");
+		if(certificate == "")
+		{
+			title = _("Change CA Password");
+		}
+		
+		// asking user
+	    UI::OpenDialog (`opt(`decorated ),
+						`HBox( `HSpacing(2),
+							  `VBox (
+									 `VSpacing (1),
+									 // popup window header
+									 `Heading (title),
+									 `VSpacing (1),
+									 `Password( `id (`oldpw), `opt(`hstretch), _("&Old Password:")),
+									 `VSpacing (1),
+									 `Password( `id (`newpw), `opt(`hstretch), _("&New Password:")),
+									 `Password( `id (`verifynewpw), `opt(`hstretch), _("&Verify Password:")),
+									 `HBox (  // push button label
+											`PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
+											`HStretch(),
+											`PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
+										   ),
+									 `VSpacing (1)					  
+									),
+							  `HSpacing (2)
+							 )
+					   );
+		
+	    UI::SetFocus (`id(`oldpw));
+	    symbol ui = nil;
+	    repeat
+ 	    {
+			ui = (symbol) UI::UserInput ();
+
+			if (ui == `ok)
+			{
+				string oldPassword = (string) UI::QueryWidget(`id(`oldpw), `Value);
+				string newPassword = (string) UI::QueryWidget(`id(`newpw), `Value);
+				string verifyPassword = (string) UI::QueryWidget(`id(`verifynewpw), `Value);
+
+				// checking password
+
+				if(newPassword != verifyPassword)
+				{
+					Popup::Error(_("New passwords do not match."));
+					ui = `again;
+				}
+				else if ( size(newPassword) < 4)
+				{
+					Popup::Error(_("The new password is too short for use as the password for the certificates.
+ Enter a valid password for the certificates.
+"));
+					ui = `again;
+				}
+				else
+				{
+					y2milestone("Change password for '%1' '%2'", CAname, certificate);
+					map<string, any> data = $[
+											  "caName"      : CAname,
+											  "certificate" : certificate,
+											  "oldPasswd"   : oldPassword,
+											  "newPasswd"   : newPassword
+											 ];
+					boolean ret = YaPI::CaManagement::ChangePassword(data);
+
+					if(ret == nil)
+					{
+						showErrorCaManagement ();
+						ui = `again;
+					}
+					else
+					{
+						if(certificate == "")
+						{
+							CaMgm::passwdMap[CAname] = newPassword;
+							Popup::Message(_("CA Password changed."));	
+						}
+						else
+						{
+							Popup::Message(_("Certificate Password changed."));
+						}
+					}
+				}
+			}
+	    }
+	    until (contains ([`ok, `cancel], ui));
+	    UI::CloseDialog ();
+	}
     
 
     /**

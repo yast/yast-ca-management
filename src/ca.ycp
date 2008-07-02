@@ -211,6 +211,7 @@
 				      `Right (`MenuButton( _("&Advanced..."),
 							   [
 							    `item(`id(`information), _("&View") ),
+								`item(`id(`cacpw),       _("&Change CA Password")),
 							    `item(`id(`createSubCA), _("C&reate SubCA")),
 							    `item(`id(`exportFile),  _("Export to &File")),
 							    `item(`id(`exportLDAP),  _("Export to &LDAP")),
@@ -239,6 +240,10 @@
 	if (ret == `information)
 	{
 	    showLongDescriptionCA (CaMgm::currentCA);
+	}
+	if (ret == `cacpw)
+	{
+		changePassword(CaMgm::currentCA, "");
 	}
 	if (ret == `exportLDAP)
 	{
