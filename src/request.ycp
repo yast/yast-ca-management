@@ -304,16 +304,17 @@
 						   ),				      
 				      `HStretch(),
 				      `MenuButton(`id(`request),
-						  _("Request"),
-						  [
-						   `item(`id(`view), _("View") ),
+						  _("&Request"),
+						 [
+						   `item(`id(`view), _("&View") ),
+						   `item(`id(`reqcpw), _("&Change Password") ),
 						   `menu( _("Sign"),
 							  [
 							   `item(`id(`signClient), _("As Client Certificate") ),
 							   `item(`id(`signServer), _("As Server Certificate") ),
 							   `item(`id(`signCA), _("As CA Certificate") )
 							   ]),
-						   `item(`id(`delete), _("Delete") ) //,
+						   `item(`id(`delete), _("&Delete") ) //,
 						   //`item(`id(`exportFile), _("Export to File") )
 						   ]
 						  ),
@@ -367,7 +368,11 @@
 	    showLongRequestDescription (CaMgm::currentCA,
 					CaMgm::currentRequest);		
 	}	    	
-	    
+	if(ui == `reqcpw)
+	{
+		// we need to fake a certificate name
+		changePassword(CaMgm::currentCA, "00:"+CaMgm::currentRequest);
+	}
 	if (ui == `delete)
 	{
 	    if (Popup::ContinueCancelHeadline (_("Delete"), _("Delete current request?")))

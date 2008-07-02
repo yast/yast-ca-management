@@ -198,6 +198,9 @@ $bool = WriteCRLDefaults($valueMap)
 
   Write the default values for creating a CRL.
 
+$bool = ChangePassword($valueMap)
+
+  Change the password of the private key
 
 =head1 COMMON PARAMETER
 
@@ -7122,6 +7125,139 @@ sub WriteCRLDefaults {
 
     return 1;
 }
+
+
+=item *
+C<$bool = ChangePassword($valueMap)>
+
+Change the password of a keyfile.
+
+In I<$valueMap> you can define the following keys:
+
+* caName (required)
+
+* certificate (if empty, the cakey will be changed)
+
+* algorithm (the encryption algorithm, default des3)
+
+* oldPasswd
+
+* newPasswd
+
+The syntax of these values are explained in the 
+B<COMMON PARAMETER> section.
+
+The return value is "undef" on an error and "1" on success.
+
+EXAMPLE:
+
+     my $data = {
+                 'caName'      => 'My_CA',
+                 'certificate' => $certName,
+                 'oldPasswd'   => "old password",
+                 'newPasswd'   => "new password"
+                };
+     my $res = YaPI::CaManagement->ChangePassword($data);
+     if( not defined $res ) {
+         # error
+     } else {
+         print "OK\n";
+     }
+ }
+
+=cut
+
+BEGIN { $TYPEINFO{ChangePassword} = ["function", "boolean", ["map", "string", "any"]]; }
+sub ChangePassword {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $ret = undef;
+
+    # checking requires
+    if (!defined $data->{"caName"}) {
+        # parameter check failed
+        return $self->SetError( summary => __("Missing value 'caName'."),
+                                code    => "CHECK_PARAM_FAILED");
+    }
+    $caName = $data->{"caName"};
+
+    my $certificate = $data->{"certificate"};
+
+    my $newkey = undef;
+    eval {
+
+        my $repos = "$CAM_ROOT";
+        if(defined $data->{repository}) {
+            $repos = $data->{repository};
+        }
+        if ( ! exists $data->{algorithm} || !defined $data->{algorithm} || $data->{algorithm} eq "")
+        {
+            $data->{algorithm} = "des3";
+        }
+        
+        my $oldkey = "";
+        my $keyfilename = "";
+        
+        if(defined $certificate && $certificate ne "")
+        {
+            my $keyname = "";
+            
+            if($certificate =~ /:([0-9a-fA-F-]+)/)
+            {
+                $keyname = $1;
+            }
+            $keyfilename = "$repos/$caName/keys/$keyname.key";
+            
+            if( -e $keyfilename)
+            {
+                $oldkey = LIMAL::CaMgm::LocalManagement::readFile($keyfilename);
+            }
+            else
+            {
+                return $self->SetError( summary => __("Keyfile does not exist."),
+                                        description => "$keyfilename no such file or directory.",
+                                        code    => "FILE_DOES_NOT_EXIST");
+            }
+        }
+        else
+        {
+            # certificate empty == cpw on the cakey
+            $keyfilename = "$repos/$caName/cacert.key";
+            
+            if( -e $keyfilename)
+            {
+                $oldkey = LIMAL::CaMgm::LocalManagement::readFile($keyfilename);
+            }
+            else
+            {
+                return $self->SetError( summary => __("Keyfile does not exist."),
+                                        description => "$keyfilename no such file or directory.",
+                                        code    => "FILE_DOES_NOT_EXIST");
+            }
+        }
+        
+        $newkey = LIMAL::CaMgm::LocalManagement::rsaConvert($oldkey,
+                                                            $LIMAL::CaMgm::E_PEM,
+                                                            $LIMAL::CaMgm::E_PEM,
+                                                            $data->{oldPasswd},
+                                                            $data->{newPasswd},
+                                                            $data->{algorithm});
+    
+        LIMAL::CaMgm::LocalManagement::writeFile($newkey,
+                                                 $keyfilename, 1);
+
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Password change failed."),
+                                description => YaST::caUtils->exception2String($@),
+                                code => "LIMAL_CALL_FAILED");
+    }
+    return 1;
+}
+
+
 
 1;
 
