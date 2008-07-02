@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jul  2 10:40:03 CEST 2008 - mc@suse.de
+
+- provide a checkbox for using CA password as Certificate password
+  (FATE#2612)
+
+-------------------------------------------------------------------
 Mon Jun 30 17:45:35 CEST 2008 - mc@suse.de
 
 - version 2.17.0
