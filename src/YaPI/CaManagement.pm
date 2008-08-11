@@ -4552,7 +4552,7 @@ In I<$valueMap> you can define the following keys:
 * ldapPasswd (required)
 
 B<destinationDN> is the DN to the entry where to store 
-the CA. The following objectclasses are used:
+the CA. The following objectClasses are used:
 
 * cRLDistributionPoint
 
@@ -4721,7 +4721,7 @@ sub ExportCAToLDAP {
 
     my $dnList = SCR->Read(".ldap.search", {
                                             "base_dn" => $container,
-                                            "filter" => 'objectclass=*',
+                                            "filter" => 'objectClass=*',
                                             "scope" => 0,
                                             "dn_only" => 1
                                            });
@@ -4735,7 +4735,7 @@ sub ExportCAToLDAP {
 
     $dnList = SCR->Read(".ldap.search", {
                                          "base_dn" => $data->{'destinationDN'},
-                                         "filter"  => 'objectclass=*',
+                                         "filter"  => 'objectClass=*',
                                          "scope"   => 0,
                                          "dn_only" => 1
                                         });
@@ -4808,7 +4808,7 @@ In I<$valueMap> you can define the following keys:
 * ldapPasswd (required)
 
 B<destinationDN> is the DN to the entry where to store 
-the CA. The following objectclasses are used:
+the CA. The following objectClasses are used:
 
 * cRLDistributionPoint
 
@@ -4976,7 +4976,7 @@ sub ExportCRLToLDAP {
 
     my $dnList = SCR->Read(".ldap.search", {
                                             "base_dn" => $container,
-                                            "filter" => 'objectclass=*',
+                                            "filter" => 'objectClass=*',
                                             "scope" => 0,
                                             "dn_only" => 1
                                            });
@@ -4990,7 +4990,7 @@ sub ExportCRLToLDAP {
 
     $dnList = SCR->Read(".ldap.search", {
                                          "base_dn" => $data->{'destinationDN'},
-                                         "filter" => 'objectclass=*',
+                                         "filter" => 'objectClass=*',
                                          "scope" => 0,
                                          "dn_only" => 1
                                         });
@@ -5011,7 +5011,7 @@ sub ExportCRLToLDAP {
 
         my $attr = SCR->Read(".ldap.search", {
                                               "base_dn" => $data->{'destinationDN'},
-                                              "filter" => 'objectclass=cRLDistributionPoint',
+                                              "filter" => 'objectClass=cRLDistributionPoint',
                                               "scope" => 0,
                                               "attrs" => [ "certificateRevocationList" ],
                                              });
@@ -5313,7 +5313,7 @@ sub ReadLDAPExportDefaults {
         if(defined $caName && $caName ne "") {
             $ldapret = SCR->Read(".ldap.search", {
                                                   "base_dn" => $ldapMap->{'base_config_dn'},
-                                                  "filter" => "(& (objectclass=suseCaConfiguration) (cn=$caName))",
+                                                  "filter" => "(& (objectClass=suseCaConfiguration) (cn=$caName))",
                                                   "scope" => 2,
                                                   "not_found_ok" => 1,
                                                   "attrs" => [ 'suseDefaultBase' ]
@@ -5325,14 +5325,14 @@ sub ReadLDAPExportDefaults {
                                        code => "LDAP_SEARCH_FAILED");
             }
             if(@$ldapret > 0) {
-                $retMap->{'destinationDN'} = $ldapret->[0]->{susedefaultbase};
+                $retMap->{'destinationDN'} = $ldapret->[0]->{suseDefaultBase};
             }
         }
         
         if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
             $ldapret = SCR->Read(".ldap.search", {
                                                   "base_dn" => $ldapMap->{'base_config_dn'},
-                                                  "filter" => '(& (objectclass=suseCaConfiguration) (cn=defaultCA))',
+                                                  "filter" => '(& (objectClass=suseCaConfiguration) (cn=defaultCA))',
                                                   "scope" => 2,
                                                   "not_found_ok" => 1
                                                  });
@@ -5343,7 +5343,7 @@ sub ReadLDAPExportDefaults {
                                        code => "LDAP_SEARCH_FAILED");
             }
             if(@$ldapret > 0) {
-                $retMap->{'destinationDN'} = $ldapret->[0]->{susedefaultbase};
+                $retMap->{'destinationDN'} = $ldapret->[0]->{suseDefaultBase};
             }
         }
         
@@ -5364,14 +5364,14 @@ sub ReadLDAPExportDefaults {
 
         if(defined $emailAddresses[0]) {
 
-            $filter =  "(& (objectclass=inetOrgPerson) (| (cn=$commonName) ";
+            $filter =  "(& (objectClass=inetOrgPerson) (| (cn=$commonName) ";
             foreach my $em (@emailAddresses) {
                 $filter .= "(mail=$em) ";
             }
             $filter .= "))";
 
         } else {
-            $filter =  "(& (objectclass=inetOrgPerson) (cn=$commonName))";
+            $filter =  "(& (objectClass=inetOrgPerson) (cn=$commonName))";
         }
 
         $ldapret = SCR->Read(".ldap.search", {
@@ -5477,7 +5477,7 @@ sub InitLDAPcaManagement {
     $ldapret = SCR->Read(".ldap.search", 
                          {
                           "base_dn" => $ldapMap->{'base_config_dn'},
-                          "filter" => 'objectclass=*',
+                          "filter" => 'objectClass=*',
                           "scope" => 0,
                           "dn_only" => 1
                          });
@@ -5507,7 +5507,7 @@ sub InitLDAPcaManagement {
     $ldapret = SCR->Read(".ldap.search", 
                          {
                           "base_dn" => $ldapMap->{'base_config_dn'},
-                          "filter" => '(& (objectclass=suseCaConfiguration) (cn=defaultCA))',
+                          "filter" => '(& (objectClass=suseCaConfiguration) (cn=defaultCA))',
                           "scope" => 2,
                           "not_found_ok" => 1
                          });
@@ -5523,7 +5523,7 @@ sub InitLDAPcaManagement {
         # search for the default CA container 
         $ldapret = SCR->Read(".ldap.search", {
                                               "base_dn" => $defaultCAcontainer,
-                                              "filter" => 'objectclass=*',
+                                              "filter" => 'objectClass=*',
                                               "scope" => 0,
                                               "dn_only" => 1
                                              });
@@ -5577,7 +5577,7 @@ C<$bool = ExportCertificateToLDAP($valueMap)>
 
 Export a Certificate in a LDAP Directory. This function
 is designed for exporting user certificates. The destination
-entry must have the objectclass 'inetOrgPerson'.
+entry must have the objectClass 'inetOrgPerson'.
 
 In I<$valueMap> you can define the following keys: 
 
@@ -5765,7 +5765,7 @@ sub ExportCertificateToLDAP {
 
     my $dnList = SCR->Read(".ldap.search", {
                                             "base_dn" => $data->{'destinationDN'},
-                                            "filter" => 'objectclass=inetOrgPerson',
+                                            "filter" => 'objectClass=inetOrgPerson',
                                             "scope" => 0,
                                             "dn_only" => 1
                                            });

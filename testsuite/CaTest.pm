@@ -905,7 +905,7 @@ sub dummy_test {
     
     my $ldapret = SCR->Read(".ldap.search", {
                                              "base_dn" => "dc=suse,dc=de",
-                                             "filter" => "(& (objectclass=inetOrgPerson) (cn=x*))",
+                                             "filter" => "(& (objectClass=inetOrgPerson) (cn=x*))",
                                              "scope" => 2,
                                              "not_found_ok" => 1,
                                              "dn_only" => 1
