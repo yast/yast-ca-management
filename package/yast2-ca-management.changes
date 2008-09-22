@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Sep 22 17:06:17 CEST 2008 - mc@suse.de
+
+- do not accept fqdn without a '.' (bnc#428101)
+- setting fqdn to linux.site if we cannot get a hostname 
+  (bnc#428101)
+
+-------------------------------------------------------------------
 Wed Sep  3 16:28:01 CEST 2008 - mc@suse.de
 
 - version 1.17.3
