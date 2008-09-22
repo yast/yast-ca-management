@@ -1535,7 +1535,7 @@ This certificate might be not practical as a common server certificate.
 				  
 				  boolean found = false;
 				  foreach(string hname, hostnames, {
-														if(hname != "")
+														if(hname != "" && findfirstof(hname, ".") != nil)
 														{
 															// add the names
 															found = true;
@@ -1549,7 +1549,7 @@ This certificate might be not practical as a common server certificate.
 														   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("getent hosts %1 | awk '{print $2}' | sed 's/\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
 				  
 					  foreach(string hname, hostnames, {
-															if(hname != "")
+															if(hname != "" && findfirstof(hname, ".") != nil)
 															{
 																// add the names
 																ret[hname] = "DNS";
