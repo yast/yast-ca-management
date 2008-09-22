@@ -72,11 +72,14 @@
 			{
 				ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Change the values of Server Name and E-Mail."));
 				ret = add( ret, "warning_level", `blocker );
+
+                // setting dummy
+				retmap["stdout"] = "linux.site"
 			}
 			else
 			{
 				retmap["stdout"] = hostname_bak;
-			}				
+			}
 		}
 			
 		string longhostname = strip(retmap["stdout"]:"linux.site");
