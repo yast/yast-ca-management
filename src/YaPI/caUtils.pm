@@ -2248,7 +2248,7 @@ sub exception2String {
         if(exists $err->{subexception} && defined $err->{subexception})
         {
             $msg .= "\n";
-            $msg .= exception2String($err->{subexception});
+            $msg .= $self->exception2String($err->{subexception});
         }
         return $msg;
     }
