@@ -74,7 +74,7 @@
 				ret = add( ret, "warning_level", `blocker );
 
                 // setting dummy
-				retmap["stdout"] = "linux.site"
+				retmap["stdout"] = "linux.site";
 			}
 			else
 			{
@@ -83,12 +83,16 @@
 		}
 			
 		string longhostname = strip(retmap["stdout"]:"linux.site");
+        if ( longhostname == nil ) longhostname = "";  // (bnc#428101)
+
 		if(size(longhostname) <= 0)
 		{
 			longhostname = "linux.site";
 		}
 		string hostname = ((list<string>) splitstring (longhostname, "."))[0]:"";
+        if ( hostname == nil ) hostname = "";  // (bnc#428101)
 		string domain = substring (longhostname, findfirstof(longhostname,".")+1);
+        if ( domain == nil ) domain = "";  // (bnc#428101)
 				
 		if (size (domain) <= 0)
 		{
