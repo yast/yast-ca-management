@@ -19,6 +19,7 @@ use YaST::YCP;
 use ycp;
 use Date::Calc qw( Date_to_Time );
 use POSIX ();     # Needed for setlocale()
+use I18N::Langinfo qw(langinfo D_T_FMT);
 
 my $domain = "ca-management";
 
@@ -1800,15 +1801,8 @@ sub time2human {
     my $time = shift;
     my $ret  = "";
 
-    my $monHash = { "1" => "Jan", "2" => "Feb", "3" => "Mar", 
-                    "4" => "Apr", "5" => "May", "6" => "Jun",
-                    "7" => "Jul", "8" => "Aug", "9" => "Sep",
-                    "10"=> "Oct", "11"=> "Nov", "12"=> "Dec"};
-
-    my ($year,$month,$day, $hour,$min,$sec) = 
-      Date::Calc::Time_to_Date($time);
-
-    $ret = $monHash->{$month}." $day $hour:$min:$sec $year GMT";
+    my $fmt = langinfo(D_T_FMT);
+    $ret = POSIX::strftime($fmt, localtime($time));
     return $ret;
 }
 
