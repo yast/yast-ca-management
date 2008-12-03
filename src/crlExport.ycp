@@ -36,7 +36,7 @@ map uiInfo = UI::GetDisplayInfo();
 boolean textmode = (boolean) uiInfo["TextMode"]:nil;
 
 float hspace = textmode ? 4 : 3;
-float vspace = textmode ? 0 : 1;
+float vspace = textmode ? 0 : 0.5;  // less spacing (bnc#446137)
 boolean seenSecurityInfo = false;
 
 // here are our settings for the CRL of this CA
@@ -222,14 +222,18 @@ define void exportCRL (string ca) {
             ))
     );
 
-    term cldapsettings = `VBox ( `id(`ldapSettings),
+    // fix space issue (bnc#446137)
+    term cldapsettings = `HBox( `id(`ldapSettings),
+                            `Top( `VBox(
                                     `TextEntry( `id(`hostname), _("&Host Name:"), ""),
                                     `TextEntry( `id(`port), _("&Port:"), ""),
-                                    //`HBox (`HWeight (1, `ComboBox( `id(`dn), `opt(`editable), _("&DN:"), []))),
-                                    `TextEntry( `id(`dn),  _("&DN:")),
+                                    `TextEntry( `id(`dn),  _("&DN:"))
+                            )),
+                            `Top( `VBox(
                                     `TextEntry( `id(`binddn), _("&Bind DN:"), ""),
                                     `Password(  `id(`ldapPassword), `opt(`hstretch),_("Pass&word"))
-                               ) ;
+                            ))
+                         );
 
     term cfilesettings = `VBox( `id(`fileSettings), `HBox(
                                         `TextEntry(`id(`crlfile), _("Save &as"), crlfile ),
@@ -251,10 +255,12 @@ define void exportCRL (string ca) {
                                 //`HSquash( `IntField( `id(`interval_days), "&days", 0, 100, 30 )),
                                 // Translators: this is used to express a setting of  "every XX hour(s)"
                                 `Label(_("every")),
-                                `HSquash( `IntField( `id(`interval_hours), `opt(`notify), "&hour(s)", 1, 24, 12 )),
+                                // Translators: this is used to express a setting of  "every XX hour(s)"
+                                `HSquash( `IntField( `id(`interval_hours), `opt(`notify), _("&hour(s)"), 1, 24, 12 )),  // (bnc#446137)
                                 // Translators: in case "every XX hour(s)" is set to 24, the user can set "at XX o'clock"
                                 `HBox(`id(`atHourSetting), `Label(_("at")),
-                                `HSquash( `IntField( `id(`interval_athour), "&o'clock", 0, 23, 3 ))),
+                                // Translators: in case "every XX hour(s)" is set to 24, the user can set "at XX o'clock"
+                                `HSquash( `IntField( `id(`interval_athour), _("&o'clock"), 0, 23, 3 ))),  // (bnc#446137)
                                 `HSpacing(3),
                                 `VBox( `VSpacing(1), `PushButton(`id(`securityInfo), _("&Security Information")) )
                             )
