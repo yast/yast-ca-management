@@ -84,7 +84,11 @@ repeat
     {
 	importCertificateFromDisk();	
 	ui = `again;	
-    }    
+    }
+	if(ui == `cancel)
+	{
+		ui = `abort;
+	}
 }
 until (contains ([`back, `next, `abort], ui));
 Wizard::CloseDialog();
