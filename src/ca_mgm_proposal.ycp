@@ -27,6 +27,7 @@
     import "Timezone";
     import "Users";
     import "String";
+	import "Hostname";
 
     include "ca-management/new_cert_read_write.ycp";
 	include "ca-management/util.ycp";
@@ -70,11 +71,13 @@
 		{
 			if(hostname_bak == "")
 			{
-				ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Change the values of Server Name and E-Mail."));
-				ret = add( ret, "warning_level", `blocker );
+				retmap["stdout"] = Hostname::CurrentFQ();
 
-                // setting dummy
-				retmap["stdout"] = "linux.site";
+				if(retmap["stdout"]:"linux.site" == "linux.site")
+				{
+					ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Change the values of Server Name and E-Mail."));
+					ret = add( ret, "warning_level", `blocker );
+				}
 			}
 			else
 			{
@@ -82,12 +85,12 @@
 			}
 		}
 			
-		string longhostname = strip(retmap["stdout"]:"linux.site");
+		string longhostname = strip(retmap["stdout"]:"");
         if ( longhostname == nil ) longhostname = "";  // (bnc#428101)
 
 		if(size(longhostname) <= 0)
 		{
-			longhostname = "linux.site";
+			longhostname = Hostname::CurrentFQ();
 		}
 		string hostname = ((list<string>) splitstring (longhostname, "."))[0]:"";
         if ( hostname == nil ) hostname = "";  // (bnc#428101)
