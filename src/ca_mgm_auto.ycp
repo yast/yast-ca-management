@@ -28,6 +28,7 @@ import "Report";
 import "Users";
 import "CaMgm";
 import "Summary";
+import "Hostname";
 
 include "ca-management/new_cert_read_write.ycp";
 include "ca-management/util.ycp";
@@ -375,18 +376,32 @@ boolean Import (map settings) {
 	CaMgm::autoYaSTSettings["takeLocalServerName"] = settings["takeLocalServerName"]:true;
 	if (settings["takeLocalServerName"]:true )
 	{
+		map<string,string> host_ips = getHostIPs ();
+		string hostname_bak = "";
+		
+		foreach(string key, string value, host_ips, {
+														 if(value == "DNS")
+														 {
+															 hostname_bak = key;
+														 }
+													 });
+		
 	    map retmap = (map) SCR::Execute (.target.bash_output,
 					     "/bin/hostname --long",
 					     $[] );
 	    y2milestone("Hostname :%1", retmap);
-	    if (retmap["exit"]:0 != 0)
+	    if (retmap["exit"]:1 != 0)
 	    {
-		ret = false;
+			if(hostname_bak == "")
+			{
+				retmap["stdout"] = Hostname::CurrentFQ();
+			}
+			else
+			{
+				retmap["stdout"] = hostname_bak;
+			}
 	    }
-	    else
-	    {
 		CaMgm::autoYaSTSettings["server_commonName"] = strip(retmap["stdout"]:"linux.site");
-	    }
 	}
 	else
 	{
@@ -557,15 +572,31 @@ boolean Write() {
 	// create one
 	if (CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
 	{
+		map<string,string> host_ips = getHostIPs ();
+		string hostname_bak = "";
+		
+		foreach(string key, string value, host_ips, {
+														 if(value == "DNS")
+														 {
+															 hostname_bak = key;
+														 }
+													 });
+		
 	    map retmap = (map) SCR::Execute (.target.bash_output,
-					     "/bin/hostname --long",
-					     $[] );
+										 "/bin/hostname --long",
+										 $[] );
 
 	    y2milestone("Hostname :%1", retmap);
-	    if (retmap["exit"]:0 != 0)
+	    if (retmap["exit"]:1 != 0)
 	    {
-		Report::Error(_("Cannot evaluate the name of the local machine."));
-		success = false;
+			if(hostname_bak == "")
+			{
+				retmap["stdout"] = Hostname::CurrentFQ();
+			}
+			else
+			{
+				retmap["stdout"] = hostname_bak;
+			}
 	    }
 	    CaMgm::prop_server_commonName = strip(retmap["stdout"]:"linux.site");
 	}
