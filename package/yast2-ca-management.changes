@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Jan  7 15:28:27 CET 2009 - mc@suse.de
+
+- version 2.17.9
+- use Hostname::CurrentFQ() as hostname fallback in proposal.
+  (bnc#460737)
+
+-------------------------------------------------------------------
 Fri Dec 12 13:19:48 CET 2008 - mc@suse.de
 
 - version 2.17.8
