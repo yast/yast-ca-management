@@ -58,7 +58,7 @@
     define symbol new_cert1 (string kind) ``{
 
 	string helptext	= "";
-        // help text 1/5
+        // help text 1/7
 	if (kind == "Root CA"
 	    || kind == "Sub CA")
 	{
@@ -67,27 +67,29 @@
 	else if (kind == "Client Certificate"
 		 || kind == "Server Certificate")
 	{
-	    helptext = _("<p>To generate a new certificate, some entries are needed.</p>");	
+	    helptext = _("<p>To generate a new certificate, some entries are needed.</p>");
 	}
 	else if (kind == "Client Request"
 		 || kind == "Server Request"
 		 || kind == "Sub CA Request")
 	{
-	    helptext = _("<p>To generate a new request, some entries are needed.</p>");	    	
+	    helptext = _("<p>To generate a new request, some entries are needed.</p>");
 	}
 	else
 	{
-	    helptext = "<p>ERROR Wrong kind. FIX IT</p>";	
+	    helptext = "<p>ERROR Wrong kind. FIX IT</p>";
 	}
-	
-        // help text 2/5
+
+        // help text 2/7
         helptext = helptext + _("<p>It depends on the policy defined in the configuration file.</p>");
-        // help text 3/5
+        // help text 4/7
+        helptext = helptext + _("<p>Only US ASCII characters are allowed.</p>");
+        // help text 5/7
 	if (kind == "Root CA"
 	    || kind == "Sub CA")
 	{
-	    helptext = helptext + _("<p><b>CA Name</b> is the name of a CA certificate. Use only ASCII characters, \"-\", and \"_\".</p>");
-	    helptext = helptext + _("<p><b>Common Name</b> is the name of the CA.</p>");	
+	    helptext = helptext + _("<p><b>CA Name</b> is the name of a CA certificate. Use only the characters, \"a-z\", \"A-Z\", \"-\", and \"_\".</p>");
+	    helptext = helptext + _("<p><b>Common Name</b> is the name of the CA.</p>");
 	}
 	else
 	{
@@ -101,9 +103,9 @@
 		helptext = helptext + _("<p><b>Common Name</b> is the fully qualified domain name of the server.</p>");
 	    }
 	}
-        // help text 4/5
+        // help text 6/7
         helptext = helptext + _("<p><b>E-Mail Addresses</b> are valid e-mail addresses of the user or server administrator.</p>");
-        // help text 5/5
+        // help text 7/7
         helptext = helptext + _("<p><b>Organization</b>, <b>Organizational Unit</b>, <b>Locality</b>, and <b>State</b> are often optional.</p>");
 
 
