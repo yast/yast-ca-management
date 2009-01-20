@@ -1383,7 +1383,7 @@ This certificate might be not practical as a common server certificate.
 				      `Heading (_("Import CA from Disk")),
 				      `TextEntry( `id (`caName), _("&CA Name:")),
 				      `HBox ( 
-					     `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of Certificate"))),
+					     `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of CA Certificate"))),
 					     `HWeight(1,`VBox(
 							      `Label(""),
 							      `PushButton (`id(`browseCert), `opt( `notify), Label::BrowseButton())
