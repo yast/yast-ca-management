@@ -201,7 +201,7 @@
 						
 					CaMgm::prop_server_commonName = ((list)defaultSCmap["CN"]:[])[0]:"";
 							
-							
+
 					ret = $[ "workflow_sequence" : `auto ];
 				}
 				else
@@ -211,19 +211,18 @@
 				}
 			}
 		}
-			
-		if (!check_mail_address(CaMgm::prop_email))
-		{
-			ret = add( ret, "warning", _("Invalid e-mail format."));
-			ret = add( ret, "warning_level", `blocker );
-		}
-			
+
 		if (CaMgm::prop_selection == `def)
 		{
-				
+			if (!check_mail_address(CaMgm::prop_email))
+			{
+				ret = add( ret, "warning", _("Invalid e-mail format."));
+				ret = add( ret, "warning_level", `blocker );
+			}
+
 			if ( Users::GetRootPassword() == "" && size(CaMgm::prop_password) == 0)
 			{
-					
+
 				UI::OpenDialog (`opt(`decorated ),
 								`HBox(`VSpacing(10),
 									  `VBox (
