@@ -10,7 +10,7 @@ BuildArchitectures:	noarch
 Summary:	YaST2 - CAs, Certificates and Requests Management
 
 %description
--
+Managing CAs, Certificates and Requests in an understanding way.
 
 @PREP@
 
