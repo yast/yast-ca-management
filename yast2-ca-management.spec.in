@@ -7,7 +7,7 @@ Requires:   limal-ca-mgm-perl >= 1.4.0
 
 BuildArchitectures:	noarch
 
-Summary:	CA Management
+Summary:	YaST2 - CAs, Certificates and Requests Management
 
 %description
 -
