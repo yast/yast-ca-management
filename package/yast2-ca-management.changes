@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Sep 15 15:10:38 CEST 2009 - mc@suse.de
+
+- version 2.18.1
+- fix repeated msgid (bnc#535805)
+
+-------------------------------------------------------------------
 Fri Jun 19 12:40:01 CEST 2009 - mvidner@suse.cz
 
 - Using autodocs-ycp.ami, which contains a fix for automake 1.11.

@@ -1883,7 +1883,7 @@ sub checkCommonValues {
             if($key eq "emailAddress") {
                 if (!defined $data->{$key} || $data->{$key} !~ /^[^@]+@[^@]+$/) {
                     return $self->SetError(summary => sprintf(
-                                                              __("Invalid value'%s' for parameter '%s'."),
+                                                              __("Invalid value '%s' for parameter '%s'."),
                                                               $data->{$key}, $key),
                                            code    => "PARAM_CHECK_FAILED");
                 }
@@ -2009,55 +2009,55 @@ sub checkCommonValues {
                 if ($p =~ /^\s*email:(.+)\s*$/) {
                     if (!defined $1 || $1 !~ /^[^@]+@[^@]+$/) {
                         return $self->SetError(summary => sprintf(
-                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                           __("Invalid value '%s' for parameter '%s'."),
                                                             $p, $key),
                                                code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*URI:(.+)\s*$/) {
                     if (!defined $1 || !URL->Check("$1")) {
                         return $self->SetError(summary =>  sprintf(
-                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                           __("Invalid value '%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*DNS:(.+)\s*$/) {
                     if (!defined $1 || !Hostname->CheckDomain("$1")) {
                         return $self->SetError(summary => sprintf(
-                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                           __("Invalid value '%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*RID:(.+)\s*$/) {
                     if (!defined $1 || $1 !~ /^(\d+\.)+\d+$/) {
                         return $self->SetError(summary => sprintf(
-                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                           __("Invalid value '%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*IP:(.+)\s*$/) {
                     if (!defined $1 || !(IP->Check4("$1") || IP->Check6("$1")) ) {
                         return $self->SetError(summary => sprintf(
-                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                           __("Invalid value '%s' for parameter '%s'."),
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*MS-UPN:(.+)\s*$/) {
                     if (!defined $1 || $1 !~ /^[^@]+@[^@]+$/) {
                         return $self->SetError(summary => sprintf(
-                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                           __("Invalid value '%s' for parameter '%s'."),
                                                             $p, $key),
                                                code    => "PARAM_CHECK_FAILED");
                     }
                 } elsif ($p =~ /^\s*K5PN:(.+)\s*$/) {
                     if (!defined $1 || $1 !~ /^[^@]+@[^@]+$/) {
                         return $self->SetError(summary => sprintf(
-                                                           __("Invalid value'%s' for parameter '%s'."),
+                                                           __("Invalid value '%s' for parameter '%s'."),
                                                             $p, $key),
                                                code    => "PARAM_CHECK_FAILED");
                     }
                 } else {
                     return $self->SetError(summary => sprintf(
-                                                            __("Invalid value'%s' for parameter '%s'."),
+                                                            __("Invalid value '%s' for parameter '%s'."),
                                                             $p, $key),
                                           code    => "PARAM_CHECK_FAILED");
                 }
@@ -2079,7 +2079,7 @@ sub checkCommonValues {
             $data->{$key} =~ /^\s*(critical)?\s*,*\s*(.*)/ ;
             if (!URL->Check("$2")) {
                 return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $2, $key),
                                       code    => "PARAM_CHECK_FAILED");
             }
@@ -2109,7 +2109,7 @@ sub checkCommonValues {
                                            "msCodeInd", "msCodeCom", "msCTLSign",
                                            "msSGC", "msEFS", "nsSGC")));
                 return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key), 
                                       code    => "PARAM_CHECK_FAILED");
             }
@@ -2133,47 +2133,47 @@ sub checkCommonValues {
                     if ($location =~ /^\s*email:(.+)\s*$/) {
                         if (!defined $1 || $1 !~ /^[^@]+@[^@]+$/) {
                             return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*URI:(.+)\s*$/) {
                         if (!defined $1 || !URL->Check("$1")) {
                             return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*DNS:(.+)\s*$/) {
                         if (!defined $1 || !Hostname->CheckDomain("$1")) {
                             return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*RID:(.+)\s*$/) {
                         if (!defined $1 || $1 !~ /^(\d+\.)+\d+$/) {
                             return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } elsif ($location =~ /^\s*IP:(.+)\s*$/) {
                         if (!defined $1 || !(IP->Check4("$1") || IP->Check6("$1")) ) {
                             return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key),
                                                   code    => "PARAM_CHECK_FAILED");
                         }
                     } else {
                         return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
                 } else {
                     return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $accessOID, $key),
                                           code    => "PARAM_CHECK_FAILED");
                 }
@@ -2194,13 +2194,13 @@ sub checkCommonValues {
                 if ($p =~ /^\s*URI:(.+)\s*$/) {
                     if (!defined $1 || !URL->Check("$1")) {
                         return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $1, $key),
                                                code    => "PARAM_CHECK_FAILED");
                     }
                 } else {
                     return $self->SetError(summary => sprintf(
-                                                          __("Invalid value'%s' for parameter '%s'."),
+                                                          __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key),
                                            code    => "PARAM_CHECK_FAILED");
                 }
