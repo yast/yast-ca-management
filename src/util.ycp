@@ -1126,7 +1126,8 @@ Certificate password</p>
 		}
 	    }
 	}
-	
+
+        Wizard::CloseDialog();
 	return success;
     }
 
