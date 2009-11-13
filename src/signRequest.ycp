@@ -340,6 +340,55 @@
 	    
 	    integer counter = 0;
 	    foreach ( string entry, (list<string>) extMap["value"]:[], ``{
+                if ( entry == "TLS Web Server Authentication" )
+                {
+                    entry = "serverAuth";
+                }
+                else if ( entry == "TLS Web Client Authentication" )
+                {
+                    entry = "clientAuth";
+                }
+                else if ( entry == "Code signing" )
+                {
+                    entry = "codeSigning";
+                }
+                else if ( entry == "E-mail Protection" )
+                {
+                    entry = "emailProtection";
+                }
+                else if ( entry == "Time Stamping" )
+                {
+                    entry = "timeStamping";
+                }
+                else if ( entry == "Microsoft Individual Code Signing" )
+                {
+                    entry = "msCodeInd";
+                }
+                else if ( entry == "Microsoft Commercial Code Signing" )
+                {
+                    entry = "msCodeCom";
+                }
+                else if ( entry == "Microsoft Trust List Signing" )
+                {
+                    entry = "msCTLSign";
+                }
+                else if ( entry == "Microsoft Server Gated Crypto" )
+                {
+                    entry = "msSGC";
+                }
+                else if ( entry == "Microsoft Encrypted File System" )
+                {
+                    entry = "msEFS";
+                }
+                else if ( entry == "Netscape Server Gated Crypto" )
+                {
+                    entry = "nsSGC";
+                }
+                else if ( entry == "Microsoft Smartcardlogin" )
+                {
+                    entry = "msSmartcardLogin";
+                }
+
 		if (counter == 0)
 		{
 		    CaMgm::exp_extendedKeyUsage = CaMgm::exp_extendedKeyUsage +
