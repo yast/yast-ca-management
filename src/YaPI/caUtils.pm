@@ -2107,7 +2107,7 @@ sub checkCommonValues {
                 next if(grep( ($_ eq $p), ("serverAuth", "clientAuth", "codeSigning",
                                            "emailProtection", "timeStamping",
                                            "msCodeInd", "msCodeCom", "msCTLSign",
-                                           "msSGC", "msEFS", "nsSGC")));
+                                           "msSGC", "msEFS", "nsSGC", "msSmartcardLogin")));
                 return $self->SetError(summary => sprintf(
                                                           __("Invalid value '%s' for parameter '%s'."),
                                                           $p, $key), 
