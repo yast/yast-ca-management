@@ -36,6 +36,14 @@
     map    param = (map)WFM::Args(1);
     map    ret   = $[];
 
+	if (!CaMgm::prop_CANameChanged || CaMgm::prop_CAName == "")
+	{
+		CaMgm::prop_CAName = "YaST_Default_CA";
+	}
+    if (!CaMgm::prop_passwordChanged || size(CaMgm::prop_password) < 0 )
+	{
+		CaMgm::prop_password = Users::GetRootPassword();
+	}
 
     if (func == "MakeProposal")
     {
@@ -110,17 +118,9 @@
 		{
 			CaMgm::prop_server_commonName = longhostname;
 		}
-		if (!CaMgm::prop_CANameChanged)
-		{
-			CaMgm::prop_CAName = "YaST_Default_CA";
-		}
 		if (!CaMgm::prop_countryChanged)
 		{
 			CaMgm::prop_country = Timezone::GetCountryForTimezone("");
-		}
-		if (!CaMgm::prop_passwordChanged)
-		{
-			CaMgm::prop_password = Users::GetRootPassword();
 		}
 		if (!CaMgm::prop_emailChanged)
 		{
@@ -137,20 +137,31 @@
 		if (force_reset)
 		{
 			y2milestone("FORCE RESET");
+            CaMgm::prop_keep_ca = false;
 			if (CaMgm::prop_settingsWritten)
 			{
 				if( !Popup::YesNo(_("CA Management") + "\n" +
 								  _("Settings have already been written.") + "\n" +
 								  _("Delete the old settings?")))
 				{
+                    CaMgm::prop_keep_ca = true;
 					ret = $[ "workflow_sequence" : `auto ];
 				}
 				else
 				{
-					YaPI::CaManagement::DeleteCA ($[   "caName":CaMgm::currentCA,
-													"caPasswd":getPassword(CaMgm::currentCA),
-													"force": true]);
-					CaMgm::prop_settingsWritten = false;
+                    string password = getPassword(CaMgm::prop_CAName);
+                    if(password == nil || password == "")
+                    {
+                        CaMgm::prop_keep_ca = true;
+ 					    ret = $[ "workflow_sequence" : `auto ];
+                    }
+                    else
+                    {
+				        YaPI::CaManagement::DeleteCA ($["caName"  : CaMgm::prop_CAName,
+					  	   						        "caPasswd": password,
+												        "force"   : true]);
+					    CaMgm::prop_settingsWritten = false;
+                    }
 				}
 			}
 			else
@@ -159,7 +170,6 @@
 				CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";
 				CaMgm::prop_CAName = "YaST_Default_CA";
 				CaMgm::prop_country = Timezone::GetCountryForTimezone("");
-				CaMgm::prop_password = Users::GetRootPassword();
 				CaMgm::prop_email = "postmaster@" + domain;
 				CaMgm::prop_server_commonName = longhostname;
 			}
@@ -177,10 +187,11 @@
  
 			if (CaMgm::prop_settingsWritten)
 			{
-				if( !Popup::YesNo(_("CA Management") + "\n" +
+				if( CaMgm::prop_keep_ca || !Popup::YesNo(_("CA Management") + "\n" +
 								  _("Settings have already been written.") + "\n" +
 								  _("Delete the old settings?")))
 				{
+                    CaMgm::prop_keep_ca = true;
 					// read the details directly from the server certificate
 					map defaultServerCert = (map) YaPI::CaManagement::ReadFile( $[
 																				  "inFile":"/etc/ssl/servercerts/servercert.pem",
@@ -194,9 +205,7 @@
 					CaMgm::prop_country       = ((list)defaultServerCertIssuer["C"]:[])[0]:"";
 					CaMgm::prop_email         = ((list)defaultServerCertIssuer["emailAddress"]:[])[0]:"";
 					CaMgm::prop_CAName        = CaMgm::prop_CAName;
-					CaMgm::prop_password      = Users::GetRootPassword();
- 
- 
+
 					map defaultSCmap =  defaultServerCert["DN_HASH"]:$[];
 						
 					CaMgm::prop_server_commonName = ((list)defaultSCmap["CN"]:[])[0]:"";
@@ -205,9 +214,20 @@
 					ret = $[ "workflow_sequence" : `auto ];
 				}
 				else
-				{   // delete the default Root CA manually because the root PW may be different in a repeated run of second-Stage
-					SCR::Execute(.target.bash, sformat(" rm -rf  /var/lib/CAM/%1 ", CaMgm::prop_CAName  ));
-					CaMgm::prop_settingsWritten = false;
+                {
+                    string password = getPassword(CaMgm::prop_CAName);
+                    if(password == nil || password == "")
+                    {
+                        CaMgm::prop_keep_ca = true;
+ 					    ret = $[ "workflow_sequence" : `auto ];
+                    }
+                    else
+                    {
+				        YaPI::CaManagement::DeleteCA ($["caName"  : CaMgm::prop_CAName,
+					  	   						        "caPasswd": password,
+												        "force"   : true]);
+					    CaMgm::prop_settingsWritten = false;
+                    }
 				}
 			}
 		}
@@ -220,7 +240,7 @@
 				ret = add( ret, "warning_level", `blocker );
 			}
 
-			if ( Users::GetRootPassword() == "" && size(CaMgm::prop_password) == 0)
+			if ( !CaMgm::prop_keep_ca && size(CaMgm::prop_password) < 4)
 			{
 
 				UI::OpenDialog (`opt(`decorated ),
@@ -273,8 +293,12 @@
 					
 				UI::CloseDialog ();
 			}
-				
-			if (!CaMgm::prop_passwordChanged)
+            if (CaMgm::prop_keep_ca)
+            {
+				proposal = HTML::Para(_("Current default CA and certificate.")
+									  + HTML::Newline());
+            }
+            else if (!CaMgm::prop_passwordChanged)
 			{
 				proposal = HTML::Para(_("Creating default CA and certificate.")
 									  + HTML::Newline()
@@ -302,7 +326,7 @@
 											  _("Alternative Names: ") + subAltName,
 											 ] );
 			
-			if ( size(CaMgm::prop_password) < 4)
+			if ( !CaMgm::prop_keep_ca && size(CaMgm::prop_password) < 4)
 			{
 				ret = add( ret, "warning", _("The root password is too short for use as the password for the certificates. 
  Enter a valid password for the certificates or disable certificate creation.
@@ -328,21 +352,35 @@
     }
     else if (func == "AskUser")
     {
+        CaMgm::prop_keep_ca = false;
+        string current_CAName = CaMgm::prop_CAName;
+
 		any sequence = WFM::CallFunction ( "ca_select_proposal", [] );
+
 		if (CaMgm::prop_settingsWritten)
 		{
 			if( !Popup::YesNo(_("CA Management") + "\n" +
 							  _("Settings have already been written.") + "\n" +
 							  _("Delete the old settings?")))
 			{
+                CaMgm::prop_keep_ca = true;
 				ret = $[ "workflow_sequence" : `auto ];
 			}
 			else
 			{
-				YaPI::CaManagement::DeleteCA ($["caName":CaMgm::currentCA,
-												"caPasswd":getPassword(CaMgm::currentCA),
-												"force": true]);
-				CaMgm::prop_settingsWritten = false;
+                string password = getPassword(current_CAName);
+                if(password == nil || password == "")
+                {
+                    CaMgm::prop_keep_ca = true;
+    			    ret = $[ "workflow_sequence" : `auto ];
+                }
+                else
+                {
+	    	        YaPI::CaManagement::DeleteCA ($["caName"  : current_CAName,
+				  	   						        "caPasswd": password,
+											        "force"   : true]);
+				    CaMgm::prop_settingsWritten = false;
+                }
 			}
 		}
     }
