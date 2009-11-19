@@ -139,6 +139,8 @@ global list<map> prop_subject_alt_name_list = [];
 
 global boolean adv_subject_alt_name_show_email = false;
 
+global boolean prop_keep_ca = false;
+
 /**
  * variables for new CA/Certificate/Request
  */

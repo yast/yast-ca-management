@@ -3,6 +3,12 @@ Fri Nov 13 11:05:18 CET 2009 - mc@suse.de
 
 - fix close dialog while importing certificates (bnc#554677) 
 - translate long named EKUs to the short name (bnc#546154)
+- write only global ip addresses into subjectAltName of the
+  server certificate (bnc#556596)
+- reduce proposal creation time in case of not configured
+  DNS server (bnc#556596)
+- fix delete CA (bnc#556908)
+- ask for deleting the CA only one time (bnc#556906)
 
 -------------------------------------------------------------------
 Tue Sep 15 15:10:38 CEST 2009 - mc@suse.de

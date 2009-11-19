@@ -295,6 +295,7 @@
 		    {
 			showErrorCaManagement ();
 			password = nil;
+            ui = (symbol) `retry;
 		    }
 		    else
 		    {
@@ -1512,10 +1513,10 @@ This certificate might be not practical as a common server certificate.
 		map<string,string> ret = $[];
 		
 		list <string> ip_addresses = splitstring(
-			 ((map<string, any>)SCR::Execute(.target.bash_output, "ip -f inet -o addr | awk '{print $4}' | awk -F \/ '{print $1}' | tr '\n' ','"))["stdout"]:"", ",") ;
+			 ((map<string, any>)SCR::Execute(.target.bash_output, "ip -f inet -o addr show scope global | awk '{print $4}' | awk -F \/ '{print $1}' | tr '\n' ','"))["stdout"]:"", ",") ;
 
 		list <string> ip6_addresses = splitstring(
-			 ((map<string, any>)SCR::Execute(.target.bash_output, "ip -f inet6 -o addr | awk '{print $4}' | awk -F \/ '{print $1}' | tr '\n' ','"))["stdout"]:"", ",") ;
+			 ((map<string, any>)SCR::Execute(.target.bash_output, "ip -f inet6 -o addr show scope global | awk '{print $4}' | awk -F \/ '{print $1}' | tr '\n' ','"))["stdout"]:"", ",") ;
 
 		foreach(string ip6, ip6_addresses, {
 												if(ip6 != "::1" && ip6 != "")
@@ -1532,7 +1533,7 @@ This certificate might be not practical as a common server certificate.
 				  
 				  // first ask the DNS server about the name for this IP address
 				  list<string> hostnames = splitstring(
-													   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("dig +noall +answer -x %1 | awk '{print $5}' | sed 's/\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
+													   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("dig +noall +answer +time=2 +tries=1 -x %1 | awk '{print $5}' | sed 's/\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
 				  
 				  boolean found = false;
 				  foreach(string hname, hostnames, {
