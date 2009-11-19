@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Wed Nov 18 17:32:12 CET 2009 - mc@suse.de
+
+- version 2.17.14
+- write only global ip addresses into subjectAltName of the
+  server certificate (bnc#556596)
+- reduce proposal creation time in case of not configured 
+  DNS server (bnc#556596)
+- fix delete CA (bnc#556908)
+- ask for deleting the CA only one time (bnc#556906)
+
+-------------------------------------------------------------------
 Fri Nov 13 14:49:37 CET 2009 - mc@suse.de
 
 - version 2.17.13
