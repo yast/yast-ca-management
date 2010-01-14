@@ -56,7 +56,7 @@ my $transMap = {
                 'X509v3 Subject Key Identifier'   => 'subjectKeyIdentifier',
                 'X509v3 Certificate Policies'     => 'certificatePolicies',
                 'Authority Information Access'    => 'authorityInfoAccess',
-                
+
                 'nsCaRevocationUrl'      => 'Netscape CA Revocation Url'    ,
                 'nsCaPolicyUrl'          => 'Netscape CA Policy Url'        ,
                 'nsBaseUrl'              => 'Netscape Base Url'             ,
@@ -70,12 +70,12 @@ my $transMap = {
                 'keyUsage'               => 'X509v3 Key Usage'              ,
                 'issuserAltName'         => 'X509v3 Issuer Alternative Name',
                 'subjectAltName'         => 'X509v3 Subject Alternative Name',
-                'authorityKeyIdentifier' => 'X509v3 Authority Key Identifier', 
+                'authorityKeyIdentifier' => 'X509v3 Authority Key Identifier',
                 'extendedKeyUsage'       => 'X509v3 Extended Key Usage'     ,
                 'subjectKeyIdentifier'   => 'X509v3 Subject Key Identifier' ,
                 'certificatePolicies'    => 'X509v3 Certificate Policies'   ,
                 'authorityInfoAccess'    => 'Authority Information Access'  ,
-                     
+
                 # double entry            'email'         => 'email',
                 'URI'           => 'URI',
                 'DNS'           => 'DNS',
@@ -100,17 +100,17 @@ my $transMap = {
                 'msEFS'           => 'Microsoft Encrypted File System',
                 'nsSGC'           => 'Netscape Server Gated Crypto',
 
-                'SSL/TLS Web Server Authentication' => 'serverAuth'    , 
-                'SSL/TLS Web Client Authentication' => 'clientAuth'    , 
-                'Code signing'                      => 'codeSigning'   , 
+                'SSL/TLS Web Server Authentication' => 'serverAuth'    ,
+                'SSL/TLS Web Client Authentication' => 'clientAuth'    ,
+                'Code signing'                      => 'codeSigning'   ,
                 'E-mail Protection'                 => 'emailProtection',
-                'Trusted Timestamping'              => 'timeStamping'  , 
-                'Microsoft Individual Code Signing' => 'msCodeInd'     , 
-                'Microsoft Commercial Code Signing' => 'msCodeCom'     , 
-                'Microsoft Trust List Signing'      => 'msCTLSign'     , 
-                'Microsoft Server Gated Crypto'     => 'msSGC'         , 
-                'Microsoft Encrypted File System'   => 'msEFS'         , 
-                'Netscape Server Gated Crypto'      => 'nsSGC'         , 
+                'Trusted Timestamping'              => 'timeStamping'  ,
+                'Microsoft Individual Code Signing' => 'msCodeInd'     ,
+                'Microsoft Commercial Code Signing' => 'msCodeCom'     ,
+                'Microsoft Trust List Signing'      => 'msCTLSign'     ,
+                'Microsoft Server Gated Crypto'     => 'msSGC'         ,
+                'Microsoft Encrypted File System'   => 'msEFS'         ,
+                'Netscape Server Gated Crypto'      => 'nsSGC'         ,
 
                 'client'   => 'SSL Client',
                 'server'   => 'SSL Server',
@@ -132,15 +132,15 @@ my $transMap = {
                 'decipherOnly'     => 'Decipher Only',
 
 
-                'SSL Client'        => 'client'  ,  
-                'SSL Server'        => 'server'  ,  
-                'S/MIME'            => 'email'   ,  
-                'Object Signing'    => 'objsign' , 
+                'SSL Client'        => 'client'  ,
+                'SSL Server'        => 'server'  ,
+                'S/MIME'            => 'email'   ,
+                'Object Signing'    => 'objsign' ,
                 'Unused'            => 'reserved',
                 'SSL CA'            => 'sslCA'   ,
                 'S/MIME CA'         => 'emailCA' ,
                 'Object Signing CA' => 'objCA'   ,
-                     
+
                 'Digital Signature' => 'digitalSignature',
                 'Non Repudiation'   => 'nonRepudiation'  ,
                 'Key Encipherment'  => 'keyEncipherment' ,
@@ -165,7 +165,7 @@ sub transformBasicConstaints {
         if($p eq "critical") {
             $crit = 1;
             next;
-        }            
+        }
         if(uc($p) eq "CA:TRUE") {
             $ca = 1;
             next;
@@ -184,9 +184,9 @@ sub transformBasicConstaints {
 
     my $bc = new LIMAL::CaMgm::BasicConstraintsExt();
     if(!defined $value || $value eq "") {
-     
+
         $bc->setPresent(0);
-        
+
     } else {
 
         $bc->setBasicConstraints($ca, $pathl);
@@ -194,7 +194,7 @@ sub transformBasicConstaints {
             $bc->setCritical($crit);
         }
     }
-    
+
     $exts->setBasicConstraints($bc);
     return 1;
 }
@@ -208,7 +208,7 @@ sub transformStringExtension {
     my $crit   = 0;
     my $string = "";
 
-    if ( !grep( ($_ eq $type), 
+    if ( !grep( ($_ eq $type),
                 ("nsComment", "nsBaseUrl", "nsRevocationUrl",
                  "nsCaRevocationUrl", "nsRenewalUrl",
                  "nsCaPolicyUrl", "nsSslServerName") ) ) {
@@ -224,16 +224,16 @@ sub transformStringExtension {
         }
         if(defined $2) {
             $string = $2;
-        }            
+        }
     }
-    
+
     if($type eq "nsComment") {
 
         my $e = new LIMAL::CaMgm::NsCommentExt();
         if(!defined $value || $value eq "") {
-     
+
             $e->setPresent(0);
-        
+
         } else {
 
             $e->setValue($string);
@@ -241,16 +241,16 @@ sub transformStringExtension {
                 $e->setCritical($crit);
             }
         }
-    
+
         $exts->setNsComment($e);
-        
+
     } elsif($type eq "nsBaseUrl") {
 
         my $e = new LIMAL::CaMgm::NsBaseUrlExt();
         if(!defined $value || $value eq "") {
-     
+
             $e->setPresent(0);
-        
+
         } else {
 
             $e->setValue($string);
@@ -258,16 +258,16 @@ sub transformStringExtension {
                 $e->setCritical($crit);
             }
         }
-    
+
         $exts->setNsBaseUrl($e);
 
     } elsif($type eq "nsRevocationUrl") {
 
         my $e = new LIMAL::CaMgm::NsRevocationUrlExt();
         if(!defined $value || $value eq "") {
-     
+
             $e->setPresent(0);
-        
+
         } else {
 
             $e->setValue($string);
@@ -275,16 +275,16 @@ sub transformStringExtension {
                 $e->setCritical($crit);
             }
         }
-    
+
         $exts->setNsRevocationUrl($e);
 
     } elsif($type eq "nsCaRevocationUrl") {
 
         my $e = new LIMAL::CaMgm::NsCaRevocationUrlExt();
         if(!defined $value || $value eq "") {
-     
+
             $e->setPresent(0);
-        
+
         } else {
 
             $e->setValue($string);
@@ -292,16 +292,16 @@ sub transformStringExtension {
                 $e->setCritical($crit);
             }
         }
-    
+
         $exts->setNsCaRevocationUrl($e);
 
     } elsif($type eq "nsRenewalUrl") {
 
         my $e = new LIMAL::CaMgm::NsRenewalUrlExt();
         if(!defined $value || $value eq "") {
-     
+
             $e->setPresent(0);
-        
+
         } else {
 
             $e->setValue($string);
@@ -309,16 +309,16 @@ sub transformStringExtension {
                 $e->setCritical($crit);
             }
         }
-    
+
         $exts->setNsRenewalUrl($e);
 
     } elsif($type eq "nsCaPolicyUrl") {
 
         my $e = new LIMAL::CaMgm::NsCaPolicyUrlExt();
         if(!defined $value || $value eq "") {
-     
+
             $e->setPresent(0);
-        
+
         } else {
 
             $e->setValue($string);
@@ -326,16 +326,16 @@ sub transformStringExtension {
                 $e->setCritical($crit);
             }
         }
-    
+
         $exts->setNsCaPolicyUrl($e);
 
     } elsif($type eq "nsSslServerName") {
 
         my $e = new LIMAL::CaMgm::NsSslServerNameExt();
         if(!defined $value || $value eq "") {
-     
+
             $e->setPresent(0);
-        
+
         } else {
 
             $e->setValue($string);
@@ -343,7 +343,7 @@ sub transformStringExtension {
                 $e->setCritical($crit);
             }
         }
-    
+
         $exts->setNsSslServerName($e);
     }
     return 1;
@@ -361,7 +361,7 @@ sub transformNsCertType {
         if($p eq "critical") {
             $crit = 1;
             next;
-        }            
+        }
         if(lc($p) eq "client") {
 
             $ct |= $LIMAL::CaMgm::NsCertTypeExt::client;
@@ -395,13 +395,13 @@ sub transformNsCertType {
             $ct |= $LIMAL::CaMgm::NsCertTypeExt::objCA;
 
         }
-    }   
-    
+    }
+
     my $e = new LIMAL::CaMgm::NsCertTypeExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
 
         $e->setNsCertType($ct);
@@ -409,7 +409,7 @@ sub transformNsCertType {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setNsCertType($e);
 
     return 1;
@@ -427,7 +427,7 @@ sub transformKeyUsage {
         if($p eq "critical") {
             $crit = 1;
             next;
-        }            
+        }
         if(lc($p) eq "digitalsignature") {
 
             $ku |= $LIMAL::CaMgm::KeyUsageExt::digitalSignature;
@@ -465,13 +465,13 @@ sub transformKeyUsage {
             $ku |= $LIMAL::CaMgm::KeyUsageExt::decipherOnly;
 
         }
-    }   
-    
+    }
+
     my $e = new LIMAL::CaMgm::KeyUsageExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
 
         $e->setKeyUsage($ku);
@@ -479,7 +479,7 @@ sub transformKeyUsage {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setKeyUsage($e);
 
     return 1;
@@ -511,9 +511,9 @@ sub transformSubjectKeyIdentifier {
 
     my $e = new LIMAL::CaMgm::SubjectKeyIdentifierExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
 
         $e->setSubjectKeyIdentifier($auto, $hv);
@@ -521,7 +521,7 @@ sub transformSubjectKeyIdentifier {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setSubjectKeyIdentifier($e);
     return 1;
 }
@@ -560,9 +560,9 @@ sub transformAuthorityKeyIdentifier {
 
     my $e = new LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
 
         $e->setKeyID($keyID);
@@ -571,7 +571,7 @@ sub transformAuthorityKeyIdentifier {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setAuthorityKeyIdentifier($e);
 
     return 1;
@@ -582,7 +582,7 @@ sub transformSubjectAltName {
     my $exts  = shift;
     my $value = shift || "";
     my $forDefaults = shift || 0;
-    
+
     my $crit   = 0;
     my $emailCopy = 0;
     my $list = new LIMAL::CaMgm::LiteralValueList();
@@ -612,15 +612,15 @@ sub transformSubjectAltName {
             }
             next;
         }
-                    
+
         $list->push_back(new LIMAL::CaMgm::LiteralValue($p));
     }
 
     my $e = new LIMAL::CaMgm::SubjectAlternativeNameExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
 
         $e->setCopyEmail($emailCopy);
@@ -629,7 +629,7 @@ sub transformSubjectAltName {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setSubjectAlternativeName($e);
 
     return 1;
@@ -640,7 +640,7 @@ sub transformIssuerAltName {
     my $exts  = shift;
     my $value = shift || "";
     my $forDefaults = shift || 0;
-    
+
     my $crit       = 0;
     my $issuerCopy = 0;
     my $list = new LIMAL::CaMgm::LiteralValueList();
@@ -676,18 +676,18 @@ sub transformIssuerAltName {
 
     my $e = new LIMAL::CaMgm::IssuerAlternativeNameExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
-        
+
         $e->setCopyIssuer($issuerCopy);
         $e->setAlternativeNameList($list);
         if($crit) {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setIssuerAlternativeName($e);
 
     return 1;
@@ -700,7 +700,7 @@ sub transformExtendedKeyUsage {
 
     my $crit  = 0;
     my $list  = new LIMAL::StringList();
-   
+
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
             $crit = 1;
@@ -711,17 +711,17 @@ sub transformExtendedKeyUsage {
 
     my $e = new LIMAL::CaMgm::ExtendedKeyUsageExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
-        
+
         $e->setExtendedKeyUsage($list);
         if($crit) {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setExtendedKeyUsage($e);
 
     return 1;
@@ -734,7 +734,7 @@ sub transformAuthorityInfoAccess {
 
     my $crit  = 0;
     my $list  = new LIMAL::CaMgm::AuthorityInformationList();
-   
+
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
             $crit = 1;
@@ -743,7 +743,7 @@ sub transformAuthorityInfoAccess {
         my($accessOID, $location) = split(/\s*;\s*/ , $p, 2);
         if ( $accessOID eq "OCSP" || $accessOID eq "caIssuers" ||
              $accessOID =~ /^(\d+\.)+\d+$/ ) {
-         
+
             my $lv = new LIMAL::CaMgm::LiteralValue($location);
             my $ai = new LIMAL::CaMgm::AuthorityInformation($accessOID, $lv);
 
@@ -753,17 +753,17 @@ sub transformAuthorityInfoAccess {
 
     my $e = new LIMAL::CaMgm::AuthorityInfoAccessExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
-        
+
         $e->setAuthorityInformation($list);
         if($crit) {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setAuthorityInfoAccess($e);
 
     return 1;
@@ -787,17 +787,17 @@ sub transformCrlDistributionPoints {
 
     my $e = new LIMAL::CaMgm::CRLDistributionPointsExt();
     if(!defined $value || $value eq "") {
-     
+
         $e->setPresent(0);
-        
+
     } else {
-        
+
         $e->setCRLDistributionPoints($list);
         if($crit) {
             $e->setCritical($crit);
         }
     }
-    
+
     $exts->setCRLDistributionPoints($e);
 
     return 1;
@@ -865,7 +865,7 @@ sub extractStringExtension {
     }
 
     push @vals, $ext->getValue();
-    
+
     $ret->{$type} = join(', ', @vals);
 
     return 1;
@@ -889,7 +889,7 @@ sub extractNsCertType {
         push @vals , "critical";
 
     }
-    
+
     if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::client)) {
         push @vals, "client";
     }
@@ -914,7 +914,7 @@ sub extractNsCertType {
     if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::objCA)) {
         push @vals, "objCA";
     }
-    
+
     $ret->{'nsCertType'} = join(', ', @vals);
 
     return 1;
@@ -938,7 +938,7 @@ sub extractKeyUsage {
         push @vals , "critical";
 
     }
-    
+
     if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::digitalSignature)) {
         push @vals, "digitalSignature";
     }
@@ -966,7 +966,7 @@ sub extractKeyUsage {
     if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::decipherOnly)) {
         push @vals, "decipherOnly";
     }
-    
+
     $ret->{'keyUsage'} = join(', ', @vals);
 
     return 1;
@@ -990,7 +990,7 @@ sub extractSubjectKeyIdentifier {
         push @vals , "critical";
 
     }
-    
+
     if($ext->isAutoDetectionEnabled()) {
 
         push @vals, "hash";
@@ -1000,7 +1000,7 @@ sub extractSubjectKeyIdentifier {
         push @vals, $ext->getKeyID();
 
     }
-    
+
     $ret->{'subjectKeyIdentifier'} = join(', ', @vals);
 
     return 1;
@@ -1042,7 +1042,7 @@ sub extractAuthorityKeyIdentifier {
     {
         push @vals, "issuer:always";
     }
-    
+
     $ret->{'authorityKeyIdentifier'} = join(', ', @vals);
 
     return 1;
@@ -1077,7 +1077,7 @@ sub extractSubjectAltName {
 
     for(my $it = $list->begin();
         !$list->iterator_equal($it, $list->end());
-        $list->iterator_incr($it)) 
+        $list->iterator_incr($it))
     {
         if($list->iterator_value($it)->getType() eq "1.3.6.1.4.1.311.20.2.3")
         {
@@ -1092,7 +1092,7 @@ sub extractSubjectAltName {
             push @vals, $list->iterator_value($it)->toString();
         }
     }
-    
+
     $ret->{'subjectAltName'} = join(', ', @vals);
 
     return 1;
@@ -1127,7 +1127,7 @@ sub extractIssuerAltName {
 
     for(my $it = $list->begin();
         !$list->iterator_equal($it, $list->end());
-        $list->iterator_incr($it)) 
+        $list->iterator_incr($it))
     {
         if($list->iterator_value($it)->getType() eq "1.3.6.1.4.1.311.20.2.3")
         {
@@ -1142,7 +1142,7 @@ sub extractIssuerAltName {
             push @vals, $list->iterator_value($it)->toString();
         }
     }
-    
+
     $ret->{'issuerAltName'} = join(', ', @vals);
 
     return 1;
@@ -1171,13 +1171,13 @@ sub extractExtendedKeyUsage {
 
     for(my $it = $list->begin();
         !$list->iterator_equal($it, $list->end());
-        $list->iterator_incr($it)) 
+        $list->iterator_incr($it))
     {
 
         push @vals, $list->iterator_value($it);
-        
+
     }
-    
+
     $ret->{'extendedKeyUsage'} = join(', ', @vals);
 
     return 1;
@@ -1206,13 +1206,13 @@ sub extractAuthorityInfoAccess {
 
     for(my $it = $list->begin();
         !$list->iterator_equal($it, $list->end());
-        $list->iterator_incr($it)) 
+        $list->iterator_incr($it))
     {
         my $ai =  $list->iterator_value($it);
         my $str = $ai->getAccessOID().";".$ai->getLocation()->toString();
         push @vals, $str;
     }
-    
+
     $ret->{'authorityInfoAccess'} = join(', ', @vals);
 
     return 1;
@@ -1241,11 +1241,11 @@ sub extractCrlDistributionPoints {
 
     for(my $it = $list->begin();
         !$list->iterator_equal($it, $list->end());
-        $list->iterator_incr($it)) 
+        $list->iterator_incr($it))
     {
         push @vals, $list->iterator_value($it)->toString();
     }
-    
+
     $ret->{'crlDistributionPoints'} = join(', ', @vals);
 
     return 1;
@@ -1273,7 +1273,7 @@ sub parseDN {
                ref($ret->{$1}) eq "ARRAY") {
 
                 my @a = @{$ret->{$1}};
-                
+
                 push(@a, $2);
                 $ret->{$1} = \@a;
 
@@ -1291,9 +1291,9 @@ sub getParsed {
     my $self = shift;
     my $cert = shift;
     my $ret  = {};
-    
+
     $ret->{PLAIN_EXTENSIONS} = $cert->getExtensionsAsText();
-    
+
     $ret->{DN_HASH} = $self->parseDN($cert->getSubjectDN());
     $ret->{ISSUER_HASH} = $self->parseDN($cert->getIssuerDN());
 
@@ -1303,9 +1303,9 @@ sub getParsed {
     my @a = split('\n', $cert->getCertificateAsText());
 
     my $found = 0;
-   
+
     my $val = "";
-    
+
     foreach my $line (@a) {
         chomp($line);
 
@@ -1324,7 +1324,10 @@ sub getParsed {
 
     $ret->{NOTBEFORE} = $self->time2human($cert->getStartDate());
     $ret->{NOTAFTER}  = $self->time2human($cert->getEndDate());
-    
+    $ret->{NOTBEFORE_UNIX} = $cert->getStartDate();
+    $ret->{NOTAFTER_UNIX}  = $cert->getEndDate();
+    $ret->{EXPIRED} = ($cert->getEndDate() < time)?1:0;
+
     $ret->{FINGERPRINT} = $cert->getFingerprint();
     $ret->{KEYSIZE}     = $cert->getKeysize();
 
@@ -1371,7 +1374,7 @@ sub getParsed {
     if(exists $ret->{DN_HASH}->{emailAddress}) {
         @em = @{$ret->{DN_HASH}->{emailAddress}};
     }
-    
+
     if($cert->getExtensions()->getSubjectAlternativeName()->isPresent()) {
 
         my $list = $cert->getExtensions()->getSubjectAlternativeName()->getAlternativeNameList();
@@ -1379,9 +1382,9 @@ sub getParsed {
         for(my $it = $list->begin();
             !$list->iterator_equal($it, $list->end());
             $list->iterator_incr($it)) {
-            
+
             if($list->iterator_value($it)->getType() eq "email") {
-                
+
                 push @em, $list->iterator_value($it)->getValue();
             }
         }
@@ -1416,15 +1419,15 @@ sub getParsedCRL {
     my $self = shift;
     my $crl  = shift;
     my $ret  = {};
-    
+
     $ret->{PLAIN_EXTENSIONS} = $crl->getExtensionsAsText();
-    
+
     $ret->{ISSUER_HASH} = $self->parseDN($crl->getIssuerDN());
     $ret->{ISSUER} = $crl->getIssuerDN()->getOpenSSLString();
 
     $ret->{LASTUPDATE} = $self->time2human($crl->getLastUpdateDate());
     $ret->{NEXTUPDATE} = $self->time2human($crl->getNextUpdateDate());
-    
+
     $ret->{FINGERPRINT} = $crl->getFingerprint();
 
     if($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1RSA) {
@@ -1503,18 +1506,18 @@ sub getParsedRequest {
     my $self = shift;
     my $req  = shift;
     my $ret  = {};
-    
+
     $ret->{PLAIN_EXTENSIONS} = $req->getExtensionsAsText();
-    
+
     $ret->{SUBJECT_HASH} = $self->parseDN($req->getSubjectDN());
     $ret->{DN}     = $req->getSubjectDN()->getOpenSSLString();
 
     my @a = split('\n', $req->getRequestAsText());
 
     my $found = 0;
-   
+
     my $val = "";
-    
+
     foreach my $line (@a) {
         chomp($line);
 
@@ -1581,7 +1584,7 @@ sub getParsedRequest {
     if(exists $ret->{SUBJECT_HASH}->{emailAddress}) {
         @em = @{$ret->{SUBJECT_HASH}->{emailAddress}};
     }
-    
+
     if($req->getExtensions()->getSubjectAlternativeName()->isPresent()) {
 
         my $list = $req->getExtensions()->getSubjectAlternativeName()->getAlternativeNameList();
@@ -1589,11 +1592,11 @@ sub getParsedRequest {
         for(my $it = $list->begin();
             !$list->iterator_equal($it, $list->end());
             $list->iterator_incr($it)) {
-            
+
             if($list->iterator_value($it)->getType() eq "email") {
-                
+
                 push @em, $list->iterator_value($it)->getValue();
-                
+
             }
         }
     }
@@ -1666,13 +1669,13 @@ sub simpleExtParsing {
                     for(my $it = $list->begin();
                         !$list->iterator_equal($it, $list->end());
                         $list->iterator_incr($it)) {
-                        
-                        if($list->iterator_value($it)->getType() eq "1.3.6.1.4.1.311.20.2.3") 
+
+                        if($list->iterator_value($it)->getType() eq "1.3.6.1.4.1.311.20.2.3")
                         {
                             $val .= "MS-UPN:".$list->iterator_value($it)->getValue().", ";
-                            
+
                         }
-                        elsif($list->iterator_value($it)->getType() eq "1.3.6.1.5.2.2") 
+                        elsif($list->iterator_value($it)->getType() eq "1.3.6.1.5.2.2")
                         {
                             $val .= "K5PN:".$list->iterator_value($it)->getValue().", ";
                         }
@@ -1695,18 +1698,18 @@ sub extensionParsing {
     my $ext = {};
     my $newExt = {};
 
-    
+
     $ext = $data->{OPENSSL_EXTENSIONS};
     delete $data->{OPENSSL_EXTENSIONS};
 
     foreach my $a (keys %$ext) {
-        
+
         my $newKey = $transMap->{$a};
-        
+
         $newExt->{$newKey}->{description} = $a;
         $newExt->{$newKey}->{critical}    = 0;
         $newExt->{$newKey}->{value}       = [];
-        
+
         foreach my $b (@{$ext->{$a}}) {
 
             if($b =~ /^\s*critical/) {
@@ -1762,7 +1765,7 @@ sub extensionParsing {
                           # not supported by openssl
                           next;
                       }
-                      
+
                       my $h = {};
                       $h->{type}  = $transMap->{$sp1[0]};
                       if(!defined $h->{type}) {
@@ -1810,9 +1813,9 @@ sub checkCommonValues {
     my $self = shift;
     my $data = shift || return $self->SetError(summary => __("Missing 'data' map."),
                                                code    => "PARAM_CHECK_FAILED");
-    
+
     foreach my $key (keys %{$data}) {
-        # we check only common values. 
+        # we check only common values.
         # It is possible that keys appear which could not be checked.
         if ( $key eq "caName" || $key eq "newCaName") {
             if (! defined $data->{$key} ||
@@ -1863,10 +1866,10 @@ sub checkCommonValues {
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "crlReason") {
-            if ( !grep( ($_ eq $data->{$key}), 
+            if ( !grep( ($_ eq $data->{$key}),
                                            ("unspecified", "keyCompromise", "CACompromise",
-                                            "affiliationChanged", "superseded", 
-                                            "cessationOfOperation", "certificateHold") ) ) 
+                                            "affiliationChanged", "superseded",
+                                            "cessationOfOperation", "certificateHold") ) )
             {
                 return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
@@ -1890,7 +1893,7 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "basicConstraints") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                        code => "PARAM_CHECK_FAILED");
@@ -1904,21 +1907,21 @@ sub checkCommonValues {
                                                            __("Unknown value '%s' in '%s'."),
                                                            $p, $key),
                                         code => "PARAM_CHECK_FAILED");
-            } 
+            }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
                 return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "nsComment") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "nsCertType") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                        code => "PARAM_CHECK_FAILED");
@@ -1937,7 +1940,7 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "keyUsage") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                        code => "PARAM_CHECK_FAILED");
@@ -1948,7 +1951,7 @@ sub checkCommonValues {
                                          "keyEncipherment", "dataEncipherment",
                                          "keyAgreement", "keyCertSign", "cRLSign",
                                          "encipherOnly", "decipherOnly")))
-                { 
+                {
                     return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                            code    => "PARAM_CHECK_FAILED");
                 }
@@ -1959,7 +1962,7 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "subjectKeyIdentifier") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
@@ -1977,7 +1980,7 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "authorityKeyIdentifier") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
@@ -1986,7 +1989,7 @@ sub checkCommonValues {
                 next if($p     eq "critical");
                 next if(grep( ($_ eq $p), ("issuer:always", "keyid:always",
                                            "issuer", "keyid")));
-          
+
                 return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
@@ -1996,7 +1999,7 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "subjectAltName" || $key eq "issuerAltName") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                        code => "PARAM_CHECK_FAILED");
@@ -2071,7 +2074,7 @@ sub checkCommonValues {
                   $key eq "nsCaRevocationUrl" || $key eq "nsRenewalUrl" ||
                   $key eq "nsCaPolicyUrl" ) {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
@@ -2085,7 +2088,7 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "nsSslServerName") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
@@ -2096,7 +2099,7 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "extendedKeyUsage") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
@@ -2110,17 +2113,17 @@ sub checkCommonValues {
                                            "msSGC", "msEFS", "nsSGC", "msSmartcardLogin")));
                 return $self->SetError(summary => sprintf(
                                                           __("Invalid value '%s' for parameter '%s'."),
-                                                          $p, $key), 
+                                                          $p, $key),
                                       code    => "PARAM_CHECK_FAILED");
             }
             if ($data->{$key} =~ /^\s*(critical)?\s*$/) {
                 return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
                                        code    => "PARAM_CHECK_FAILED");
             }
-        
+
         } elsif ( $key eq "authorityInfoAccess") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
@@ -2184,7 +2187,7 @@ sub checkCommonValues {
             }
         } elsif ( $key eq "crlDistributionPoints") {
             # test critical
-            if ($data->{$key} =~ /critical/ && 
+            if ($data->{$key} =~ /critical/ &&
                 $data->{$key} !~ /^\s*critical/) {
                 return $self->SetError(summary => sprintf(__("Wrong use of 'critical' in '%s'."),$key),
                                       code => "PARAM_CHECK_FAILED");
@@ -2217,12 +2220,12 @@ sub checkCommonValues {
 sub exception2String {
     my $self = shift;
     my $err  = shift || undef;
-    
-    if(!defined $err) 
+
+    if(!defined $err)
     {
         return "";
     }
-    elsif(ref($err) eq "HASH") 
+    elsif(ref($err) eq "HASH")
     {
         my $msg = "";
         if(exists $err->{type} && defined $err->{type})

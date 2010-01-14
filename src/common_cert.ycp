@@ -37,58 +37,97 @@ define symbol MainSequence () {
 Wizard::CreateDialog();
 Wizard::SetDesktopIcon("ca-management");
 
-// help text 1/4
+// help text 1/5
 string helptext = _("<p>The <b>Common Server Certificate</b> will be used by other YaST modules.</p>");
-// help text 2/4
+// help text 2/5
 helptext = helptext + _("<p>This certificate can be exchanged by importing a certificate from a file.</p>");
-// help text 3/4
+// help text 3/5
 helptext = helptext + _("<p>Certificates can be written to a file using <b>Export to File</b> in section <b>Certificate</b> in the <b>CA Management</b> module.</p>");
 
-// help text 3/4
+// help text 4/5
 helptext = helptext + _("<p>Certificates to import from disk must have been written in <b>PKCS12 format with CA chain</b>.</p>");
+
+// help text 5/5
+helptext = helptext + _("<p>You can remove the Certificates from disk. But make sure, that it is not used anymore by other services.</p>");
 
 symbol ui = nil;
 
 repeat
 {
     string ret = (string) YaPI::CaManagement::ReadFile ($[ "inFile":"/etc/ssl/servercerts/servercert.pem",
-							   "datatype":"CERTIFICATE",
-							   "inForm":"PEM",
-							   "type":"plain"]);
-	
-    y2milestone("ReadCertificate(/etc/ssl/certs/YaST-CA.pem): %1", ret);
+                                                          "datatype":"CERTIFICATE",
+                                                          "inForm":"PEM",
+                                                          "type":"plain"]);
+
+    y2milestone("ReadCertificate(/etc/ssl/servercerts/servercert.pem): %1", ret);
     if (ret == nil)
     {
-	ret = "<pre>Common Server Certificate not found.\nYou can import a certificate from disk</pre>";
+        ret = "<pre>Common Server Certificate not found.\nYou can import a certificate from disk</pre>";
     }
     else
     {
-	ret = "<pre>" + ret + "</pre>";
+        ret = "<pre>" + ret + "</pre>";
     }
 
-
     term contents = `VBox (
-			   `Left(`Label (_("Description"))),
-			   `VSpacing (0.5),
-			   `RichText (ret),
-			   `VSpacing (0.5),
-			   `Right (`PushButton (`id(`importDisk), _("&Import")))       
-			   );
-    
+                          `Left(`Label (_("Description"))),
+                          `VSpacing (0.5),
+                          `RichText (ret),
+                          `VSpacing (0.5),
+                          `HBox (  // push button label
+                              `HStretch(),
+                              `PushButton (`id(`remove), _("&Remove")),
+                              `PushButton (`id(`importDisk), _("&Import")))
+                          );
+
     // To translators: dialog label
     Wizard::SetContents (_("Common Server Certificate"), contents, helptext, false, true);
     Wizard::SetNextButton(`next, Label::FinishButton() );
-    
+
     ui = (symbol) UI::UserInput ();
     if (ui == `importDisk)
     {
-	importCertificateFromDisk();	
-	ui = `again;	
+        importCertificateFromDisk();
+        ui = `again;
     }
-	if(ui == `cancel)
-	{
-		ui = `abort;
-	}
+    if (ui == `remove)
+    {
+        map crt = (map) YaPI::CaManagement::ReadFile ($[ "inFile":"/etc/ssl/servercerts/servercert.pem",
+                                                         "datatype":"CERTIFICATE",
+                                                         "inForm":"PEM",
+                                                         "type":"parsed"]);
+        integer expired = (integer) crt["EXPIRED"]:0;
+        boolean reallyRemove = false;
+        if (expired == 1)
+        {
+          // To translators: popup yes/no question
+          reallyRemove = Popup::YesNo( "Really remove the Certificate?" );
+        }
+        else
+        {
+           //removeCertificateFromDisk();
+           reallyRemove = Popup::AnyQuestion( Label::WarningMsg(),
+                                              // To translators: warning popup yes/no question (1/3)
+                                              _("The certificate is not yet expired.\n")+
+                                              // To translators: warning popup yes/no question (2/3)
+                                              _("Please make sure, that no service use this certificate anymore.\n\n")+
+                                              // To translators: warning popup yes/no question (3/3)
+                                              _("Are you sure, that you want to remove the certificate?"),
+                                              Label::YesButton(),
+                                              Label::NoButton(),
+                                              `focus_no );
+        }
+        y2milestone ("Remove certificate? => %1", reallyRemove);
+        if ( reallyRemove )
+        {
+            YaPI::CaManagement::RemoveCommonServerCertificate();
+        }
+        ui = `again;
+    }
+    if(ui == `cancel)
+    {
+        ui = `abort;
+    }
 }
 until (contains ([`back, `next, `abort], ui));
 Wizard::CloseDialog();
