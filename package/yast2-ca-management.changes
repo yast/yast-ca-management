@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Jan 14 12:35:43 CET 2010 - mc@suse.de
+
+- version 2.19.0
+- implement export certificate key to file (fate#305490) 
+
+-------------------------------------------------------------------
 Wed Jan 13 18:56:03 CET 2010 - kmachalkova@suse.cz
 
 - Adjusted .desktop file(s) to wrap /sbin/yast2/ calls in xdg-su
