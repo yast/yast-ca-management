@@ -162,6 +162,10 @@ $bool = ImportCommonServerCertificate($valueMap)
   and copy them to a place where other YaST modules look
   for such a common certificate.
 
+$bool = RemoveCommonServerCertificate($valueMap)
+
+  Remove a common server certificate
+
 $bool = ReadFile($valueMap)
 
   Returns a certificate or CRL as plain text or parsed map.
@@ -6115,7 +6119,32 @@ sub ImportCommonServerCertificate {
     return 1;
 }
 
+=item *
+C<$bool = RemoveCommonServerCertificate($valueMap)>
 
+Remove a common server certificate from disk
+
+=cut
+
+BEGIN { $TYPEINFO{RemoveCommonServerCertificate} = ["function", "boolean"]; }
+sub RemoveCommonServerCertificate {
+    my $self = shift;
+
+    if ( -e "/etc/ssl/servercerts/servercert.pem" )
+    {
+        unlink("/etc/ssl/servercerts/servercert.pem");
+    }
+    if ( -e "/etc/ssl/servercerts/serverkey.pem" )
+    {
+        unlink("/etc/ssl/servercerts/serverkey.pem");
+    }
+    if ( -e "/etc/ssl/certs/YaST-CA.pem" )
+    {
+        unlink("/etc/ssl/certs/YaST-CA.pem");
+    }
+
+    return 1;
+}
 
 =item *
 C<$bool = ReadFile($valueMap)>

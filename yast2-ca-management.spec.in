@@ -45,3 +45,5 @@ Managing CAs, Certificates and Requests in an understanding way.
 /usr/bin/generateCRL.pl
 /usr/bin/exportCRL.pl
 %attr(600, root, root) %config(noreplace) /etc/generateCRL.conf
+
+%changelog
