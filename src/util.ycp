@@ -11,10 +11,10 @@
 
     textdomain "ca-management";
 
-    import "CaMgm";    
+    import "CaMgm";
     import "Label";
     import "Popup";
-    import "Wizard";        
+    import "Wizard";
     import "Hostname";
     import "YaPI::CaManagement";
 
@@ -51,7 +51,7 @@
         {
             first = first + 1;
         }
-    
+
         while(last >= 0 && isBlank(substring(str, last, 1)))
         {
             last = last - 1;
@@ -63,7 +63,7 @@
         return "";
     }
 
-    
+
     /**
      * Asking for a existing or new file
      * @param flag new file, filter, headline
@@ -74,7 +74,7 @@
 			      string headline) ``{
 	map<string,any> display = UI::GetDisplayInfo ();
 	string ret = "";
-	
+
 	if (SCR::Read (.target.size, "/opt/kde3/bin/kfiledialog") > 0
 	    && strip (getenv ("KDE_FULL_SESSION")) == "true"
 	    && !display["TextMode"]:false)
@@ -94,14 +94,14 @@
 	    }
 	    else
 	    {
-		ret = UI::AskForExistingFile( ".", filterString, headline );		
+		ret = UI::AskForExistingFile( ".", filterString, headline );
 	    }
 	}
 
 	return ret;
     }
 
-    
+
     /**
      * Creates Country items
      * @return a list country items formated for a UI table
@@ -118,14 +118,14 @@
 					  country_map, { return v; });
 
 	name_list = sort (name_list);
-	    
+
 	foreach (string name, name_list, ``{
 	    result = add (result, `item (`id (country_index[name]:""), name ,
 					 CaMgm::country == country_index[name]:"") );
 	});
         return result;
     }
-    
+
 
     /**
      * See RFC 2822, 3.4
@@ -157,7 +157,7 @@
 		{
 			title = _("Change CA Password");
 		}
-		
+
 		// asking user
 	    UI::OpenDialog (`opt(`decorated ),
 						`HBox( `HSpacing(2),
@@ -175,12 +175,12 @@
 											`HStretch(),
 											`PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
 										   ),
-									 `VSpacing (1)					  
+									 `VSpacing (1)
 									),
 							  `HSpacing (2)
 							 )
 					   );
-		
+
 	    UI::SetFocus (`id(`oldpw));
 	    symbol ui = nil;
 	    repeat
@@ -228,7 +228,7 @@
 						if(certificate == "")
 						{
 							CaMgm::passwdMap[CAname] = newPassword;
-							Popup::Message(_("CA Password changed."));	
+							Popup::Message(_("CA Password changed."));
 						}
 						else
 						{
@@ -241,17 +241,17 @@
 	    until (contains ([`ok, `cancel], ui));
 	    UI::CloseDialog ();
 	}
-    
+
 
     /**
      * Dialog for asking a CA password. Returns the password
      *   without asking if is has already input before.
-     * @param CAname 
+     * @param CAname
      * @return string password
      */
     define string getPassword(string CAname)``{
 	string password = nil;
-	
+
 	if (!haskey(CaMgm::passwdMap, CAname))
 	{
 	    // asking user
@@ -263,13 +263,13 @@
 					  `Heading (_("Enter CA Password")),
 					  `VSpacing (1),
 					  `Password( `id (`entry), `opt(`hstretch), _("&Password:")),
-					  `VSpacing (1),					  
+					  `VSpacing (1),
 					  `HBox (  // push button label
 						 `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 						 `HStretch(),
 						 `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
 						 ),
-					  `VSpacing (1)					  
+					  `VSpacing (1)
 					  ),
 				   `HSpacing (2)
 				   )
@@ -313,13 +313,13 @@
 	    // already available
 	    password = CaMgm::passwdMap[CAname]:"";
 	}
-	
+
 	return password;
     }
 
     /**
      * Dialog for exporting CA/Certificate/CRL to LDAP
-     *   
+     *
      * @param "CA" "CRL" "CERT" "subjectAltName"
      * @return true ( success )
      */
@@ -336,9 +336,9 @@
 
 	y2milestone ("exportToLDAP type: %1; CAname: %2, commonName: %3, email: %4, certificate: %5, subjectAltName: %6",
 		     kind,CAname,commonName,email,certificate,subjectAltName);
-	
-	passwordTerm = add (passwordTerm, `Password(`id (`password), `opt(`hstretch), _("LDAP P&assword:")));	
-	
+
+	passwordTerm = add (passwordTerm, `Password(`id (`password), `opt(`hstretch), _("LDAP P&assword:")));
+
 	if (kind == "CERT")
 	{
 	    if (size (subjectAltName) > 0)
@@ -355,7 +355,7 @@
 									"caName":CAname,
 									"commonName":commonName,
 									"emailAddress":email]);
-	    }		
+	    }
 	    passwordTerm = add (passwordTerm, `Password(  `id (`keyPasswd), `opt(`hstretch), _("Certificate &Password:")));
 	    passwordTerm = add (passwordTerm, `HBox(
 						    `Password( `id (`p12Passwd), `opt(`hstretch), _("&New Password:")),
@@ -381,7 +381,7 @@
 			      "commonName":commonName,
 			      "emailAddress":email,
 			      "subjectAltName":subjectAltName],
-			    messageMap);		
+			    messageMap);
 	    }
 	    else
 	    {
@@ -389,7 +389,7 @@
 			    $["type":kindmap[kind]:"", "caName":CAname],
 			    messageMap);
 	    }
-			
+
 	    if (messageMap["code"]:"" == "LDAP_CONFIG_NEEDED")
 	    {
 		UI::OpenDialog (`opt(`decorated ),
@@ -403,13 +403,13 @@ Enter the required LDAP password.
 ")),
 					      `VSpacing (1),
 					      `Password( `id (`password), `opt(`hstretch), _("P&assword:")),
- 					      `VSpacing (1),					  
+ 					      `VSpacing (1),
 					      `HBox (  // push button label
 						     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 						     `HStretch(),
 						     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
 						     ),
-					      `VSpacing (1)					  
+					      `VSpacing (1)
 					      ),
 				       `HSpacing (2)
 				       )
@@ -426,7 +426,7 @@ Enter the required LDAP password.
 			if (YaPI::CaManagement::InitLDAPcaManagement($["ldapPasswd":password]))
 			{
 			    if (kind == "CERT")
-			    {	
+			    {
 				defaultv = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
 											"caName":CAname,
 											"commonName":commonName,
@@ -436,11 +436,11 @@ Enter the required LDAP password.
 			    {
 				defaultv = YaPI::CaManagement::ReadLDAPExportDefaults ($["type":kindmap[kind]:"",
 											"caName":CAname]);
-			    }			    
+			    }
 			}
 			else
 			{
-			    showErrorCaManagement ();			    
+			    showErrorCaManagement ();
 			}
 		    }
 		}
@@ -451,8 +451,8 @@ Enter the required LDAP password.
 
 	if (defaultv == nil)
 	{
-	    showErrorCaManagement ();			    	    
-	}	
+	    showErrorCaManagement ();
+	}
 	else
 	{
 	    hostname = defaultv["ldapHostname"]:"";
@@ -462,7 +462,7 @@ Enter the required LDAP password.
 	}
 
 	y2milestone("ReadLDAPExportDefaults() returned %1", defaultv);
-	
+
 	UI::OpenDialog (`opt(`decorated ),
 			`HBox( `HSpacing(2),
 			       `VBox (
@@ -475,13 +475,13 @@ Enter the required LDAP password.
 				      `HBox (`HWeight (1, `ComboBox( `id (`dn), `opt(`editable), _("&DN:"), dn))),
 				      `TextEntry( `id (`binddn), _("&Bind DN:"), binddn),
 				      passwordTerm,
-				      `VSpacing (1),					  
+				      `VSpacing (1),
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 					     `HStretch(),
 					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
 					     ),
-				      `VSpacing (1)					  
+				      `VSpacing (1)
 				      ),
 			       `HSpacing (2)
 			       )
@@ -492,13 +492,13 @@ Enter the required LDAP password.
 	repeat
  	{
 	    ui = (symbol) UI::UserInput ();
-	    
+
 	    password = (string) UI::QueryWidget(`id(`password), `Value);
 	    hostname = (string) UI::QueryWidget(`id(`hostname), `Value);
 	    port = (string) UI::QueryWidget(`id(`port), `Value);
 	    string stringDN = (string) UI::QueryWidget(`id(`dn), `Value);
-	    binddn = (string) UI::QueryWidget(`id(`binddn), `Value);	    
-	    
+	    binddn = (string) UI::QueryWidget(`id(`binddn), `Value);
+
 	    if (ui == `cancel)
 	    {
 		password = nil;
@@ -602,14 +602,18 @@ Enter the required LDAP password.
 				      `Heading (_("Export CA to File")),
 				      `VSpacing (1),
 				      `Frame ( _("Export Format"),
-					       `RadioButtonGroup(`id(`rb), 
+					       `RadioButtonGroup(`id(`rb),
 								 `VBox(
 								       `Left(`RadioButton(`id(`PEM_CERT), `opt(`notify),
 											  _("O&nly the Certificate in PEM Format"), true)),
-								       `Left(`RadioButton(`id(`PEM_CERT_KEY), `opt(`notify),
-											  _("Ce&rtificate and the Key Unencrypted in PEM Format"))),
-								       `Left(`RadioButton(`id(`PEM_CERT_ENCKEY), `opt(`notify),
-											  _("C&ertificate and the Key Encrypted in PEM Format"))),
+								       `Left(`RadioButton(`id(`PEM_KEY), `opt(`notify),
+											  _("Only the Key &Unencrypted in PEM Format"))),
+								       `Left(`RadioButton(`id(`PEM_ENCKEY), `opt(`notify),
+											  _("Only the &Key Encrypted in PEM Format"))),
+                                                                       `Left(`RadioButton(`id(`PEM_CERT_KEY), `opt(`notify),
+                                                                                          _("Ce&rtificate and the Key Unencrypted in PEM Format"))),
+                                                                       `Left(`RadioButton(`id(`PEM_CERT_ENCKEY), `opt(`notify),
+                                                                                          _("C&ertificate and the Key Encrypted in PEM Format"))),
 								       `Left(`RadioButton(`id(`DER_CERT), `opt(`notify),
 											  _("&Certificate in DER Format"))),
 								       `Left(`RadioButton(`id(`PKCS12), `opt(`notify),
@@ -622,21 +626,21 @@ Enter the required LDAP password.
 				      `HBox(
 					    `Password( `id (`PK12password), `opt(`hstretch), _("&New Password")),
 					    `Password( `id (`verifyPassword), `opt(`hstretch), _("&Verify Password"))
-					    ),				      
-				      `HBox ( 
+					    ),
+				      `HBox (
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
 					     `VBox(
 						   `Label(""),
 						   `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
 						   )
-					     ),				      
-				      `VSpacing (1),					  
+					     ),
+				      `VSpacing (1),
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 					     `HStretch(),
 					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
 					     ),
-				      `VSpacing (1)					  
+				      `VSpacing (1)
 				      ),
 			       `HSpacing (2)
 			       )
@@ -644,41 +648,45 @@ Enter the required LDAP password.
 
 	symbol ui = nil;
 	UI::ChangeWidget (`id (`PK12password), `Enabled, false);
-	UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);		
+	UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);
 	repeat
  	{
 	    ui = (symbol) UI::UserInput ();
 
 	    map<symbol,string> kindmap = $[`PEM_CERT:"PEM_CERT",
-					   `PEM_CERT_KEY:"PEM_CERT_KEY",
-					   `PEM_CERT_ENCKEY:"PEM_CERT_ENCKEY",
+					   `PEM_KEY:"PEM_KEY",
+					   `PEM_ENCKEY:"PEM_ENCKEY",
+                                           `PEM_CERT_KEY:"PEM_CERT_KEY",
+                                           `PEM_CERT_ENCKEY:"PEM_CERT_ENCKEY",
 					   `DER_CERT:"DER_CERT",
 					   `PKCS12:"PKCS12",
 					   `PKCS12_CHAIN:"PKCS12_CHAIN"];
-	    
+
             string kind = kindmap[(symbol) UI::QueryWidget(`id(`rb),
 							   `CurrentButton)]:"";
 
 	    map<symbol,string> filtermap = $[`PEM_CERT:"*.pem *.crt *",
-					     `PEM_CERT_KEY:"*.pem *.crt *",
-					     `PEM_CERT_ENCKEY:"*.pem *.crt *",
+					     `PEM_KEY:"*.pem *.key *",
+					     `PEM_ENCKEY:"*.pem *.key *",
+                                             `PEM_CERT_KEY:"*.pem *.crt *",
+                                             `PEM_CERT_ENCKEY:"*.pem *.crt *",
 					     `DER_CERT:"*.der *.crt *",
 					     `PKCS12:"*.p12 *.crt *",
 					     `PKCS12_CHAIN:"*.p12 *.crt *"];
-	    
+
 	    string filterString	= filtermap[(symbol) UI::QueryWidget(`id(`rb),
-								     `CurrentButton)]:"*";    
+								     `CurrentButton)]:"*";
 
 	    if (kind == "PKCS12"
 		|| kind == "PKCS12_CHAIN")
 	    {
 		UI::ChangeWidget (`id (`PK12password), `Enabled, true);
-		UI::ChangeWidget (`id (`verifyPassword), `Enabled, true);				
+		UI::ChangeWidget (`id (`verifyPassword), `Enabled, true);
 	    }
 	    else
 	    {
 		UI::ChangeWidget (`id (`PK12password), `Enabled, false);
-		UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);				
+		UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);
 	    }
 
 	    if (ui == `browse)
@@ -689,7 +697,7 @@ Enter the required LDAP password.
 		    UI::ChangeWidget(`id(`filename), `Value, name);
 		}
 	    }
-		
+
 	    if (ui == `ok)
 	    {
 		// export to file
@@ -701,7 +709,7 @@ Enter the required LDAP password.
 		    Popup::Error(_("New passwords do not match."));
 		    ui = `again;
 		}
-		
+
 		string filename = (string) UI::QueryWidget(`id(`filename), `Value);
 		if (size (filename) == 0)
 		{
@@ -738,7 +746,7 @@ Enter the required LDAP password.
 			|| ret != "1")
 		    {
 			showErrorCaManagement ();
-			ui = `again;			
+			ui = `again;
 		    }
 		    else
 		    {
@@ -749,7 +757,7 @@ Enter the required LDAP password.
 	}
 	until (contains ([`ok, `cancel], ui));
 	UI::CloseDialog ();
-    }        
+    }
 
     /**
      * Dialog for exporting CRL to file
@@ -765,7 +773,7 @@ Enter the required LDAP password.
 				      `Heading (_("Export CRL to File")),
 				      `VSpacing (1),
 				      `Frame ( _("Export Format"),
-					       `RadioButtonGroup(`id(`rb), 
+					       `RadioButtonGroup(`id(`rb),
 								 `VBox(
 								       `Left(`RadioButton(`id(`PEM), `opt(`notify),
 											  _("&PEM Format"), true)),
@@ -774,20 +782,20 @@ Enter the required LDAP password.
 								       )
 								 )
 					       ),
-				      `HBox ( 
+				      `HBox (
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
 					     `VBox(
 						   `Label(""),
 						   `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
 						   )
-					     ),				      
-				      `VSpacing (1),					  
+					     ),
+				      `VSpacing (1),
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 					     `HStretch(),
 					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
 					     ),
-				      `VSpacing (1)					  
+				      `VSpacing (1)
 				      ),
 			       `HSpacing (2)
 			       )
@@ -803,10 +811,10 @@ Enter the required LDAP password.
 
 	    map<symbol,string> filtermap = $[`PEM:"*.pem *.crt *",
 					     `DER:"*.der *.crt *"];
-	    
+
 	    string filterString	= filtermap[(symbol) UI::QueryWidget(`id(`rb),
-								     `CurrentButton)]:"*";    	    
-	    
+								     `CurrentButton)]:"*";
+
             string kind = kindmap[(symbol) UI::QueryWidget(`id(`rb),
 							   `CurrentButton)]:"";
 
@@ -818,7 +826,7 @@ Enter the required LDAP password.
 		    UI::ChangeWidget(`id(`filename), `Value, name);
 		}
 	    }
-		
+
 	    if (ui == `ok)
 	    {
 		// export to file
@@ -837,7 +845,7 @@ Enter the required LDAP password.
 								   "exportFormat" : kind,
 								   "destinationFile" : filename
 								 ]);
-		    
+
 		    y2milestone ("ExportCRL(%1) return %2", $["caName": CAname,
 							     "exportFormat" : kind,
 							     "destinationFile" : filename
@@ -846,7 +854,7 @@ Enter the required LDAP password.
 			|| ret != "1")
 		    {
 			showErrorCaManagement ();
-			ui = `again;			
+			ui = `again;
 		    }
 		    else
 		    {
@@ -873,12 +881,16 @@ Enter the required LDAP password.
 				      `Heading (_("Export Certificate to File")),
 				      `VSpacing (1),
 				      `Frame ( _("Export Format"),
-					       `RadioButtonGroup(`id(`rb), 
+					       `RadioButtonGroup(`id(`rb),
 								 `VBox(
 								       `Left(`RadioButton(`id(`PEM_CERT), `opt(`notify),
 											  _("&Only the Certificate in PEM Format"), true)),
-								       `Left(`RadioButton(`id(`PEM_CERT_KEY), `opt(`notify),
-											  _("Ce&rtificate and the Key Unencrypted in PEM Format"))),
+								       `Left(`RadioButton(`id(`PEM_KEY), `opt(`notify),
+											  _("Only the Key &Unencrypted in PEM Format"))),
+                                                                       `Left(`RadioButton(`id(`PEM_ENCKEY), `opt(`notify),
+                                                                                          _("Only the &Key Encrypted in PEM Format"))),
+                                                                       `Left(`RadioButton(`id(`PEM_CERT_KEY), `opt(`notify),
+                                                                                          _("Ce&rtificate and the Key Unencrypted in PEM Format"))),
 								       `Left(`RadioButton(`id(`PEM_CERT_ENCKEY), `opt(`notify),
 											  _("C&ertificate and the Key Encrypted in PEM Format"))),
 								       `Left(`RadioButton(`id(`DER_CERT), `opt(`notify),
@@ -895,20 +907,20 @@ Enter the required LDAP password.
 					    `Password( `id (`PK12password), `opt(`hstretch), _("&New Password")),
 					    `Password( `id (`verifyPassword), `opt(`hstretch), _("&Verify Password"))
 					    ),
-				      `HBox ( 
+				      `HBox (
 					     `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
 					     `VBox(
 						   `Label(""),
 						   `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
 						   )
-					     ),				      
-				      `VSpacing (1),					  
+					     ),
+				      `VSpacing (1),
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 					     `HStretch(),
 					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
 					     ),
-				      `VSpacing (1)					  
+				      `VSpacing (1)
 				      ),
 			       `HSpacing (2)
 			       )
@@ -916,42 +928,46 @@ Enter the required LDAP password.
 
 	symbol ui = nil;
 	UI::ChangeWidget (`id (`PK12password), `Enabled, false);
-	UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);		
+	UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);
 	repeat
  	{
 	    ui = (symbol) UI::UserInput ();
 
 	    map<symbol,string> kindmap = $[`PEM_CERT:"PEM_CERT",
-					   `PEM_CERT_KEY:"PEM_CERT_KEY",
-					   `PEM_CERT_ENCKEY:"PEM_CERT_ENCKEY",
+					   `PEM_KEY:"PEM_KEY",
+					   `PEM_ENCKEY:"PEM_ENCKEY",
+                                           `PEM_CERT_KEY:"PEM_CERT_KEY",
+                                           `PEM_CERT_ENCKEY:"PEM_CERT_ENCKEY",
 					   `DER_CERT:"DER_CERT",
 					   `PKCS12:"PKCS12",
 					   `PKCS12_CHAIN:"PKCS12_CHAIN"];
-	    
+
             string kind =  kindmap[(symbol) UI::QueryWidget(`id(`rb),
 						   `CurrentButton)]:"";
 
 	    map<symbol,string> filtermap = $[`PEM_CERT:"*.pem *.crt *",
-					     `PEM_CERT_KEY:"*.pem *.crt *",
-					     `PEM_CERT_ENCKEY:"*.pem *.crt *",
+					     `PEM_KEY:"*.pem *.key *",
+					     `PEM_ENCKEY:"*.pem *.key *",
+                                             `PEM_CERT_KEY:"*.pem *.crt *",
+                                             `PEM_CERT_ENCKEY:"*.pem *.crt *",
 					     `DER_CERT:"*.der *.crt *",
 					     `PKCS12:"*.p12 *.crt *",
 					     `PKCS12_CHAIN:"*.p12 *.crt *"];
-	    
+
 	    string filterString	= filtermap[(symbol) UI::QueryWidget(`id(`rb),
-								     `CurrentButton)]:"*";    
-	    
+								     `CurrentButton)]:"*";
+
 
 	    if (kind == "PKCS12"
 		|| kind == "PKCS12_CHAIN")
 	    {
 		UI::ChangeWidget (`id (`PK12password), `Enabled, true);
-		UI::ChangeWidget (`id (`verifyPassword), `Enabled, true);		
+		UI::ChangeWidget (`id (`verifyPassword), `Enabled, true);
 	    }
 	    else
 	    {
 		UI::ChangeWidget (`id (`PK12password), `Enabled, false);
-		UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);		
+		UI::ChangeWidget (`id (`verifyPassword), `Enabled, false);
 	    }
 
 	    if (ui == `browse)
@@ -962,7 +978,7 @@ Enter the required LDAP password.
 		    UI::ChangeWidget(`id(`filename), `Value, name);
 		}
 	    }
-		
+
 	    if (ui == `ok)
 	    {
 		// export to file
@@ -1041,13 +1057,13 @@ Enter the required LDAP password.
 
 	term contents =  `VBox (
 				`VSpacing (1),
-				`HBox ( 
+				`HBox (
 				       `HWeight(1, `TextEntry( `id (`filename), _("&File Name:"))),
 				       `VBox(
 					     `Label(""),
 					     `PushButton (`id(`browse), `opt( `notify), Label::BrowseButton())
 					     )
-				       ),				      
+				       ),
 				`VSpacing (1),
 				`Password( `id (`password), `opt(`hstretch), _("&Password:")),
 				`VSpacing (1)
@@ -1060,12 +1076,12 @@ Enter the required LDAP password.
         // help text 2/3
 	help_text = help_text +
 	    _("Import a server certificate and correspondenting CA and copy them to a place where other YaST modules look for such a common certificate.");
-	
+
 	// help text 3/3
 	help_text = help_text + _("<p><b>Password:</b><br>
 Certificate password</p>
-");	
-	
+");
+
 	Wizard::CreateDialog();
 	Wizard::SetDesktopIcon("ca-management");
 	Wizard::SetContents( _("Importing Common Certificate from Disk"), contents,
@@ -1080,7 +1096,7 @@ Certificate password</p>
 	{
 	    success = false;
 	    ret = UI::UserInput ();
-	    
+
 	    if (ret == `browse)
 	    {
 		string name = selectFile (false, "*.p12", "Import from ..." );
@@ -1088,9 +1104,9 @@ Certificate password</p>
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
 		}
-		ret = `again;		
+		ret = `again;
 	    }
-	    
+
 	    if (ret == `next)
 	    {
 		// reading certificate from disk
@@ -1103,14 +1119,14 @@ Certificate password</p>
 		else
 		{
 		    password = (string) UI::QueryWidget (`id(`password), `Value);
-	    
+
 		    UI::BusyCursor();
 		    UI::OpenDialog(`VBox(`Label(_("Importing certificate..."))));
-		    
+
 		    boolean yapiret = (boolean) YaPI::CaManagement::ImportCommonServerCertificate ($["passwd" : password,
 												     "inFile" : filename]);
 		    y2milestone ("ImportCommonServerCertificate(%1) return %2",
-				 filename, 
+				 filename,
 				 yapiret);
 		    if (yapiret == nil
 			|| !yapiret)
@@ -1122,8 +1138,8 @@ Certificate password</p>
 		    {
 			Popup::Message(_("Certificate has been imported."));
 			success = true;
-		    }		    
-		    UI::CloseDialog ();		    
+		    }
+		    UI::CloseDialog ();
 		}
 	    }
 	}
@@ -1140,12 +1156,12 @@ Certificate password</p>
      * @return success
      */
     define boolean exportCommonServerCertificate (string CAname, string certificate, string commonName) ``{
-	
+
 	boolean success = false;
 	boolean check = YaPI::CaManagement::Verify ($["caName": CAname,
                       "caPasswd":getPassword(CAname),
 					  "certificate" : certificate,
-					  "disableCRLcheck" : "1", 
+					  "disableCRLcheck" : "1",
 					  "purpose" : "sslserver"
 						    ]);
 	// Checking, if the certificate is a server certificate
@@ -1161,7 +1177,7 @@ Certificate password</p>
 		return true;
 	    }
 	}
-	
+
 	// evaluate if the common name of the server certificate is the hostname
 	map retmap = (map) SCR::Execute (.target.bash_output,
 					"/bin/hostname --long",
@@ -1169,7 +1185,7 @@ Certificate password</p>
 	y2milestone("Hostname :%1", retmap);
 	if (commonName != strip(retmap["stdout"]:""))
 	{
-	    string errorString = sformat ( _("The common name of the certificate (%1) is not the name of 
+	    string errorString = sformat ( _("The common name of the certificate (%1) is not the name of
 the server (%2).
 This certificate might be not practical as a common server certificate.
 "),
@@ -1177,7 +1193,7 @@ This certificate might be not practical as a common server certificate.
 					   strip(retmap["stdout"]:""));
 	    Popup::Warning (errorString);
 	}
-					   
+
 	UI::OpenDialog (`opt(`decorated ),
 			`HBox( `HSpacing(2),
 			       `VBox (
@@ -1192,7 +1208,7 @@ This certificate might be not practical as a common server certificate.
 					     `HStretch(),
 					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
 					     ),
-				      `VSpacing (1)					  
+				      `VSpacing (1)
 				      ),
 			       `HSpacing (2)
 			       )
@@ -1209,7 +1225,7 @@ This certificate might be not practical as a common server certificate.
 		UI::BusyCursor();
 		UI::OpenDialog(`VBox(`Label(_("Exporting certificate..."))));
 		string filename = (string) SCR::Read (.target.tmpdir) + "/commonCertificate";
-		    
+
 		string ret = (string) YaPI::CaManagement::ExportCertificate ($["caName": CAname,
 																	   "caPasswd" : getPassword (CAname),
 																	   "certificate" : certificate,
@@ -1235,7 +1251,7 @@ This certificate might be not practical as a common server certificate.
 		    boolean yapiret = (boolean) YaPI::CaManagement::ImportCommonServerCertificate ($["passwd" : password,
 												     "inFile" : filename]);
 		    y2milestone ("ImportCommonServerCertificate(%1) return %2",
-				 filename, 
+				 filename,
 				 yapiret);
 		    if (yapiret == nil
 			|| !yapiret)
@@ -1247,14 +1263,14 @@ This certificate might be not practical as a common server certificate.
 		    {
 			Popup::Message(_("Certificate has been written as common server certificate."));
 			success = true;
-		    }		    
+		    }
 		}
-		UI::CloseDialog ();		    
+		UI::CloseDialog ();
 	    }
-	} 
+	}
 	until (contains ([`ok, `cancel], ui));
-	UI::CloseDialog ();		    	
-	
+	UI::CloseDialog ();
+
 	return success;
     }
 
@@ -1273,7 +1289,7 @@ This certificate might be not practical as a common server certificate.
 				      `VSpacing (1),
 				      `Heading (_("Import Request from Disk")),
 				      `VSpacing (1),
-				      `HBox ( 
+				      `HBox (
 					     `HWeight(2, `TextEntry( `id (`filename), _("&File Name:"))),
 					     `HWeight(1,`VBox(
 							      `Label(""),
@@ -1281,12 +1297,12 @@ This certificate might be not practical as a common server certificate.
 							      )
 						      )
 					     ),
-				      `VSpacing (1),					  
+				      `VSpacing (1),
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 					     `HStretch(),
 					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
-					     ),				      
+					     ),
 				      `VSpacing (1)
 				      )
 				)
@@ -1300,7 +1316,7 @@ This certificate might be not practical as a common server certificate.
 	{
 	    success = false;
 	    ret = UI::UserInput ();
-	    
+
 	    if (ret == `browse)
 	    {
 		string name = selectFile ( false, "*.pem *.req *.csr *.der", "Import from ..." );
@@ -1308,9 +1324,9 @@ This certificate might be not practical as a common server certificate.
 		{
 		    UI::ChangeWidget(`id(`filename), `Value, name);
 		}
-		ret = `again;		
+		ret = `again;
 	    }
-	    
+
 	    if (ret == `ok)
 	    {
 		// reading certificate from disk
@@ -1343,13 +1359,13 @@ This certificate might be not practical as a common server certificate.
 		    {
 			UI::BusyCursor();
 			UI::OpenDialog(`VBox(`Label(_("Importing request..."))));
-		    
+
 			string yapiret = (string) YaPI::CaManagement::ImportRequest ($["caName" : CaName,
                                             "caPasswd":getPassword(CaName),
 											"inFile" : filename,
 											"importFormat" : extention]);
 			y2milestone ("ImportRequest(%1) return %2",
-				     filename, 
+				     filename,
 				     yapiret);
  			if (yapiret == nil)
 			{
@@ -1360,13 +1376,13 @@ This certificate might be not practical as a common server certificate.
  			{
 			    Popup::Message(_("Request has been imported."));
 			    success = true;
-			}		    
+			}
 			UI::CloseDialog ();
 		    }
 		}
 	    }
 	}
-	UI::CloseDialog ();	
+	UI::CloseDialog ();
 	return success;
     }
 
@@ -1384,7 +1400,7 @@ This certificate might be not practical as a common server certificate.
 				      `VSpacing (1),
 				      `Heading (_("Import CA from Disk")),
 				      `TextEntry( `id (`caName), _("&CA Name:")),
-				      `HBox ( 
+				      `HBox (
 					     `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of CA Certificate"))),
 					     `HWeight(1,`VBox(
 							      `Label(""),
@@ -1392,21 +1408,21 @@ This certificate might be not practical as a common server certificate.
 							      )
 						      )
 					     ),
-				      `HBox ( 
+				      `HBox (
 					     `HWeight(2, `TextEntry( `id (`pathKey), _("&Path of Key"))),
 					     `HWeight(1,`VBox(
 							      `Label(""),
 							      `PushButton (`id(`browseKey), `opt( `notify), Label::BrowseButton())
 							      )
 						      )
-					     ),			       
+					     ),
 				      `Password( `id (`passKey), `opt(`hstretch),_("&Key Password")),
-				      `VSpacing (1),					  
+				      `VSpacing (1),
 				      `HBox (  // push button label
 					     `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
 					     `HStretch(),
 					     `PushButton (`id(`cancel), `opt( `key_F9), Label::AbortButton())
-					     ),				      
+					     ),
 				      `VSpacing (1)
 				      )
 			       )
@@ -1420,7 +1436,7 @@ This certificate might be not practical as a common server certificate.
 	{
 	    success = false;
 	    ret = UI::UserInput ();
-	    
+
 	    if (ret == `browseCert)
 	    {
 		string name = selectFile (false, "*.pem *.crt", "Import from ..." );
@@ -1428,9 +1444,9 @@ This certificate might be not practical as a common server certificate.
 		{
 		    UI::ChangeWidget(`id(`pathCert), `Value, name);
 		}
-		ret = `again;		
+		ret = `again;
 	    }
-	    
+
 	    if (ret == `browseKey)
 	    {
  		string name = selectFile (false, "*.pem *.key", "Import from ..." );
@@ -1438,13 +1454,13 @@ This certificate might be not practical as a common server certificate.
 		{
 		    UI::ChangeWidget(`id(`pathKey), `Value, name);
 		}
-		ret = `again;		
-	    }	    
-	    
+		ret = `again;
+	    }
+
 	    if (ret == `ok)
 	    {
 		// reading CA from disk
-		
+
 		string caCertificate = (string) UI::QueryWidget(`id(`pathCert), `Value);
 		string caKey = (string) UI::QueryWidget(`id(`pathKey), `Value);
 		string caPasswd = (string) UI::QueryWidget(`id(`passKey), `Value);
@@ -1472,12 +1488,12 @@ This certificate might be not practical as a common server certificate.
 		    Popup::Error(_("CA name required."));
 		    ret = `again;
 		}
-		
+
 		if (ret == `ok)
 		{
 		    UI::BusyCursor();
 		    UI::OpenDialog(`VBox(`Label(_("Importing request..."))));
-		    
+
 		    boolean yapiret = (boolean) YaPI::CaManagement::ImportCA ($["caName" : caName,
 																		"caCertificate" : caCertificate,
 																		"caKey" : caKey,
@@ -1503,7 +1519,7 @@ This certificate might be not practical as a common server certificate.
 		}
 	    }
 	}
-	UI::CloseDialog ();	
+	UI::CloseDialog ();
 	return success;
     }
 
@@ -1511,7 +1527,7 @@ This certificate might be not practical as a common server certificate.
 	define map<string,string> getHostIPs () ``{
 
 		map<string,string> ret = $[];
-		
+
 		list <string> ip_addresses = splitstring(
 			 ((map<string, any>)SCR::Execute(.target.bash_output, "ip -f inet -o addr show scope global | awk '{print $4}' | awk -F \/ '{print $1}' | tr '\n' ','"))["stdout"]:"", ",") ;
 
@@ -1530,11 +1546,11 @@ This certificate might be not practical as a common server certificate.
 			  {
 				  // add the IP address
 				  ret[ip] = "IP";
-				  
+
 				  // first ask the DNS server about the name for this IP address
 				  list<string> hostnames = splitstring(
 													   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("dig +noall +answer +time=2 +tries=1 -x %1 | awk '{print $5}' | sed 's/\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
-				  
+
 				  boolean found = false;
 				  foreach(string hname, hostnames, {
 														if(hname != "" && findfirstof(hname, ".") != nil)
@@ -1549,7 +1565,7 @@ This certificate might be not practical as a common server certificate.
 				  {
 					  list<string> hostnames = splitstring(
 														   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("getent hosts %1 | awk '{print $2}' | sed 's/\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
-				  
+
 					  foreach(string hname, hostnames, {
 															if(hname != "" && findfirstof(hname, ".") != nil)
 															{
@@ -1561,9 +1577,9 @@ This certificate might be not practical as a common server certificate.
 			  }
 	    });
 		y2milestone("getHostIPs return: %1", ret);
-		return ret;					  
+		return ret;
 	}
-    
+
 // EOF
 }
 
