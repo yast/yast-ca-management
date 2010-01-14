@@ -17,9 +17,8 @@ X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstResource=
 
 Icon=yast-common_cert
-Exec=/sbin/yast2 common_cert
+Exec=xdg-su -c "/sbin/yast2 common_cert"
 
 Name=Common Server Certificate
 GenericName=Install an SSL certificate for server services
-X-KDE-SubstituteUID=true
 StartupNotify=true
