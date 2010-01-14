@@ -125,7 +125,7 @@
 	if (kind == "Sub CA"
 	    || kind == "Sub CA Request")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, 
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA,
                                                                    "caPasswd":getPassword(CaMgm::currentCA),
                                                                    "certType":"ca"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
@@ -135,7 +135,7 @@
 	if (kind == "Server Certificate"
 	    ||kind == "Server Request")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, 
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA,
                                                                    "caPasswd":getPassword(CaMgm::currentCA),
                                                                    "certType":"server"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
@@ -145,7 +145,7 @@
 	if (kind == "Client Certificate"
 	    ||kind == "Client Request")
 	{
-	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA, 
+	    ret = (map) YaPI::CaManagement::ReadCertificateDefaults ($["caName": CaMgm::currentCA,
                                                                    "caPasswd":getPassword(CaMgm::currentCA),
                                                                    "certType":"client"]);
 	    y2milestone("ReadCertificateDefaults(%1): %2",
@@ -701,7 +701,7 @@
 	else
 	{
 	    // Certificates, Sub-CAs, Requests
-	    map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CaMgm::currentCA, 
+	    map ret = (map) YaPI::CaManagement::ReadCA ($["caName":CaMgm::currentCA,
                                                       "caPasswd":getPassword(CaMgm::currentCA),
                                                       "type":"parsed"]);
 	    y2milestone("ReadCA(%1): %2", CaMgm::currentCA, ret);
@@ -758,7 +758,7 @@
 	    param["caPasswd"] = getPassword(CaMgm::currentCA);
 	    //param["notext"] = "1";
 		foreach(map elem, CaMgm::prop_subject_alt_name_list, {
-																  CaMgm::adv_subject_alt_name_list = add (CaMgm::adv_subject_alt_name_list, elem);	
+																  CaMgm::adv_subject_alt_name_list = add (CaMgm::adv_subject_alt_name_list, elem);
 															  });
 	}
 	if (kind == "Client Certificate")
@@ -1297,7 +1297,7 @@
 	// fillup parameters depending on kind
 
 	param["caName"] =  CaMgm::currentCA;
-	// set the real password later. 
+	// set the real password later.
     param["caPasswd"] = "<was set>";
 	param["certType"] =  kindmap[CaMgm::currentDefault]:"";
 
@@ -1324,7 +1324,7 @@
 	{
 	    param["basicConstraints"] = param["basicConstraints"]:"" +
 		", pathlen:" + tostring(CaMgm::adv_pathlenValue);
-	}	
+	}
 
 	if (CaMgm::adv_cri_nsComment)
 	{

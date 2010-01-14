@@ -14,21 +14,21 @@ BEGIN {
 
     #    my $comp = new LIMAL::StringArray();
     #    $comp->push_back("*");
-        
+
     #    my $cat = new LIMAL::StringArray();
     #    $cat->push_back("FATAL");
     #    $cat->push_back("ERROR");
     #    $cat->push_back("INFO");
-        
+
 
     #    my $logref = LIMAL::Logger::createFileLogger("YaPI::CaManagement", $comp, $cat,
-    #                                                 "[%d] %p %c %l - %m", 
+    #                                                 "[%d] %p %c %l - %m",
     #                                                 "/var/log/YaST2/limal-ca-mgm.log",
     #                                                 2048, 2);
     #    LIMAL::Logger::setDefaultLogger($logref);
     #};
     # ignore errors here; If we run as none root this happens
-    
+
 
 }
 
@@ -78,7 +78,7 @@ $ca = ReadCA($valueMap)
 $name = AddRequest($valueMap)
 
   create a request for a special CA and returns the name
-  
+
 $name = IssueCertificate($valueMap)
 
   issue a certificate and returns the name of the new certificate
@@ -98,7 +98,7 @@ $bool = UpdateDB($valueMap)
 $cert = ReadCertificate($valueMap)
 
   returns a certificate as plain text or parsed map
-  
+
 $bool = RevokeCertificate($valueMap)
 
   revoke a certificate
@@ -204,7 +204,7 @@ $bool = ChangePassword($valueMap)
 
 =head1 COMMON PARAMETER
 
-Here is a list of common parameter which are often 
+Here is a list of common parameter which are often
 used in I<$valueMap>
 
 =over 2
@@ -223,12 +223,12 @@ certType => <value>
 newCaName <directory Name>
 
 =item *
-request => <filename> 
+request => <filename>
 
  (without suffix)
 
 =item *
-certificate => <filename> 
+certificate => <filename>
 
  (without suffix)
 
@@ -239,7 +239,7 @@ keyPasswd => <String>
 caPasswd => <string>
 
 =item *
-commonName => <String> 
+commonName => <String>
 
  (ascii)
 
@@ -278,9 +278,9 @@ unstructuredName => <string>
 =item *
 crlReason => <value>
 
- allowed values are: 
+ allowed values are:
 
- unspecified, keyCompromise, CACompromise, affiliationChanged, 
+ unspecified, keyCompromise, CACompromise, affiliationChanged,
  superseded, cessationOfOperation, certificateHold
 
 =back
@@ -310,7 +310,7 @@ keyUsage => <values>
 
  allowed values are:
 
- digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment, 
+ digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment,
  keyAgreement, keyCertSign, cRLSign, encipherOnly, decipherOnly
 
 =item *
@@ -332,7 +332,7 @@ subjectAltName => <values>
 
  allowed values are:
 
- email:<email-address>, URI:<URL>, DNS:<domain_name>, 
+ email:<email-address>, URI:<URL>, DNS:<domain_name>,
  RID:<object_identifier>, IP:<ip_address>, email:copy
 
 =item *
@@ -340,7 +340,7 @@ issuerAltName => <values>
 
  allowed values are:
 
- email:<email-address>, URI:<URL>, DNS:<domain_name>, 
+ email:<email-address>, URI:<URL>, DNS:<domain_name>,
  RID:<object_identifier>, IP:<ip_address>, issuer:copy
 
 =item *
@@ -366,8 +366,8 @@ extendedKeyUsage => <values>
 
  allowed values are:
 
- serverAuth, clientAuth, codeSigning, emailProtection, timeStamping, 
- msCodeInd, msCodeCom, msCTLSign, msSGC, msEFS, nsSGC, 
+ serverAuth, clientAuth, codeSigning, emailProtection, timeStamping,
+ msCodeInd, msCodeCom, msCTLSign, msSGC, msEFS, nsSGC,
  <object_identifier>
 
  a list of explanation:
@@ -389,7 +389,7 @@ authorityInfoAccess => <accessOID>;<location>
 
  accessOID can be: OCSP, caIssuers or a <object_identifier>
 
- location can be: email:<email-address>, URI:<URL>, DNS:<domain_name>, 
+ location can be: email:<email-address>, URI:<URL>, DNS:<domain_name>,
  RID:<object_identifier>, IP:<ip_address>
 
 =item *
@@ -465,7 +465,7 @@ sub ReadCAList {
         if(defined $repository) {
 
             $list = LIMAL::CaMgm::CA::getCAList($repository);
-        
+
         } else {
 
             $list = LIMAL::CaMgm::CA::getCAList();
@@ -478,7 +478,7 @@ sub ReadCAList {
           }
     };
     if($@) {
-        return $self->SetError( summary     => __("Cannot read CA list."), 
+        return $self->SetError( summary     => __("Cannot read CA list."),
                                 description => YaST::caUtils->exception2String($@),
                                 code        => "LIMAL_CALL_FAILED");
     }
@@ -488,12 +488,12 @@ sub ReadCAList {
 =item *
 C<$caList = ReadCATree()>
 
-Returns a list of lists of the available CAs 
+Returns a list of lists of the available CAs
 containing the issuer caName.
 
 * $caList->[$x]->[0] is the caName
 
-* $caList->[$x]->[1] is the issuer caName 
+* $caList->[$x]->[1] is the issuer caName
 
 If the issuer caName is empty caName is a root CA.
 The list is sorted by the first element.
@@ -521,9 +521,9 @@ sub ReadCATree {
         my $tree = undef;
 
         if(defined $repository) {
-            
+
             $tree = LIMAL::CaMgm::CA::getCATree($repository);
-        
+
         } else {
 
             $tree = LIMAL::CaMgm::CA::getCATree();
@@ -539,7 +539,7 @@ sub ReadCATree {
           }
     };
     if($@) {
-        return $self->SetError( summary     => __("Cannot read CA tree."), 
+        return $self->SetError( summary     => __("Cannot read CA tree."),
                                 description => YaST::caUtils->exception2String($@),
                                 code        => "LIMAL_CALL_FAILED");
     }
@@ -615,7 +615,7 @@ I<$valueMap> supports the following Keys:
 
 * crlDistributionPoints
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 EXAMPLE:
@@ -634,7 +634,7 @@ EXAMPLE:
 
  my $res = YaPI::CaManagement->AddRootCA($data);
  if( not defined $res ) {
-     # error  
+     # error
  } else {
      print "OK\n";
  }
@@ -687,21 +687,21 @@ sub AddRootCA {
     }
     my $rgd = undef;
     eval {
-        
+
         if( defined $data->{'repository'}) {
-            
+
             $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults($data->{'repository'});
-            
+
         } else {
-            
+
             $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults();
-            
+
         }
         my $dnl = $rgd->getSubjectDN()->getDN();
         my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
                          'organizationName', 'organizationalUnitName',
                          'commonName', 'emailAddress');
-        
+
         for(my $dnit = $dnl->begin();
             !$dnl->iterator_equal($dnit, $dnl->end());
             $dnl->iterator_incr($dnit))
@@ -711,7 +711,7 @@ sub AddRootCA {
                 if($dnl->iterator_value($dnit)->getType() =~ /^$v$/i) {
 
                     if(defined $data->{$v}) {
-                        
+
                         $dnl->iterator_value($dnit)->setRDNValue($data->{$v});
 
                     } else {
@@ -749,7 +749,7 @@ sub AddRootCA {
 
         my $exts = $rgd->getExtensions();
 
-        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+        my $e = YaST::caUtils->transformBasicConstaints($exts,
                                                         $data->{'basicConstraints'});
         if(!defined $e) {
             return undef;
@@ -759,24 +759,24 @@ sub AddRootCA {
 
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
-    
-    
+
+
     my $cid = undef;
     eval {
 
         if( defined $data->{'repository'}) {
-            
+
             $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults($data->{'repository'});
-            
+
         } else {
-            
+
             $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults();
-            
+
         }
 
         my $start = time();
@@ -785,56 +785,56 @@ sub AddRootCA {
         $cid->setCertifyPeriode($start, $end);
 
         my $exts = $cid->getExtensions();
-        
-        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+
+        my $e = YaST::caUtils->transformBasicConstaints($exts,
                                                         $data->{'basicConstraints'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsComment",
                                                      $data->{'nsComment'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsBaseUrl",
                                                      $data->{'nsBaseUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsRevocationUrl",
                                                      $data->{'nsRevocationUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsCaRevocationUrl",
                                                      $data->{'nsCaRevocationUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsRenewalUrl",
                                                      $data->{'nsRenewalUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsSslServerName",
                                                      $data->{'nsSslServerName'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsCaPolicyUrl",
                                                      $data->{'nsCaPolicyUrl'});
         if(!defined $e) {
@@ -908,10 +908,10 @@ sub AddRootCA {
     eval {
 
         if( defined $data->{'repository'}) {
-            
+
             LIMAL::CaMgm::CA::createRootCA($data->{'caName'},
                                            $data->{'keyPasswd'},
-                                           $rgd, $cid, 
+                                           $rgd, $cid,
                                            $data->{'repository'});
         } else {
 
@@ -987,11 +987,11 @@ On success the return value is a hash which can contain the following keys:
 
 * DN
 
-I<DN> is a hash which contains some values of the 
+I<DN> is a hash which contains some values of the
 subject of the CA Certificate (if caName is defined)
 
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 EXAMPLE:
@@ -1002,7 +1002,7 @@ EXAMPLE:
              'caName'   => 'My_CA',
              'certType' => 'client'
             }
- $certValueMap = YaPI::CaManagement->ReadCertificateDefaults($data) 
+ $certValueMap = YaPI::CaManagement->ReadCertificateDefaults($data)
  if( not defined $certValueMap ) {
      # error
  } else {
@@ -1012,7 +1012,7 @@ EXAMPLE:
 =cut
 
 BEGIN { $TYPEINFO{ReadCertificateDefaults} = [
-                                              "function", 
+                                              "function",
                                               ["map", "string", "any"],
                                               ["map", "string", "any"]
                                              ]; }
@@ -1029,7 +1029,7 @@ sub ReadCertificateDefaults {
 
     if (defined $data->{"caName"}) {
         $caName = $data->{"caName"};
-    } 
+    }
     if (defined $data->{"certType"}) {
         $certType = $data->{"certType"};
     } else {
@@ -1057,11 +1057,11 @@ sub ReadCertificateDefaults {
             'authorityInfoAccess'    => undef,
             'crlDistributionPoints'  => undef
            };
-    
+
     my $ca  = undef;
     my $rgd = undef;
     my $cid = undef;
-    
+
     my $rType = 0;
     my $cType = 0;
 
@@ -1079,16 +1079,16 @@ sub ReadCertificateDefaults {
         }
 
         if(defined $data->{'caName'} && $data->{'caName'} ne "") {
-        
+
             if(defined $data->{'repository'}) {
-                
-                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+
+                $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                            $data->{'caPasswd'},
                                            $data->{'repository'});
             } else {
-                
+
                 $ca = new LIMAL::CaMgm::CA($data->{'caName'}, $data->{'caPasswd'});
-                
+
             }
 
             $rgd = $ca->getRequestDefaults($rType);
@@ -1097,15 +1097,15 @@ sub ReadCertificateDefaults {
         } else {
 
             if( defined $data->{'repository'}) {
-                
+
                 $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults($data->{'repository'});
                 $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults($data->{'repository'});
-                
+
             } else {
-                
+
                 $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults();
                 $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults();
-                
+
             }
         }
 
@@ -1118,19 +1118,19 @@ sub ReadCertificateDefaults {
             return undef;
         }
 
-        $e = YaST::caUtils->extractStringExtension($cext->getNsComment(), 
+        $e = YaST::caUtils->extractStringExtension($cext->getNsComment(),
                                                    "nsComment", $ret);
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->extractStringExtension($cext->getNsBaseUrl(), 
+        $e = YaST::caUtils->extractStringExtension($cext->getNsBaseUrl(),
                                                    "nsBaseUrl", $ret);
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->extractStringExtension($cext->getNsRevocationUrl(), 
+        $e = YaST::caUtils->extractStringExtension($cext->getNsRevocationUrl(),
                                                    "nsRevocationUrl", $ret);
         if(!defined $e) {
             return undef;
@@ -1148,13 +1148,13 @@ sub ReadCertificateDefaults {
             return undef;
         }
 
-        $e = YaST::caUtils->extractStringExtension($cext->getNsSslServerName(), 
+        $e = YaST::caUtils->extractStringExtension($cext->getNsSslServerName(),
                                                    "nsSslServerName", $ret);
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->extractStringExtension($cext->getNsCaPolicyUrl(), 
+        $e = YaST::caUtils->extractStringExtension($cext->getNsCaPolicyUrl(),
                                                    "nsCaPolicyUrl", $ret);
         if(!defined $e) {
             return undef;
@@ -1221,7 +1221,7 @@ sub ReadCertificateDefaults {
 
         for(my $it = $list->begin();
             !$list->iterator_equal($it, $list->end());
-            $list->iterator_incr($it)) 
+            $list->iterator_incr($it))
           {
               my $type  = $list->iterator_value($it)->getType();
               my $value = $list->iterator_value($it)->getValue();
@@ -1299,7 +1299,7 @@ In I<$valueMap> you can define the following keys:
 
 * keyLength
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error and "1" on success.
@@ -1332,7 +1332,7 @@ sub WriteCertificateDefaults {
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
-    
+
     # checking requires
     if (!defined $data->{"caName"}) {
                                            # parameter check failed
@@ -1340,7 +1340,7 @@ sub WriteCertificateDefaults {
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
-    
+
     if(! defined $data->{"certType"}) {
                                            # parameter check failed
         return $self->SetError( summary => __("Missing value 'certType'."),
@@ -1352,8 +1352,8 @@ sub WriteCertificateDefaults {
     eval {
 
         if( defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
                                        $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
@@ -1363,7 +1363,7 @@ sub WriteCertificateDefaults {
         }
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -1394,58 +1394,58 @@ sub WriteCertificateDefaults {
 
             $cid->setCertifyPeriode($start, $end);
         }
-            
+
         my $exts = $cid->getExtensions();
-        
-        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+
+        my $e = YaST::caUtils->transformBasicConstaints($exts,
                                                         $data->{'basicConstraints'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsComment",
                                                      $data->{'nsComment'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsBaseUrl",
                                                      $data->{'nsBaseUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsRevocationUrl",
                                                      $data->{'nsRevocationUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsCaRevocationUrl",
                                                      $data->{'nsCaRevocationUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsRenewalUrl",
                                                      $data->{'nsRenewalUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsSslServerName",
                                                      $data->{'nsSslServerName'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsCaPolicyUrl",
                                                      $data->{'nsCaPolicyUrl'});
         if(!defined $e) {
@@ -1518,7 +1518,7 @@ sub WriteCertificateDefaults {
 
     my $rgd = undef;
     eval {
-        
+
         $rgd = $ca->getRequestDefaults($rtype);
 
         if( defined $data->{"keyLength"}) {
@@ -1528,20 +1528,20 @@ sub WriteCertificateDefaults {
 
         my $exts = $rgd->getExtensions();
 
-        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+        my $e = YaST::caUtils->transformBasicConstaints($exts,
                                                         $data->{'basicConstraints'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsComment",
                                                      $data->{'nsComment'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsSslServerName",
                                                      $data->{'nsSslServerName'});
         if(!defined $e) {
@@ -1582,7 +1582,7 @@ sub WriteCertificateDefaults {
 
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -1613,12 +1613,12 @@ sub WriteCertificateDefaults {
                 y2error($Varray->getitem($i));
             }
         }
-        
+
         return $self->SetError( summary => __("Writing the defaults failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
-    
+
     return 1;
 }
 
@@ -1679,8 +1679,8 @@ sub ReadCA {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
-     
-    if (! defined $data->{"type"} || 
+
+    if (! defined $data->{"type"} ||
         !grep( ( $_ eq $data->{"type"}), ("parsed", "plain", "extended"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
@@ -1691,22 +1691,22 @@ sub ReadCA {
     my $ca = undef;
     eval {
         if(defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
-            
+
         } else {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
-            
+
         }
 
         my $cert = $ca->getCA();
 
         if ($type eq "parsed" || $type eq "extended") {
-            
+
             $ret = YaST::caUtils->getParsed($cert);
             my $repos = "$CAM_ROOT";
             if(defined $data->{repository}) {
@@ -1725,10 +1725,10 @@ sub ReadCA {
         } else {
             $ret = $cert->getCertificateAsText();
         }
-        
+
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Parsing the CA failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -1783,7 +1783,7 @@ The keys in I<$valueMap> are:
 
 * extendedKeyUsage
 
-The return value is "undef" on an error and the 
+The return value is "undef" on an error and the
 filename(without suffix) of the request on success.
 
 The syntax of these values are explained in the
@@ -1806,7 +1806,7 @@ EXAMPLE:
             };
  my $res = YaPI::CaManagement->AddRequest($data);
  if( not defined $res ) {
-     # error 
+     # error
  } else {
      print "OK Name of the request is: '$res'\n";
  }
@@ -1854,8 +1854,8 @@ sub AddRequest {
     eval {
 
         if( defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
                                        $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
@@ -1865,7 +1865,7 @@ sub AddRequest {
         }
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -1873,14 +1873,14 @@ sub AddRequest {
 
     my $rgd = undef;
     eval {
-        
+
         $rgd = $ca->getRequestDefaults($LIMAL::CaMgm::E_Client_Req);
-            
+
         my $dnl = $rgd->getSubjectDN()->getDN();
         my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
                          'organizationName', 'organizationalUnitName',
                          'commonName', 'emailAddress');
-        
+
         for(my $dnit = $dnl->begin();
             !$dnl->iterator_equal($dnit, $dnl->end());
             $dnl->iterator_incr($dnit))
@@ -1890,7 +1890,7 @@ sub AddRequest {
                 if($dnl->iterator_value($dnit)->getType() =~ /^$v$/i) {
 
                     if(defined $data->{$v}) {
-                        
+
                         $dnl->iterator_value($dnit)->setRDNValue($data->{$v});
 
                     } else {
@@ -1928,20 +1928,20 @@ sub AddRequest {
 
         my $exts = $rgd->getExtensions();
 
-        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+        my $e = YaST::caUtils->transformBasicConstaints($exts,
                                                         $data->{'basicConstraints'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsComment",
                                                      $data->{'nsComment'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsSslServerName",
                                                      $data->{'nsSslServerName'});
         if(!defined $e) {
@@ -1982,7 +1982,7 @@ sub AddRequest {
 
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -1996,7 +1996,7 @@ sub AddRequest {
 
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Creating request failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -2010,7 +2010,7 @@ C<$name = IssueCertificate($valueMap)>
 
 Issue a certificate and returns the name of the new certificate.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -2056,10 +2056,10 @@ In I<$valueMap> you can define the following keys:
 
 * crlDistributionPoints
 
-The return value is "undef" on an error and the 
+The return value is "undef" on an error and the
 filename(without suffix) of the certificate on success.
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 EXAMPLE:
@@ -2134,7 +2134,7 @@ sub IssueCertificate {
     eval {
 
         if( defined $data->{'repository'}) {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
@@ -2144,7 +2144,7 @@ sub IssueCertificate {
         }
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -2170,56 +2170,56 @@ sub IssueCertificate {
         $cid->setCertifyPeriode($start, $end);
 
         my $exts = $cid->getExtensions();
-        
-        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+
+        my $e = YaST::caUtils->transformBasicConstaints($exts,
                                                         $data->{'basicConstraints'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsComment",
                                                      $data->{'nsComment'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsBaseUrl",
                                                      $data->{'nsBaseUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsRevocationUrl",
                                                      $data->{'nsRevocationUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsCaRevocationUrl",
                                                      $data->{'nsCaRevocationUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsRenewalUrl",
                                                      $data->{'nsRenewalUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsSslServerName",
                                                      $data->{'nsSslServerName'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsCaPolicyUrl",
                                                      $data->{'nsCaPolicyUrl'});
         if(!defined $e) {
@@ -2298,7 +2298,7 @@ sub IssueCertificate {
 
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Signing certificate failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -2312,7 +2312,7 @@ C<$name = AddCertificate($valueMap)>
 
 Create a new Certificate and returns the name
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -2381,10 +2381,10 @@ In I<$valueMap> you can define the following keys:
 * notext (optional - if set to "1" do not output the
           text version in the PEM file)
 
-The return value is "undef" on an error and the 
+The return value is "undef" on an error and the
 filename(without suffix) of the certificate on success.
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 EXAMPLE:
@@ -2433,7 +2433,7 @@ sub AddCertificate {
 
             if(defined $data->{'repository'}) {
 
-                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+                $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                            $data->{'caPasswd'},
                                            $data->{'repository'});
 
@@ -2447,12 +2447,12 @@ sub AddCertificate {
             $ca->deleteRequest($request);
         };
         if($@) {
-            
+
             # ignore error
         }
         return undef;
     }
-    
+
     return $certificate;
 }
 
@@ -2461,19 +2461,19 @@ C<$certList = ReadCertificateList($valueMap)>
 
 Returns a list of maps with all certificates of the defined CA.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
 * caPasswd (required)
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error.
 
-On success it returns an array of hashes with all 
-certificates of this CA. @ret[0..X] can have the 
+On success it returns an array of hashes with all
+certificates of this CA. @ret[0..X] can have the
 following Hash keys:
 
 * certificate (the name of the certificate)
@@ -2531,7 +2531,7 @@ sub ReadCertificateList {
     }
 
     if (! defined $data->{'caPasswd'} ) {
-        
+
         return $self->SetError(summary => __("Missing parameter 'caPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
@@ -2540,28 +2540,28 @@ sub ReadCertificateList {
 
     eval {
         if(defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
-            
+
         } else {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
-            
+
         }
-        
+
         my $list = $ca->getCertificateList();
-        
+
         for(my $listIT = $list->begin();
             !$list->iterator_equal($listIT, $list->end());
             $list->iterator_incr($listIT))
         {
-            
+
             my $hash = undef;
             my $map = $list->iterator_value($listIT);
-            
+
             for(my $mapIT = $map->begin();
                 !$map->iterator_equal($mapIT, $map->end());
                 $map->iterator_incr($mapIT))
@@ -2579,7 +2579,7 @@ sub ReadCertificateList {
         }
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Getting the certificate list failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -2591,9 +2591,9 @@ sub ReadCertificateList {
 =item *
 C<$bool = UpdateDB($valueMap)>
 
-Update the internal openssl database. 
+Update the internal openssl database.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -2601,7 +2601,7 @@ In I<$valueMap> you can define the following keys:
 
 The return value is "undef" on an error and "1" on success.
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 EXAMPLE:
@@ -2624,7 +2624,7 @@ BEGIN { $TYPEINFO{UpdateDB} = ["function", "boolean", ["map", "string", "any"]];
 sub UpdateDB {
     my $self = shift;
     my $data = shift;
-    
+
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
@@ -2644,31 +2644,31 @@ sub UpdateDB {
     my $ca = undef;
     eval {
         if(defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
-            
+
         } else {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
-            
+
         }
-        
+
         my $list = $ca->updateDB();
     };
     if($@) {
-        
+
         if( (ref($@) eq "HASH" && $@->{code} == $LIMAL::CaMgm::E_INVALID_PASSWD) ||
-            $@ =~ /invalid.*password/i) 
+            $@ =~ /invalid.*password/i)
         {
             # error message; displayed in an popup dialog
             return $self->SetError( summary => __("Invalid password."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
-        else 
+        else
         {
             # error message; displayed in an popup dialog
             return $self->SetError( summary => __("UpdateDB failed."),
@@ -2676,7 +2676,7 @@ sub UpdateDB {
                                     code => "LIMAL_CALL_FAILED");
         }
     }
-    
+
     return 1;
 }
 
@@ -2685,15 +2685,15 @@ C<$cert = ReadCertificate($valueMap)>
 
 Returns a certificate as plain text or parsed map.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
 * certificate (required - name without suffix)
 
-* type (required - allowed values: "parsed", "extended" or "plain") 
+* type (required - allowed values: "parsed", "extended" or "plain")
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error.
@@ -2743,15 +2743,15 @@ sub ReadCertificate {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
-    
-    if (! defined $data->{"type"} || 
+
+    if (! defined $data->{"type"} ||
         !grep( ( $_ eq $data->{"type"}), ("parsed", "plain", "extended"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $type = $data->{"type"};
-    
+
     if (! defined $data->{"certificate"}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
@@ -2762,22 +2762,22 @@ sub ReadCertificate {
     my $ca = undef;
     eval {
         if(defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
-            
+
         } else {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
-            
+
         }
 
         my $cert = $ca->getCertificate($certificate);
 
         if ($type eq "parsed" || $type eq "extended") {
-            
+
             $ret = YaST::caUtils->getParsed($cert);
             my $repos = "$CAM_ROOT";
             if(defined $data->{repository}) {
@@ -2796,10 +2796,10 @@ sub ReadCertificate {
         } else {
             $ret = $cert->getCertificateAsText();
         }
-        
+
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Parsing the certificate failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -2810,9 +2810,9 @@ sub ReadCertificate {
 =item *
 C<$bool = RevokeCertificate($valueMap)>
 
-Revoke a certificate. 
+Revoke a certificate.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -2822,7 +2822,7 @@ In I<$valueMap> you can define the following keys:
 
 * crlReason
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error and "1" on success.
@@ -2863,7 +2863,7 @@ sub RevokeCertificate {
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
-    
+
     if (!defined $data->{"caPasswd"} ) {
                                            # parameter check failed
         return $self->SetError( summary => __("Missing value 'caPasswd'."),
@@ -2880,16 +2880,16 @@ sub RevokeCertificate {
     my $ca = undef;
     eval {
         if(defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
-            
+
         } else {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
-            
+
         }
 
         my $reason = new LIMAL::CaMgm::CRLReason();
@@ -2897,11 +2897,11 @@ sub RevokeCertificate {
         if (defined $data->{'crlReason'}) {
             $reason->setReason($data->{'crlReason'});
         }
-        
+
         $ca->revokeCertificate($certificate, $reason);
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Revoking the certificate failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -2913,9 +2913,9 @@ sub RevokeCertificate {
 =item *
 C<$bool = AddCRL($valueMap)>
 
-Create a new CRL. 
+Create a new CRL.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -2923,7 +2923,7 @@ In I<$valueMap> you can define the following keys:
 
 * days (required)
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error and "1" on success.
@@ -2961,7 +2961,7 @@ sub AddCRL {
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
-    
+
     if (!defined $data->{"caPasswd"} ) {
         return $self->SetError( summary => __("Missing value 'caPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
@@ -2975,7 +2975,7 @@ sub AddCRL {
     eval {
 
         if( defined $data->{'repository'}) {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
@@ -2985,7 +2985,7 @@ sub AddCRL {
         }
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -3003,7 +3003,7 @@ sub AddCRL {
 ######   we use only the default extensions
 #
 #         my $exts = $cgd->getExtensions();
-        
+
 #         my $e = YaST::caUtils->transformAuthorityKeyIdentifier($exts,
 #                                     $data->{'authorityKeyIdentifier'});
 #         if(!defined $e) {
@@ -3031,7 +3031,7 @@ sub AddCRL {
 
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Creating the CRL failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -3044,13 +3044,13 @@ C<$crl = ReadCRL($valueMap)>
 
 Returns a CRL as plain text or parsed map.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
 * type (required - allowed values: "parsed", "extended" or "plain")
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error.
@@ -3098,25 +3098,25 @@ sub ReadCRL {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
-    
-    if (! defined $data->{"type"} || 
+
+    if (! defined $data->{"type"} ||
         !grep( ($_ eq $data->{"type"}), ("parsed", "plain", "extended"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $type = $data->{"type"};
-    
+
     my $ca = undef;
     eval {
         if(defined $data->{'repository'}) {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
-            
+
         } else {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
         }
@@ -3142,26 +3142,26 @@ sub ReadCRL {
             }
 
         } else {
-         
+
             $ret = $crl->getCRLAsText();
-   
+
         }
     };
     if($@) {
-        
+
         if( (ref($@) eq "HASH" && $@->{code} == $LIMAL::CaMgm::E_FILE_NOT_FOUND) ||
             $@ =~ /RuntimeException: File not found/i) {
-            
+
             return $self->SetError( summary => __("No CRL available."),
                                     code => "LIMAL_CALL_FAILED");
         } else {
-            
+
             return $self->SetError( summary => __("Parsing the CRL failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
     }
-    
+
     return $ret;
 }
 
@@ -3170,7 +3170,7 @@ C<$file = ExportCA($valueMap)>
 
 Export a CA to a file or returns it in different formats.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -3179,6 +3179,10 @@ In I<$valueMap> you can define the following keys:
 * exportFormat <format> (required)
 
   PEM_CERT (export only the Certificate im PEM format)
+
+  PEM_KEY (export the Key unencrypted in PEM Format)
+
+  PEM_ENCKEY (export the Key encrypted in PEM Format)
 
   PEM_CERT_KEY (export the Certificate and the Key unencrypted in PEM Format)
 
@@ -3196,7 +3200,7 @@ In I<$valueMap> you can define the following keys:
 
 The return value is "undef" on an error and "1" on success if destinationFile is defined.
 If destinationFile is not defined, the CA is directly returned. If the exportFormat is
-PEM_CERT_KEY or PEM_CERT_ENCKEY the certificate and the key are returned. 
+PEM_CERT_KEY or PEM_CERT_ENCKEY the certificate and the key are returned.
 Because of the PEM format it is easy to split them later.
 
 
@@ -3266,9 +3270,9 @@ sub ExportCA {
         $destinationFile = $data->{'destinationFile'};
     }
 
-    if (!defined $data->{"exportFormat"} || 
-        !grep( ( $_ eq $data->{"exportFormat"}), 
-               ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY",
+    if (!defined $data->{"exportFormat"} ||
+        !grep( ( $_ eq $data->{"exportFormat"}),
+               ("PEM_CERT", "PEM_KEY", "PEM_ENCKEY", "PEM_CERT_KEY", "PEM_CERT_ENCKEY",
                 "DER_CERT", "PKCS12", "PKCS12_CHAIN"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'exportFormat'."),
@@ -3306,7 +3310,7 @@ sub ExportCA {
     if ($format eq "PEM_CERT") {
 
         eval {
-            
+
             my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
 
             if (defined $destinationFile) {
@@ -3319,33 +3323,78 @@ sub ExportCA {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
-    } elsif ($format eq "PEM_CERT_KEY") {
+    } elsif ($format eq "PEM_KEY") {
 
         eval {
-            
-            my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
-            my $buffer2 = $ca->exportCAKeyAsPEM("");
 
-            $buffer1->append("\n", 1);
-            $buffer1->append($buffer2->data(), $buffer2->size());
-            
+            my $buffer1 = $ca->exportCAKeyAsPEM("");
+
             if (defined $destinationFile) {
 
                 LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
-                
+
                 $ret = $buffer1->data();
             }
         };
         if($@) {
-            
+
+            return $self->SetError( summary => __("Export failed."),
+                                    description => YaST::caUtils->exception2String($@),
+                                    code => "LIMAL_CALL_FAILED");
+        }
+    } elsif ($format eq "PEM_ENCKEY") {
+
+        eval {
+
+            my $buffer1 = $ca->exportCAKeyAsPEM($data->{'caPasswd'});
+
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+
+                $ret = $buffer1->data();
+            }
+        };
+        if($@) {
+
+            return $self->SetError( summary => __("Export failed."),
+                                    description => YaST::caUtils->exception2String($@),
+                                    code => "LIMAL_CALL_FAILED");
+        }
+
+    } elsif ($format eq "PEM_CERT_KEY") {
+
+        eval {
+
+            my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
+            my $buffer2 = $ca->exportCAKeyAsPEM("");
+
+            $buffer1->append("\n", 1);
+            $buffer1->append($buffer2->data(), $buffer2->size());
+
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+
+                $ret = $buffer1->data();
+            }
+        };
+        if($@) {
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3353,10 +3402,10 @@ sub ExportCA {
     } elsif ($format eq "PEM_CERT_ENCKEY") {
 
         eval {
-            
+
             my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
             my $buffer2 = $ca->exportCAKeyAsPEM($data->{'caPasswd'});
-            
+
             $buffer1->append("\n", 1);
             $buffer1->append($buffer2->data(), $buffer2->size());
 
@@ -3371,7 +3420,7 @@ sub ExportCA {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3380,7 +3429,7 @@ sub ExportCA {
     } elsif ($format eq "DER_CERT") {
 
         eval {
-            
+
             my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_DER);
 
             if (defined $destinationFile) {
@@ -3393,7 +3442,7 @@ sub ExportCA {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3407,7 +3456,7 @@ sub ExportCA {
         }
 
         eval {
-            
+
             my $buffer = $ca->exportCAasPKCS12($data->{'P12Password'},
                                                0);
 
@@ -3421,7 +3470,7 @@ sub ExportCA {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3437,7 +3486,7 @@ sub ExportCA {
 
 
         eval {
-            
+
             my $buffer = $ca->exportCAasPKCS12($data->{'P12Password'},
                                                1);
 
@@ -3451,7 +3500,7 @@ sub ExportCA {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3465,7 +3514,7 @@ C<$file = ExportCertificate($valueMap)>
 
 Export a certificate to a file or returns it in different formats.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -3478,6 +3527,10 @@ In I<$valueMap> you can define the following keys:
 * exportFormat <format> (required)
 
   PEM_CERT (export only the Certificate im PEM format)
+
+  PEM_KEY (export the Key unencrypted in PEM Format)
+
+  PEM_ENCKEY (export the Key encrypted in PEM Format)
 
   PEM_CERT_KEY (export the Certificate and the Key unencrypted in PEM Format)
 
@@ -3495,7 +3548,7 @@ In I<$valueMap> you can define the following keys:
 
 The return value is "undef" on an error and "1" on success if destinationFile is defined.
 If destinationFile is not defined, the certificate is directly returned. If the exportFormat is
-PEM_CERT_KEY or PEM_CERT_ENCKEY the certificate and the key are returned. 
+PEM_CERT_KEY or PEM_CERT_ENCKEY the certificate and the key are returned.
 Because of the PEM format it is easy to split them later.
 
 
@@ -3553,7 +3606,7 @@ sub ExportCertificate {
         return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
- 
+
     if (! defined $data->{'certificate'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
@@ -3579,9 +3632,9 @@ sub ExportCertificate {
         $destinationFile = $data->{'destinationFile'};
     }
 
-    if (! defined $data->{"exportFormat"} || 
+    if (! defined $data->{"exportFormat"} ||
         !grep( ( $_ eq $data->{"exportFormat"}),
-               ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY",
+               ("PEM_CERT", "PEM_KEY", "PEM_ENCKEY", "PEM_CERT_KEY", "PEM_CERT_ENCKEY",
                 "DER_CERT", "PKCS12", "PKCS12_CHAIN"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'exportFormat'."),
@@ -3619,7 +3672,7 @@ sub ExportCertificate {
 
     if ($format eq "PEM_CERT") {
         eval {
-            
+
             my $buffer = $ca->exportCertificate($certificate,
                                                 $LIMAL::CaMgm::E_PEM);
 
@@ -3633,21 +3686,70 @@ sub ExportCertificate {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
         }
+    } elsif ($format eq "PEM_KEY") {
+
+        eval {
+
+            my $buffer1 = $ca->exportCertificateKeyAsPEM($certificate,
+                                                         $keyPasswd,
+                                                         "");
+
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+
+                $ret = $buffer1->data();
+            }
+        };
+        if($@) {
+
+            return $self->SetError( summary => __("Export failed."),
+                                    description => YaST::caUtils->exception2String($@),
+                                    code => "LIMAL_CALL_FAILED");
+        }
+
+    } elsif ($format eq "PEM_ENCKEY") {
+
+        eval {
+
+            my $buffer1 = $ca->exportCertificateKeyAsPEM($certificate,
+                                                         $keyPasswd,
+                                                         $keyPasswd);
+
+            if (defined $destinationFile) {
+
+                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                                                         $destinationFile);
+                $ret = 1;
+            } else {
+                $ret = $buffer1->data();
+            }
+        };
+        if($@) {
+
+            return $self->SetError( summary => __("Export failed."),
+                                    description => YaST::caUtils->exception2String($@),
+                                    code => "LIMAL_CALL_FAILED");
+        }
+
     } elsif ($format eq "PEM_CERT_KEY") {
 
         eval {
-            
+
             my $buffer1 = $ca->exportCertificate($certificate,
                                                  $LIMAL::CaMgm::E_PEM);
             my $buffer2 = $ca->exportCertificateKeyAsPEM($certificate,
                                                          $keyPasswd,
                                                          "");
-            
+
             $buffer1->append("\n", 1);
             $buffer1->append($buffer2->data(), $buffer2->size());
 
@@ -3662,7 +3764,7 @@ sub ExportCertificate {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3671,13 +3773,13 @@ sub ExportCertificate {
     } elsif ($format eq "PEM_CERT_ENCKEY") {
 
         eval {
-            
+
             my $buffer1 = $ca->exportCertificate($certificate,
                                                  $LIMAL::CaMgm::E_PEM);
             my $buffer2 = $ca->exportCertificateKeyAsPEM($certificate,
                                                          $keyPasswd,
                                                          $keyPasswd);
-            
+
             $buffer1->append("\n", 1);
             $buffer1->append($buffer2->data(), $buffer2->size());
 
@@ -3691,7 +3793,7 @@ sub ExportCertificate {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3700,7 +3802,7 @@ sub ExportCertificate {
     } elsif ($format eq "DER_CERT") {
 
         eval {
-            
+
             my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_DER);
 
             if (defined $destinationFile) {
@@ -3713,7 +3815,7 @@ sub ExportCertificate {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3728,7 +3830,7 @@ sub ExportCertificate {
         }
 
         eval {
-            
+
             my $buffer = $ca->exportCertificateAsPKCS12($certificate,
                                                         $keyPasswd,
                                                         $data->{'P12Password'},
@@ -3744,7 +3846,7 @@ sub ExportCertificate {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3758,7 +3860,7 @@ sub ExportCertificate {
         }
 
         eval {
-            
+
             my $buffer = $ca->exportCertificateAsPKCS12($certificate,
                                                         $keyPasswd,
                                                         $data->{'P12Password'},
@@ -3774,7 +3876,7 @@ sub ExportCertificate {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3788,7 +3890,7 @@ C<$file = ExportCRL($valueMap)>
 
 Export a CRL to a file or returns it in different formats.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -3803,7 +3905,7 @@ In I<$valueMap> you can define the following keys:
 * destinationFile (optional)
 
 The return value is "undef" on an error and "1" on success,
-if 'destinationFile' is defined. 
+if 'destinationFile' is defined.
 If 'destinationFile' is not defined the CRL is returned.
 
 EXAMPLE:
@@ -3814,7 +3916,7 @@ EXAMPLE:
                  'caPasswd'     => 'system',
                  'exportFormat' => $ef,
                 };
-     
+
      my $res = YaPI::CaManagement->ExportCRL($data);
      if( not defined $res ) {
          # error
@@ -3848,14 +3950,14 @@ sub ExportCRL {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
- 
+
     if (!defined $data->{'caPasswd'}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
                                code    => "PARAM_CHECK_FAILED");
     }
- 
-    if (!defined $data->{"exportFormat"} || 
+
+    if (!defined $data->{"exportFormat"} ||
         !grep( ( $_ eq $data->{"exportFormat"}), ("PEM", "DER"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'exportFormat'."),
@@ -3906,7 +4008,7 @@ sub ExportCRL {
     if ($format eq "PEM") {
 
         eval {
-            
+
             my $buffer = $ca->exportCRL($LIMAL::CaMgm::E_PEM);
 
             if (defined $destinationFile) {
@@ -3919,7 +4021,7 @@ sub ExportCRL {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3928,7 +4030,7 @@ sub ExportCRL {
     } elsif ($format eq "DER") {
 
         eval {
-            
+
             my $buffer = $ca->exportCRL($LIMAL::CaMgm::E_DER);
 
             if (defined $destinationFile) {
@@ -3941,7 +4043,7 @@ sub ExportCRL {
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Export failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -3960,7 +4062,7 @@ C<$bool = Verify($valueMap)>
 
 Verify a certificate.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -3988,7 +4090,7 @@ The parameter B<purpose> could be one of the following values:
 
 * ocsphelper   (OCSP helper)
 
-The syntax of the other values are explained in the 
+The syntax of the other values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" if the verification failed.
@@ -4047,7 +4149,7 @@ sub Verify {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
                                        $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
@@ -4058,7 +4160,7 @@ sub Verify {
 
         my $purpose = "any";
         if(defined $data->{'purpose'} && $data->{'purpose'} ne "") {
-            if(!grep( ($_ eq $data->{'purpose'}), 
+            if(!grep( ($_ eq $data->{'purpose'}),
                       ("sslclient", "sslserver", "nssslserver",
                        "smimesign", "smimeencrypt", "crlsign",
                        "any", "ocsphelper"))) {
@@ -4090,7 +4192,7 @@ C<$bool = AddSubCA($valueMap)>
 
 create a new CA signed by another CA.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * newCaName (required - the name of the new CA)
 
@@ -4156,10 +4258,10 @@ In I<$valueMap> you can define the following keys:
 
 * crlDistributionPoints
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
-The return value is "undef" on an the 
+The return value is "undef" on an the
 filename(without suffix) of the certificate on success.
 
 EXAMPLE:
@@ -4182,7 +4284,7 @@ EXAMPLE:
 
  my $res = YaPI::CaManagement->AddSubCA($data);
  if( not defined $res ) {
-     # error    
+     # error
  } else {
      print "OK '$res'\n";
  }
@@ -4196,7 +4298,7 @@ sub AddSubCA {
     my @dn   = ();
     my $caName  = "";
     my $newCaName  = "";
-    
+
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
@@ -4213,7 +4315,7 @@ sub AddSubCA {
                                 code    => "CHECK_PARAM_FAILED");
     }
     $newCaName = $data->{"newCaName"};
-    
+
     if (!defined $data->{"keyPasswd"}) {
         return $self->SetError( summary => __("Missing value 'keyPasswd'."),
                                 code    => "CHECK_PARAM_FAILED");
@@ -4248,19 +4350,19 @@ sub AddSubCA {
     eval {
 
         if( defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
                                        $data->{"caPasswd"},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
                                        $data->{"caPasswd"});
 
         }
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Initializing the CA failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -4268,14 +4370,14 @@ sub AddSubCA {
 
     my $rgd = undef;
     eval {
-        
+
         $rgd = $ca->getRequestDefaults($LIMAL::CaMgm::E_CA_Req);
-            
+
         my $dnl = $rgd->getSubjectDN()->getDN();
         my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
                          'organizationName', 'organizationalUnitName',
                          'commonName', 'emailAddress');
-        
+
         for(my $dnit = $dnl->begin();
             !$dnl->iterator_equal($dnit, $dnl->end());
             $dnl->iterator_incr($dnit))
@@ -4285,7 +4387,7 @@ sub AddSubCA {
                 if($dnl->iterator_value($dnit)->getType() =~ /^$v$/i) {
 
                     if(defined $data->{$v}) {
-                        
+
                         $dnl->iterator_value($dnit)->setRDNValue($data->{$v});
 
                     } else {
@@ -4323,20 +4425,20 @@ sub AddSubCA {
 
         my $exts = $rgd->getExtensions();
 
-        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+        my $e = YaST::caUtils->transformBasicConstaints($exts,
                                                         $data->{'basicConstraints'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsComment",
                                                      $data->{'nsComment'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsSslServerName",
                                                      $data->{'nsSslServerName'});
         if(!defined $e) {
@@ -4377,7 +4479,7 @@ sub AddSubCA {
 
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Modifying RequestGenerationData failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -4394,56 +4496,56 @@ sub AddSubCA {
         $cid->setCertifyPeriode($start, $end);
 
         my $exts = $cid->getExtensions();
-        
-        my $e = YaST::caUtils->transformBasicConstaints($exts, 
+
+        my $e = YaST::caUtils->transformBasicConstaints($exts,
                                                         $data->{'basicConstraints'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsComment",
                                                      $data->{'nsComment'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsBaseUrl",
                                                      $data->{'nsBaseUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsRevocationUrl",
                                                      $data->{'nsRevocationUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsCaRevocationUrl",
                                                      $data->{'nsCaRevocationUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsRenewalUrl",
                                                      $data->{'nsRenewalUrl'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsSslServerName",
                                                      $data->{'nsSslServerName'});
         if(!defined $e) {
             return undef;
         }
 
-        $e = YaST::caUtils->transformStringExtension($exts, 
+        $e = YaST::caUtils->transformStringExtension($exts,
                                                      "nsCaPolicyUrl",
                                                      $data->{'nsCaPolicyUrl'});
         if(!defined $e) {
@@ -4520,15 +4622,15 @@ sub AddSubCA {
         $certName = $ca->createSubCA($newCaName,
                                      $data->{'keyPasswd'},
                                      $rgd, $cid);
-        
+
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Creating the SubCA failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
-    
+
     return $certName;
 }
 
@@ -4537,7 +4639,7 @@ C<$bool = ExportCAToLDAP($valueMap)>
 
 Export a CA in a LDAP Directory.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -4551,7 +4653,7 @@ In I<$valueMap> you can define the following keys:
 
 * ldapPasswd (required)
 
-B<destinationDN> is the DN to the entry where to store 
+B<destinationDN> is the DN to the entry where to store
 the CA. The following objectClasses are used:
 
 * cRLDistributionPoint
@@ -4600,10 +4702,10 @@ sub ExportCAToLDAP {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
-    
+
     if (! defined $data->{'ldapHostname'} ||
-        !(IP->Check4($data->{'ldapHostname'}) || 
-          IP->Check6($data->{'ldapHostname'}) || 
+        !(IP->Check4($data->{'ldapHostname'}) ||
+          IP->Check6($data->{'ldapHostname'}) ||
           Hostname->CheckFQ($data->{'ldapHostname'}))
        ) {
                                            # parameter check failed
@@ -4613,7 +4715,7 @@ sub ExportCAToLDAP {
 
     if (! defined $data->{'ldapPort'} ||
         $data->{'ldapPort'} eq "") {
-        # setting default value 
+        # setting default value
         $data->{'ldapPort'} = 389;
     }
 
@@ -4624,7 +4726,7 @@ sub ExportCAToLDAP {
     }
 
     my $object = X500::DN->ParseRFC2253($data->{'destinationDN'});
-    if (! defined $data->{'destinationDN'} || 
+    if (! defined $data->{'destinationDN'} ||
         $data->{'destinationDN'} eq "" ||
         ! defined $object) {
         # parameter check failed
@@ -4641,24 +4743,24 @@ sub ExportCAToLDAP {
 
     my $container = "";
     for(my $i = scalar($object->getRDNs())-2; $i >= 0; $i--) {
-        
+
         my @a = $object->getRDN($i)->getAttributeTypes();
-        
+
         if($container eq "") {
             $container = $a[0]."=".$object->getRDN($i)->getAttributeValue($a[0]);
         } else {
             $container = $container.",".$a[0]."=".$object->getRDN($i)->getAttributeValue($a[0]);
-        }        
+        }
     }
 
-    if (! defined $data->{'BindDN'} || 
+    if (! defined $data->{'BindDN'} ||
         $data->{'BindDN'} eq "") {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'BindDN'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if (! defined $data->{'ldapPasswd'} || 
+    if (! defined $data->{'ldapPasswd'} ||
         $data->{'ldapPasswd'} eq "") {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'ldapPasswd'."),
@@ -4689,7 +4791,7 @@ sub ExportCAToLDAP {
         return $self->SetError(summary => __("Cannot parse the CA certificate."),
                                code => "PARSE_ERROR");
     }
-    
+
     # default is try; disable only, if ldap client says no
     my $use_tls = "try";
 
@@ -4697,7 +4799,7 @@ sub ExportCAToLDAP {
         my $ldapMap = Ldap->Export();
         if(defined $ldapMap->{ldap_tls}) {
             if($ldapMap->{ldap_tls} == 1) {
-                $use_tls = "yes" 
+                $use_tls = "yes"
             } else {
                 $use_tls = "no";
             }
@@ -4753,7 +4855,7 @@ sub ExportCAToLDAP {
         # entry exists => we have to modify it
         $action = "modify";
     }
-    
+
     if($action eq "add") {
 
         my $entry = {
@@ -4780,11 +4882,11 @@ sub ExportCAToLDAP {
                                    code => "LDAP_MODIFY_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
-        
+
     } else {
         #this should never happen :-)
     }
-    
+
     return 1;
 }
 
@@ -4793,7 +4895,7 @@ C<$bool = ExportCRLToLDAP($valueMap)>
 
 Export a CRL in a LDAP Directory
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -4807,7 +4909,7 @@ In I<$valueMap> you can define the following keys:
 
 * ldapPasswd (required)
 
-B<destinationDN> is the DN to the entry where to store 
+B<destinationDN> is the DN to the entry where to store
 the CA. The following objectClasses are used:
 
 * cRLDistributionPoint
@@ -4856,10 +4958,10 @@ sub ExportCRLToLDAP {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
-    
+
     if (! defined $data->{'ldapHostname'} ||
-        !(IP->Check4($data->{'ldapHostname'}) || 
-          IP->Check6($data->{'ldapHostname'}) || 
+        !(IP->Check4($data->{'ldapHostname'}) ||
+          IP->Check6($data->{'ldapHostname'}) ||
           Hostname->CheckFQ($data->{'ldapHostname'}))
        ) {
                                            # parameter check failed
@@ -4869,7 +4971,7 @@ sub ExportCRLToLDAP {
 
     if (! defined $data->{'ldapPort'} ||
         $data->{'ldapPort'} eq "") {
-        # setting default value 
+        # setting default value
         $data->{'ldapPort'} = 389;
     }
 
@@ -4880,7 +4982,7 @@ sub ExportCRLToLDAP {
     }
 
     my $object = X500::DN->ParseRFC2253($data->{'destinationDN'});
-    if (! defined $data->{'destinationDN'} || 
+    if (! defined $data->{'destinationDN'} ||
         $data->{'destinationDN'} eq "" ||
         ! defined $object) {
                                            # parameter check failed
@@ -4896,9 +4998,9 @@ sub ExportCRLToLDAP {
 
     my $container = "";
     for(my $i = scalar($object->getRDNs())-2; $i >= 0; $i--) {
-        
+
         my @a = $object->getRDN($i)->getAttributeTypes();
-        
+
         if($container eq "") {
             $container = $a[0]."=".$object->getRDN($i)->getAttributeValue($a[0]);
         } else {
@@ -4906,14 +5008,14 @@ sub ExportCRLToLDAP {
         }
     }
 
-    if (! defined $data->{'BindDN'} || 
+    if (! defined $data->{'BindDN'} ||
         $data->{'BindDN'} eq "") {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'BindDN'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if (! defined $data->{'ldapPasswd'} || 
+    if (! defined $data->{'ldapPasswd'} ||
         $data->{'ldapPasswd'} eq "") {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'ldapPasswd'."),
@@ -4952,7 +5054,7 @@ sub ExportCRLToLDAP {
         my $ldapMap = Ldap->Export();
         if(defined $ldapMap->{ldap_tls} && $ldapMap->{ldap_tls} == 0) {
             if($ldapMap->{ldap_tls} == 1) {
-                $use_tls = "yes" 
+                $use_tls = "yes"
             } else {
                 $use_tls = "no";
             }
@@ -5022,7 +5124,7 @@ sub ExportCRLToLDAP {
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'},
                                    code => "LDAP_SEARCH_FAILED");
         }
-        if (! defined $attr->[0]->{"certificateRevocationList;binary"} || 
+        if (! defined $attr->[0]->{"certificateRevocationList;binary"} ||
             $attr->{"certificateRevocationList;binary"} eq "") {
             $doCRLdp = 1;
         }
@@ -5044,7 +5146,7 @@ sub ExportCRLToLDAP {
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
 
-    
+
     } elsif ($action eq "modify") {
 
         my $entry = {
@@ -5056,7 +5158,7 @@ sub ExportCRLToLDAP {
                                    code => "LDAP_MODIFY_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
-        
+
     } else {
         #this should never happen :-)
     }
@@ -5065,7 +5167,7 @@ sub ExportCRLToLDAP {
     if ( $doCRLdp ) {
         # seems to be the first export, so
         # check for crlDistributionPoint in config template
-        
+
         my $ca = undef;
         eval {
             my $crlDP_client = "";
@@ -5081,7 +5183,7 @@ sub ExportCRLToLDAP {
 
                 $crlDP_client = "found";
             }
-            
+
             my $defServer = $ca->getIssueDefaults($LIMAL::CaMgm::E_Server_Cert);
 
             if($defServer->getExtensions()->getCRLDistributionPoints()->isPresent() &&
@@ -5098,63 +5200,63 @@ sub ExportCRLToLDAP {
                 $crlDP_ca = "found";
             }
 
-        
+
             if ( (! defined $crlDP_client || $crlDP_client eq "") &&
                  (! defined $crlDP_server || $crlDP_server eq "") &&
-                 (! defined $crlDP_ca     || $crlDP_ca     eq "") 
+                 (! defined $crlDP_ca     || $crlDP_ca     eq "")
                ) {
                 # if all crlDP are not defined or empty, than we can add it automaticaly
-                
+
                 #my $crlDP = "URI:";
                 my $crlDP   .= "ldap://".$data->{'ldapHostname'}.":".$data->{'ldapPort'}."/";
                 $crlDP   .= uri_escape($data->{'destinationDN'});
-                
+
                 my $list = new LIMAL::CaMgm::LiteralValueList();
                 $list->push_back(new LIMAL::CaMgm::LiteralValue("URI", $crlDP));
-                
+
                 # client
-                
+
                 my $cdp = $defClient->getExtensions()->getCRLDistributionPoints();
                 $cdp->setCRLDistributionPoints($list);
-                
+
                 my $ext = $defClient->getExtensions();
                 $ext->setCRLDistributionPoints($cdp);
-                
+
                 $defClient->setExtensions($ext);
-                
-                # server 
-                
+
+                # server
+
                 $cdp = $defServer->getExtensions()->getCRLDistributionPoints();
                 $cdp->setCRLDistributionPoints($list);
-                
+
                 $ext = $defServer->getExtensions();
                 $ext->setCRLDistributionPoints($cdp);
-                
+
                 $defServer->setExtensions($ext);
-                
+
                 # ca
-                
+
                 $cdp = $defCA->getExtensions()->getCRLDistributionPoints();
                 $cdp->setCRLDistributionPoints($list);
-                
+
                 $ext = $defCA->getExtensions();
                 $ext->setCRLDistributionPoints($cdp);
-                
+
                 $defCA->setExtensions($ext);
-                
+
                 $ca->setIssueDefaults($LIMAL::CaMgm::E_Client_Cert,
                                       $defClient);
-                
+
                 $ca->setIssueDefaults($LIMAL::CaMgm::E_Server_Cert,
                                       $defServer);
-                
+
                 $ca->setIssueDefaults($LIMAL::CaMgm::E_CA_Cert,
                                       $defCA);
-                
+
             }
         };
         if($@) {
-            
+
             return $self->SetError( summary => __("Checking for new CRL Distribution Point failed."),
                                     description => YaST::caUtils->exception2String($@),
                                     code => "LIMAL_CALL_FAILED");
@@ -5215,8 +5317,8 @@ if( not defined $res ) {
 
 =cut
 
-BEGIN { $TYPEINFO{ReadLDAPExportDefaults} = ["function", 
-                                             ["map", "string", "any"], 
+BEGIN { $TYPEINFO{ReadLDAPExportDefaults} = ["function",
+                                             ["map", "string", "any"],
                                              ["map", "string", "any"] ]; }
 sub ReadLDAPExportDefaults {
     my $self = shift;
@@ -5236,7 +5338,7 @@ sub ReadLDAPExportDefaults {
     if (defined $data->{'caName'} ) {
         $caName = $data->{'caName'};
     }
-    
+
     if(!defined $data->{'type'} ||
        !grep( ($_ eq $data->{'type'}), ("ca", "crl", "certificate"))) {
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
@@ -5255,9 +5357,9 @@ sub ReadLDAPExportDefaults {
         if(defined $data->{'emailAddress'} && $data->{'emailAddress'} ne "") {
             push(@emailAddresses, $data->{'emailAddress'});
         }
-        
+
         # get other email addresses from subject alt name
-        if(defined $data->{'subjectAltName'} && 
+        if(defined $data->{'subjectAltName'} &&
            $data->{'subjectAltName'} =~ /email/)
           {
               my @eaddr = split(/\s*,\s*/, $data->{'subjectAltName'});
@@ -5282,10 +5384,10 @@ sub ReadLDAPExportDefaults {
         } else {
             return $self->SetError( summary => __("No LDAP server configured."),
                                     code => "HOST_NOT_FOUND");
-        } 
+        }
         if(defined $ldapMap->{ldap_tls} ) {
             if($ldapMap->{ldap_tls} == 1) {
-                $use_tls = "yes" 
+                $use_tls = "yes"
             } else {
                 $use_tls = "no";
             }
@@ -5298,7 +5400,7 @@ sub ReadLDAPExportDefaults {
         return $self->SetError(summary => __("LDAP initialization failed."),
                                code => "SCR_INIT_FAILED");
     }
-    
+
     # anonymous bind
     if (! SCR->Execute(".ldap.bind", {}) ) {
         my $ldapERR = SCR->Read(".ldap.error");
@@ -5309,7 +5411,7 @@ sub ReadLDAPExportDefaults {
 
     if(defined $type && ($type eq "ca" || $type eq "crl")) {
         # Is there already a ldapconfig object?
-  
+
         if(defined $caName && $caName ne "") {
             $ldapret = SCR->Read(".ldap.search", {
                                                   "base_dn" => $ldapMap->{'base_config_dn'},
@@ -5328,7 +5430,7 @@ sub ReadLDAPExportDefaults {
                 $retMap->{'destinationDN'} = $ldapret->[0]->{suseDefaultBase};
             }
         }
-        
+
         if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
             $ldapret = SCR->Read(".ldap.search", {
                                                   "base_dn" => $ldapMap->{'base_config_dn'},
@@ -5346,20 +5448,20 @@ sub ReadLDAPExportDefaults {
                 $retMap->{'destinationDN'} = $ldapret->[0]->{suseDefaultBase};
             }
         }
-        
+
         if(!exists $retMap->{'destinationDN'} || $retMap->{'destinationDN'} eq "") {
             return $self->SetError(summary => __("No configuration available in LDAP."),
                                    code => "LDAP_CONFIG_NEEDED");
         }
-       
-        # complete the destinationDN 
+
+        # complete the destinationDN
         for(my $i = 0; $i < scalar(@{$retMap->{'destinationDN'}}); $i++) {
             $retMap->{'destinationDN'}->[$i] = "cn=$caName,".$retMap->{'destinationDN'}->[$i];
         }
 
     } else {
         # type is certificate
-        
+
         my $filter = undef;
 
         if(defined $emailAddresses[0]) {
@@ -5390,7 +5492,7 @@ sub ReadLDAPExportDefaults {
         if(@$ldapret > 0) {
             $retMap->{'destinationDN'} = $ldapret;
         }
-        
+
     }
     $retMap->{'ldapHostname'} = $ldapMap->{'ldap_server'};
     $retMap->{'ldapPort'} = $ldapMap->{'ldap_port'};
@@ -5404,7 +5506,7 @@ C<$bool = InitLDAPcaManagement($valueMap)>
 
 Creates the default configuration structure in LDAP
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * ldapPasswd (required)
 
@@ -5425,7 +5527,7 @@ EXAMPLE:
 
 =cut
 
-BEGIN { $TYPEINFO{InitLDAPcaManagement} = ["function", "boolean", 
+BEGIN { $TYPEINFO{InitLDAPcaManagement} = ["function", "boolean",
                                              ["map", "string", "any"] ]; }
 
 sub InitLDAPcaManagement {
@@ -5453,16 +5555,16 @@ sub InitLDAPcaManagement {
         } else {
             return $self->SetError( summary => __("No LDAP server configured."),
                                     code => "HOST_NOT_FOUND");
-        } 
+        }
     }
-    
+
     my $ret = Ldap->LDAPInit ();
     if ($ret ne "") {
-        
+
         return $self->SetError(summary => __("LDAP initialization failed."),
                                code => "SCR_INIT_FAILED");
     }
-    
+
     # bind
     if (! SCR->Execute(".ldap.bind", { bind_dn => $ldapMap->{'bind_dn'},
                                        bind_pw => $data->{ldapPasswd}
@@ -5474,7 +5576,7 @@ sub InitLDAPcaManagement {
     }
 
     # search for base_config_dn
-    $ldapret = SCR->Read(".ldap.search", 
+    $ldapret = SCR->Read(".ldap.search",
                          {
                           "base_dn" => $ldapMap->{'base_config_dn'},
                           "filter" => 'objectClass=*',
@@ -5488,23 +5590,23 @@ sub InitLDAPcaManagement {
 
             Ldap->SetGUI(YaST::YCP::Boolean(0));
             Ldap->SetBindPassword($data->{ldapPasswd});
-            
+
             if(! Ldap->CheckBaseConfig($ldapMap->{'base_config_dn'})) {
                 Ldap->SetGUI(YaST::YCP::Boolean(1));
                 return $self->SetError(summary => __("Cannot add base configuration entry."),
                                        code => "LDAP_ADD_FAILED");
             }
             Ldap->SetGUI(YaST::YCP::Boolean(1));
-            
+
         } else {
             return $self->SetError(summary => __("LDAP search failed."),
                                    code => "LDAP_SEARCH_FAILED",
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
     }
-    
+
     # search for default Config entry
-    $ldapret = SCR->Read(".ldap.search", 
+    $ldapret = SCR->Read(".ldap.search",
                          {
                           "base_dn" => $ldapMap->{'base_config_dn'},
                           "filter" => '(& (objectClass=suseCaConfiguration) (cn=defaultCA))',
@@ -5520,7 +5622,7 @@ sub InitLDAPcaManagement {
     if(@$ldapret <= 0) {
         my $defaultCAcontainer = "ou=PKI,".$ldapMap->{'ldap_domain'};
 
-        # search for the default CA container 
+        # search for the default CA container
         $ldapret = SCR->Read(".ldap.search", {
                                               "base_dn" => $defaultCAcontainer,
                                               "filter" => 'objectClass=*',
@@ -5536,9 +5638,9 @@ sub InitLDAPcaManagement {
                              "objectClass" => [ "organizationalUnit" ],
                              "ou" => "PKI",
                             };
-                
+
                 $ldapret = SCR->Write(".ldap.add", { dn => $defaultCAcontainer }, $entry);
-            
+
                 if(! defined $ldapret) {
                     my $ldapERR = SCR->Read(".ldap.error");
                     return $self->SetError(summary => __("Cannot add CA configuration entry."),
@@ -5553,9 +5655,9 @@ sub InitLDAPcaManagement {
         }
 
         # create default CA config entry
-        $ldapret = SCR->Write(".ldap.add", 
+        $ldapret = SCR->Write(".ldap.add",
                               { dn => "cn=defaultCA,".$ldapMap->{'base_config_dn'}},
-                              { 
+                              {
                                "objectClass" => [ "suseCaConfiguration"],
                                "cn" => "defaultCA",
                                "suseDefaultBase", $defaultCAcontainer
@@ -5568,7 +5670,7 @@ sub InitLDAPcaManagement {
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
     }
-    return 1;    
+    return 1;
 }
 
 
@@ -5579,7 +5681,7 @@ Export a Certificate in a LDAP Directory. This function
 is designed for exporting user certificates. The destination
 entry must have the objectClass 'inetOrgPerson'.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -5600,7 +5702,7 @@ In I<$valueMap> you can define the following keys:
 * ldapPasswd (required)
 
 If the private key of the certificate is available and the
-parameter 'caPasswd', 'keyPasswd' and 'p12Passwd' are defined, 
+parameter 'caPasswd', 'keyPasswd' and 'p12Passwd' are defined,
 an export in PKCS12 format is also done.
 
 The return value is "undef" on an error and "1" on success.
@@ -5657,10 +5759,10 @@ sub ExportCertificateToLDAP {
     if(defined $1 && $1 ne "") {
         $key = $1;
     }
-    
+
     if (! defined $data->{'ldapHostname'} ||
-        !(IP->Check4($data->{'ldapHostname'}) || 
-          IP->Check6($data->{'ldapHostname'}) || 
+        !(IP->Check4($data->{'ldapHostname'}) ||
+          IP->Check6($data->{'ldapHostname'}) ||
           Hostname->CheckFQ($data->{'ldapHostname'}))
        ) {
                                            # parameter check failed
@@ -5670,7 +5772,7 @@ sub ExportCertificateToLDAP {
 
     if (! defined $data->{'ldapPort'} ||
         $data->{'ldapPort'} eq "") {
-        # setting default value 
+        # setting default value
         $data->{'ldapPort'} = 389;
     }
 
@@ -5680,21 +5782,21 @@ sub ExportCertificateToLDAP {
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if (! defined $data->{'destinationDN'} || 
+    if (! defined $data->{'destinationDN'} ||
         $data->{'destinationDN'} eq "") {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'destinationDN'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if (! defined $data->{'BindDN'} || 
+    if (! defined $data->{'BindDN'} ||
         $data->{'BindDN'} eq "") {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'BindDN'."),
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if (! defined $data->{'ldapPasswd'} || 
+    if (! defined $data->{'ldapPasswd'} ||
         $data->{'ldapPasswd'} eq "") {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'ldapPasswd'."),
@@ -5728,7 +5830,7 @@ sub ExportCertificateToLDAP {
                                 code        => "LIMAL_CALL_FAILED");
     }
     my ($body) = ($crt->data() =~ /-----BEGIN[\s\w]+-----\n([\S\s\n]+)\n-----END[\s\w]+-----/);
-    
+
     if (! defined $body || $body eq "") {
         return $self->SetError(summary => __("Cannot parse the certificate."),
                                code => "PARSE_ERROR");
@@ -5741,13 +5843,13 @@ sub ExportCertificateToLDAP {
         my $ldapMap = Ldap->Export();
         if(defined $ldapMap->{ldap_tls}) {
             if($ldapMap->{ldap_tls} == 1) {
-                $use_tls = "yes" 
+                $use_tls = "yes"
             } else {
                 $use_tls = "no";
             }
         }
     }
-    
+
     if (! SCR->Execute(".ldap", {"hostname" => $data->{'ldapHostname'},
                                  "port"     => $data->{'ldapPort'},
                                  "use_tls"  => $use_tls })) {
@@ -5776,7 +5878,7 @@ sub ExportCertificateToLDAP {
                                code => "LDAP_SEARCH_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
-    
+
     my $entry = {
                  'userCertificate;binary' => YaST::YCP::Byteblock(decode_base64($body))
                 };
@@ -5786,7 +5888,7 @@ sub ExportCertificateToLDAP {
                                code => "LDAP_MODIFY_FAILED",
                                description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
     }
-    
+
     if ( $exportPKCS12 ) {
 
         my $ca = undef;
@@ -5804,7 +5906,7 @@ sub ExportCertificateToLDAP {
                                     description => YaST::caUtils->exception2String($@),
                                     code        => "LIMAL_CALL_FAILED");
         }
-        
+
         my $entry = {
                      'userPKCS12' => YaST::YCP::Byteblock($p12->data())
                     };
@@ -5816,9 +5918,9 @@ sub ExportCertificateToLDAP {
                                    description => $ldapERR->{'code'}." : ".$ldapERR->{'msg'});
         }
     }
-    
+
     return 1;
-    
+
 }
 
 =item *
@@ -5827,7 +5929,7 @@ C<$bool = DeleteCertificate($valueMap)>
 Delete a Certificate. This function removes also
 the request and the private key.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -5835,7 +5937,7 @@ In I<$valueMap> you can define the following keys:
 
 * caPasswd (required)
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error and "1" on success.
@@ -5876,14 +5978,14 @@ sub DeleteCertificate {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
-    
+
     if (!defined $data->{'certificate'}) {
         # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'certificate'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $certificate = $data->{'certificate'};
-    
+
     my $ca = undef;
     eval {
 
@@ -5918,7 +6020,7 @@ sub DeleteCertificate {
                                 code => "LIMAL_CALL_FAILED");
     }
 
-    return 1;    
+    return 1;
 }
 
 
@@ -5936,7 +6038,7 @@ The server certificate is copied to '/etc/ssl/servercerts/servercert.pem' .
 The private key is copied to '/etc/ssl/servercerts/serverkey.pem' .
 The private key is unencrypted and only for B<root> readable.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * inFile (required)
 
@@ -5945,7 +6047,7 @@ In I<$valueMap> you can define the following keys:
 B<inFile> is the path to a certificate in PKCS12 format.
 
 B<passwd> is the password which is needed to decrypt the PKCS12
-certificate. A second password is not needed, because the private 
+certificate. A second password is not needed, because the private
 key will be unencrypted.
 
 The return value is "undef" on an error and "1" on success.
@@ -5967,9 +6069,9 @@ EXAMPLE:
 =cut
 
 BEGIN { $TYPEINFO{ImportCommonServerCertificate} = [
-                                                    "function", 
-                                                    "boolean", 
-                                                    ["map", "string", "any"] 
+                                                    "function",
+                                                    "boolean",
+                                                    ["map", "string", "any"]
                                                    ]; }
 sub ImportCommonServerCertificate {
     my $self = shift;
@@ -6118,7 +6220,7 @@ sub ReadFile {
         }
 
         if($data->{datatype} eq "CERTIFICATE") {
-            
+
             my $cert = LIMAL::CaMgm::LocalManagement::getCertificate($data->{inFile},
                                                                      $inForm);
 
@@ -6139,10 +6241,10 @@ sub ReadFile {
                 }
 
                 if($type eq "extended") {
-                    
+
                     $ret = YaST::caUtils->extensionParsing($ret);
                 }
-                
+
             } else {
                 $ret = $cert->getCertificateAsText();
             }
@@ -6152,7 +6254,7 @@ sub ReadFile {
                                                             $inForm);
 
             if ($type eq "parsed" || $type eq "extended") {
-                
+
                 $ret = YaST::caUtils->getParsedCRL($crl);
 
 
@@ -6168,16 +6270,16 @@ sub ReadFile {
                 }
 
                 if($type eq "extended") {
-                    
+
                     $ret = YaST::caUtils->extensionParsing($ret);
                 }
-                
+
             } else {
-                
+
                 $ret = $crl->getCRLAsText();
-                
+
             }
-            
+
         } elsif($data->{datatype} eq "REQUEST") {
 
             my $req = LIMAL::CaMgm::LocalManagement::getRequest($data->{inFile},
@@ -6199,17 +6301,17 @@ sub ReadFile {
                 }
 
                 if($type eq "extended") {
-                    
+
                     $ret = YaST::caUtils->extensionParsing($ret);
                 }
-                
+
             } else {
                 $ret = $req->getRequestAsText();
             }
         }
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Parsing failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -6223,15 +6325,15 @@ C<$cert = ReadRequest($valueMap)>
 
 Returns a request as plain text or parsed map.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
 * request (required - name without suffix)
 
-* type (required - allowed values: "parsed", "extended" or "plain") 
+* type (required - allowed values: "parsed", "extended" or "plain")
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error.
@@ -6281,15 +6383,15 @@ sub ReadRequest {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{"caName"};
-    
-    if (! defined $data->{"type"} || 
+
+    if (! defined $data->{"type"} ||
         !grep( ( $_ eq $data->{"type"}), ("parsed", "plain", "extended"))) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'type'."),
                                code => "PARAM_CHECK_FAILED");
     }
     $type = $data->{"type"};
-    
+
     if (! defined $data->{"request"}) {
                                            # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'request'."),
@@ -6351,17 +6453,17 @@ C<$certList = ReadRequestList($valueMap)>
 
 Returns a list of maps with all requests of the defined CA.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error.
 
-On success it returns an array of hashes with all 
-requests of this CA. @ret[0..X] can have the 
+On success it returns an array of hashes with all
+requests of this CA. @ret[0..X] can have the
 following Hash keys:
 
 * request (the name of the certificate)
@@ -6420,15 +6522,15 @@ sub ReadRequestList {
     my $ca = undef;
     eval {
         if(defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
-            
+
         } else {
             $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
-            
+
         }
 
         my $list = $ca->getRequestList();
@@ -6466,18 +6568,18 @@ C<$request = ImportRequest($valueMap)>
 
 Import a request in a CA repository.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
-* inFile 
+* inFile
 
 * data
 
 * importFormat (default PEM)
 
 B<inFile> is the path to a request.
-B<data> the request data directly 
+B<data> the request data directly
 
 One of B<inFile> or B<data> is required.
 
@@ -6503,9 +6605,9 @@ EXAMPLE:
 =cut
 
 BEGIN { $TYPEINFO{ImportRequest} = [
-                                    "function", 
-                                    "string", 
-                                    ["map", "string", "any"] 
+                                    "function",
+                                    "string",
+                                    ["map", "string", "any"]
                                    ]; }
 sub ImportRequest {
     my $self = shift;
@@ -6531,7 +6633,7 @@ sub ImportRequest {
                                                       $data->{inFile}),
                                    code => "FILE_DOES_NOT_EXIST");
         }
-        
+
         $data->{data} = SCR->Read(".target.string",$data->{inFile});
         if(! defined $data->{data}) {
             return $self->SetError(summary => __("Cannot read the request."),
@@ -6565,20 +6667,20 @@ sub ImportRequest {
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
-    
+
     eval {
         my $byteBuffer = new LIMAL::ByteBuffer($data->{data}, length($data->{data}));
-        
+
         if(defined $data->{importFormat} && $data->{importFormat} eq "DER") {
-            
-            $ret = $ca->importRequestData($byteBuffer, 
+
+            $ret = $ca->importRequestData($byteBuffer,
                                           $LIMAL::CaMgm::E_DER);
-            
+
         } else {
-            
-            $ret = $ca->importRequestData($byteBuffer, 
+
+            $ret = $ca->importRequestData($byteBuffer,
                                           $LIMAL::CaMgm::E_PEM);
-            
+
         }
     };
     if($@) {
@@ -6587,7 +6689,7 @@ sub ImportRequest {
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
-    
+
     return $ret;
 }
 
@@ -6598,7 +6700,7 @@ C<$bool = DeleteRequest($valueMap)>
 Delete a Request. This function removes also
 the private key if one is available.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required)
 
@@ -6606,7 +6708,7 @@ In I<$valueMap> you can define the following keys:
 
 * request (required)
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error and "1" on success.
@@ -6647,14 +6749,14 @@ sub DeleteRequest {
                                code    => "PARAM_CHECK_FAILED");
     }
     $caName = $data->{'caName'};
-    
+
     if (!defined $data->{'request'}) {
         # parameter check failed
         return $self->SetError(summary => __("Invalid value for parameter 'request'."),
                                code    => "PARAM_CHECK_FAILED");
     }
     $req = $data->{'request'};
-    
+
     my $ca = undef;
     eval {
         if(defined $data->{'repository'}) {
@@ -6678,17 +6780,17 @@ sub DeleteRequest {
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
-    return 1;    
+    return 1;
 }
 
 
 =item *
 C<$bool = ImportCA($valueMap)>
 
-Import a CA certificate and private key and creates a 
+Import a CA certificate and private key and creates a
 infrastructure.
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required - A name for this CA)
 
@@ -6722,9 +6824,9 @@ BEGIN { $TYPEINFO{ImportCA} = ["function", "boolean", ["map", "string", "any"] ]
 sub ImportCA {
     my $self   = shift;
     my $data   = shift;
-    
+
     my $caName = "";
-    
+
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
@@ -6745,7 +6847,7 @@ sub ImportCA {
         return $self->SetError(summary => __("Invalid value for parameter 'caKey'."),
                                code    => "PARAM_CHECK_FAILED");
     }
-    
+
     my $size = SCR->Read(".target.size", $data->{caKey});
     if ($size <= 0) {
         return $self->SetError(summary => sprintf(
@@ -6764,13 +6866,13 @@ sub ImportCA {
         my $cert = LIMAL::CaMgm::LocalManagement::readFile($data->{caCertificate});
         my $key  = LIMAL::CaMgm::LocalManagement::readFile($data->{caKey});
 
-        if( defined $data->{'repository'}) 
+        if( defined $data->{'repository'})
         {
             LIMAL::CaMgm::CA::importCA($caName, $cert, $key,
                                        $data->{caPasswd},
                                        $data->{"repository"});
         }
-        else 
+        else
         {
             LIMAL::CaMgm::CA::importCA($caName, $cert, $key,
                                        $data->{caPasswd});
@@ -6792,7 +6894,7 @@ C<$bool = DeleteCA($valueMap)>
 
   Delete a Certificate Authority infrastructure
 
-In I<$valueMap> you can define the following keys: 
+In I<$valueMap> you can define the following keys:
 
 * caName (required - A name for this CA)
 
@@ -6801,8 +6903,8 @@ In I<$valueMap> you can define the following keys:
 * force (0/1 default is 0)
 
 Normaly you can only delete a CA if the CA certificate is expired or
-you have never signed a certificate with this CA. In all other cases 
-you have to set the force parameter to 1 if you realy want to delete 
+you have never signed a certificate with this CA. In all other cases
+you have to set the force parameter to 1 if you realy want to delete
 the CA and you know what you are doing.
 
 The return value is "undef" on an error and "1" on success.
@@ -6827,7 +6929,7 @@ BEGIN { $TYPEINFO{DeleteCA} = ["function", "boolean", ["map", "string", "any"] ]
 sub DeleteCA {
     my $self   = shift;
     my $data   = shift;
-    
+
     my $caName = "";
     my $doDelete = 0;
 
@@ -6848,7 +6950,7 @@ sub DeleteCA {
                                code    => "PARAM_CHECK_FAILED");
     }
 
-    if(exists $data->{force}  && 
+    if(exists $data->{force}  &&
        defined $data->{force} &&
        $data->{force} == 1) {
         # force delete
@@ -6861,7 +6963,7 @@ sub DeleteCA {
 
         if( defined $data->{'repository'}) {
 
-            LIMAL::CaMgm::CA::deleteCA($caName, 
+            LIMAL::CaMgm::CA::deleteCA($caName,
                                        $data->{caPasswd},
                                        $doDelete,
                                        $data->{"repository"});
@@ -6906,7 +7008,7 @@ On success the return value is a hash which can contain the following keys:
 * issuerAltName
 
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 EXAMPLE:
@@ -6916,7 +7018,7 @@ EXAMPLE:
  my $data = {
              'caName'   => 'My_CA'
             }
- $crlValueMap = YaPI::CaManagement->ReadCRLDefaults($data) 
+ $crlValueMap = YaPI::CaManagement->ReadCRLDefaults($data)
  if( not defined $crlValueMap ) {
      # error
  } else {
@@ -6926,7 +7028,7 @@ EXAMPLE:
 =cut
 
 BEGIN { $TYPEINFO{ReadCRLDefaults} = [
-                                      "function", 
+                                      "function",
                                       ["map", "string", "any"],
                                       ["map", "string", "any"]
                                      ]; }
@@ -6958,21 +7060,21 @@ sub ReadCRLDefaults {
     eval {
 
         if(defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
         } else {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{'caName'}, $data->{'caPasswd'});
-            
+
         }
-        
+
         $cgd = $ca->getCRLDefaults();
-        
+
         my $crlExt = $cgd->getExtensions();
 
-        
+
         my $e = YaST::caUtils->extractAuthorityKeyIdentifier($crlExt->getAuthorityKeyIdentifier(),
                                                              $ret);
         if(!defined $e) {
@@ -7019,7 +7121,7 @@ In I<$valueMap> you can define the following keys:
 
 * issuerAltName
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error and "1" on success.
@@ -7028,7 +7130,7 @@ EXAMPLE:
 
      my $data = {
                  'caName'    => 'My_CA',
-                 'days'      => '7'                 
+                 'days'      => '7'
                 };
      my $res = YaPI::CaManagement->WriteCRLDefaults($data);
      if( not defined $res ) {
@@ -7050,7 +7152,7 @@ sub WriteCRLDefaults {
     if (not defined YaST::caUtils->checkCommonValues($data)) {
         return $self->SetError(%{YaST::caUtils->Error()});
     }
-    
+
     # checking requires
     if (!defined $data->{"caName"}) {
                                            # parameter check failed
@@ -7058,19 +7160,19 @@ sub WriteCRLDefaults {
                                 code    => "CHECK_PARAM_FAILED");
     }
     $caName = $data->{"caName"};
-    
+
     my $ca = undef;
     eval {
-        
+
         if( defined $data->{'repository'}) {
-            
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, 
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
                                        $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
-            
+
             $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
-            
+
         }
     };
     if($@) {
@@ -7090,7 +7192,7 @@ sub WriteCRLDefaults {
         }
 
         my $exts = $cgd->getExtensions();
-        
+
         my $e = YaST::caUtils->transformAuthorityKeyIdentifier($exts,
                                                                $data->{'authorityKeyIdentifier'});
         if(!defined $e) {
@@ -7106,18 +7208,18 @@ sub WriteCRLDefaults {
         $cgd->setExtensions($exts);
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Modifying CRLGenerationData failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
     }
-    
+
     eval {
 
         $ca->setCRLDefaults($cgd);
     };
     if($@) {
-        
+
         return $self->SetError( summary => __("Writing the defaults failed."),
                                 description => YaST::caUtils->exception2String($@),
                                 code => "LIMAL_CALL_FAILED");
@@ -7144,7 +7246,7 @@ In I<$valueMap> you can define the following keys:
 
 * newPasswd
 
-The syntax of these values are explained in the 
+The syntax of these values are explained in the
 B<COMMON PARAMETER> section.
 
 The return value is "undef" on an error and "1" on success.
@@ -7195,20 +7297,20 @@ sub ChangePassword {
         {
             $data->{algorithm} = "des3";
         }
-        
+
         my $oldkey = "";
         my $keyfilename = "";
-        
+
         if(defined $certificate && $certificate ne "")
         {
             my $keyname = "";
-            
+
             if($certificate =~ /:([0-9a-fA-F-]+)/)
             {
                 $keyname = $1;
             }
             $keyfilename = "$repos/$caName/keys/$keyname.key";
-            
+
             if( -e $keyfilename)
             {
                 $oldkey = LIMAL::CaMgm::LocalManagement::readFile($keyfilename);
@@ -7224,7 +7326,7 @@ sub ChangePassword {
         {
             # certificate empty == cpw on the cakey
             $keyfilename = "$repos/$caName/cacert.key";
-            
+
             if( -e $keyfilename)
             {
                 $oldkey = LIMAL::CaMgm::LocalManagement::readFile($keyfilename);
@@ -7236,14 +7338,14 @@ sub ChangePassword {
                                         code    => "FILE_DOES_NOT_EXIST");
             }
         }
-        
+
         $newkey = LIMAL::CaMgm::LocalManagement::rsaConvert($oldkey,
                                                             $LIMAL::CaMgm::E_PEM,
                                                             $LIMAL::CaMgm::E_PEM,
                                                             $data->{oldPasswd},
                                                             $data->{newPasswd},
                                                             $data->{algorithm});
-    
+
         LIMAL::CaMgm::LocalManagement::writeFile($newkey,
                                                  $keyfilename, 1);
 
