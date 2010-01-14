@@ -19,10 +19,9 @@ X-SuSE-YaST-AutoInstRequires=lan,users
 X-SuSE-YaST-AutoInstSchema=ca_mgm.rnc
 
 Icon=yast-ca_mgm
-Exec=/sbin/yast2 ca_mgm
+Exec=xdg-su -c "/sbin/yast2 ca_mgm"
 
 Name=CA Management
 GenericName=Configure CAs, certificates, and requests
 
-X-KDE-SubstituteUID=true
 StartupNotify=true
