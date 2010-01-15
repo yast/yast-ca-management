@@ -37,18 +37,26 @@ define symbol MainSequence () {
 Wizard::CreateDialog();
 Wizard::SetDesktopIcon("ca-management");
 
-// help text 1/5
-string helptext = _("<p>The <b>Common Server Certificate</b> will be used by other YaST modules.</p>");
-// help text 2/5
-helptext = helptext + _("<p>This certificate can be exchanged by importing a certificate from a file.</p>");
-// help text 3/5
+// help text 1/7
+string helptext = _("<p>A Server Certificate is used by services which provide SSL/TLS encrypted network connections.</p>");
+
+// help text 2/7
+helptext = helptext + _("<p>The purpose of the <b>Common Server Certificate</b> is, to provide a certificate for several services running on this host. ");
+
+// help text 3/7
+helptext = helptext + _("Some YaST modules provide the capability to use this certificate during configuration of such a service.</p>");
+
+// help text 4/7
+helptext = helptext + _("<p>With the <b>Import/Replace</b> button you can add a new server certificate or replace the currect one.</p>");
+
+// help text 5/7
+helptext = helptext + _("<p>You can remove the Certificates by clicking the <b>Remove</b> button. But make sure, that it is not used anymore by other services.</p>");
+
+// help text 6/7
 helptext = helptext + _("<p>Certificates can be written to a file using <b>Export to File</b> in section <b>Certificate</b> in the <b>CA Management</b> module.</p>");
 
-// help text 4/5
+// help text 7/7
 helptext = helptext + _("<p>Certificates to import from disk must have been written in <b>PKCS12 format with CA chain</b>.</p>");
-
-// help text 5/5
-helptext = helptext + _("<p>You can remove the Certificates from disk. But make sure, that it is not used anymore by other services.</p>");
 
 symbol ui = nil;
 
@@ -74,10 +82,12 @@ repeat
                           `VSpacing (0.5),
                           `RichText (ret),
                           `VSpacing (0.5),
-                          `HBox (  // push button label
+                          `HBox (
                               `HStretch(),
+                              // push button label
                               `PushButton (`id(`remove), _("&Remove")),
-                              `PushButton (`id(`importDisk), _("&Import")))
+                              // push button label
+                              `PushButton (`id(`importDisk), _("&Import/Replace")))
                           );
 
     // To translators: dialog label

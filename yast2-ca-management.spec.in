@@ -1,15 +1,13 @@
 @HEADER-COMMENT@
 
 @HEADER@
-Group:	System/YaST
-License: GPL v2 or later
-BuildRequires:	dosfstools limal-ca-mgm-perl limal-perl perl-Date-Calc perl-URI perl-X500-DN docbook-xsl-stylesheets doxygen libxslt perl-XML-Writer yast2-devtools pkg-config yast2-core yast2 update-desktop-files
-Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc limal-perl perl-Config-IniFiles perl-URI
-Requires:   limal-ca-mgm-perl >= 1.4.0
-
-BuildArchitectures:	noarch
-
-Summary:	YaST2 - CAs, Certificates and Requests Management
+Group:          System/YaST
+License:        GPLv2+
+BuildRequires:  docbook-xsl-stylesheets dosfstools doxygen libxslt limal-ca-mgm-perl limal-perl perl-Date-Calc perl-URI perl-X500-DN perl-XML-Writer pkg-config update-desktop-files yast2 yast2-core yast2-devtools
+Requires:       yast2 perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc limal-perl perl-Config-IniFiles perl-URI
+Requires:       limal-ca-mgm-perl >= 1.4.0
+BuildArch:      noarch
+Summary:        YaST2 - CAs, Certificates and Requests Management
 
 %description
 Managing CAs, Certificates and Requests in an understanding way.
@@ -19,7 +17,6 @@ Managing CAs, Certificates and Requests in an understanding way.
 @BUILD@
 
 @INSTALL@
-
 @CLEAN@
 
 %files
@@ -45,5 +42,4 @@ Managing CAs, Certificates and Requests in an understanding way.
 /usr/bin/generateCRL.pl
 /usr/bin/exportCRL.pl
 %attr(600, root, root) %config(noreplace) /etc/generateCRL.conf
-
 %changelog

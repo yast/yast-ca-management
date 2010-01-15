@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Jan 15 10:34:48 CET 2010 - mc@suse.de
+
+- version 2.19.1
+- add remove certificate function to common server certificate module
+  (fate#306590)
+- improve the help text. 
+
+-------------------------------------------------------------------
 Thu Jan 14 12:35:43 CET 2010 - mc@suse.de
 
 - version 2.19.0
