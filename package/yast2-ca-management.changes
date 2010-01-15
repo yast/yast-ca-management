@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jan 15 11:17:28 CET 2010 - mc@suse.de
+
+- version 2.19.2
+- add a hint to the help texts that more informations about 
+  CA Management are available in our manual. (fate#306589)
+
+-------------------------------------------------------------------
 Fri Jan 15 10:34:48 CET 2010 - mc@suse.de
 
 - version 2.19.1
