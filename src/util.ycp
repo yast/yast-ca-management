@@ -1564,7 +1564,7 @@ This certificate might be not practical as a common server certificate.
 				  if(!found)
 				  {
 					  list<string> hostnames = splitstring(
-														   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("getent hosts %1 | awk '{print $2}' | sed 's/\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
+														   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("getent hosts %1 | awk '{print $2}' | sed 's/\\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
 
 					  foreach(string hname, hostnames, {
 															if(hname != "" && findfirstof(hname, ".") != nil)
