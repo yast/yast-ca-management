@@ -1533,7 +1533,7 @@ This certificate might be not practical as a common server certificate.
 				  
 				  // first ask the DNS server about the name for this IP address
 				  list<string> hostnames = splitstring(
-													   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("dig +noall +answer +time=2 +tries=1 -x %1 | awk '{print $5}' | sed 's/\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
+													   ((map<string,any>)SCR::Execute(.target.bash_output, sformat("dig +noall +answer +time=2 +tries=1 -x %1 | awk '{print $5}' | sed 's/\\.$//'| tr '\n' '|'", ip)))["stdout"]:"", "|");
 				  
 				  boolean found = false;
 				  foreach(string hname, hostnames, {
