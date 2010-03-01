@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Mar  1 13:23:40 CET 2010 - mc@suse.de
+
+- version 2.19.4
+- fix another potential issue while generating subjectAltName
+  (bnc#582129) 
+
+-------------------------------------------------------------------
 Tue Feb 23 11:37:01 CET 2010 - mc@suse.de
 
 - version 2.19.3
