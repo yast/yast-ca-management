@@ -2037,7 +2037,7 @@ sub checkCommonValues {
                                                             $p, $key),
                                               code    => "PARAM_CHECK_FAILED");
                     }
-                } elsif ($p =~ /^\s*IP:(.+)\s*$/) {
+                } elsif ($p =~ /^\s*IP[\s\w]*:(.+)\s*$/) {
                     if (!defined $1 || !(IP->Check4("$1") || IP->Check6("$1")) ) {
                         return $self->SetError(summary => sprintf(
                                                            __("Invalid value '%s' for parameter '%s'."),
