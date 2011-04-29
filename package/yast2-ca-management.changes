@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Apr 29 11:08:55 CEST 2011 - mc@suse.de
+
+- version 2.17.18
+- improve bad password error message. (bnc#690558)
+- mark message for translation (bnc#605481)
+
+-------------------------------------------------------------------
 Fri Mar 19 15:33:23 CET 2010 - mc@suse.de
 
 - version 2.17.17
