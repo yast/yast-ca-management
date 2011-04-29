@@ -246,7 +246,7 @@
 				UI::OpenDialog (`opt(`decorated ),
 								`HBox(`VSpacing(10),
 									  `VBox (
-											 `Label("Unable to retrieve the system root password. Set a CA password to continue."),
+											 `Label(_("Unable to retrieve the system root password. Set a CA password to continue.")),
 											 `HSpacing(10),
 											 `Password(`id(`pw1), `opt(`hstretch), _("&Password:"), ""),
 											 `Password(`id(`pw2), `opt(`hstretch), _("Co&nfirm Password"), ""),

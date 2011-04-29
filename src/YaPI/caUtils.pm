@@ -1848,7 +1848,7 @@ sub checkCommonValues {
         } elsif ( $key eq "keyPasswd" || $key eq "caPasswd") {
             if (! defined $data->{$key} ||
                 length($data->{$key}) < 4) {
-                return $self->SetError(summary => sprintf(__("Invalid value '%s' for parameter '%s'."),$data->{$key}, $key),
+                return $self->SetError(summary => sprintf(__("Password (%s) is too simple."), $key),
                                       code    => "PARAM_CHECK_FAILED");
             }
         } elsif ( $key eq "keyLength") {
