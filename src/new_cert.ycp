@@ -149,7 +149,7 @@
 					`HSpacing(2),
 					`HWeight (1,`TextEntry(`id (`id_state), _("&State:"), CaMgm::state ))));
 
-        contents = add (contents, `HBox (`HWeight(1,`ComboBox( `id (`id_country), _("C&ountry:"), getCountryList()))));
+        contents = add (contents, `HBox (`HWeight(1,`ComboBox( `id (`id_country), `opt(`editable), _("C&ountry:"), getCountryList()))));
 
                                 // To translators: dialog label
 
