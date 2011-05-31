@@ -116,7 +116,7 @@ Here, change the settings of this CA and certificate or import a CA and certific
 						  `HBox(`HWeight (1,`TextEntry(`id(`email), _("E-Mail"),
 									       CaMgm::autoYaSTSettings["server_email"]:"")),
 							`HSpacing(2), 
-							`HWeight (1,`ComboBox( `id (`id_country), _("C&ountry:"),
+							`HWeight (1,`ComboBox( `id (`id_country), `opt(`editable), _("C&ountry:"),
 									       getAutoCountryList()))
 							),				     
 						  `HBox(`HWeight (1,`TextEntry( `id (`id_organisation), _("O&rganization:"),

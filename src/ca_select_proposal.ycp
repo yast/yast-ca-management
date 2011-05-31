@@ -77,7 +77,7 @@ Here, change these <b>default settings</b>.
 			       `HBox(`HWeight (1,`TextEntry( `id (`id_serverName), _("&Server Name:"),
 							     CaMgm::prop_server_commonName )),
 				     `HSpacing(2), 
-				     `HWeight (1,`ComboBox( `id (`id_country), _("C&ountry:"),
+				     `HWeight (1,`ComboBox( `id (`id_country), `opt(`editable), _("C&ountry:"),
 							    getPropCountryList()))
 				     ),				     
 			       `HBox(`HWeight (1,`TextEntry( `id (`id_organisation), _("O&rganization:"),
