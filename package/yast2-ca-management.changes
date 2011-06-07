@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Jun  7 12:45:57 UTC 2011 - jreidinger@novell.com
+
+- version 2.17.19
+- allow to change alternative name in CA proposal (FATE#308423)
+- create country selection combobox editable to allow choose of
+  countries not listed (FATE#310179)
+
+-------------------------------------------------------------------
 Fri Apr 29 11:08:55 CEST 2011 - mc@suse.de
 
 - version 2.17.18
