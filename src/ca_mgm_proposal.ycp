@@ -54,18 +54,20 @@
 
 		map<string,string> host_ips = getHostIPs ();
 		string hostname_bak = "";
-		CaMgm::prop_subject_alt_name_list = [];
+		if (size(CaMgm::prop_subject_alt_name_list) <= 0){
+                    CaMgm::prop_subject_alt_name_list = [];
 		
-		foreach(string key, string value, host_ips, {
-										 if(value == "DNS")
-										 {
-											 hostname_bak = key;
-										 }
-										 map elem = $[];
-										 elem["kind"] = value;
-										 elem["name"] = key;
-										 CaMgm::prop_subject_alt_name_list = add (CaMgm::prop_subject_alt_name_list, elem);	
-			 });
+		    foreach(string key, string value, host_ips, {
+			if(value == "DNS")
+			{
+			    hostname_bak = key;
+			}
+			map elem = $[];
+			elem["kind"] = value;
+			elem["name"] = key;
+			CaMgm::prop_subject_alt_name_list = add (CaMgm::prop_subject_alt_name_list, elem);
+                    });
+                }
 		
 		map retmap = (map) SCR::Execute (.target.bash_output,
 										 "/bin/hostname --long",
