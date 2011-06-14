@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Jun 14 13:02:34 CEST 2011 - jreidinger@suse.cz
+
+- version 2.21.1
+- country selection combobox is editable to allow choose of
+  countries not listed there (FATE#310179)
+- allow to change altarnative name in CA proposal (FATE#308423)
+
+-------------------------------------------------------------------
 Fri Apr 29 11:32:34 CEST 2011 - mc@suse.de
 
 - version 2.21.0

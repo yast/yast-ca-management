@@ -49,6 +49,151 @@
 	});
         return result;	
     }
+
+    define list editAltNames( list<map> initial_set ){
+        term alt_dialog = `HBox( `VSpacing(10),
+                                 `VBox (`HSpacing(10),
+                                        `RadioButtonGroup(`id(`rb),
+                                                          `HBox(
+                                                                `RadioButton(`id("URI"), `opt(`notify), "URI", true),
+                                                                `RadioButton(`id("email"), `opt(`notify), "email"),
+                                                                `RadioButton(`id("DNS"), `opt(`notify), "DNS"),
+                                                                `RadioButton(`id("IP"), `opt(`notify), "IP"),
+                                                                `RadioButton(`id("RID"), `opt(`notify), "RID"),
+                                                                `RadioButton(`id("MS-UPN"), `opt(`notify), "MS-UPN"),
+                                                                `RadioButton(`id("K5PN"), `opt(`notify), "K5PN")
+                                                         )),
+                                        `TextEntry(`id(`name), _("&Name:")),
+                                        // push button label
+                                        `HBox(`PushButton (`id(`cancel), `opt(`key_F9), Label::CancelButton()),
+                                              `HStretch(),
+                                              `PushButton (`id(`ok), `opt(`default, `key_F10), Label::OKButton())
+                                             ),
+                                        `HSpacing(10)
+                                  ),
+                                  `VSpacing(10)
+                                );
+        UI::OpenDialog ( 
+            `VBox ( `Left (`CheckBox(`id(`id_adv_cri_subject_alt_name),
+                                     _("critical"),
+                                     CaMgm::prop_adv_cri_issuer_alt_name
+                    )),
+                    `VSpacing(1.5),
+                    `HBox(
+                          `VSpacing(5),
+                          `HWeight (3, `Table (`id (`id_adv_subject_alt_name),
+                                               `header (
+                                                          // To translators: table headers
+                                                          _("Kind"),
+                                                          _("Name")
+                                                        )
+                                   )),
+                          `HWeight (1, `VBox(
+                                             `HBox ( `HWeight (1,`PushButton (`id (`add),
+                                                                              `opt (`key_F3),
+                                                                              Label::AddButton()
+                                                   ))),
+                                             `HBox ( `HWeight (1,`PushButton (`id (`edit),
+                                                                              `opt (`key_F3),
+                                                                              Label::EditButton()
+                                                   ))),
+                                             `HBox ( `HWeight (1,`PushButton (`id (`delete),
+                                                                              `opt (`key_F5),
+                                                                              Label::DeleteButton()
+                                                   ))),
+                                             `VStretch()
+                     ))),
+                     `VSpacing(1.5),
+                     `ButtonBox(`PushButton(`id(`ok),`opt(`key_F10),Label::OKButton()),
+                                `PushButton (`id(`cancel),`opt(`key_F9,`default), Label::CancelButton())
+                               )
+                   ));
+        any ret = nil;
+        do {
+	    integer i = 0;
+            list<term> table_list = maplist( map element, initial_set, ``{
+		i = i + 1;
+                return `item (`id (i), element["kind"]:"", element["name"]:"" );
+            });
+            UI::ChangeWidget(`id(`id_adv_subject_alt_name), `Items, table_list);
+            ret = UI::UserInput();
+            if (ret == `add || ret == `edit ){
+                string current_kind = "";
+                string current_name = "";
+                if (ret == `edit){
+                    integer current_item  = (integer)UI::QueryWidget(`id(`id_adv_subject_alt_name), `CurrentItem);
+                    term table_item = (term) UI::QueryWidget(`id(`id_adv_subject_alt_name), `Item(current_item));
+                    if (table_item == nil)
+                    {
+                        Popup::Error (_("No item has been selected."));
+                        continue;
+                    }
+
+                    current_kind = (string) table_item[1]:"";
+                    current_name = (string) table_item[2]:"";
+                }
+                UI::OpenDialog (`opt(`decorated ),alt_dialog);
+                UI::SetFocus (`id(`ok));
+                if (ret == `edit){
+		    UI::ChangeWidget(`id(`name), `Value, current_name);
+		    UI::ChangeWidget(`id(`rb), `CurrentButton, current_kind);
+		}
+                if(!CaMgm::adv_subject_alt_name_show_email)
+                {
+                    UI::ChangeWidget(`id("email"), `Enabled, false);
+                } else {
+                    UI::ChangeWidget(`id("email"), `Enabled, true);
+                }
+                while (true)
+                {
+                    any ret2 = UI::UserInput();
+                    if (ret2 == `ok)
+                    {
+                        map new_entry = (ret==`add) ? $[] :
+                                find(map m,initial_set,
+                                     ``{return (m["kind"]:"" == current_kind && m["name"]:"" == current_name);});
+                        new_entry["kind"] = (string) UI::QueryWidget(`id(`rb), `CurrentButton);
+                        new_entry["name"] = (string) UI::QueryWidget(`id(`name), `Value);
+                        if (ret == `add)
+                        {
+                            initial_set       = add (initial_set, new_entry);
+                        }
+                        break;
+                    }
+                    else if (ret2 == `cancel)
+                    {
+                        break;
+                    }
+                }
+                UI::CloseDialog ();
+            } else if (ret == `delete) {
+                integer current_item  = (integer)UI::QueryWidget(`id(`id_adv_subject_alt_name), `CurrentItem);
+                term table_item = (term) UI::QueryWidget(`id(`id_adv_subject_alt_name), `Item(current_item));
+
+                if (table_item == nil)
+                {
+                    Popup::Error (_("No item has been selected."));
+                    continue;
+                }
+                string current_kind = (string) table_item[1]:"";
+                string current_name = (string) table_item[2]:"";
+
+                if (Popup::YesNoHeadline (
+                        // To translators: ContinueCancel Popup headline
+                        _("Delete"),
+                        // To translators: ContinueCancel Popup
+                        _("Really delete this entry?")))
+                {
+                    initial_set = filter( map element, initial_set, ``{    
+                          return (element["kind"]:"" != current_kind || element["name"]:"" != current_name );
+                        });
+                }
+            }
+        } while ( ret != `ok && ret != `cancel );
+	boolean ca_crit = (boolean) UI::QueryWidget(`id(`id_adv_cri_subject_alt_name), `Value);
+	UI::CloseDialog();
+        return (ret == `ok) ? [initial_set,ca_crit] : nil; 
+    }
     
     
     /**
@@ -97,7 +242,7 @@ Here, change these <b>default settings</b>.
                                     ),
 			       `HBox(`HWeight (1,`TextEntry(`id(`email), _("E-Mail"), CaMgm::prop_email)),
 				     `HSpacing(2), 
-				     `HWeight (1,`Empty())
+				     `HWeight (1,`PushButton(`id(`alt),"&Edit Alternative Names"))
                                      )
 			       );
 
@@ -119,12 +264,21 @@ Here, change these <b>default settings</b>.
 	// Get the user input.
 	//
 	any ret = nil;
+        list<map> temp_alt_names = CaMgm::prop_subject_alt_name_list;
+        boolean temp_cri_alt = CaMgm::prop_adv_cri_issuer_alt_name;
 
 	repeat
 	    {
 		ret = Wizard::UserInput();
 
-		if (ret == `next
+                if (ret == `alt)
+                {
+                    any ret = editAltNames(temp_alt_names);
+                    if (ret != nil)
+                        temp_alt_names = ((list)ret)[0]:temp_alt_names;
+                        temp_cri_alt = ((list)ret)[1]:temp_cri_alt;
+                }
+		else if (ret == `next
 		    ||ret == `back)
 		{
 		    confirmPassword = (string) UI::QueryWidget(`id(`pw2), `Value);
@@ -183,6 +337,9 @@ Here, change these <b>default settings</b>.
 			CaMgm::prop_organisationUnit = (string) UI::QueryWidget(`id(`id_organisationUnit), `Value);
 			CaMgm::prop_locality = (string) UI::QueryWidget(`id(`id_locality), `Value);
 			CaMgm::prop_state = (string) UI::QueryWidget(`id(`id_state), `Value);
+			CaMgm::prop_subject_alt_name_list = temp_alt_names;
+			CaMgm::prop_adv_cri_issuer_alt_name = temp_cri_alt;
+			y2milestone("alt names %1", CaMgm::prop_subject_alt_name_list);
 		    }
 		}
 	    }
