@@ -760,6 +760,7 @@
 		foreach(map elem, CaMgm::prop_subject_alt_name_list, {
 																  CaMgm::adv_subject_alt_name_list = add (CaMgm::adv_subject_alt_name_list, elem);
 															  });
+           CaMgm::adv_cri_issuer_alt_name = CaMgm::prop_adv_cri_issuer_alt_name;
 	}
 	if (kind == "Client Certificate")
 	{

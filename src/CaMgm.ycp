@@ -136,6 +136,7 @@ global string 	prop_state = "";
 global symbol   prop_selection = `def; // `none, `disk
 
 global list<map> prop_subject_alt_name_list = [];
+global boolean 	prop_adv_cri_issuer_alt_name = false;
 
 global boolean adv_subject_alt_name_show_email = false;
 
