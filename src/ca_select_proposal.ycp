@@ -273,10 +273,10 @@ Here, change these <b>default settings</b>.
 
                 if (ret == `alt)
                 {
-                    any ret = editAltNames(temp_alt_names);
-                    if (ret != nil)
-                        temp_alt_names = ((list)ret)[0]:temp_alt_names;
-                        temp_cri_alt = ((list)ret)[1]:temp_cri_alt;
+                    any new_alt_names = editAltNames(temp_alt_names);
+                    if (new_alt_names != nil)
+                        temp_alt_names = ((list)new_alt_names)[0]:temp_alt_names;
+                        temp_cri_alt = ((list)new_alt_names)[1]:temp_cri_alt;
                 }
 		else if (ret == `next
 		    ||ret == `back)
