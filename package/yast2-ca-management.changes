@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Sep  8 16:32:17 CEST 2011 - mc@suse.de
+
+- version 2.17.20
+- check subject alt name when exporting as common server cert
+  (bnc#716673)
+
+-------------------------------------------------------------------
 Tue Jun  7 12:45:57 UTC 2011 - jreidinger@novell.com
 
 - version 2.17.19
