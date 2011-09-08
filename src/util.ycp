@@ -1185,13 +1185,28 @@ Certificate password</p>
 	y2milestone("Hostname :%1", retmap);
 	if (commonName != strip(retmap["stdout"]:""))
 	{
-	    string errorString = sformat ( _("The common name of the certificate (%1) is not the name of
+            // check if hostname is in Subject Alt Name
+            map ret = (map) YaPI::CaManagement::ReadCertificate ($["caName":CAname,
+                                                                   "caPasswd":getPassword(CAname),
+                                                                   "certificate":certificate,
+                                                                   "type":"parsed"]);
+            map<string,list> opensslExtentions = ret["OPENSSL_EXTENSIONS"]:$[];
+            boolean found = false;
+            foreach (string entry, (list<string>) opensslExtentions["X509v3 Subject Alternative Name"]:[], ``{
+                if (issubstring(entry, strip(retmap["stdout"]:""))) {
+                    y2milestone("Found hostname(%1) in Subject Alternative Name (%2)", strip(retmap["stdout"]:""), entry)
+                    found = true;
+                }
+            });
+            if (!found) {
+               string errorString = sformat ( _("The common name of the certificate (%1) is not the name of·
 the server (%2).
 This certificate might be not practical as a common server certificate.
 "),
 					   commonName,
 					   strip(retmap["stdout"]:""));
-	    Popup::Warning (errorString);
+               Popup::Warning (errorString);
+            }
 	}
 
 	UI::OpenDialog (`opt(`decorated ),
