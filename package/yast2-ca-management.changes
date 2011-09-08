@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Sep  8 16:41:05 CEST 2011 - mc@suse.de
+
+- version 2.21.2
+- check subject alt name when exporting as common server cert
+  (bnc#716673)
+
+-------------------------------------------------------------------
 Fri Aug  5 12:31:02 CEST 2011 - tgoettlicher@suse.de
 
 - fixed .desktop file (bnc #681249)
