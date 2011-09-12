@@ -47,7 +47,7 @@ helptext = helptext + _("<p>The purpose of the <b>Common Server Certificate</b> 
 helptext = helptext + _("Some YaST modules provide the capability to use this certificate during configuration of such a service.</p>");
 
 // help text 4/8
-helptext = helptext + _("<p>With the <b>Import/Replace</b> button you can add a new server certificate or replace the currect one.</p>");
+helptext = helptext + _("<p>With the <b>Import/Replace</b> button you can add a new server certificate or replace the current one.</p>");
 
 // help text 5/8
 helptext = helptext + _("<p>You can remove the Certificates by clicking the <b>Remove</b> button. But make sure, that it is not used anymore by other services.</p>");
@@ -59,7 +59,7 @@ helptext = helptext + _("<p>Certificates can be written to a file using <b>Expor
 helptext = helptext + _("<p>Certificates to import from disk must have been written in <b>PKCS12 format with CA chain</b>.</p>");
 
 // help text 8/8
-helptext = helptext + _("<p>For more informations, please read the manual.</p>");
+helptext = helptext + _("<p>For more information, please read the manual.</p>");
 
 symbol ui = nil;
 

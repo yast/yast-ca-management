@@ -1075,7 +1075,7 @@ Enter the required LDAP password.
 ");
         // help text 2/3
 	help_text = help_text +
-	    _("Import a server certificate and correspondenting CA and copy them to a place where other YaST modules look for such a common certificate.");
+	    _("Import a server certificate and corresponding CA and copy them to a place where other YaST modules look for such a common certificate.");
 
 	// help text 3/3
 	help_text = help_text + _("<p><b>Password:</b><br>

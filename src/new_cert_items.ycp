@@ -30,7 +30,7 @@
 
     include "ca-management/new_cert_callbacks.ycp";
 
-    define string advanced_help = _("<P>This frame shows further attributes and OpenSSL X509v3 extensions that can be set. If you are not familiar with these extentions, refer to the file /usr/share/doc/packages/openssl-doc/openssl.txt (package openssl-doc).</P>");
+    define string advanced_help = _("<P>This frame shows further attributes and OpenSSL X509v3 extensions that can be set. If you are not familiar with these extensions, refer to the file /usr/share/doc/packages/openssl-doc/openssl.txt (package openssl-doc).</P>");
 
     define string expert_help = advanced_help + _("<P>Wrong entries can make the certificate unusable.</P>");
 

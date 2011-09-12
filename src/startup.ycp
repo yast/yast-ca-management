@@ -119,7 +119,7 @@
         // help text 2/3
         helptext = helptext + _("<p><b>Create Root CA</b> generates a new root certificate authority.</p>");
         // help text 3/3
-        helptext = helptext + _("<p>For more informations about CA Management, please read the manual.</p>");
+        helptext = helptext + _("<p>For more information about CA Management, please read the manual.</p>");
 
         list<term> termList = getCAList ("");
 
