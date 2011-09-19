@@ -15,6 +15,7 @@ X-SuSE-YaST-AutoInst=
 X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstResource=
+X-SuSE-YaST-AutoLogResource=false
 
 Icon=yast-common_cert
 Exec=/sbin/yast2 common_cert
