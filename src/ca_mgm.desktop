@@ -16,6 +16,7 @@ X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstClonable=true
 X-SuSE-YaST-AutoInstRequires=lan,users
 X-SuSE-YaST-AutoInstSchema=ca_mgm.rnc
+X-SuSE-YaST-AutoLogResource=false
 
 Icon=yast-ca_mgm
 Exec=xdg-su -c "/sbin/yast2 ca_mgm"
