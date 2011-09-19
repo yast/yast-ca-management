@@ -746,7 +746,9 @@ if(size(WFM::Args()) > 0 && is(WFM::Args(0), string)) {
 	param = (map) WFM::Args(1);
 }
 y2milestone("func=%1", func);
-y2milestone("param=%1", param);
+map logparam = param;
+logparam["password"]="<non-empty>";
+y2milestone("param=%1", logparam);
 
 /* Create a summary*/
 if(func == "Summary") {
