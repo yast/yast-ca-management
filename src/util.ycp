@@ -1178,7 +1178,7 @@ Certificate password</p>
             boolean found = false;
             foreach (string entry, (list<string>) opensslExtentions["X509v3 Subject Alternative Name"]:[], ``{
                 if (issubstring(entry, strip(retmap["stdout"]:""))) {
-                    y2milestone("Found hostname(%1) in Subject Alternative Name (%2)", strip(retmap["stdout"]:""), entry)
+                    y2milestone("Found hostname(%1) in Subject Alternative Name (%2)", strip(retmap["stdout"]:""), entry);
                     found = true;
                 }
             });
