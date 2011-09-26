@@ -71,7 +71,7 @@
 			];
 
 	Wizard::CreateDialog();
-	Wizard::SetDesktopIcon("ca-management");
+	Wizard::SetDesktopTitleAndIcon("ca_mgm");
 	symbol ret = WizardSequencer(aliases, CaMgm::certificateSequence);
 
 	UI::CloseDialog();
@@ -92,7 +92,7 @@
 			];
 
 	Wizard::CreateDialog();
-	Wizard::SetDesktopIcon("ca-management");
+	Wizard::SetDesktopTitleAndIcon("ca_mgm");
 	symbol ret = WizardSequencer(aliases, defaultSequence);
 
 	UI::CloseDialog();

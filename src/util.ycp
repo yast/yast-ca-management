@@ -1083,7 +1083,7 @@ Certificate password</p>
 ");
 
 	Wizard::CreateDialog();
-	Wizard::SetDesktopIcon("ca-management");
+	Wizard::SetDesktopTitleAndIcon("ca_mgm");
 	Wizard::SetContents( _("Importing Common Certificate from Disk"), contents,
 			     help_text,
 			     true, true);
