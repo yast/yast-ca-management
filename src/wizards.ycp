@@ -39,7 +39,7 @@ define symbol newCASequence() ``{
     ];
 
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca-management");
+    Wizard::SetDesktopTitleAndIcon("ca_mgm");
     symbol ret = WizardSequencer(aliases, CaMgm::certificateSequence);
 
     UI::CloseDialog();
@@ -91,7 +91,7 @@ define symbol MainSequence() ``{
         ];
 
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca-management");
+    Wizard::SetDesktopTitleAndIcon("ca_mgm");
     symbol ret = WizardSequencer(aliases, sequence);
 
     UI::CloseDialog();

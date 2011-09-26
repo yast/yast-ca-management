@@ -203,7 +203,7 @@
     define any editDefaultEntries () ``{
 
 	Wizard::CreateDialog();
-	Wizard::SetDesktopIcon("ca-management");    
+	Wizard::SetDesktopIcon("ca_mgm");    
 	string help_text = _("<p>
 YaST generates a <b>default CA and certificate</b> automatically. This CA and certificate
 is used for communicating with the <b>Apache server</b>.
@@ -357,7 +357,7 @@ Here, change these <b>default settings</b>.
     * MAIN module
     * ----------------------------------------------------------------------*/
     Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("ca-management");    
+    Wizard::SetDesktopIcon("ca_mgm");    
     
     string heading = _("Managing CAs and Certificates");
 

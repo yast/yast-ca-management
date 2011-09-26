@@ -35,7 +35,7 @@ y2milestone ("common_cert module started");
 define symbol MainSequence () {
 
 Wizard::CreateDialog();
-Wizard::SetDesktopIcon("ca-management");
+Wizard::SetDesktopTitleAndIcon("common_cert");
 
 // help text 1/8
 string helptext = _("<p>A Server Certificate is used by services which provide SSL/TLS encrypted network connections.</p>");
