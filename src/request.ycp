@@ -25,18 +25,18 @@
     import "Wizard";
     import "Label";
     import "Popup";
-    
+
     textdomain "ca-management";
-    
+
     include "ca-management/signRequest.ycp";
-    
+
     define list<string> requestID = [];
 
     // help text 1/6
     string requestHelptext = _("<p>First, see a list view with all available requests of this CA. The columns are the DN of the request including the e-mail address.</p>");
-    // help text 2/6 
+    // help text 2/6
     requestHelptext = requestHelptext + _("<p>Select one of the requests and execute some actions.</p>");
-    // help text 3/6 
+    // help text 3/6
     requestHelptext = requestHelptext + _("<p><b>View</b> opens a window with a text representation of the complete request.</p>");
     // help text 4/6
     requestHelptext = requestHelptext + _("<p>You can also <b>Sign</b>, <b>Delete</b>, or <b>Export</b> a request.</p>");
@@ -54,7 +54,7 @@
 
 	map aliases = $[
           "new_certinit"   	: ``(new_cert_init ("Client Request")),
-	  "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+	  "new_certSaveDef"  	: ``(new_cert_save_default ()),
 	  "new_cert1"  	 	: ``(new_cert1 ("Client Request")),
 	  "new_cert2"   	: ``(new_cert2 ("Client Request")),
 	  "new_cert3"   	: ``(new_cert3 ("Client Request")),
@@ -78,7 +78,7 @@
 
 	map aliases = $[
           "new_certinit"   	: ``(new_cert_init ("Server Request")),
-	  "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+	  "new_certSaveDef"  	: ``(new_cert_save_default ()),
 	  "new_cert1"  	 	: ``(new_cert1 ("Server Request")),
 	  "new_cert2"   	: ``(new_cert2 ("Server Request")),
 	  "new_cert3"   	: ``(new_cert3 ("Server Request")),
@@ -102,7 +102,7 @@
 
 	map aliases = $[
           "new_certinit"   	: ``(new_cert_init ("Sub CA Request")),
-	  "new_certSaveDef"  	: ``(new_cert_save_default ()),		
+	  "new_certSaveDef"  	: ``(new_cert_save_default ()),
 	  "new_cert1"  	 	: ``(new_cert1 ("Sub CA Request")),
 	  "new_cert2"   	: ``(new_cert2 ("Sub CA Request")),
 	  "new_cert3"   	: ``(new_cert3 ("Sub CA Request")),
@@ -116,9 +116,9 @@
 	UI::CloseDialog();
 
 	return ret;
-    }            
+    }
 
-    
+
     /**
      * Signing new Request sequence
      * @param kind (`signClient,`signServer,`signCA)
@@ -130,23 +130,23 @@
 			 $["req_init"   	: ``(signRequestInit ("Client Request")),
 			   "req_sign1"  	: ``(signRequest1 ("Client Request")),
 			   "req_sign2"   	: ``(signRequest2 ("Client Request")),
-			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),	   
+			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),
 			   ],
 			 `signServer:
 			 $["req_init"   	: ``(signRequestInit ("Server Request")),
 			   "req_sign1"  	: ``(signRequest1 ("Server Request")),
 			   "req_sign2"   	: ``(signRequest2 ("Server Request")),
-			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),	   
+			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),
 			   ],
 			 `signCA:
   			 $["req_init"   	: ``(signRequestInit ("CA Request")),
 			   "req_sign1"  	: ``(signRequest1 ("CA Request")),
 			   "req_sign2"   	: ``(signRequest2 ("CA Request")),
-			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),	   
+			   "req_advanced"   	: ``(new_cert_advanced (false, "Sign Request")),
 			   ]
 	];
-			 
-	
+
+
 	map requestSequence = $[
 	"ws_start"	    : "req_init",
         "req_init"          : $[
@@ -169,18 +169,18 @@
         "req_advanced"  : $[
 			    `abort		: `abort,
 			    `back		: "req_sign2"
-	                    ],	
+	                    ],
     ];
 
 	Wizard::CreateDialog();
 	Wizard::SetDesktopTitleAndIcon("ca_mgm");
 	symbol ret = WizardSequencer(aliases[kind]:$[], requestSequence);
-	
+
 	UI::CloseDialog();
 
 	return ret;
     }
-    
+
 
     /**
      * showLongRequestDescription - description of a request in textform
@@ -193,10 +193,10 @@
                                  "caPasswd":getPassword(CAname),
 								 "request":Request,
 								 "type":"plain"]);
-	
+
 	y2milestone("ReadRequest(%1,%2): %3", CAname, Request, ret);
 	ret = "<pre>" + ret + "</pre>";
-	
+
         if (ret == nil)
         {
             showErrorCaManagement ();
@@ -220,10 +220,10 @@
 
 	    UI::SetFocus (`id(`ok));
 	    UI::UserInput ();
-	    UI::CloseDialog ();	    
-	}	
+	    UI::CloseDialog ();
+	}
     }
-    
+
     /**
      * Creates request items
      *
@@ -235,7 +235,7 @@
         integer i = 0;
 
 	requestID = [];
-	
+
 	list<map> ret = (list<map>) YaPI::CaManagement::ReadRequestList ($["caName":currentCA, "caPasswd":getPassword(currentCA)]);
         if (ret == nil)
         {
@@ -243,10 +243,10 @@
 	    return nil;
         }
         y2milestone("ReadRequestList(%1): %2", currentCA, ret);
-	
+
 
 	foreach (map element, ret, ``{
-	    result = add (result, `item (`id (i), 
+	    result = add (result, `item (`id (i),
 					 element["commonName"]:"",
 					 element["emailAddress"]:"",
 					 element["organizationName"]:"",
@@ -262,11 +262,11 @@
     }
 
     /**
-     * Dialog Tab - request - 
+     * Dialog Tab - request -
      * @return term for requests of a selected CA
      */
-    term getRequestTab () {    
-        list<term> certTermList = getRequestList (CaMgm::currentCA);	
+    term getRequestTab () {
+        list<term> certTermList = getRequestList (CaMgm::currentCA);
 	if (certTermList == nil)
 	{
 	    return nil;
@@ -285,7 +285,7 @@
 						       _("State"), _("Country"), _("Generate Time")),
 					      certTermList),
 				      `HSpacing (1)
-				      ),			       
+				      ),
 			       `HBox (
 				      `HSpacing (1),
 				      `RichText(`id(`textinfo),""),
@@ -297,11 +297,11 @@
 				      `HSpacing (1),
 				      `MenuButton( _("Add"),
 						   [
-						    `item(`id(`addCARequest), _("Add Sub-CA Request") ),						    
+						    `item(`id(`addCARequest), _("Add Sub-CA Request") ),
 						    `item(`id(`addServerRequest), _("Add Server Request") ),
 						    `item(`id(`addClientRequest), _("Add Client Request") )
 						    ]
-						   ),				      
+						   ),
 				      `HStretch(),
 				      `MenuButton(`id(`request),
 						  _("&Request"),
@@ -314,8 +314,8 @@
 							   `item(`id(`signServer), _("As Server Certificate") ),
 							   `item(`id(`signCA), _("As CA Certificate") )
 							   ]),
-						   `item(`id(`delete), _("&Delete") ) //,
-						   //`item(`id(`exportFile), _("Export to File") )
+						   `item(`id(`delete), _("&Delete") ),
+						   `item(`id(`exportFile), _("Export to File") )
 						   ]
 						  ),
 				      `HSpacing (1)
@@ -324,17 +324,17 @@
 			       );
 	return contents;
     }
-    
+
     /**
      * Initialize the tab of the dialog
      */
     void initRequestTab () {
 	boolean anyitems = UI::QueryWidget (`id (`table), `CurrentItem) != nil;
 	UI::ChangeWidget (`id (`request), `Enabled, anyitems);
-	
+
 	integer id = (integer) UI::QueryWidget (`id (`table), `CurrentItem);
 	CaMgm::currentRequest = (string) requestID[id]:"";
-	
+
 	if (anyitems)
 	{
 	    map ret = (map) YaPI::CaManagement::ReadRequest ($["caName":CaMgm::currentCA,
@@ -346,9 +346,9 @@
 	    // Add generation time to map
 	    term itemTerm =  (term) UI::QueryWidget(`id(`table), `Item(id));
 	    ret = add (ret, "date", itemTerm[8]:"");
-	    
+
 	    UI::ChangeWidget( `id(`textinfo), `Value, getRequestDescription (ret, false));
-	}	    
+	}
     }
 
 
@@ -362,12 +362,12 @@
 	{
 	    initRequestTab ();
 	}
-	    
+
 	if (ui == `view)
 	{
 	    showLongRequestDescription (CaMgm::currentCA,
-					CaMgm::currentRequest);		
-	}	    	
+					CaMgm::currentRequest);
+	}
 	if(ui == `reqcpw)
 	{
 		// we need to fake a certificate name
@@ -399,32 +399,48 @@
 	    || ui == `signCA)
 	{
 	    signRequestSequence (ui);
-	    ui = `again;		
+	    ui = `again;
 	}
 	if (ui == `exportFile)
 	{
-	    Popup::Error(_("Currently not supported."));
+	    //Popup::Error(_("Currently not supported."));
+	    string newreqfile = UI::AskForSaveFileName( ".", "*", _("Save as") );
+        if (newreqfile != nil && newreqfile != "")
+        {
+            string ret = (string) YaPI::CaManagement::ExportRequest ($[ "caName": CaMgm::currentCA,
+                                                                     "caPasswd": getPassword(CaMgm::currentCA),
+                                                                     "request": CaMgm::currentRequest,
+                                                                     "destinationFile": newreqfile]);
+            if (ret != nil && ret == "1")
+            {
+                Popup::Message(_("Saved to file successfully"));
+            }
+            else
+            {
+                showErrorCaManagement();
+            }
+        }
 	}
 	if (ui == `import)
 	{
 	    importRequestFromDisk (CaMgm::currentCA);
-	    ui = `again;	    
+	    ui = `again;
 	}
 	if (ui == `addCARequest)
 	{
 	    newCARequestSequence ();
-	    ui = `again;			    
-	}	
+	    ui = `again;
+	}
 	if (ui == `addServerRequest)
 	{
 	    newServerRequestSequence ();
-	    ui = `again;			    
+	    ui = `again;
 	}
 	if (ui == `addClientRequest)
 	{
 	    newClientRequestSequence ();
-	    ui = `again;			    
-	}	    		
+	    ui = `again;
+	}
 
 	return (symbol)ui;
     }
