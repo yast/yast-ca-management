@@ -123,6 +123,10 @@ $file = ExportCRL($valueMap)
 
   Export a CRL to a file or returns it in different formats
 
+$bool = ExportRequest($valueMap)
+
+  Export a Request to a file
+
 $bool = Verify($valueMap)
 
   verify a certificate
@@ -413,6 +417,7 @@ use ycp;
 use URI::Escape;
 use X500::DN;
 use MIME::Base64;
+use File::Copy;
 #use Digest::MD5 qw(md5_hex);
 #use Date::Calc qw( Date_to_Time Add_Delta_DHMS Today_and_Now);
 
@@ -3458,6 +3463,109 @@ sub ExportCA {
         }
     }
     return $ret;
+}
+
+=item *
+C<$bool = ExportRequest($valueMap)>
+
+Export a request to a file
+
+In I<$valueMap> you can define the following keys:
+
+* caName (required)
+
+* caPassword (required)
+
+* request (required)
+
+* destinationFile (required)
+
+The function return true on success.
+
+=cut
+BEGIN { $TYPEINFO{ExportRequest} = ["function", "any", ["map", "string", "any"]]; }
+sub ExportRequest {
+    my $self = shift;
+    my $data = shift;
+    my $caName = "";
+    my $request = "";
+    my $destinationFile = undef;
+
+    # checking requires
+    if (!defined $data->{'caName'}) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caName'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $caName = $data->{"caName"};
+
+    if (!defined $data->{'caPasswd'}) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'caPasswd'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+
+    if (! defined $data->{'request'}) {
+                                           # parameter check failed
+        return $self->SetError(summary => __("Invalid value for parameter 'request'."),
+                               code    => "PARAM_CHECK_FAILED");
+    }
+    $request = $data->{"request"};
+
+    if (! defined $data->{'destinationFile'}) {
+        return $self->SetError(summary => sprintf(__("Cannot parse destinationFile %s."),
+                                                  $data->{'destinationFile'}),
+                               description => "Please enter an absolute path and no special characters as filename.",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    $data->{'destinationFile'} =~ /^(\/.+\/)[A-Za-z0-9-_.]+$/;
+    if (not defined $1) {
+        # parameter check failed
+        return $self->SetError(summary => sprintf(__("Cannot parse destinationFile %s."),
+                                                  $data->{'destinationFile'}),
+                               description => "Please enter an absolute path and no special characters as filename.",
+                               code => "PARAM_CHECK_FAILED");
+    }
+    my $ret = SCR->Read(".target.dir", ["$1", undef] );
+    if (not defined $ret) {
+        return $self->SetError(summary => __("Directory does not exist."),
+                               description => "'$1' does not exist.",
+                               code => "DIR_DOES_NOT_EXIST");
+    }
+    $destinationFile = $data->{'destinationFile'};
+
+    my $ca = undef;
+    eval {
+
+        if( defined $data->{'repository'}) {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+                                       $data->{"repository"});
+        } else {
+
+            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+
+        }
+    };
+    if($@) {
+
+        return $self->SetError( summary => __("Initializing the CA failed."),
+                                description => YaST::caUtils->exception2String($@),
+                                code => "LIMAL_CALL_FAILED");
+    }
+
+    my $repository = "$CAM_ROOT";
+    $repository = $data->{'repository'} if defined $data->{'repository'};
+
+    my $origPath = "$repository/$caName/req/$request.req";
+    my $size = SCR->Read(".target.size", $origPath);
+    if ($size <= 0) {
+        return $self->SetError(summary => __("Request not found in")." '$origPath'",
+                               code => "FILE_DOES_NOT_EXIST");
+    }
+    copy($origPath, $destinationFile) or return $self->SetError(summary => __("Copy Request failed"),
+                                                                code => "LIMAL_CALL_FAILED");
+    return 1;
 }
 
 =item *
