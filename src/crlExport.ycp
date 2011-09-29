@@ -60,7 +60,7 @@ map crlConfFormat = $[  "options" : [ "line_can_continue", "global_values", "joi
 define void showSecurityInfo()
 {
     Popup::LongText(
-                   // Translators: window caption 
+                   // Translators: window caption
                    _("Security Information"),
                    // Translators: long help text - security information
                    `RichText(_("Warning!<br>Activating the automatic creation and export of a CRL will write the CA password to a configuration file on disk. The password will be stored there in plain text as it is needed to create a CRL. The file will only be readable for the root user.")),
@@ -120,7 +120,7 @@ define void cleanLdapCred()
 define void readSettings(string ca)
 {
     string crlConf = sformat("/var/lib/CAM/%1/exportcrl.conf", deletechars(ca, " "));
-    if (SCR::Execute(.target.bash, sformat("[ -f  %1  ]", crlConf) ) == 0 )
+    if (SCR::Execute(.target.bash, sformat("[ -f  %1  ]", String::Quote (crlConf) ) ) == 0 )
     {
         SCR::RegisterAgent( .temp_crlexport_agent, `ag_ini(
                             `IniAgent( crlConf,  crlConfFormat  ))  );
@@ -160,9 +160,9 @@ define void readSettings(string ca)
 define void writeSettings(string ca)
 {
     string crlConf = sformat("/var/lib/CAM/%1/exportcrl.conf", deletechars(ca, " "));
-    if (! (SCR::Execute(.target.bash, sformat("[ -f  %1  ]", crlConf) ) == 0))
+    if (! (SCR::Execute(.target.bash, sformat("[ -f  %1  ]", String::Quote (crlConf)) ) == 0))
     {
-        SCR::Execute(.target.bash, sformat("umask 0077  &&  touch  %1", crlConf) );
+        SCR::Execute(.target.bash, sformat("umask 0077  &&  touch  %1", String::Quote (crlConf)) );
     }
 
     SCR::RegisterAgent( .temp_crlexport_agent, `ag_ini(
@@ -240,7 +240,7 @@ define void exportCRL (string ca) {
                                         `VBox(`VSpacing(1), `PushButton(`id(`askFile), Label::BrowseButton() ))
                                  ),
                                 `Left( `RadioButtonGroup(`id(`fileformat),
-                                       `HBox( 
+                                       `HBox(
                                               `Label(_("Export Format")),
                                               `RadioButton(`id(`ffpem), `opt(`notify), _("PEM Format"), true ),
                                               `RadioButton(`id(`ffder), `opt(`notify), _("DER Format") )
@@ -276,7 +276,7 @@ define void exportCRL (string ca) {
                                             `Left( `CheckBox(`id(`exportFile), `opt(`notify), _("Export to file"), true )),
                                             `HBox( `HSpacing(hspace), cfilesettings ),
                                             `VSpacing(vspace),
-                                            `Left( `CheckBox(`id(`exportLDAP), `opt(`notify), _("Export to LDAP"), false )), 
+                                            `Left( `CheckBox(`id(`exportLDAP), `opt(`notify), _("Export to LDAP"), false )),
                                             `HBox( `HSpacing(hspace), cldapsettings ),
                                             `VSpacing(vspace),
                                             cinterval
@@ -308,7 +308,7 @@ define void exportCRL (string ca) {
         if (ui == `askFile)
         {
             string fformat = "*.pem";
-            if (fileformat == `ffder) fformat = "*.der"; 
+            if (fileformat == `ffder) fformat = "*.der";
             string newcrlfile = UI::AskForSaveFileName( crlfile, fformat, _("Save as") );
             if (newcrlfile != nil && newcrlfile != "") crlfile = newcrlfile;
         }
