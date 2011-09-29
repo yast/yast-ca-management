@@ -48,13 +48,13 @@ define list<term> getAutoCountryList () ``{
     list<string> name_list = maplist ( string k, string v,
 				       country_map, { return v; });
 
-    name_list = sort (name_list);	
-	    
+    name_list = sort (name_list);
+
     foreach (string name, name_list, ``{
 	result = add (result, `item (`id (country_index[name]:""), name ,
 				     CaMgm::autoYaSTSettings["country"]:Timezone::GetCountryForTimezone("") == country_index[name]:"") );
     });
-    return result;	
+    return result;
 }
 
 
@@ -73,7 +73,7 @@ is used for communicating with the Apache server.
 Here, change the settings of this CA and certificate or import a CA and certificate from a file.
 </p>
 ");
-	
+
     /* Initialization dialog contents */
     Wizard::CreateDialog();
 
@@ -86,7 +86,7 @@ Here, change the settings of this CA and certificate or import a CA and certific
 							 _("Import Common CA and Certificate"),
 							 CaMgm::autoYaSTSettings["importCertificate"]:true)),
 				      `HBox ( `HSpacing (3),
-					      `VBox(    
+					      `VBox(
 						    `HBox (
 							   `HWeight(2, `TextEntry( `id (`pathCert), _("&Path of Certificate"),
 										   CaMgm::autoYaSTSettings["pathCertificate"]:"")),
@@ -97,42 +97,42 @@ Here, change the settings of this CA and certificate or import a CA and certific
 								    )
 							   ),
 						    `HBox(`HWeight (1,`Password(`id(`pw3), `opt(`hstretch), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
-							  `HSpacing(2), 
+							  `HSpacing(2),
 							  `HWeight (1,`Password(`id(`pw4), `opt(`hstretch), _("Co&nfirm Password"), confirmPassword))
 							  )
 						    )
-					      ),				      
+					      ),
 				      `Left(`RadioButton(`id(`notImport), `opt( `notify),
 							 _("Generate Common CA and Certificate"),
 							 !(CaMgm::autoYaSTSettings["importCertificate"]:false))),
 				      `HBox(`HSpacing (3),
-					    `VBox(    
+					    `VBox(
 						  `HBox(`HWeight (1,`TextEntry( `id (`id_CAName), _("&CA Name:"),
 										CaMgm::autoYaSTSettings["CAName"]:"YaST_Default_CA")),
-							`HSpacing(2), 
+							`HSpacing(2),
 							`HWeight (1,`TextEntry( `id (`id_commonName), _("&Common Name:"),
 										CaMgm::autoYaSTSettings["ca_commonName"]:""))
 							),
 						  `HBox(`HWeight (1,`TextEntry(`id(`email), _("E-Mail"),
 									       CaMgm::autoYaSTSettings["server_email"]:"")),
-							`HSpacing(2), 
+							`HSpacing(2),
 							`HWeight (1,`ComboBox( `id (`id_country), `opt(`editable), _("C&ountry:"),
 									       getAutoCountryList()))
-							),				     
+							),
 						  `HBox(`HWeight (1,`TextEntry( `id (`id_organisation), _("O&rganization:"),
 										CaMgm::autoYaSTSettings["organisation"]:"")),
-							`HSpacing(2), 
+							`HSpacing(2),
 							`HWeight (1,`TextEntry( `id (`id_organisationUnit), _("Or&ganizational Unit:"),
 										CaMgm::autoYaSTSettings["organisationUnit"]:""))
 							),
 						  `HBox(`HWeight (1,`TextEntry( `id (`id_locality), _("Loca&lity:"),
 										CaMgm::autoYaSTSettings["locality"]:"")),
-							`HSpacing(2), 
+							`HSpacing(2),
 							`HWeight (1,`TextEntry( `id (`id_state), _("&State:"),
 										CaMgm::autoYaSTSettings["state"]:""))
 							),
 						  `HBox(`HWeight (1,`Password(`id(`pw1), `opt(`hstretch), _("&Password:"), CaMgm::autoYaSTSettings["password"]:"")),
-							`HSpacing(2), 
+							`HSpacing(2),
 							`HWeight (1,`Password(`id(`pw2), `opt(`hstretch), _("Co&nfirm Password"), confirmPassword))
 							),
 						  `Left(`CheckBox(`id(`localServerName), `opt(`notify),
@@ -140,7 +140,7 @@ Here, change the settings of this CA and certificate or import a CA and certific
 								  CaMgm::autoYaSTSettings["takeLocalServerName"]:true)),
 						  `HBox(`HWeight (1,`TextEntry( `id (`id_serverName), _("&Server Name:"),
 										CaMgm::autoYaSTSettings["server_commonName"]:"")),
-							`HSpacing(2), 
+							`HSpacing(2),
 							`HWeight (1,`Empty())
 							)
 						  )
@@ -148,15 +148,15 @@ Here, change the settings of this CA and certificate or import a CA and certific
 				      )
 				)
 			   );
-    
+
     Wizard::SetContents (caption, contents, help_text, false, true);
     Wizard::SetNextButton(`next, Label::FinishButton() );
-    
+
     // Get the user input.
     //
     any ret = nil;
 
-    repeat 
+    repeat
     {
 	if (UI::QueryWidget(`id(`rb), `CurrentButton) == `import)
 	{
@@ -172,11 +172,11 @@ Here, change the settings of this CA and certificate or import a CA and certific
 	    UI::ChangeWidget (`id (`pw2), `Enabled, false);
 	    UI::ChangeWidget (`id (`localServerName), `Enabled, false);
 	    UI::ChangeWidget (`id (`id_serverName), `Enabled, false);
-	    UI::ChangeWidget (`id (`pathCert), `Enabled, true); 
+	    UI::ChangeWidget (`id (`pathCert), `Enabled, true);
 	    UI::ChangeWidget (`id(`browseCert), `Enabled, true);
 	    UI::ChangeWidget (`id (`pw3), `Enabled, true);
 	    UI::ChangeWidget (`id (`pw4), `Enabled, true);
-	    
+
 	}
 	else
 	{
@@ -189,11 +189,11 @@ Here, change the settings of this CA and certificate or import a CA and certific
 	    UI::ChangeWidget (`id (`id_locality), `Enabled, true);
 	    UI::ChangeWidget (`id (`id_state), `Enabled, true);
 	    UI::ChangeWidget (`id (`localServerName), `Enabled, true);
-	    UI::ChangeWidget (`id (`pathCert), `Enabled, false); 
+	    UI::ChangeWidget (`id (`pathCert), `Enabled, false);
 	    UI::ChangeWidget (`id(`browseCert), `Enabled, false);
 	    UI::ChangeWidget (`id (`pw3), `Enabled, false);
 	    UI::ChangeWidget (`id (`pw4), `Enabled, false);
-	    
+
 		UI::ChangeWidget (`id (`pw1), `Enabled, true);
 		UI::ChangeWidget (`id (`pw2), `Enabled, true);
 
@@ -204,10 +204,10 @@ Here, change the settings of this CA and certificate or import a CA and certific
 	    else
 	    {
 		UI::ChangeWidget (`id (`id_serverName), `Enabled, true);
-	    }	    
+	    }
 	}
 
-	
+
 	ret = Wizard::UserInput();
 
 	if (ret == `browseCert)
@@ -217,14 +217,14 @@ Here, change the settings of this CA and certificate or import a CA and certific
 	    {
 		UI::ChangeWidget(`id(`pathCert), `Value, name);
 	    }
-	    ret = `again;		
+	    ret = `again;
 	}
 
 	if (ret == `next
 	    ||ret == `back)
 	{
 	    remove (CaMgm::autoYaSTSettings, "certificate");
-	    
+
 	    boolean notImport = (boolean) (UI::QueryWidget(`id(`rb), `CurrentButton) == `notImport);
 	    if (notImport)
 	    {
@@ -246,7 +246,7 @@ Here, change the settings of this CA and certificate or import a CA and certific
 	    {
 		Popup::Error(_("CA name required."));
 		ret = `again;
-	    }	    	    
+	    }
 	    if (notImport
 		&& size ((string) UI::QueryWidget(`id(`id_commonName), `Value)) <= 0
 		&& ret!=`again)
@@ -268,7 +268,7 @@ Here, change the settings of this CA and certificate or import a CA and certific
 		&& ret!=`again)
 	    {
 		Popup::Error(_("Server name required."));
-		ret = `again;		
+		ret = `again;
 	    }
 
 	    if (!notImport
@@ -284,42 +284,42 @@ Here, change the settings of this CA and certificate or import a CA and certific
 		{
 		    Popup::Error(_("Password length should be greater than three characters."));
 		    ret = `again;
-		}		
-	    }	    
+		}
+	    }
 
 	    map retmap = $[];
-	    
+
 	    if (!notImport
 		&& ret!=`again)
 	    {
 		string command = sformat("/usr/bin/openssl base64 -in %1 -e",
-					 (string) UI::QueryWidget(`id (`pathCert), `Value));
+					 String::Quote ( (string) UI::QueryWidget(`id (`pathCert), `Value)));
 		retmap = (map) SCR::Execute (.target.bash_output,
 						 command,
 						 $[] );
 		y2milestone("%1 :%2", command, retmap);
 		if (retmap["exit"]:0 != 0)
 		{
-		    y2error("%1 :%2", command, retmap);		    
+		    y2error("%1 :%2", command, retmap);
 		    Popup::Error(_("Cannot read the certificate."));
-		    ret = `again;		
+		    ret = `again;
 		}
 	    }
 
 	    if (ret!=`again)
 	    {
 		CaMgm::autoYaSTSettings = $[];
-		
+
 		CaMgm::autoYaSTSettings["importCertificate"] = (boolean) ((symbol)UI::QueryWidget(`id(`rb), `CurrentButton) == `import);
 		if (CaMgm::autoYaSTSettings["importCertificate"]:false)
 		{
 		    CaMgm::autoYaSTSettings["certificate"] = strip(retmap["stdout"]:"");
 		    CaMgm::autoYaSTSettings["pathCertificate"] = (string) UI::QueryWidget(`id (`pathCert), `Value);
-		    CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw3), `Value);		    
+		    CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw3), `Value);
 		}
 		else
 		{
-		    CaMgm::autoYaSTSettings["takeLocalServerName"] = (boolean) UI::QueryWidget(`id(`localServerName), `Value);	
+		    CaMgm::autoYaSTSettings["takeLocalServerName"] = (boolean) UI::QueryWidget(`id(`localServerName), `Value);
 		    CaMgm::autoYaSTSettings["password"] = (string) UI::QueryWidget(`id(`pw1), `Value);
 		    if (!CaMgm::autoYaSTSettings["takeLocalServerName"]:true)
 		    {
@@ -363,7 +363,7 @@ boolean Import (map settings) {
 	// importing CA/certificate
 	CaMgm::autoYaSTSettings["certificate"] = settings["certificate"]:"";
 	CaMgm::autoYaSTSettings["pathCertificate"] = settings["pathCertificate"]:"";
-	CaMgm::autoYaSTSettings["password"] = settings["password"]:"";	
+	CaMgm::autoYaSTSettings["password"] = settings["password"]:"";
     }
     else
     {
@@ -372,20 +372,20 @@ boolean Import (map settings) {
 	{
 	    CaMgm::autoYaSTSettings["password"] = settings["password"]:"";
 	}
-    
+
 	CaMgm::autoYaSTSettings["takeLocalServerName"] = settings["takeLocalServerName"]:true;
 	if (settings["takeLocalServerName"]:true )
 	{
 		map<string,string> host_ips = getHostIPs ();
 		string hostname_bak = "";
-		
+
 		foreach(string key, string value, host_ips, {
 														 if(value == "DNS")
 														 {
 															 hostname_bak = key;
 														 }
 													 });
-		
+
 	    map retmap = (map) SCR::Execute (.target.bash_output,
 					     "/bin/hostname --long",
 					     $[] );
@@ -406,44 +406,44 @@ boolean Import (map settings) {
 	else
 	{
 	    if (haskey (settings, "server_commonName"))
-	    {	    
+	    {
 		CaMgm::autoYaSTSettings["server_commonName"] = settings["server_commonName"]:"";
 	    }
 	}
 	if (haskey (settings, "CAName"))
-	{	    
+	{
 	    CaMgm::autoYaSTSettings["CAName"] = settings["CAName"]:"YaST_Default_CA";
 	}
 	if (haskey (settings, "ca_commonName"))
-	{	        
+	{
 	    CaMgm::autoYaSTSettings["ca_commonName"] = settings["ca_commonName"]:"";
 	}
 	if (haskey (settings, "server_email"))
-	{	        
+	{
 	    CaMgm::autoYaSTSettings["server_email"] = settings["server_email"]:"";
 	}
 	if (haskey (settings, "country"))
-	{	        
+	{
 	    CaMgm::autoYaSTSettings["country"] = settings["country"]:"";
 	}
 	if (haskey (settings, "organisation"))
-	{	        
+	{
 	    CaMgm::autoYaSTSettings["organisation"] = settings["organisation"]:"";
 	}
 	if (haskey (settings, "organisationUnit"))
-	{	        
+	{
 	    CaMgm::autoYaSTSettings["organisationUnit"] = settings["organisationUnit"]:"";
 	}
 	if (haskey (settings, "locality"))
-	{	        
+	{
 	    CaMgm::autoYaSTSettings["locality"] = settings["locality"]:"";
 	}
 	if (haskey (settings, "state"))
-	{	        
+	{
 	    CaMgm::autoYaSTSettings["state"] = settings["state"]:"";
 	}
     }
-    
+
     return ret;
 }
 
@@ -453,7 +453,7 @@ boolean Import (map settings) {
  * @return map Dumped settings (later acceptable by Import ())
  */
 map Export () {
-    
+
     return CaMgm::autoYaSTSettings;
 }
 
@@ -477,7 +477,7 @@ string Summary() {
 
     if (CaMgm::autoYaSTSettings["importCertificate"]:false)
     {
-	summary = Summary::AddHeader (summary,_("Import Certificate from File"));	
+	summary = Summary::AddHeader (summary,_("Import Certificate from File"));
     	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["pathCertificate"]:"");
     }
     else
@@ -507,7 +507,7 @@ string Summary() {
 	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["locality"]:_("[not set]"));
 	summary = Summary::AddHeader (summary, _("State"));
 	summary = Summary::AddLine (summary, CaMgm::autoYaSTSettings["state"]:_("[not set]"));
-    
+
 	summary = Summary::AddHeader (summary, _("Password"));
 	if (size (CaMgm::autoYaSTSettings["password"]:"") <= 0 )
 	{
@@ -518,7 +518,7 @@ string Summary() {
 	    summary = Summary::AddLine (summary, _("[set]"));
 	}
     }
-    
+
     return summary;
 }
 
@@ -535,7 +535,7 @@ boolean Write() {
 
     Report::DisplayErrors(true, 5);
     Report::DisplayMessages(true, 5);
-    
+
     // We do not set help text here, because it was set outside
     Progress::New(caption, " ", steps, [
 	    /* Progress stage 1/2 */
@@ -556,13 +556,13 @@ boolean Write() {
     // Read server information
 
     string tmpfile = (string) SCR::Read (.target.tmpdir) + "/YaST-Servercert.p12";
-    
+
     Progress::NextStage();
     if (CaMgm::autoYaSTSettings["importCertificate"]:false)
     {
 	// importing CA/certificate
 	string command = sformat("/usr/bin/openssl base64 -out %1 -d",
-				 tmpfile);
+				 String::Quote ( tmpfile ));
 	SCR::Execute (.target.bash_input,
 		      command,
 		      CaMgm::autoYaSTSettings["certificate"]:"");
@@ -574,14 +574,14 @@ boolean Write() {
 	{
 		map<string,string> host_ips = getHostIPs ();
 		string hostname_bak = "";
-		
+
 		foreach(string key, string value, host_ips, {
 														 if(value == "DNS")
 														 {
 															 hostname_bak = key;
 														 }
 													 });
-		
+
 	    map retmap = (map) SCR::Execute (.target.bash_output,
 										 "/bin/hostname --long",
 										 $[] );
@@ -604,7 +604,7 @@ boolean Write() {
 	{
 	    CaMgm::prop_server_commonName = CaMgm::autoYaSTSettings["server_commonName"]:"";
 	}
-    
+
 	CaMgm::prop_selection = `def;
 	CaMgm::prop_ca_commonName = CaMgm::autoYaSTSettings["ca_commonName"]:"";
 	CaMgm::prop_CAName = CaMgm::autoYaSTSettings["CAName"]:"YaST_Default_CA";
@@ -618,7 +618,7 @@ boolean Write() {
     }
 
     Progress::NextStage();
-    
+
     // write settings
 
     if (success)
@@ -635,18 +635,18 @@ boolean Write() {
 		    || !importret)
 		{
 		    success = false;
-		}	
+		}
 	}
 	else
 	{
-	    success = create_default_CA_certificate();	
+	    success = create_default_CA_certificate();
 	}
     }
     if (!success)
     {
 	/* Error message */
 	Report::Error (_("Cannot create certificates."));
-    }    
+    }
 
     sleep(sl);
 
@@ -690,14 +690,14 @@ boolean Read() {
 	{
 		domain = strip(retmap["stdout"]:"site");
 	}
-		
+
 	if(found)
 	{
 		map serverCertDN = servercert["DN_HASH"]:$[];
 		map serverCertIssuer = servercert["ISSUER_HASH"]:$[];
 
-		
-		CaMgm::autoYaSTSettings["takeLocalServerName"] = false;	
+
+		CaMgm::autoYaSTSettings["takeLocalServerName"] = false;
 		CaMgm::autoYaSTSettings["password"] = "ENTER PASSWORD HERE";
 		CaMgm::autoYaSTSettings["server_commonName"] = ((list)serverCertDN["CN"]:[])[0]:(hostname + "." + domain);
 		CaMgm::autoYaSTSettings["CAName"] = "YaST_Default_CA";
@@ -711,7 +711,7 @@ boolean Read() {
 	}
 	else
 	{
-		CaMgm::autoYaSTSettings["takeLocalServerName"] = true;	
+		CaMgm::autoYaSTSettings["takeLocalServerName"] = true;
 		CaMgm::autoYaSTSettings["password"] = "ENTER PASSWORD HERE";
 		CaMgm::autoYaSTSettings["CAName"] = "YaST_Default_CA";
 		CaMgm::autoYaSTSettings["ca_commonName"] = "YaST Default CA " + "(" + domain + ")";

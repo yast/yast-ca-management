@@ -56,7 +56,7 @@
 		string hostname_bak = "";
 		if (size(CaMgm::prop_subject_alt_name_list) <= 0){
                     CaMgm::prop_subject_alt_name_list = [];
-		
+
 		    foreach(string key, string value, host_ips, {
 			if(value == "DNS")
 			{
@@ -68,7 +68,7 @@
 			CaMgm::prop_subject_alt_name_list = add (CaMgm::prop_subject_alt_name_list, elem);
                     });
                 }
-		
+
 		map retmap = (map) SCR::Execute (.target.bash_output,
 										 "/bin/hostname --long",
 										 $[] );
@@ -94,7 +94,7 @@
 				retmap["stdout"] = hostname_bak;
 			}
 		}
-			
+
 		string longhostname = strip(retmap["stdout"]:"");
         if ( longhostname == nil ) longhostname = "";  // (bnc#428101)
 
@@ -106,12 +106,12 @@
         if ( hostname == nil ) hostname = "";  // (bnc#428101)
 		string domain = substring (longhostname, findfirstof(longhostname,".")+1);
         if ( domain == nil ) domain = "";  // (bnc#428101)
-				
+
 		if (size (domain) <= 0)
 		{
 			domain = longhostname;
 		}
-			
+
 		if (!CaMgm::prop_ca_commonNameChanged)
 		{
 			CaMgm::prop_ca_commonName = "YaST Default CA (" + hostname + ")";
@@ -128,12 +128,12 @@
 		{
 			CaMgm::prop_email = "postmaster@" + domain;
 		}
-			
+
 		if(ret["warning"]:"" != "")
 		{
 			return ret;
 		}
-			
+
 
 		// new handling of force reset because of (#238754)
 		if (force_reset)
@@ -185,8 +185,8 @@
 																  "inForm":"PEM"
 																 ]);
 			CaMgm::prop_settingsWritten = defaultRootCA != nil ? true:false;
-  
- 
+
+
 			if (CaMgm::prop_settingsWritten)
 			{
 				if( CaMgm::prop_keep_ca || !Popup::YesNo(_("CA Management") + "\n" +
@@ -200,7 +200,7 @@
 																				  "type":"parsed",
 																				  "datatype":"CERTIFICATE",
 																				  "inForm":"PEM"           ]);
- 
+
 					map defaultServerCertIssuer = defaultServerCert["ISSUER_HASH"]:$[];
 					// CaMgm::prop_selection     = `def;
 					CaMgm::prop_ca_commonName = ((list)defaultServerCertIssuer["CN"]:[])[0]:"";
@@ -209,9 +209,9 @@
 					CaMgm::prop_CAName        = CaMgm::prop_CAName;
 
 					map defaultSCmap =  defaultServerCert["DN_HASH"]:$[];
-						
+
 					CaMgm::prop_server_commonName = ((list)defaultSCmap["CN"]:[])[0]:"";
-							
+
 
 					ret = $[ "workflow_sequence" : `auto ];
 				}
@@ -276,7 +276,7 @@
 						}
 						if ( size(pw1) < 4)
 						{
-							Popup::Error(_("The password is too short for use as the password for the certificates. 
+							Popup::Error(_("The password is too short for use as the password for the certificates.
  Enter a valid password for the certificates or disable certificate creation.
 "));
 							continue;
@@ -292,7 +292,7 @@
 						break;
 					}
 				}
-					
+
 				UI::CloseDialog ();
 			}
             if (CaMgm::prop_keep_ca)
@@ -311,14 +311,14 @@
 				proposal = HTML::Para(_("Creating default CA and certificate.")
 									  + HTML::Newline());
 			}
-				
+
 			string passwordString = (string) (CaMgm::prop_passwordChanged ? _("[manually set]") : _("[root password]"));
 
 			string subAltName = "";
 			foreach(map elem, CaMgm::prop_subject_alt_name_list, {
 																	 subAltName = subAltName + elem["kind"]:"" + ":" + elem["name"]:"" + " ";
 																 });
-			
+
 			proposal = proposal+ HTML::List( [ _("CA Name: ") + CaMgm::prop_CAName,
 											  _("Common Name: ") + CaMgm::prop_ca_commonName,
 											  _("Server Name: ") + CaMgm::prop_server_commonName,
@@ -327,10 +327,10 @@
 											  _("E-Mail: ") + CaMgm::prop_email,
 											  _("Alternative Names: ") + subAltName,
 											 ] );
-			
+
 			if ( !CaMgm::prop_keep_ca && size(CaMgm::prop_password) < 4)
 			{
-				ret = add( ret, "warning", _("The root password is too short for use as the password for the certificates. 
+				ret = add( ret, "warning", _("The root password is too short for use as the password for the certificates.
  Enter a valid password for the certificates or disable certificate creation.
 "));
 				ret = add( ret, "warning_level", `blocker );
@@ -344,7 +344,7 @@
 		{
 			proposal = HTML::Para(_("Importing a CA and certificate from file"));
 		}
-			
+
 		ret = add (ret, "preformatted_proposal", proposal);
 		if ( ((list<string>) splitstring (CaMgm::prop_server_commonName, "."))[0]:"" == "linux")
 		{
@@ -398,7 +398,7 @@
     else if (func == "Write")
     {
 		boolean success = true;
-		
+
 		if (!CaMgm::prop_settingsWritten)
 		{
 			if (CaMgm::prop_selection == `def)
@@ -414,7 +414,7 @@
 				CaMgm::prop_settingsWritten = true;
 			}
 		}
-		
+
         ret = $[ "success" : success ];
     }
     return ret;
