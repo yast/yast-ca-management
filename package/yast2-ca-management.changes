@@ -1,7 +1,9 @@
 -------------------------------------------------------------------
 Thu Sep 29 11:01:16 CEST 2011 - mc@suse.de
 
+- version 2.21.8
 - quote pathes used in target.bash (bnc#266220)
+- implement export request (bnc#717224)
 
 -------------------------------------------------------------------
 Mon Sep 26 14:44:47 CEST 2011 - visnov@suse.cz
