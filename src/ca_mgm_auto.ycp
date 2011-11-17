@@ -29,6 +29,7 @@ import "Users";
 import "CaMgm";
 import "Summary";
 import "Hostname";
+import "String";
 
 include "ca-management/new_cert_read_write.ycp";
 include "ca-management/util.ycp";
