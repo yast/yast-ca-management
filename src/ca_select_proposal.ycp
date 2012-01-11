@@ -242,7 +242,7 @@ Here, change these <b>default settings</b>.
                                     ),
 			       `HBox(`HWeight (1,`TextEntry(`id(`email), _("E-Mail"), CaMgm::prop_email)),
 				     `HSpacing(2), 
-				     `HWeight (1,`PushButton(`id(`alt),"&Edit Alternative Names"))
+				     `HWeight (1,`PushButton(`id(`alt), _("&Edit Alternative Names")))
                                      )
 			       );
 
