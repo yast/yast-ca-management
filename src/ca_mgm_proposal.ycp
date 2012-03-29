@@ -276,8 +276,8 @@
 						}
 						if ( size(pw1) < 4)
 						{
-							Popup::Error(_("The password is too short for use as the password for the certificates.
- Enter a valid password for the certificates or disable certificate creation.
+							Popup::Error(_("The password is too short to use for the certificates. 
+Enter a valid password for the certificates or disable certificate creation.
 "));
 							continue;
 						}

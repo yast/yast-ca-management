@@ -211,7 +211,7 @@ define void exportCRL (string ca) {
 
     string help_para1 = sformat("<p><b>%1</b></p>", caption);
     string help_para2 = _("<p>Export the CRL of this CA once by selecting <b>Export once</b>.</p>");
-    string help_para3 = _("<p>To set up a repeated recreation of the CRL select <b>Repeated recreation and export</b>. In this case set the interval for the recreation in <b>Periodic interval</b>. If you set the interval to 24 hours you can additionally select the hour for the export. Please make sure you read and understood the <b>Security Information</b>.</p>");
+    string help_para3 = _("<p>To set up a repeated recreation of the CRL, select <b>Repeated recreation and export</b>. In this case, set the interval for the recreation in <b>Periodic interval</b>. If you set the interval to 24 hours, you can additionally select the hour for the export. Make sure you read and understand the <b>Security Information</b>.</p>");
     string help_para4 = _("<p>You can activate an export of the CRL to a local file or to an LDAP server or both. Set up the respective parameters in <b>Export to local file</b> and <b>Export to LDAP</b>.</p>");
 
     string helptext = help_para1 + help_para2 + help_para3 + help_para4;
@@ -372,12 +372,12 @@ define void exportCRL (string ca) {
                     y2milestone ("ExportCRL(%1) returned %2",   $["caName": ca, "exportFormat" : exportFormat, "destinationFile" : crlfile], ret);
                     if (strret == nil || strret != "1")
                     {
-                        if ( Popup::YesNoHeadline(_("Export to file failed"), _("Do you want to retry?")) )
+                        if ( Popup::YesNoHeadline(_("Export to file failed."), _("Do you want to retry?")) )
                         {
                             ui = `retry;
                         }
                     }
-                    else { Popup::Message(_("Saved to file successfully")); }
+                    else { Popup::Message(_("Saved to file successfully.")); }
                 }
 
                 if (ldap_active)
@@ -392,7 +392,7 @@ define void exportCRL (string ca) {
                     }
                     else
                     {
-                        if ( Popup::YesNoHeadline(_("Export to LDAP failed"), _("Do you want to retry?")) )
+                        if ( Popup::YesNoHeadline(_("Export to LDAP failed."), _("Do you want to retry?")) )
                         {
                             ui = `retry;
                         }
