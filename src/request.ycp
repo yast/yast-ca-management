@@ -413,7 +413,7 @@
                                                                      "destinationFile": newreqfile]);
             if (ret != nil && ret == "1")
             {
-                Popup::Message(_("Saved to file successfully"));
+                Popup::Message(_("Saved to file successfully."));
             }
             else
             {

@@ -202,8 +202,8 @@
 				}
 				else if ( size(newPassword) < 4)
 				{
-					Popup::Error(_("The new password is too short for use as the password for the certificates.
- Enter a valid password for the certificates.
+					Popup::Error(_("The new password is too short to use it for the certificates.
+Enter a valid password for the certificates.
 "));
 					ui = `again;
 				}
