@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Apr 25 11:08:23 CEST 2012 - mc@suse.de
+
+- version 2.22.2
+- Add details to hostname warning while exporting a
+  common server certificate (bnc#756014)
+
+-------------------------------------------------------------------
 Thu Mar 29 14:09:43 CEST 2012 - jsuchome@suse.cz
 
 - merged proofed texts
