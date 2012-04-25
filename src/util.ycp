@@ -1205,7 +1205,9 @@ This certificate might be not practical as a common server certificate.
 "),
 					   commonName,
 					   strip(retmap["stdout"]:""));
-               Popup::Warning (errorString);
+               string details = _("The hostname of this server (command: hostname --long) have to match 
+either the common name of the certificate (CN) or on of the values in subject alternative names.");
+               Popup::WarningDetails (errorString, details);
             }
 	}
 
