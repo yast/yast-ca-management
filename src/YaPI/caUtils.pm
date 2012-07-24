@@ -1,7 +1,6 @@
 ###############################################################
-# Copyright 2004, Novell, Inc.  All rights reserved.
+# Copyright 2004-2012, Novell, Inc.  All rights reserved.
 #
-# $Id$
 ###############################################################
 
 package YaST::caUtils;
@@ -13,8 +12,7 @@ BEGIN {
 use strict;
 use Errno qw(ENOENT);
 
-use LIMAL;
-use LIMAL::CaMgm;
+use CaMgm;
 use YaST::YCP;
 use ycp;
 use Date::Calc qw( Date_to_Time );
@@ -182,7 +180,7 @@ sub transformBasicConstaints {
         }
     }
 
-    my $bc = new LIMAL::CaMgm::BasicConstraintsExt();
+    my $bc = new CaMgm::BasicConstraintsExt();
     if(!defined $value || $value eq "") {
 
         $bc->setPresent(0);
@@ -229,7 +227,7 @@ sub transformStringExtension {
 
     if($type eq "nsComment") {
 
-        my $e = new LIMAL::CaMgm::NsCommentExt();
+        my $e = new CaMgm::NsCommentExt();
         if(!defined $value || $value eq "") {
 
             $e->setPresent(0);
@@ -246,7 +244,7 @@ sub transformStringExtension {
 
     } elsif($type eq "nsBaseUrl") {
 
-        my $e = new LIMAL::CaMgm::NsBaseUrlExt();
+        my $e = new CaMgm::NsBaseUrlExt();
         if(!defined $value || $value eq "") {
 
             $e->setPresent(0);
@@ -263,7 +261,7 @@ sub transformStringExtension {
 
     } elsif($type eq "nsRevocationUrl") {
 
-        my $e = new LIMAL::CaMgm::NsRevocationUrlExt();
+        my $e = new CaMgm::NsRevocationUrlExt();
         if(!defined $value || $value eq "") {
 
             $e->setPresent(0);
@@ -280,7 +278,7 @@ sub transformStringExtension {
 
     } elsif($type eq "nsCaRevocationUrl") {
 
-        my $e = new LIMAL::CaMgm::NsCaRevocationUrlExt();
+        my $e = new CaMgm::NsCaRevocationUrlExt();
         if(!defined $value || $value eq "") {
 
             $e->setPresent(0);
@@ -297,7 +295,7 @@ sub transformStringExtension {
 
     } elsif($type eq "nsRenewalUrl") {
 
-        my $e = new LIMAL::CaMgm::NsRenewalUrlExt();
+        my $e = new CaMgm::NsRenewalUrlExt();
         if(!defined $value || $value eq "") {
 
             $e->setPresent(0);
@@ -314,7 +312,7 @@ sub transformStringExtension {
 
     } elsif($type eq "nsCaPolicyUrl") {
 
-        my $e = new LIMAL::CaMgm::NsCaPolicyUrlExt();
+        my $e = new CaMgm::NsCaPolicyUrlExt();
         if(!defined $value || $value eq "") {
 
             $e->setPresent(0);
@@ -331,7 +329,7 @@ sub transformStringExtension {
 
     } elsif($type eq "nsSslServerName") {
 
-        my $e = new LIMAL::CaMgm::NsSslServerNameExt();
+        my $e = new CaMgm::NsSslServerNameExt();
         if(!defined $value || $value eq "") {
 
             $e->setPresent(0);
@@ -364,40 +362,40 @@ sub transformNsCertType {
         }
         if(lc($p) eq "client") {
 
-            $ct |= $LIMAL::CaMgm::NsCertTypeExt::client;
+            $ct |= $CaMgm::NsCertTypeExt::client;
 
         } elsif(lc($p) eq "server") {
 
-            $ct |= $LIMAL::CaMgm::NsCertTypeExt::server;
+            $ct |= $CaMgm::NsCertTypeExt::server;
 
         } elsif(lc($p) eq "email") {
 
-            $ct |= $LIMAL::CaMgm::NsCertTypeExt::email;
+            $ct |= $CaMgm::NsCertTypeExt::email;
 
         } elsif(lc($p) eq "objsign") {
 
-            $ct |= $LIMAL::CaMgm::NsCertTypeExt::objsign;
+            $ct |= $CaMgm::NsCertTypeExt::objsign;
 
         } elsif(lc($p) eq "reserved") {
 
-            $ct |= $LIMAL::CaMgm::NsCertTypeExt::reserved;
+            $ct |= $CaMgm::NsCertTypeExt::reserved;
 
         } elsif(lc($p) eq "sslca") {
 
-            $ct |= $LIMAL::CaMgm::NsCertTypeExt::sslCA;
+            $ct |= $CaMgm::NsCertTypeExt::sslCA;
 
         } elsif(lc($p) eq "emailca") {
 
-            $ct |= $LIMAL::CaMgm::NsCertTypeExt::emailCA;
+            $ct |= $CaMgm::NsCertTypeExt::emailCA;
 
         } elsif(lc($p) eq "objca") {
 
-            $ct |= $LIMAL::CaMgm::NsCertTypeExt::objCA;
+            $ct |= $CaMgm::NsCertTypeExt::objCA;
 
         }
     }
 
-    my $e = new LIMAL::CaMgm::NsCertTypeExt();
+    my $e = new CaMgm::NsCertTypeExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -430,44 +428,44 @@ sub transformKeyUsage {
         }
         if(lc($p) eq "digitalsignature") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::digitalSignature;
+            $ku |= $CaMgm::KeyUsageExt::digitalSignature;
 
         } elsif(lc($p) eq "nonrepudiation") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::nonRepudiation;
+            $ku |= $CaMgm::KeyUsageExt::nonRepudiation;
 
         } elsif(lc($p) eq "keyencipherment") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::keyEncipherment;
+            $ku |= $CaMgm::KeyUsageExt::keyEncipherment;
 
         } elsif(lc($p) eq "dataencipherment") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::dataEncipherment;
+            $ku |= $CaMgm::KeyUsageExt::dataEncipherment;
 
         } elsif(lc($p) eq "keyagreement") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::keyAgreement;
+            $ku |= $CaMgm::KeyUsageExt::keyAgreement;
 
         } elsif(lc($p) eq "keycertsign") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::keyCertSign;
+            $ku |= $CaMgm::KeyUsageExt::keyCertSign;
 
         } elsif(lc($p) eq "crlsign") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::cRLSign;
+            $ku |= $CaMgm::KeyUsageExt::cRLSign;
 
         } elsif(lc($p) eq "encipheronly") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::encipherOnly;
+            $ku |= $CaMgm::KeyUsageExt::encipherOnly;
 
         } elsif(lc($p) eq "decipheronly") {
 
-            $ku |= $LIMAL::CaMgm::KeyUsageExt::decipherOnly;
+            $ku |= $CaMgm::KeyUsageExt::decipherOnly;
 
         }
     }
 
-    my $e = new LIMAL::CaMgm::KeyUsageExt();
+    my $e = new CaMgm::KeyUsageExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -509,7 +507,7 @@ sub transformSubjectKeyIdentifier {
         }
     }
 
-    my $e = new LIMAL::CaMgm::SubjectKeyIdentifierExt();
+    my $e = new CaMgm::SubjectKeyIdentifierExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -532,8 +530,8 @@ sub transformAuthorityKeyIdentifier {
     my $value = shift || "";
 
     my $crit   = 0;
-    my $keyID  = $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_none;
-    my $issuer = $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_none;
+    my $keyID  = $CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_none;
+    my $issuer = $CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_none;
 
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
@@ -541,24 +539,24 @@ sub transformAuthorityKeyIdentifier {
             next;
         }
         if($p eq "keyid") {
-            $keyID = $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_normal;
+            $keyID = $CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_normal;
             next;
         }
         if($p eq "keyid:always") {
-            $keyID = $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_always;
+            $keyID = $CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_always;
             next;
         }
         if($p eq "issuer") {
-            $issuer = $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_normal;
+            $issuer = $CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_normal;
             next;
         }
         if($p eq "issuer:always") {
-            $issuer = $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_always;
+            $issuer = $CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_always;
             next;
         }
     }
 
-    my $e = new LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt();
+    my $e = new CaMgm::AuthorityKeyIdentifierGenerateExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -585,7 +583,7 @@ sub transformSubjectAltName {
 
     my $crit   = 0;
     my $emailCopy = 0;
-    my $list = new LIMAL::CaMgm::LiteralValueList();
+    my $list = new CaMgm::LiteralValueList();
 
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
@@ -600,7 +598,7 @@ sub transformSubjectAltName {
         {
             if(!$forDefaults)
             {
-                $list->push_back(new LIMAL::CaMgm::LiteralValue("1.3.6.1.4.1.311.20.2.3:$1"));
+                $list->push_back(new CaMgm::LiteralValue("1.3.6.1.4.1.311.20.2.3:$1"));
             }
             next;
         }
@@ -608,15 +606,15 @@ sub transformSubjectAltName {
         {
             if(!$forDefaults)
             {
-                $list->push_back(new LIMAL::CaMgm::LiteralValue("1.3.6.1.5.2.2:$1"));
+                $list->push_back(new CaMgm::LiteralValue("1.3.6.1.5.2.2:$1"));
             }
             next;
         }
 
-        $list->push_back(new LIMAL::CaMgm::LiteralValue($p));
+        $list->push_back(new CaMgm::LiteralValue($p));
     }
 
-    my $e = new LIMAL::CaMgm::SubjectAlternativeNameExt();
+    my $e = new CaMgm::SubjectAlternativeNameExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -643,7 +641,7 @@ sub transformIssuerAltName {
 
     my $crit       = 0;
     my $issuerCopy = 0;
-    my $list = new LIMAL::CaMgm::LiteralValueList();
+    my $list = new CaMgm::LiteralValueList();
 
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
@@ -658,7 +656,7 @@ sub transformIssuerAltName {
         {
             if(!$forDefaults)
             {
-                $list->push_back(new LIMAL::CaMgm::LiteralValue("1.3.6.1.4.1.311.20.2.3:$1"));
+                $list->push_back(new CaMgm::LiteralValue("1.3.6.1.4.1.311.20.2.3:$1"));
             }
             next;
         }
@@ -666,15 +664,15 @@ sub transformIssuerAltName {
         {
             if(!$forDefaults)
             {
-                $list->push_back(new LIMAL::CaMgm::LiteralValue("1.3.6.1.5.2.2:$1"));
+                $list->push_back(new CaMgm::LiteralValue("1.3.6.1.5.2.2:$1"));
             }
             next;
         }
 
-        $list->push_back(new LIMAL::CaMgm::LiteralValue($p));
+        $list->push_back(new CaMgm::LiteralValue($p));
     }
 
-    my $e = new LIMAL::CaMgm::IssuerAlternativeNameExt();
+    my $e = new CaMgm::IssuerAlternativeNameExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -699,7 +697,7 @@ sub transformExtendedKeyUsage {
     my $value = shift || "";
 
     my $crit  = 0;
-    my $list  = new LIMAL::StringList();
+    my $list  = new CaMgm::StringList();
 
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
@@ -709,7 +707,7 @@ sub transformExtendedKeyUsage {
         $list->push_back($p);
     }
 
-    my $e = new LIMAL::CaMgm::ExtendedKeyUsageExt();
+    my $e = new CaMgm::ExtendedKeyUsageExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -733,7 +731,7 @@ sub transformAuthorityInfoAccess {
     my $value = shift || "";
 
     my $crit  = 0;
-    my $list  = new LIMAL::CaMgm::AuthorityInformationList();
+    my $list  = new CaMgm::AuthorityInformationList();
 
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
@@ -744,14 +742,14 @@ sub transformAuthorityInfoAccess {
         if ( $accessOID eq "OCSP" || $accessOID eq "caIssuers" ||
              $accessOID =~ /^(\d+\.)+\d+$/ ) {
 
-            my $lv = new LIMAL::CaMgm::LiteralValue($location);
-            my $ai = new LIMAL::CaMgm::AuthorityInformation($accessOID, $lv);
+            my $lv = new CaMgm::LiteralValue($location);
+            my $ai = new CaMgm::AuthorityInformation($accessOID, $lv);
 
             $list->push_back($ai);
         }
     }
 
-    my $e = new LIMAL::CaMgm::AuthorityInfoAccessExt();
+    my $e = new CaMgm::AuthorityInfoAccessExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -775,17 +773,17 @@ sub transformCrlDistributionPoints {
     my $value = shift || "";
 
     my $crit       = 0;
-    my $list = new LIMAL::CaMgm::LiteralValueList();
+    my $list = new CaMgm::LiteralValueList();
 
     foreach my $p (split(/\s*,\s*/ , $value)) {
         if($p eq "critical") {
             $crit = 1;
             next;
         }
-        $list->push_back(new LIMAL::CaMgm::LiteralValue($p));
+        $list->push_back(new CaMgm::LiteralValue($p));
     }
 
-    my $e = new LIMAL::CaMgm::CRLDistributionPointsExt();
+    my $e = new CaMgm::CRLDistributionPointsExt();
     if(!defined $value || $value eq "") {
 
         $e->setPresent(0);
@@ -890,28 +888,28 @@ sub extractNsCertType {
 
     }
 
-    if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::client)) {
+    if($ext->isEnabledFor($CaMgm::NsCertTypeExt::client)) {
         push @vals, "client";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::server)) {
+    if($ext->isEnabledFor($CaMgm::NsCertTypeExt::server)) {
         push @vals, "server";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::email)) {
+    if($ext->isEnabledFor($CaMgm::NsCertTypeExt::email)) {
         push @vals, "email";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::objsign)) {
+    if($ext->isEnabledFor($CaMgm::NsCertTypeExt::objsign)) {
         push @vals, "objsign";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::reserved)) {
+    if($ext->isEnabledFor($CaMgm::NsCertTypeExt::reserved)) {
         push @vals, "reserved";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::sslCA)) {
+    if($ext->isEnabledFor($CaMgm::NsCertTypeExt::sslCA)) {
         push @vals, "sslCA";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::emailCA)) {
+    if($ext->isEnabledFor($CaMgm::NsCertTypeExt::emailCA)) {
         push @vals, "emailCA";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::NsCertTypeExt::objCA)) {
+    if($ext->isEnabledFor($CaMgm::NsCertTypeExt::objCA)) {
         push @vals, "objCA";
     }
 
@@ -939,31 +937,31 @@ sub extractKeyUsage {
 
     }
 
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::digitalSignature)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::digitalSignature)) {
         push @vals, "digitalSignature";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::nonRepudiation)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::nonRepudiation)) {
         push @vals, "nonRepudiation";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::keyEncipherment)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::keyEncipherment)) {
         push @vals, "keyEncipherment";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::dataEncipherment)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::dataEncipherment)) {
         push @vals, "dataEncipherment";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::keyAgreement)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::keyAgreement)) {
         push @vals, "keyAgreement";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::keyCertSign)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::keyCertSign)) {
         push @vals, "keyCertSign";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::cRLSign)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::cRLSign)) {
         push @vals, "cRLSign";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::encipherOnly)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::encipherOnly)) {
         push @vals, "encipherOnly";
     }
-    if($ext->isEnabledFor($LIMAL::CaMgm::KeyUsageExt::decipherOnly)) {
+    if($ext->isEnabledFor($CaMgm::KeyUsageExt::decipherOnly)) {
         push @vals, "decipherOnly";
     }
 
@@ -1025,20 +1023,20 @@ sub extractAuthorityKeyIdentifier {
 
     }
 
-    if($ext->getKeyID() == $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_normal)
+    if($ext->getKeyID() == $CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_normal)
     {
         push @vals, "keyid";
     }
-    elsif($ext->getKeyID() == $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_always)
+    elsif($ext->getKeyID() == $CaMgm::AuthorityKeyIdentifierGenerateExt::KeyID_always)
     {
         push @vals, "keyid:always";
     }
 
-    if($ext->getIssuer() == $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_normal)
+    if($ext->getIssuer() == $CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_normal)
     {
         push @vals, "issuer";
     }
-    elsif($ext->getIssuer() == $LIMAL::CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_always)
+    elsif($ext->getIssuer() == $CaMgm::AuthorityKeyIdentifierGenerateExt::Issuer_always)
     {
         push @vals, "issuer:always";
     }
@@ -1331,28 +1329,28 @@ sub getParsed {
     $ret->{FINGERPRINT} = $cert->getFingerprint();
     $ret->{KEYSIZE}     = $cert->getKeysize();
 
-    if($cert->getPublicKeyAlgorithm() == $LIMAL::CaMgm::E_RSA) {
+    if($cert->getPublicKeyAlgorithm() == $CaMgm::E_RSA) {
 
         $ret->{PUBKEY_ALGORITHM} = "rsaEncryption";
 
-    } elsif($cert->getPublicKeyAlgorithm() == $LIMAL::CaMgm::E_DSA) {
+    } elsif($cert->getPublicKeyAlgorithm() == $CaMgm::E_DSA) {
 
         $ret->{PUBKEY_ALGORITHM} = "dsaEncryption";
 
-    } elsif($cert->getPublicKeyAlgorithm() == $LIMAL::CaMgm::E_DH) {
+    } elsif($cert->getPublicKeyAlgorithm() == $CaMgm::E_DH) {
 
         $ret->{PUBKEY_ALGORITHM} = "dhEncryption";
 
     }
-    if($cert->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1RSA) {
+    if($cert->getSignatureAlgorithm() == $CaMgm::E_SHA1RSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithRSAEncryption";
 
-    } elsif($cert->getSignatureAlgorithm() == $LIMAL::CaMgm::E_MD5RSA) {
+    } elsif($cert->getSignatureAlgorithm() == $CaMgm::E_MD5RSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "md5WithRSAEncryption";
 
-    } elsif($cert->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1DSA) {
+    } elsif($cert->getSignatureAlgorithm() == $CaMgm::E_SHA1DSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithDSAEncryption";
 
@@ -1430,15 +1428,15 @@ sub getParsedCRL {
 
     $ret->{FINGERPRINT} = $crl->getFingerprint();
 
-    if($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1RSA) {
+    if($crl->getSignatureAlgorithm() == $CaMgm::E_SHA1RSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithRSAEncryption";
 
-    } elsif($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_MD5RSA) {
+    } elsif($crl->getSignatureAlgorithm() == $CaMgm::E_MD5RSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "md5WithRSAEncryption";
 
-    } elsif($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1DSA) {
+    } elsif($crl->getSignatureAlgorithm() == $CaMgm::E_SHA1DSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithDSAEncryption";
 
@@ -1541,28 +1539,28 @@ sub getParsedRequest {
 
     $ret->{KEYSIZE}     = $req->getKeysize();
 
-    if($req->getKeyAlgorithm() == $LIMAL::CaMgm::E_RSA) {
+    if($req->getKeyAlgorithm() == $CaMgm::E_RSA) {
 
         $ret->{PUBKEY_ALGORITHM} = "rsaEncryption";
 
-    } elsif($req->getKeyAlgorithm() == $LIMAL::CaMgm::E_DSA) {
+    } elsif($req->getKeyAlgorithm() == $CaMgm::E_DSA) {
 
         $ret->{PUBKEY_ALGORITHM} = "dsaEncryption";
 
-    } elsif($req->getKeyAlgorithm() == $LIMAL::CaMgm::E_DH) {
+    } elsif($req->getKeyAlgorithm() == $CaMgm::E_DH) {
 
         $ret->{PUBKEY_ALGORITHM} = "dhEncryption";
 
     }
-    if($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1RSA) {
+    if($req->getSignatureAlgorithm() == $CaMgm::E_SHA1RSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithRSAEncryption";
 
-    } elsif($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_MD5RSA) {
+    } elsif($req->getSignatureAlgorithm() == $CaMgm::E_MD5RSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "md5WithRSAEncryption";
 
-    } elsif($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1DSA) {
+    } elsif($req->getSignatureAlgorithm() == $CaMgm::E_SHA1DSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithDSAEncryption";
 
@@ -2225,7 +2223,7 @@ sub exception2String {
     {
         return "";
     }
-    elsif(ref($err) eq "HASH")
+    elsif(ref($err) eq "HASH" || ref($err) eq "CaMgm:Exception")
     {
         my $msg = "";
         if(exists $err->{type} && defined $err->{type})

@@ -1,35 +1,11 @@
 ###############################################################
-# Copyright 2004,2005 Novell, Inc.  All rights reserved.
+# Copyright 2004-2012 Novell, Inc.  All rights reserved.
 #
-# $Id$
 ###############################################################
 package YaPI::CaManagement;
 
 BEGIN {
     push @INC, '/usr/share/YaST2/modules/';
-
-    use LIMAL;
-
-    #eval {
-
-    #    my $comp = new LIMAL::StringArray();
-    #    $comp->push_back("*");
-
-    #    my $cat = new LIMAL::StringArray();
-    #    $cat->push_back("FATAL");
-    #    $cat->push_back("ERROR");
-    #    $cat->push_back("INFO");
-
-
-    #    my $logref = LIMAL::Logger::createFileLogger("YaPI::CaManagement", $comp, $cat,
-    #                                                 "[%d] %p %c %l - %m",
-    #                                                 "/var/log/YaST2/limal-ca-mgm.log",
-    #                                                 2048, 2);
-    #    LIMAL::Logger::setDefaultLogger($logref);
-    #};
-    # ignore errors here; If we run as none root this happens
-
-
 }
 
 our $VERSION="1.2.0";
@@ -414,7 +390,7 @@ crlDistributionPoints URI:<URL>[,URI:<URL>,...]
 use strict;
 use vars qw(@ISA);
 
-use LIMAL::CaMgm;
+use CaMgm;
 use YaST::YCP qw(Boolean);
 use YaST::caUtils;
 use ycp;
@@ -443,6 +419,18 @@ our @CAPABILITIES = (
                     );
 
 my $CAM_ROOT = "/var/lib/CAM";
+
+my $logref = CaMgm::LogControl::instance();
+if($ENV{"Y2DEBUG"})
+{
+    $logref->setLogLevel( $CaMgm::E_DEBUG );
+}
+else
+{
+    $logref->setLogLevel( $CaMgm::E_INFO );
+}
+$logref->logfile("/var/log/YaST2/libcamgm.log");
+#$logref->logToStdErr();
 
 =item *
 C<$caList = ReadCAList()>
@@ -473,11 +461,11 @@ sub ReadCAList {
         my $list = undef;
         if(defined $repository) {
 
-            $list = LIMAL::CaMgm::CA::getCAList($repository);
+            $list = CaMgm::CA::getCAList($repository);
 
         } else {
 
-            $list = LIMAL::CaMgm::CA::getCAList();
+            $list = CaMgm::CA::getCAList();
         }
         for(my $it = $list->begin();
             !$list->iterator_equal($it, $list->end());
@@ -531,11 +519,11 @@ sub ReadCATree {
 
         if(defined $repository) {
 
-            $tree = LIMAL::CaMgm::CA::getCATree($repository);
+            $tree = CaMgm::CA::getCATree($repository);
 
         } else {
 
-            $tree = LIMAL::CaMgm::CA::getCATree();
+            $tree = CaMgm::CA::getCATree();
 
         }
         for(my $it1 = $tree->begin();
@@ -699,11 +687,11 @@ sub AddRootCA {
 
         if( defined $data->{'repository'}) {
 
-            $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults($data->{'repository'});
+            $rgd = CaMgm::CA::getRootCARequestDefaults($data->{'repository'});
 
         } else {
 
-            $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults();
+            $rgd = CaMgm::CA::getRootCARequestDefaults();
 
         }
         my $dnl = $rgd->getSubjectDN()->getDN();
@@ -731,7 +719,7 @@ sub AddRootCA {
             }
         }
 
-        my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
+        my $dnObject = new CaMgm::DNObject($dnl);
         $rgd->setSubjectDN($dnObject);
 
         if( defined $data->{'challengePassword'} ) {
@@ -780,11 +768,11 @@ sub AddRootCA {
 
         if( defined $data->{'repository'}) {
 
-            $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults($data->{'repository'});
+            $cid = CaMgm::CA::getRootCAIssueDefaults($data->{'repository'});
 
         } else {
 
-            $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults();
+            $cid = CaMgm::CA::getRootCAIssueDefaults();
 
         }
 
@@ -918,13 +906,13 @@ sub AddRootCA {
 
         if( defined $data->{'repository'}) {
 
-            LIMAL::CaMgm::CA::createRootCA($data->{'caName'},
+            CaMgm::CA::createRootCA($data->{'caName'},
                                            $data->{'keyPasswd'},
                                            $rgd, $cid,
                                            $data->{'repository'});
         } else {
 
-            LIMAL::CaMgm::CA::createRootCA($data->{'caName'},
+            CaMgm::CA::createRootCA($data->{'caName'},
                                            $data->{'keyPasswd'},
                                            $rgd, $cid);
 
@@ -1077,26 +1065,26 @@ sub ReadCertificateDefaults {
     eval {
 
         if($data->{'certType'} eq "ca") {
-            $rType = $LIMAL::CaMgm::E_CA_Req;
-            $cType = $LIMAL::CaMgm::E_CA_Cert;
+            $rType = $CaMgm::E_CA_Req;
+            $cType = $CaMgm::E_CA_Cert;
         } elsif($data->{'certType'} eq "client") {
-            $rType = $LIMAL::CaMgm::E_Client_Req;
-            $cType = $LIMAL::CaMgm::E_Client_Cert;
+            $rType = $CaMgm::E_Client_Req;
+            $cType = $CaMgm::E_Client_Cert;
         } elsif($data->{'certType'} eq "server") {
-            $rType = $LIMAL::CaMgm::E_Server_Req;
-            $cType = $LIMAL::CaMgm::E_Server_Cert;
+            $rType = $CaMgm::E_Server_Req;
+            $cType = $CaMgm::E_Server_Cert;
         }
 
         if(defined $data->{'caName'} && $data->{'caName'} ne "") {
 
             if(defined $data->{'repository'}) {
 
-                $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                $ca = new CaMgm::CA($data->{'caName'},
                                            $data->{'caPasswd'},
                                            $data->{'repository'});
             } else {
 
-                $ca = new LIMAL::CaMgm::CA($data->{'caName'}, $data->{'caPasswd'});
+                $ca = new CaMgm::CA($data->{'caName'}, $data->{'caPasswd'});
 
             }
 
@@ -1107,13 +1095,13 @@ sub ReadCertificateDefaults {
 
             if( defined $data->{'repository'}) {
 
-                $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults($data->{'repository'});
-                $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults($data->{'repository'});
+                $rgd = CaMgm::CA::getRootCARequestDefaults($data->{'repository'});
+                $cid = CaMgm::CA::getRootCAIssueDefaults($data->{'repository'});
 
             } else {
 
-                $rgd = LIMAL::CaMgm::CA::getRootCARequestDefaults();
-                $cid = LIMAL::CaMgm::CA::getRootCAIssueDefaults();
+                $rgd = CaMgm::CA::getRootCARequestDefaults();
+                $cid = CaMgm::CA::getRootCAIssueDefaults();
 
             }
         }
@@ -1362,12 +1350,12 @@ sub WriteCertificateDefaults {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+            $ca = new CaMgm::CA($data->{"caName"},
                                        $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -1381,14 +1369,14 @@ sub WriteCertificateDefaults {
     my $type = 0;
     my $rtype = 0;
     if($certType eq "client") {
-        $type = $LIMAL::CaMgm::E_Client_Cert;
-        $rtype = $LIMAL::CaMgm::E_Client_Req;
+        $type = $CaMgm::E_Client_Cert;
+        $rtype = $CaMgm::E_Client_Req;
     } elsif($certType eq "server") {
-        $type = $LIMAL::CaMgm::E_Server_Cert;
-        $rtype = $LIMAL::CaMgm::E_Server_Req;
+        $type = $CaMgm::E_Server_Cert;
+        $rtype = $CaMgm::E_Server_Req;
     } elsif($certType eq "ca") {
-        $type = $LIMAL::CaMgm::E_CA_Cert;
-        $rtype = $LIMAL::CaMgm::E_CA_Req;
+        $type = $CaMgm::E_CA_Cert;
+        $rtype = $CaMgm::E_CA_Req;
     }
 
     my $cid = undef;
@@ -1701,13 +1689,13 @@ sub ReadCA {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
 
         }
@@ -1721,7 +1709,7 @@ sub ReadCA {
             if(defined $data->{repository}) {
                 $repos = $data->{repository};
             }
-            my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/cacert.pem");
+            my $bod = CaMgm::LocalManagement::readFile("$repos/$caName/cacert.pem");
             my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
             my $endT   = "-----END[\\w\\s]+[-]{5}";
             ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
@@ -1864,12 +1852,12 @@ sub AddRequest {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+            $ca = new CaMgm::CA($data->{"caName"},
                                        $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -1883,7 +1871,7 @@ sub AddRequest {
     my $rgd = undef;
     eval {
 
-        $rgd = $ca->getRequestDefaults($LIMAL::CaMgm::E_Client_Req);
+        $rgd = $ca->getRequestDefaults($CaMgm::E_Client_Req);
 
         my $dnl = $rgd->getSubjectDN()->getDN();
         my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
@@ -1910,7 +1898,7 @@ sub AddRequest {
             }
         }
 
-        my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
+        my $dnObject = new CaMgm::DNObject($dnl);
         $rgd->setSubjectDN($dnObject);
 
         if( defined $data->{'challengePassword'} ) {
@@ -2001,7 +1989,7 @@ sub AddRequest {
     eval {
 
         $requestName = $ca->createRequest($data->{'keyPasswd'},
-                                          $rgd, $LIMAL::CaMgm::E_Client_Req);
+                                          $rgd, $CaMgm::E_Client_Req);
 
     };
     if($@) {
@@ -2144,11 +2132,11 @@ sub IssueCertificate {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -2161,11 +2149,11 @@ sub IssueCertificate {
 
     my $type = 0;
     if($certType eq "client") {
-        $type = $LIMAL::CaMgm::E_Client_Cert;
+        $type = $CaMgm::E_Client_Cert;
     } elsif($certType eq "server") {
-        $type = $LIMAL::CaMgm::E_Server_Cert;
+        $type = $CaMgm::E_Server_Cert;
     } elsif($certType eq "ca") {
-        $type = $LIMAL::CaMgm::E_CA_Cert;
+        $type = $CaMgm::E_CA_Cert;
     }
 
     my $cid = undef;
@@ -2442,13 +2430,13 @@ sub AddCertificate {
 
             if(defined $data->{'repository'}) {
 
-                $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                $ca = new CaMgm::CA($data->{'caName'},
                                            $data->{'caPasswd'},
                                            $data->{'repository'});
 
             } else {
 
-                $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+                $ca = new CaMgm::CA($data->{'caName'},
                                            $data->{'caPasswd'});
 
             }
@@ -2550,13 +2538,13 @@ sub ReadCertificateList {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
 
         }
@@ -2654,13 +2642,13 @@ sub UpdateDB {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
 
         }
@@ -2669,7 +2657,7 @@ sub UpdateDB {
     };
     if($@) {
 
-        if( (ref($@) eq "HASH" && $@->{code} == $LIMAL::CaMgm::E_INVALID_PASSWD) ||
+        if( (ref($@) eq "HASH" && $@->{code} == $CaMgm::E_INVALID_PASSWD) ||
             $@ =~ /invalid.*password/i)
         {
             # error message; displayed in an popup dialog
@@ -2772,13 +2760,13 @@ sub ReadCertificate {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
 
         }
@@ -2792,7 +2780,7 @@ sub ReadCertificate {
             if(defined $data->{repository}) {
                 $repos = $data->{repository};
             }
-            my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/newcerts/$certificate".".pem");
+            my $bod = CaMgm::LocalManagement::readFile("$repos/$caName/newcerts/$certificate".".pem");
             my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
             my $endT   = "-----END[\\w\\s]+[-]{5}";
             ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
@@ -2890,18 +2878,18 @@ sub RevokeCertificate {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
 
         }
 
-        my $reason = new LIMAL::CaMgm::CRLReason();
+        my $reason = new CaMgm::CRLReason();
 
         if (defined $data->{'crlReason'}) {
             $reason->setReason($data->{'crlReason'});
@@ -2985,11 +2973,11 @@ sub AddCRL {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -3120,13 +3108,13 @@ sub ReadCRL {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
         }
 
@@ -3140,7 +3128,7 @@ sub ReadCRL {
             if(defined $data->{repository}) {
                 $repos = $data->{repository};
             }
-            my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/crl/crl.pem");
+            my $bod = CaMgm::LocalManagement::readFile("$repos/$caName/crl/crl.pem");
             my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
             my $endT   = "-----END[\\w\\s]+[-]{5}";
             ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
@@ -3158,7 +3146,7 @@ sub ReadCRL {
     };
     if($@) {
 
-        if( (ref($@) eq "HASH" && $@->{code} == $LIMAL::CaMgm::E_FILE_NOT_FOUND) ||
+        if( (ref($@) eq "HASH" && $@->{code} == $CaMgm::E_FILE_NOT_FOUND) ||
             $@ =~ /RuntimeException: File not found/i) {
 
             return $self->SetError( summary => __("No CRL available."),
@@ -3300,11 +3288,11 @@ sub ExportCA {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -3320,11 +3308,11 @@ sub ExportCA {
 
         eval {
 
-            my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
+            my $buffer = $ca->exportCACert($CaMgm::E_PEM);
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3345,7 +3333,7 @@ sub ExportCA {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3367,7 +3355,7 @@ sub ExportCA {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3386,7 +3374,7 @@ sub ExportCA {
 
         eval {
 
-            my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
+            my $buffer1 = $ca->exportCACert($CaMgm::E_PEM);
             my $buffer2 = $ca->exportCAKeyAsPEM("");
 
             $buffer1->append("\n", 1);
@@ -3394,7 +3382,7 @@ sub ExportCA {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3412,7 +3400,7 @@ sub ExportCA {
 
         eval {
 
-            my $buffer1 = $ca->exportCACert($LIMAL::CaMgm::E_PEM);
+            my $buffer1 = $ca->exportCACert($CaMgm::E_PEM);
             my $buffer2 = $ca->exportCAKeyAsPEM($data->{'caPasswd'});
 
             $buffer1->append("\n", 1);
@@ -3420,7 +3408,7 @@ sub ExportCA {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3439,11 +3427,11 @@ sub ExportCA {
 
         eval {
 
-            my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_DER);
+            my $buffer = $ca->exportCACert($CaMgm::E_DER);
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3471,7 +3459,7 @@ sub ExportCA {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3501,7 +3489,7 @@ sub ExportCA {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3592,11 +3580,11 @@ sub ExportRequest {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -3766,11 +3754,11 @@ sub ExportCertificate {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -3786,11 +3774,11 @@ sub ExportCertificate {
         eval {
 
             my $buffer = $ca->exportCertificate($certificate,
-                                                $LIMAL::CaMgm::E_PEM);
+                                                $CaMgm::E_PEM);
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3813,7 +3801,7 @@ sub ExportCertificate {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3838,7 +3826,7 @@ sub ExportCertificate {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3857,7 +3845,7 @@ sub ExportCertificate {
         eval {
 
             my $buffer1 = $ca->exportCertificate($certificate,
-                                                 $LIMAL::CaMgm::E_PEM);
+                                                 $CaMgm::E_PEM);
             my $buffer2 = $ca->exportCertificateKeyAsPEM($certificate,
                                                          $keyPasswd,
                                                          "");
@@ -3867,7 +3855,7 @@ sub ExportCertificate {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3887,7 +3875,7 @@ sub ExportCertificate {
         eval {
 
             my $buffer1 = $ca->exportCertificate($certificate,
-                                                 $LIMAL::CaMgm::E_PEM);
+                                                 $CaMgm::E_PEM);
             my $buffer2 = $ca->exportCertificateKeyAsPEM($certificate,
                                                          $keyPasswd,
                                                          $keyPasswd);
@@ -3897,7 +3885,7 @@ sub ExportCertificate {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer1,
+                CaMgm::LocalManagement::writeFile($buffer1,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3915,11 +3903,11 @@ sub ExportCertificate {
 
         eval {
 
-            my $buffer = $ca->exportCACert($LIMAL::CaMgm::E_DER);
+            my $buffer = $ca->exportCACert($CaMgm::E_DER);
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3950,7 +3938,7 @@ sub ExportCertificate {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -3980,7 +3968,7 @@ sub ExportCertificate {
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -4100,11 +4088,11 @@ sub ExportCRL {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -4121,11 +4109,11 @@ sub ExportCRL {
 
         eval {
 
-            my $buffer = $ca->exportCRL($LIMAL::CaMgm::E_PEM);
+            my $buffer = $ca->exportCRL($CaMgm::E_PEM);
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -4143,11 +4131,11 @@ sub ExportCRL {
 
         eval {
 
-            my $buffer = $ca->exportCRL($LIMAL::CaMgm::E_DER);
+            my $buffer = $ca->exportCRL($CaMgm::E_DER);
 
             if (defined $destinationFile) {
 
-                LIMAL::CaMgm::LocalManagement::writeFile($buffer,
+                CaMgm::LocalManagement::writeFile($buffer,
                                                          $destinationFile);
                 $ret = 1;
             } else {
@@ -4261,12 +4249,12 @@ sub Verify {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+            $ca = new CaMgm::CA($data->{"caName"},
                                        $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
 
@@ -4463,12 +4451,12 @@ sub AddSubCA {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+            $ca = new CaMgm::CA($data->{"caName"},
                                        $data->{"caPasswd"},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+            $ca = new CaMgm::CA($data->{"caName"},
                                        $data->{"caPasswd"});
 
         }
@@ -4483,7 +4471,7 @@ sub AddSubCA {
     my $rgd = undef;
     eval {
 
-        $rgd = $ca->getRequestDefaults($LIMAL::CaMgm::E_CA_Req);
+        $rgd = $ca->getRequestDefaults($CaMgm::E_CA_Req);
 
         my $dnl = $rgd->getSubjectDN()->getDN();
         my @DN_Values = ('countryName', 'stateOrProvinceName', 'localityName',
@@ -4510,7 +4498,7 @@ sub AddSubCA {
             }
         }
 
-        my $dnObject = new LIMAL::CaMgm::DNObject($dnl);
+        my $dnObject = new CaMgm::DNObject($dnl);
         $rgd->setSubjectDN($dnObject);
 
         if( defined $data->{'challengePassword'} ) {
@@ -4600,7 +4588,7 @@ sub AddSubCA {
     my $cid = undef;
     eval {
 
-        $cid = $ca->getIssueDefaults($LIMAL::CaMgm::E_CA_Cert);
+        $cid = $ca->getIssueDefaults($CaMgm::E_CA_Cert);
 
         my $start = time();
         my $end   = $start +($data->{"days"} * 24 * 60 * 60);
@@ -4888,7 +4876,7 @@ sub ExportCAToLDAP {
     my $ca = undef;
     eval {
         # FIXME: password check for CA?
-        $ca = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/cacert.pem");
+        $ca = CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/cacert.pem");
 
     };
     if($@) {
@@ -5143,7 +5131,7 @@ sub ExportCRLToLDAP {
     my $crl = undef;
     eval {
         # FIXME: password check for CA ?
-        $crl = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/crl/crl.pem");
+        $crl = CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/crl/crl.pem");
 
     };
     if($@) {
@@ -5286,9 +5274,9 @@ sub ExportCRLToLDAP {
             my $crlDP_server = "";
             my $crlDP_ca     = "";
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
-            my $defClient = $ca->getIssueDefaults($LIMAL::CaMgm::E_Client_Cert);
+            my $defClient = $ca->getIssueDefaults($CaMgm::E_Client_Cert);
 
             if($defClient->getExtensions()->getCRLDistributionPoints()->isPresent() &&
                !$defClient->getExtensions()->getCRLDistributionPoints()->getCRLDistributionPoints()->empty()) {
@@ -5296,7 +5284,7 @@ sub ExportCRLToLDAP {
                 $crlDP_client = "found";
             }
 
-            my $defServer = $ca->getIssueDefaults($LIMAL::CaMgm::E_Server_Cert);
+            my $defServer = $ca->getIssueDefaults($CaMgm::E_Server_Cert);
 
             if($defServer->getExtensions()->getCRLDistributionPoints()->isPresent() &&
                !$defServer->getExtensions()->getCRLDistributionPoints()->getCRLDistributionPoints()->empty()) {
@@ -5304,7 +5292,7 @@ sub ExportCRLToLDAP {
                 $crlDP_server = "found";
             }
 
-            my $defCA = $ca->getIssueDefaults($LIMAL::CaMgm::E_CA_Cert);
+            my $defCA = $ca->getIssueDefaults($CaMgm::E_CA_Cert);
 
             if($defCA->getExtensions()->getCRLDistributionPoints()->isPresent() &&
                !$defCA->getExtensions()->getCRLDistributionPoints()->getCRLDistributionPoints()->empty()) {
@@ -5323,8 +5311,8 @@ sub ExportCRLToLDAP {
                 my $crlDP   .= "ldap://".$data->{'ldapHostname'}.":".$data->{'ldapPort'}."/";
                 $crlDP   .= uri_escape($data->{'destinationDN'});
 
-                my $list = new LIMAL::CaMgm::LiteralValueList();
-                $list->push_back(new LIMAL::CaMgm::LiteralValue("URI", $crlDP));
+                my $list = new CaMgm::LiteralValueList();
+                $list->push_back(new CaMgm::LiteralValue("URI", $crlDP));
 
                 # client
 
@@ -5356,13 +5344,13 @@ sub ExportCRLToLDAP {
 
                 $defCA->setExtensions($ext);
 
-                $ca->setIssueDefaults($LIMAL::CaMgm::E_Client_Cert,
+                $ca->setIssueDefaults($CaMgm::E_Client_Cert,
                                       $defClient);
 
-                $ca->setIssueDefaults($LIMAL::CaMgm::E_Server_Cert,
+                $ca->setIssueDefaults($CaMgm::E_Server_Cert,
                                       $defServer);
 
-                $ca->setIssueDefaults($LIMAL::CaMgm::E_CA_Cert,
+                $ca->setIssueDefaults($CaMgm::E_CA_Cert,
                                       $defCA);
 
             }
@@ -5933,7 +5921,7 @@ sub ExportCertificateToLDAP {
     my $crt = undef;
     eval {
         # FIXME: password check for CA ?
-        $crt = LIMAL::CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/newcerts/$certificate.pem");
+        $crt = CaMgm::LocalManagement::readFile("$CAM_ROOT/$caName/newcerts/$certificate.pem");
 
     };
     if($@) {
@@ -6007,7 +5995,7 @@ sub ExportCertificateToLDAP {
         my $p12 = "";
         eval {
 
-            $ca = new LIMAL::CaMgm::CA($caName, $data->{caPasswd});
+            $ca = new CaMgm::CA($caName, $data->{caPasswd});
 
             $p12 = $ca->exportCertificateAsPKCS12($certificate,
                                                   $data->{'keyPasswd'},
@@ -6103,12 +6091,12 @@ sub DeleteCertificate {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+            $ca = new CaMgm::CA($data->{"caName"},
                                        $data->{"caPasswd"},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+            $ca = new CaMgm::CA($data->{"caName"},
                                        $data->{"caPasswd"});
 
         }
@@ -6215,7 +6203,7 @@ sub ImportCommonServerCertificate {
 
     eval {
 
-        LIMAL::CaMgm::LocalManagement::importCommonServerCertificate($data->{inFile},
+        CaMgm::LocalManagement::importCommonServerCertificate($data->{inFile},
                                                                      $data->{passwd});
 
     };
@@ -6350,15 +6338,15 @@ sub ReadFile {
     }
 
     eval {
-        my $inForm = $LIMAL::CaMgm::E_PEM;
+        my $inForm = $CaMgm::E_PEM;
 
         if($data->{inForm} eq "DER") {
-            $inForm = $LIMAL::CaMgm::E_DER;
+            $inForm = $CaMgm::E_DER;
         }
 
         if($data->{datatype} eq "CERTIFICATE") {
 
-            my $cert = LIMAL::CaMgm::LocalManagement::getCertificate($data->{inFile},
+            my $cert = CaMgm::LocalManagement::getCertificate($data->{inFile},
                                                                      $inForm);
 
             if ($type eq "parsed" || $type eq "extended") {
@@ -6370,7 +6358,7 @@ sub ReadFile {
                 #
                 if($data->{inForm} eq "PEM") {
 
-                    my $bod = LIMAL::CaMgm::LocalManagement::readFile($data->{inFile});
+                    my $bod = CaMgm::LocalManagement::readFile($data->{inFile});
 
                     my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
                     my $endT   = "-----END[\\w\\s]+[-]{5}";
@@ -6387,7 +6375,7 @@ sub ReadFile {
             }
         } elsif($data->{datatype} eq "CRL") {
 
-            my $crl = LIMAL::CaMgm::LocalManagement::getCRL($data->{inFile},
+            my $crl = CaMgm::LocalManagement::getCRL($data->{inFile},
                                                             $inForm);
 
             if ($type eq "parsed" || $type eq "extended") {
@@ -6400,7 +6388,7 @@ sub ReadFile {
                 #
                 if($data->{inForm} eq "PEM") {
 
-                    my $bod = LIMAL::CaMgm::LocalManagement::readFile($data->{inFile});
+                    my $bod = CaMgm::LocalManagement::readFile($data->{inFile});
                     my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
                     my $endT   = "-----END[\\w\\s]+[-]{5}";
                     ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
@@ -6419,7 +6407,7 @@ sub ReadFile {
 
         } elsif($data->{datatype} eq "REQUEST") {
 
-            my $req = LIMAL::CaMgm::LocalManagement::getRequest($data->{inFile},
+            my $req = CaMgm::LocalManagement::getRequest($data->{inFile},
                                                                 $inForm);
 
             if ($type eq "parsed" || $type eq "extended") {
@@ -6431,7 +6419,7 @@ sub ReadFile {
                 #
                 if($data->{inForm} eq "PEM") {
 
-                    my $bod = LIMAL::CaMgm::LocalManagement::readFile($data->{inFile});
+                    my $bod = CaMgm::LocalManagement::readFile($data->{inFile});
                     my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
                     my $endT   = "-----END[\\w\\s]+[-]{5}";
                     ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
@@ -6540,13 +6528,13 @@ sub ReadRequest {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
 
         }
@@ -6560,7 +6548,7 @@ sub ReadRequest {
             if(defined $data->{repository}) {
                 $repos = $data->{repository};
             }
-            my $bod = LIMAL::CaMgm::LocalManagement::readFile("$repos/$caName/req/$request".".req");
+            my $bod = CaMgm::LocalManagement::readFile("$repos/$caName/req/$request".".req");
             my $beginT = "-----BEGIN[\\w\\s]+[-]{5}";
             my $endT   = "-----END[\\w\\s]+[-]{5}";
             ( $ret->{BODY} ) = ( $bod->data() =~ /($beginT[\S\s\n]+$endT)/ );
@@ -6660,12 +6648,12 @@ sub ReadRequestList {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
 
         }
@@ -6788,13 +6776,13 @@ sub ImportRequest {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
         }
     };
@@ -6806,17 +6794,17 @@ sub ImportRequest {
     }
 
     eval {
-        my $byteBuffer = new LIMAL::ByteBuffer($data->{data}, length($data->{data}));
+        my $byteBuffer = new ByteBuffer($data->{data}, length($data->{data}));
 
         if(defined $data->{importFormat} && $data->{importFormat} eq "DER") {
 
             $ret = $ca->importRequestData($byteBuffer,
-                                          $LIMAL::CaMgm::E_DER);
+                                          $CaMgm::E_DER);
 
         } else {
 
             $ret = $ca->importRequestData($byteBuffer,
-                                          $LIMAL::CaMgm::E_PEM);
+                                          $CaMgm::E_PEM);
 
         }
     };
@@ -6898,13 +6886,13 @@ sub DeleteRequest {
     eval {
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
 
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'});
 
         }
@@ -7000,18 +6988,18 @@ sub ImportCA {
 
     eval {
 
-        my $cert = LIMAL::CaMgm::LocalManagement::readFile($data->{caCertificate});
-        my $key  = LIMAL::CaMgm::LocalManagement::readFile($data->{caKey});
+        my $cert = CaMgm::LocalManagement::readFile($data->{caCertificate});
+        my $key  = CaMgm::LocalManagement::readFile($data->{caKey});
 
         if( defined $data->{'repository'})
         {
-            LIMAL::CaMgm::CA::importCA($caName, $cert, $key,
+            CaMgm::CA::importCA($caName, $cert, $key,
                                        $data->{caPasswd},
                                        $data->{"repository"});
         }
         else
         {
-            LIMAL::CaMgm::CA::importCA($caName, $cert, $key,
+            CaMgm::CA::importCA($caName, $cert, $key,
                                        $data->{caPasswd});
         }
     };
@@ -7100,14 +7088,14 @@ sub DeleteCA {
 
         if( defined $data->{'repository'}) {
 
-            LIMAL::CaMgm::CA::deleteCA($caName,
+            CaMgm::CA::deleteCA($caName,
                                        $data->{caPasswd},
                                        $doDelete,
                                        $data->{"repository"});
 
         } else {
 
-            LIMAL::CaMgm::CA::deleteCA($caName,
+            CaMgm::CA::deleteCA($caName,
                                        $data->{caPasswd},
                                        $doDelete);
         }
@@ -7198,12 +7186,12 @@ sub ReadCRLDefaults {
 
         if(defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'},
+            $ca = new CaMgm::CA($data->{'caName'},
                                        $data->{'caPasswd'},
                                        $data->{'repository'});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{'caName'}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{'caName'}, $data->{'caPasswd'});
 
         }
 
@@ -7303,12 +7291,12 @@ sub WriteCRLDefaults {
 
         if( defined $data->{'repository'}) {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"},
+            $ca = new CaMgm::CA($data->{"caName"},
                                        $data->{'caPasswd'},
                                        $data->{"repository"});
         } else {
 
-            $ca = new LIMAL::CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
+            $ca = new CaMgm::CA($data->{"caName"}, $data->{'caPasswd'});
 
         }
     };
@@ -7450,7 +7438,7 @@ sub ChangePassword {
 
             if( -e $keyfilename)
             {
-                $oldkey = LIMAL::CaMgm::LocalManagement::readFile($keyfilename);
+                $oldkey = CaMgm::LocalManagement::readFile($keyfilename);
             }
             else
             {
@@ -7466,7 +7454,7 @@ sub ChangePassword {
 
             if( -e $keyfilename)
             {
-                $oldkey = LIMAL::CaMgm::LocalManagement::readFile($keyfilename);
+                $oldkey = CaMgm::LocalManagement::readFile($keyfilename);
             }
             else
             {
@@ -7476,14 +7464,14 @@ sub ChangePassword {
             }
         }
 
-        $newkey = LIMAL::CaMgm::LocalManagement::rsaConvert($oldkey,
-                                                            $LIMAL::CaMgm::E_PEM,
-                                                            $LIMAL::CaMgm::E_PEM,
+        $newkey = CaMgm::LocalManagement::rsaConvert($oldkey,
+                                                            $CaMgm::E_PEM,
+                                                            $CaMgm::E_PEM,
                                                             $data->{oldPasswd},
                                                             $data->{newPasswd},
                                                             $data->{algorithm});
 
-        LIMAL::CaMgm::LocalManagement::writeFile($newkey,
+        CaMgm::LocalManagement::writeFile($newkey,
                                                  $keyfilename, 1);
 
     };
