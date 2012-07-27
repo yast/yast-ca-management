@@ -3,10 +3,29 @@
 @HEADER@
 Group:          System/YaST
 License:        GPL-2.0+
-BuildRequires:  docbook-xsl-stylesheets dosfstools doxygen libxslt perl-camgm perl-Date-Calc perl-URI perl-X500-DN perl-XML-Writer pkg-config update-desktop-files yast2 yast2-core yast2-devtools
-Requires:       yast2 perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc perl-Config-IniFiles perl-URI
+BuildRequires:  docbook-xsl-stylesheets
+BuildRequires:  dosfstools
+BuildRequires:  doxygen
+BuildRequires:  libxslt
+BuildRequires:  perl-Date-Calc
+BuildRequires:  perl-URI
+BuildRequires:  perl-X500-DN
+BuildRequires:  perl-XML-Writer
+BuildRequires:  perl-camgm
+BuildRequires:  pkg-config
+BuildRequires:  update-desktop-files
+BuildRequires:  yast2
+BuildRequires:  yast2-core
+BuildRequires:  yast2-devtools
+Requires:       perl
+Requires:       perl-Config-IniFiles
+Requires:       perl-Date-Calc
+Requires:       perl-URI
+Requires:       perl-X500-DN
 Requires:       perl-camgm
-Requires:	yast2 >= 2.21.22
+Requires:       perl-gettext
+Requires:       yast2 >= 2.21.22
+Requires:       yast2-perl-bindings
 BuildArch:      noarch
 Summary:        YaST2 - CAs, Certificates and Requests Management
 
