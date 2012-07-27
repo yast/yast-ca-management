@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Jul 27 10:42:18 CEST 2012 - mc@suse.de
+
+- version 2.23.0
+- remove usage of limal-ca-mgm and use new libcamgm instead
+
+-------------------------------------------------------------------
 Wed Apr 25 11:08:23 CEST 2012 - mc@suse.de
 
 - version 2.22.2
