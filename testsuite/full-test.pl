@@ -240,6 +240,7 @@ sub T07_ReadCertificateDefaults {
     foreach my $certType ("ca", "client", "server") {
         my $data = {
                     'caName'    => 'Test1_SuSE_CA',
+                    'caPasswd'  => 'system',
                     'certType'  => $certType
                    };
       
@@ -279,6 +280,7 @@ sub T09_ReadCA {
     foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test2_SuSE_CA',
+                    'caPasswd' => 'system',
                     'type'   => $type
                    };
         
@@ -299,6 +301,7 @@ sub T10_AddRequest {
     print "------------------- T10_AddRequest ---------------------\n";
     my $data = {
                 'caName'                => 'Test1_SuSE_CA',
+                'caPasswd'              => 'system',
                 'keyPasswd'             => 'system',
                 'commonName'            => 'My Request5',
                 'emailAddress'          => 'my2@tait.linux.tux',
@@ -468,6 +471,7 @@ sub T15_ReadCertificate {
     foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
+                    'caPasswd' => 'system',
                     'type'   => $type,
                     'certificate' => $crt3
                    };
@@ -530,6 +534,7 @@ sub T18_ReadCRL {
     foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
+                    'caPasswd'    => 'system',
                     'type'   => $type,
                    };
         
@@ -583,7 +588,8 @@ sub T19_ExportCA {
 sub T20_ExportCertificate {
     print STDERR "------------------- T20_ExportCertificate ---------------------\n";
     print "------------------- T20_ExportCertificate ---------------------\n";
-    foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
+    #foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12", "PKCS12_CHAIN") {
+    foreach my $ef ("PEM_CERT", "PEM_CERT_KEY", "PEM_CERT_ENCKEY","DER_CERT", "PKCS12") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
                     'caPasswd' => 'system',
@@ -803,7 +809,8 @@ sub T23a_enhanced_verify {
     }
 
     $data = {
-             caName => 'Test3_SuSE_CA', 
+             caName => 'Test3_SuSE_CA',
+            'caPasswd'    => 'tralla',
              certificate => $newcert 
             };
     
@@ -939,7 +946,7 @@ sub T28_ListManyCerts {
     print STDERR "------------------- T28_ListManyCerts ---------------------\n";
     print "------------------- T28_ListManyCerts ---------------------\n";
     use Time::HiRes qw( usleep ualarm gettimeofday tv_interval );
-    my $start = [gettimeofday];   
+    my $start = [gettimeofday];
     my $data = {
                 caName => 'Test2_SuSE_CA',
                 caPasswd => "system"
@@ -960,6 +967,7 @@ sub T29_WriteCertificateDefaults {
     print "------------------- T29_WriteCertificateDefaults ---------------------\n";
     my $data = {
                 'caName'                => 'Test3_SuSE_CA',
+                'caPasswd'              => 'tralla',
                 'certType'              => 'server',
                 'basicConstraints'      => 'critical, CA:FALSE',
                 'nsComment'             => '"SuSE Certificate"',
@@ -1098,6 +1106,7 @@ sub T37_CheckCA1 {
 
     my $data = {
                 'caName' => 'Test1_SuSE_CA',
+                'caPasswd' => 'system',
                 'type'   => "plain"
                };
     
@@ -1193,6 +1202,7 @@ sub T38_CheckCA2 {
     
     my $data = {
                 'caName' => 'Test2_SuSE_CA',
+                'caPasswd' => 'system',
                 'type'   => "plain"
                };
     
@@ -1307,6 +1317,7 @@ sub T39_CheckCertificate1 {
     
     my $data = {
                 'caName' => 'Test1_SuSE_CA',
+                'caPasswd' => 'system',
                 'type'   => "plain",
                 'certificate' => $crt2
                };
@@ -1401,6 +1412,7 @@ sub T40_CheckCertificate2 {
     
     my $data = {
                 'caName' => 'Test1_SuSE_CA',
+                'caPasswd' => 'system',
                 'type'   => "plain",
                 'certificate' => $crt3
                };
@@ -1515,6 +1527,7 @@ sub T41_CheckCRL1 {
     print "------------------- T41_CheckCRL1 ---------------------\n";
     my $data = {
                 'caName' => 'Test1_SuSE_CA',
+                'caPasswd' => 'system',
                 'type'   => "plain",
                };
     
@@ -1622,6 +1635,7 @@ sub T44_ReadCRL3 {
     foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test2_SuSE_CA',
+                    'caPasswd'    => 'system',
                     'type'   => $type,
                    };
         
@@ -1642,6 +1656,7 @@ sub T45_CheckCRL3 {
     print "------------------- T45_CheckCRL3 ---------------------\n";
     my $data = {
                 'caName' => 'Test2_SuSE_CA',
+                'caPasswd'    => 'system',
                 'type'   => "plain",
                };
     
@@ -1798,10 +1813,10 @@ sub __checkCerts {
         
         if($orig ne $ref) {
             $err = $err + 1;
-            print STDERR "Found differences:\n";
-            print STDERR "ORIG:'$orig'\n";
-            print STDERR "REF :'$ref'\n";
-            print STDERR "LAST:'$last'\n";
+            print "Found differences:\n";
+            print "ORIG:'$orig'\n";
+            print "REF :'$ref'\n";
+            print "LAST:'$last'\n";
         }
         
         $last = $orig;
@@ -1815,6 +1830,7 @@ sub T46_ReadRequest {
     foreach my $type ("parsed", "plain", "extended") {
         my $data = {
                     'caName' => 'Test1_SuSE_CA',
+                    'caPasswd'    => 'system',
                     'type'   => $type,
                     'request' => $req3
                    };
@@ -1837,7 +1853,8 @@ sub T47_ReadRequestList() {
     use Time::HiRes qw( usleep ualarm gettimeofday tv_interval );
     my $start = [gettimeofday];   
     my $data = {
-                'caName' => 'Test2_SuSE_CA'
+                'caName' => 'Test2_SuSE_CA',
+                'caPasswd'    => 'system'
                };
     
     my $res = YaPI::CaManagement->ReadRequestList($data);
@@ -1881,6 +1898,7 @@ nwR1IKGnTcEx4CkTLp4lTISAj/2tE8jMPmTnGEO7dnkX2wW7Eb0Z5gDsVTzGh580
 
     my $data = {
                 'caName' => 'Test1_SuSE_CA',
+                'caPasswd'    => 'system',
                 'data' => $req1
                };
     
@@ -1923,6 +1941,7 @@ sub T50_ImportCA {
 
     my $data = {
                 'caName'       => 'Test4_SuSE_CA',
+                'caPasswd'    => 'system',
                 'caCertificate'=> "/var/lib/CAM/Test1_SuSE_CA/cacert.pem",
                 'caKey'        => '/var/lib/CAM/Test1_SuSE_CA/cacert.key'
                };
@@ -1996,6 +2015,7 @@ sub T52_ReadCRLDefaults {
 
     my $data = {
                 'caName'       => 'Test1_SuSE_CA',
+                'caPasswd'    => 'system',
                };
     
     my $res = YaPI::CaManagement->ReadCRLDefaults($data);
@@ -2015,6 +2035,7 @@ sub T53_WriteCRLDefaults {
 
     my $data = {
                 'caName'                 => 'Test1_SuSE_CA',
+                'caPasswd'    => 'system',
                 'days'                   => '1',
                 'authorityKeyIdentifier' => 'keyid:always,issuer:always',
                 'issuerAltName'          => 'issuer:copy'
@@ -2036,6 +2057,7 @@ sub T54_AddRequest {
     print "------------------- T54_AddRequest ---------------------\n";
     my $data = {
                 'caName'                => 'Test1_SuSE_CA',
+                'caPasswd'    => 'system',
                 'keyPasswd'             => '1234',
                 'commonName'            => 'My Request54',
                 'emailAddress'          => 'my@tait.linux.tux',
