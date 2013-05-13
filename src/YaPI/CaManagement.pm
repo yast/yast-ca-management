@@ -6815,7 +6815,7 @@ sub ImportRequest {
     }
 
     eval {
-        my $byteBuffer = new ByteBuffer($data->{data}, length($data->{data}));
+        my $byteBuffer = new CaMgm::ByteBuffer($data->{data}, length($data->{data}));
 
         if(defined $data->{importFormat} && $data->{importFormat} eq "DER") {
 
