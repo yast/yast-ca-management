@@ -32,7 +32,7 @@ you may find current contact information at www.novell.com
 
     textdomain "ca-management";
 
-    import "CaMgm";    
+    import "CaMgm";
     import "YaPI::CaManagement";
 
     include "ca-management/popup.ycp";
@@ -80,21 +80,21 @@ you may find current contact information at www.novell.com
     define boolean cmdCreateCertificate(map options) ``{
 	CaMgm::CAName = options["caname"]:"";
 	CaMgm::currentCA = options["caname"]:"";
-	
+
 	if (options["type"]:"" == "client")
 	{
 	    new_cert_init ("Client Certificate");
 	}
 	else if (options["type"]:"" == "server")
 	{
-	    new_cert_init ("Server Certificate");	    
+	    new_cert_init ("Server Certificate");
 	}
 	else
 	{
 	    CommandLine::Print (_("Wrong kind of certificate."));
 	    return false;
 	}
-	
+
 	CaMgm::CAName = options["caname"]:"";
 	CaMgm::commonName = options["cn"]:"";
 	CaMgm::emailList = [$["default":true, "name": options["email"]:""]];
@@ -138,7 +138,7 @@ you may find current contact information at www.novell.com
 	    {
 		showErrorCaManagement ();
 		ret = false;
-	    }		
+	    }
 	}
 	return ret;
     }
@@ -152,7 +152,7 @@ you may find current contact information at www.novell.com
 	// generating CRL
 	boolean ret = nil;
 	map <string, any> param = $[];
-	
+
 	if (haskey (options, "capasswd"))
 	{
 	    param["caPasswd"] = options["capasswd"]:"";
@@ -162,32 +162,32 @@ you may find current contact information at www.novell.com
 	    param["caPasswd"] = strip(getenv("capasswd"));
 	}
 	param["caName"] = options["caname"]:"";
-	param["days"] = tointeger (options["days"]:"365");	
-	
+	param["days"] = tointeger (options["days"]:"365");
+
 	ret = (boolean) YaPI::CaManagement::AddCRL (param);
 	if (ret == nil
 	    || ret == false)
 	{
 	    showErrorCaManagement ();
 	    return false;
-	}	
+	}
 	return ret;
     }
-    
+
     /**
      * Dialog for exporting CA to file
-     * @param option map     
+     * @param option map
      * @return true ( success )
      */
     define boolean cmdExportCAtoFile (map options) ``{
 	map <string, any> param = $[];
-	string kind = options["certFormat"]:"";	
+	string kind = options["certFormat"]:"";
 
 	if (!haskey (options, "capasswd"))
 	{
 	    options["capasswd"] = strip(getenv("capasswd"));
 	}
-	
+
 	param["caPasswd"] = options["capasswd"]:"";
 	param["caName"] = options["caname"]:"";
 	param["destinationFile"] =  options["file"]:"";
@@ -204,7 +204,7 @@ you may find current contact information at www.novell.com
 	    param["P12Password"] = options["p12passwd"]:"";
 	}
 	ret = (string) YaPI::CaManagement::ExportCA (param);
-	
+
 	y2milestone ("ExportCA(to %1) return %2", options["file"]:"", ret);
 	if (ret == nil
 	    || ret != "1")
@@ -213,16 +213,16 @@ you may find current contact information at www.novell.com
 	    return false;
 	}
 	return true;
-    }        
+    }
 
     /**
      * exporting CRL to file
-     * @param option map          
+     * @param option map
      * @return true ( success )
      */
     define boolean cmdExportCRLtoFile (map options) ``{
 	map <string, any> param = $[];
-	
+
 	param["destinationFile"] =  options["file"]:"";
 	param["exportFormat"] = options["crlFormat"]:"";
 	param["caName"] = options["caname"]:"";
@@ -231,7 +231,7 @@ you may find current contact information at www.novell.com
 	string ret = nil;
 	ret = (string) YaPI::CaManagement::ExportCRL (param);
 
-    // delete parameter for security reason :-)		    
+    // delete parameter for security reason :-)
 	param["caPasswd"] = "<was set>";
 
 	y2milestone ("ExportCRL(%1) return %2", param, ret);
@@ -246,12 +246,12 @@ you may find current contact information at www.novell.com
 
     /**
      * exporting Certificate to file
-     * @param option map               
+     * @param option map
      * @return true ( success )
      */
     define boolean cmdExportCertificateToFile (map options) ``{
 	map <string, any> param = $[];
-	string kind = options["certFormat"]:"";	
+	string kind = options["certFormat"]:"";
 
 	if (!haskey (options, "keyPasswd"))
 	{
@@ -262,7 +262,7 @@ you may find current contact information at www.novell.com
         param["caPasswd"] = options["capasswd"]:"";
 	param["certificate"] = options["certname"]:"";
 	param["exportFormat"] = kind;
-	param["destinationFile"] =  options["file"]:"";	
+	param["destinationFile"] =  options["file"]:"";
 	param["keyPasswd"] = options["keyPasswd"]:"";
 
 	string ret = nil;
@@ -273,9 +273,9 @@ you may find current contact information at www.novell.com
 	    {
 		options["p12passwd"] = strip(getenv("p12passwd"));
 	    }
-	    param["P12Password"] = options["p12passwd"]:"";	    
+	    param["P12Password"] = options["p12passwd"]:"";
 	}
-	
+
 	ret = (string) YaPI::CaManagement::ExportCertificate (param);
 
 	y2milestone ("ExportCertificate(to %1) return %2",
@@ -290,8 +290,8 @@ you may find current contact information at www.novell.com
 	return true;
     }
 
-    
-    
+
+
 // EOF
 }
 
