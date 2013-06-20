@@ -81,6 +81,15 @@ you may find current contact information at www.novell.com
 	CaMgm::CAName = options["caname"]:"";
 	CaMgm::currentCA = options["caname"]:"";
 
+	if (haskey (options, "capasswd"))
+	{
+	    CaMgm::passwdMap[CaMgm::CAName] = options["capasswd"]:"";
+	}
+	else
+	{
+	    CaMgm::passwdMap[CaMgm::CAName] = strip(getenv("capasswd"));
+	}
+
 	if (options["type"]:"" == "client")
 	{
 	    new_cert_init ("Client Certificate");
@@ -112,15 +121,6 @@ you may find current contact information at www.novell.com
 	else
 	{
 	    CaMgm::password = strip(getenv("keyPasswd"));
-	}
-
-	if (haskey (options, "capasswd"))
-	{
-	    CaMgm::passwdMap[CaMgm::CAName] = options["capasswd"]:"";
-	}
-	else
-	{
-	    CaMgm::passwdMap[CaMgm::CAName] = strip(getenv("capasswd"));
 	}
 
 	boolean ret = true;
