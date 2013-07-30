@@ -27,6 +27,8 @@ Requires:       perl-gettext
 Requires:       yast2 >= 2.21.22
 Requires:       yast2-perl-bindings
 BuildArch:      noarch
+Requires:       yast2-ruby-bindings >= 1.0.0
+
 Summary:        YaST2 - CAs, Certificates and Requests Management
 
 %description
@@ -45,14 +47,14 @@ Managing CAs, Certificates and Requests in an understanding way.
 %dir @moduledir@/YaPI
 %dir @moduledir@/YaST
 @yncludedir@/ca-management/*
-@clientdir@/ca-mgm.ycp
-@clientdir@/ca_mgm.ycp
-@clientdir@/ca_mgm_proposal.ycp
-@clientdir@/ca_select_proposal.ycp
-@clientdir@/common-cert.ycp
-@clientdir@/common_cert.ycp
-@clientdir@/ca_mgm_auto.ycp
-@moduledir@/CaMgm.y*
+@clientdir@/ca-mgm.rb
+@clientdir@/ca_mgm.rb
+@clientdir@/ca_mgm_proposal.rb
+@clientdir@/ca_select_proposal.rb
+@clientdir@/common-cert.rb
+@clientdir@/common_cert.rb
+@clientdir@/ca_mgm_auto.rb
+@moduledir@/CaMgm.rb
 @moduledir@/YaPI/CaManagement.pm
 @moduledir@/YaST/caUtils.pm
 @desktopdir@/ca_mgm.desktop
