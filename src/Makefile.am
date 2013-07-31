@@ -1,60 +1,55 @@
-# Makefile.am for source/ca-management/src
+# Sources for ca-management
 
-SUBDIRS = YaPI
+module_DATA = \
+  modules/CaMgm.rb
 
-myincludedir = @yncludedir@/ca-management
+module1dir = @moduledir@/YaPI
+module1_DATA = \
+  modules/YaPI/CaManagement.pm
 
-myinclude_DATA =		\
-	popup.ycp		\
-	startup.ycp		\
-	new_cert.ycp		\
-	util.ycp		\
-	new_cert_items.ycp	\
-	new_cert_callbacks.ycp	\
-	new_cert_advanced.ycp	\
-	new_cert_read_write.ycp \
-	ca.ycp			\
-	crl.ycp			\
-	certificate.ycp		\
-	request.ycp		\
-	signRequest.ycp		\
-	certDefault.ycp		\
-	crlDefault.ycp		\
-	crlExport.ycp		\
-	dialog-ca.ycp		\
-	commandline.ycp		\
-	wizards.ycp
+module2dir = @moduledir@/YaST
+module2_DATA = \
+  modules/YaST/caUtils.pm
 
-module_DATA = 	CaMgm.ycp	
+client_DATA = \
+  clients/ca-mgm.rb \
+  clients/ca_mgm_auto.rb \
+  clients/ca_mgm_proposal.rb \
+  clients/ca_mgm.rb \
+  clients/ca_select_proposal.rb \
+  clients/common-cert.rb \
+  clients/common_cert.rb
 
-client_DATA = 		\
-	ca_mgm.ycp	\
-	ca_select_proposal.ycp	\
-	ca_mgm_proposal.ycp	\
-	ca-mgm.ycp		\
-	ca_mgm_auto.ycp         \
-	common-cert.ycp		\
-	common_cert.ycp
+yncludedir = @yncludedir@/ca-management
+ynclude_DATA = \
+  include/ca-management/ca.rb \
+  include/ca-management/new_cert.rb \
+  include/ca-management/new_cert_advanced.rb \
+  include/ca-management/wizards.rb \
+  include/ca-management/certDefault.rb \
+  include/ca-management/new_cert_read_write.rb \
+  include/ca-management/commandline.rb \
+  include/ca-management/crlDefault.rb \
+  include/ca-management/new_cert_callbacks.rb \
+  include/ca-management/crl.rb \
+  include/ca-management/new_cert_items.rb \
+  include/ca-management/crlExport.rb \
+  include/ca-management/startup.rb \
+  include/ca-management/signRequest.rb \
+  include/ca-management/popup.rb \
+  include/ca-management/request.rb \
+  include/ca-management/certificate.rb \
+  include/ca-management/dialog-ca.rb \
+  include/ca-management/util.rb
 
-desktop_DATA = ca_mgm.desktop	\
-	       common_cert.desktop
+schemafilesdir = $(schemadir)/autoyast/rnc
+schemafiles_DATA = \
+  autoyast-rnc/ca_mgm.rnc
 
-rncdir = $(schemadir)/autoyast/rnc
-rnc_DATA = ca_mgm.rnc
+desktop_DATA = \
+  desktop/common_cert.desktop \
+  desktop/ca_mgm.desktop
 
-EXTRA_DIST =		\
-	$(module_DATA)	\
-	$(client_DATA)	\
-        $(desktop_DATA)	\
-	$(myinclude_DATA) \
-	$(cam_DATA) \
-	$(rnc_DATA)
-
-ca-management:
-	ln -sf . ca-management
-
-ycpchook = ca-management
-
-YCPCFLAGS =
+EXTRA_DIST = $(module_DATA) $(module1_DATA) $(module2_DATA) $(client_DATA) $(ynclude_DATA) $(schemafiles_DATA) $(desktop_DATA)
 
 include $(top_srcdir)/Makefile.am.common
