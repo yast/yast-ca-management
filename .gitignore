@@ -12,7 +12,7 @@ config.log
 config.status
 config.sub
 configure
-configure.in
+configure.ac
 install-sh
 missing
 pluglib-bindings.ami
@@ -20,5 +20,3 @@ src/.dep
 src/YaPI/.dep
 src/ca-management
 package/yast2-ca-management-*.tar.bz2
-package/yast2-ca-management.spec
-
