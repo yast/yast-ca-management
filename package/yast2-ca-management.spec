@@ -38,7 +38,7 @@ BuildRequires:  pkg-config
 BuildRequires:  update-desktop-files
 BuildRequires:  yast2
 BuildRequires:  yast2-core
-BuildRequires:  yast2-devtools >= 3.0.6
+BuildRequires:  yast2-devtools >= 3.1.10
 Requires:       perl
 Requires:       perl-Config-IniFiles
 Requires:       perl-Date-Calc
