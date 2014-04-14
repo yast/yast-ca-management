@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Apr 14 08:01:14 CEST 2014 - mc@suse.de
+
+- version 3.1.2
+- add new signature algorithems SHA224RSA, SHA256RSA,
+  SHA384RSA and SHA512RSA
+
+-------------------------------------------------------------------
 Wed Nov 13 15:56:18 UTC 2013 - jreidinger@suse.com
 
 - Add explicit COPYING file
