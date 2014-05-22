@@ -150,7 +150,8 @@ module Yast
           ret
         )
         if ret == nil
-          ret = "<pre>Common Server Certificate not found.\nYou can import a certificate from disk</pre>"
+          # popup text
+          ret = _("<pre>Common Server Certificate not found.\nYou can import a certificate from disk</pre>")
         else
           ret = Ops.add(Ops.add("<pre>", ret), "</pre>")
         end
