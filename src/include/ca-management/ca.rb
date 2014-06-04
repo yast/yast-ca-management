@@ -183,27 +183,33 @@ module Yast
         text = Ops.add(text, _("<p><b>Issued For:</b></p>"))
         text = Ops.add(text, "<pre>")
         text = Ops.add(
-          Ops.add(text, "\nCommon Name:  "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nCommon Name:  ")),
           Ops.get_string(Ops.get_list(dn, "CN", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nOrganization: "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nOrganization: ")),
           Ops.get_string(Ops.get_list(dn, "O", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nLocation:     "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nLocation:     ")),
           Ops.get_string(Ops.get_list(dn, "L", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nState:        "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nState:        ")),
           Ops.get_string(Ops.get_list(dn, "ST", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nCountry:      "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nCountry:      ")),
           Ops.get_string(Ops.get_list(dn, "C", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nEMAIL:        "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nEMAIL:        ")),
           Ops.get_string(Ops.get_list(dn, "emailAddress", []), 0, "")
         )
         text = Ops.add(text, "</pre>")
@@ -214,27 +220,33 @@ module Yast
         text = Ops.add(text, _("<p><b>Issued By:</b></p>"))
         text = Ops.add(text, "<pre>")
         text = Ops.add(
-          Ops.add(text, "\nCommon Name:  "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nCommon Name:  ")),
           Ops.get_string(Ops.get_list(issuer, "CN", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nOrganization: "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nOrganization: ")),
           Ops.get_string(Ops.get_list(issuer, "O", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nLocation:     "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nLocation:     ")),
           Ops.get_string(Ops.get_list(issuer, "L", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nState:        "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nState:        ")),
           Ops.get_string(Ops.get_list(issuer, "ST", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nCountry:      "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nCountry:      ")),
           Ops.get_string(Ops.get_list(issuer, "C", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nEMAIL:        "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nEMAIL:        ")),
           Ops.get_string(Ops.get_list(issuer, "emailAddress", []), 0, "")
         )
         text = Ops.add(text, "</pre>")

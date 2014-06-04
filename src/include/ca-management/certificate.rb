@@ -298,60 +298,74 @@ module Yast
       dn = Ops.get_map(certMap, "DN_HASH", {})
       if Ops.greater_than(Builtins.size(dn), 0)
         text = Ops.add(
-          Ops.add(text, "\nCommon Name:        "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nCommon Name:        ")),
           Ops.get_string(Ops.get_list(dn, "CN", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nOrganization:       "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nOrganization:       ")),
           Ops.get_string(Ops.get_list(dn, "O", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nLocation:           "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nLocation:           ")),
           Ops.get_string(Ops.get_list(dn, "L", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nState:              "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nState:              ")),
           Ops.get_string(Ops.get_list(dn, "ST", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nCountry:            "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nCountry:            ")),
           Ops.get_string(Ops.get_list(dn, "C", []), 0, "")
         )
         text = Ops.add(
-          Ops.add(text, "\nEMAIL:              "),
+          # Preformated Text: take care that all translations have the same length
+          Ops.add(text, _("\nEMAIL:              ")),
           Ops.get_string(Ops.get_list(dn, "emailAddress", []), 0, "")
         )
       end
       text = Ops.add(
-        Ops.add(text, "\nIs CA:              "),
+        # Preformated Text: take care that all translations have the same length
+        Ops.add(text, _("\nIs CA:              ")),
         Ops.get_string(certMap, "IS_CA", "")
       )
       text = Ops.add(
-        Ops.add(text, "\nKey Size:           "),
+        # Preformated Text: take care that all translations have the same length
+        Ops.add(text, _("\nKey Size:           ")),
         Ops.get_string(certMap, "KEYSIZE", "")
       )
       text = Ops.add(
-        Ops.add(text, "\nSerialnumber:       "),
+        # Preformated Text: take care that all translations have the same length
+        Ops.add(text, _("\nSerialnumber:       ")),
         Ops.get_string(certMap, "SERIAL", "")
       )
       text = Ops.add(
-        Ops.add(text, "\nVersion:            "),
+        # Preformated Text: take care that all translations have the same length
+        Ops.add(text, _("\nVersion:            ")),
         Ops.get_string(certMap, "VERSION", "")
       )
       text = Ops.add(
-        Ops.add(text, "\nValid from:         "),
+        # Preformated Text: take care that all translations have the same length
+        Ops.add(text, _("\nValid from:         ")),
         Ops.get_string(certMap, "NOTBEFORE", "")
       )
       text = Ops.add(
-        Ops.add(text, "\nValid to:           "),
+        # Preformated Text: take care that all translations have the same length
+        Ops.add(text, _("\nValid to:           ")),
         Ops.get_string(certMap, "NOTAFTER", "")
       )
       text = Ops.add(
-        Ops.add(text, "\nalgo. of pub. Key : "),
+        # Preformated Text: take care that all translations have the same length
+        Ops.add(text, _("\nalgo. of pub. Key : ")),
         Ops.get_string(certMap, "PUBKEY_ALGORITHM", "")
       )
       text = Ops.add(
-        Ops.add(text, "\nalgo. of signature: "),
+        # Preformated Text: take care that all translations have the same length
+        Ops.add(text, _("\nalgo. of signature: ")),
         Ops.get_string(certMap, "SIGNATURE_ALGORITHM", "")
       )
       text = Ops.add(text, "</pre>")
