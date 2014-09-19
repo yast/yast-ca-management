@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Sep 19 10:05:21 CEST 2014 - mc@suse.de
+
+- version 3.1.5
+- the CA is now stored in /etc/pki/trust/anchors
+  and we need to run update-ca-certificates (bnc#897441)
+
+-------------------------------------------------------------------
 Wed Jun  4 11:55:40 CEST 2014 - mc@suse.de
 
 - version 3.1.4
