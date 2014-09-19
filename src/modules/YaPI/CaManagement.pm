@@ -6152,7 +6152,7 @@ Import a server certificate plus correspondenting CA
 and copy them to a place where other YaST modules look
 for such a common certificate.
 
-The CA(s) are copied to '/etc/ssl/certs/YaST-CA.pem'.
+The CA(s) are copied to '/etc/pki/trust/anchors/YaST-CA.pem'.
 
 The server certificate is copied to '/etc/ssl/servercerts/servercert.pem' .
 
@@ -6255,9 +6255,10 @@ sub RemoveCommonServerCertificate {
     {
         unlink("/etc/ssl/servercerts/serverkey.pem");
     }
-    if ( -e "/etc/ssl/certs/YaST-CA.pem" )
+    if ( -e "/etc/pki/trust/anchors/YaST-CA.pem" )
     {
-        unlink("/etc/ssl/certs/YaST-CA.pem");
+        unlink("/etc/pki/trust/anchors/YaST-CA.pem");
+        `update-ca-certificates`;
     }
 
     return 1;
