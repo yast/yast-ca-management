@@ -10,7 +10,7 @@ BuildArchitectures:	noarch
 Summary:	CA Management
 
 %description
--
+Managing CAs, Certificates and Requests in an understanding way.
 
 @PREP@
 
