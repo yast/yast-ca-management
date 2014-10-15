@@ -1,8 +1,10 @@
 -------------------------------------------------------------------
-Mon Oct 13 12:50:22 UTC 2014 - jdsn@suse.de
+Wed Oct 15 18:23:25 UTC 2014 - jdsn@suse.de
 
 - version 2.17.25
-- fix creation of certificates via commandline (bnc#899893)
+- fix reading passwords from env in commandline mode (bnc#899893)
+  read passwords from environment where needed
+  consistent handling of passwords from environment
 
 -------------------------------------------------------------------
 Wed Oct  2 14:30:00 CEST 2013 - mc@suse.de

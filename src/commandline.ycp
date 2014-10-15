@@ -35,14 +35,11 @@
 	CaMgm::country = options["c"]:"";
 	CaMgm::validPeriod = tointeger (options["days"]:"365");
 	CaMgm::keyLength = tointeger (options["keyLength"]:"1024");
-	if (haskey (options, "keyPasswd"))
+	if (!haskey (options, "keyPasswd"))
 	{
-	    CaMgm::password = options["keyPasswd"]:"";
+	    options["keyPasswd"] = strip(getenv("keyPasswd"));
 	}
-	else
-	{
-	    CaMgm::password = strip(getenv("keyPasswd"));
-	}
+	CaMgm::password = options["keyPasswd"]:"";
 	if (!cert_write ("Root CA"))
 	{
 	    showErrorCaManagement ();
@@ -60,14 +57,11 @@
 	CaMgm::CAName = options["caname"]:"";
 	CaMgm::currentCA = options["caname"]:"";
 	
-	if (haskey (options, "capasswd"))
+	if (!haskey (options, "capasswd"))
 	{
-	    CaMgm::passwdMap[CaMgm::CAName] = options["capasswd"]:"";
+	    options["capasswd"] = strip(getenv("capasswd"));
 	}
-	else
-	{
-	    CaMgm::passwdMap[CaMgm::CAName] = strip(getenv("capasswd"));
-	}
+	CaMgm::passwdMap[CaMgm::CAName] = options["capasswd"]:"";
 
 	if (options["type"]:"" == "client")
 	{
@@ -93,14 +87,11 @@
 	CaMgm::country = options["c"]:"";
 	CaMgm::validPeriod = tointeger (options["days"]:"365");
 	CaMgm::keyLength = tointeger (options["keyLength"]:"1024");
-	if (haskey (options, "keyPasswd"))
+	if (!haskey (options, "keyPasswd"))
 	{
-	    CaMgm::password = options["keyPasswd"]:"";
+	    options["keyPasswd"] = strip(getenv("keyPasswd"));
 	}
-	else
-	{
-	    CaMgm::password = strip(getenv("keyPasswd"));
-	}
+	CaMgm::password = options["keyPasswd"]:"";
 
 	boolean ret = true;
 	if (options["kind"]:"" == "client")
@@ -132,16 +123,13 @@
 	boolean ret = nil;
 	map <string, any> param = $[];
 	
-	if (haskey (options, "capasswd"))
-	{
-	    param["caPasswd"] = options["capasswd"]:"";
-	}
-	else
-	{
-	    param["caPasswd"] = strip(getenv("capasswd"));
-	}
 	param["caName"] = options["caname"]:"";
 	param["days"] = tointeger (options["days"]:"365");	
+	if (!haskey (options, "capasswd"))
+	{
+	    options["capasswd"] = strip(getenv("capasswd"));
+	}
+	param["caPasswd"] = options["capasswd"]:"";
 	
 	ret = (boolean) YaPI::CaManagement::AddCRL (param);
 	if (ret == nil
@@ -162,15 +150,14 @@
 	map <string, any> param = $[];
 	string kind = options["certFormat"]:"";	
 
+	param["caName"] = options["caname"]:"";
+	param["destinationFile"] =  options["file"]:"";
+	param["exportFormat"] = kind;
 	if (!haskey (options, "capasswd"))
 	{
 	    options["capasswd"] = strip(getenv("capasswd"));
 	}
-	
 	param["caPasswd"] = options["capasswd"]:"";
-	param["caName"] = options["caname"]:"";
-	param["destinationFile"] =  options["file"]:"";
-	param["exportFormat"] = kind;
 
 	string ret = nil;
 	if (kind == "PKCS12"
@@ -205,6 +192,10 @@
 	param["destinationFile"] =  options["file"]:"";
 	param["exportFormat"] = options["crlFormat"]:"";
 	param["caName"] = options["caname"]:"";
+	if (!haskey (options, "capasswd"))
+	{
+	    options["capasswd"] = strip(getenv("capasswd"));
+	}
 	param["caPasswd"] = options["capasswd"]:"";
 
 	string ret = nil;
@@ -232,17 +223,20 @@
 	map <string, any> param = $[];
 	string kind = options["certFormat"]:"";	
 
+	param["caName"] = options["caname"]:"";
+	param["certificate"] = options["certname"]:"";
+	param["exportFormat"] = kind;
+	param["destinationFile"] =  options["file"]:"";	
 	if (!haskey (options, "keyPasswd"))
 	{
 	    options["keyPasswd"] = strip(getenv("keyPasswd"));
 	}
-
-	param["caName"] = options["caname"]:"";
-        param["caPasswd"] = options["capasswd"]:"";
-	param["certificate"] = options["certname"]:"";
-	param["exportFormat"] = kind;
-	param["destinationFile"] =  options["file"]:"";	
 	param["keyPasswd"] = options["keyPasswd"]:"";
+	if (!haskey (options, "capasswd"))
+	{
+	    options["capasswd"] = strip(getenv("capasswd"));
+	}
+	param["caPasswd"] = options["capasswd"]:"";
 
 	string ret = nil;
 	if (kind == "PKCS12"
