@@ -1353,6 +1353,22 @@ sub getParsed {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithDSAEncryption";
 
+    } elsif($cert->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA224RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha224WithRSAEncryption";
+
+    } elsif($cert->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA256RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha256WithRSAEncryption";
+
+    } elsif($cert->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA384RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha384WithRSAEncryption";
+
+    } elsif($cert->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA512RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha512WithRSAEncryption";
+
     }
     $ret->{SERIAL} = $cert->getSerial();
 
@@ -1438,6 +1454,22 @@ sub getParsedCRL {
     } elsif($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1DSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithDSAEncryption";
+
+    } elsif($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA224RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha224WithRSAEncryption";
+
+    } elsif($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA256RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha256WithRSAEncryption";
+
+    } elsif($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA384RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha384WithRSAEncryption";
+
+    } elsif($crl->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA512RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha512WithRSAEncryption";
 
     }
 
@@ -1562,6 +1594,22 @@ sub getParsedRequest {
     } elsif($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA1DSA) {
 
         $ret->{SIGNATURE_ALGORITHM} = "sha1WithDSAEncryption";
+
+    } elsif($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA224RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha224WithRSAEncryption";
+
+    } elsif($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA256RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha256WithRSAEncryption";
+
+    } elsif($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA384RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha384WithRSAEncryption";
+
+    } elsif($req->getSignatureAlgorithm() == $LIMAL::CaMgm::E_SHA512RSA) {
+
+        $ret->{SIGNATURE_ALGORITHM} = "sha512WithRSAEncryption";
 
     }
 
