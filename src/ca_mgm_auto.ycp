@@ -401,7 +401,8 @@ boolean Import (map settings) {
 				retmap["stdout"] = hostname_bak;
 			}
 	    }
-		CaMgm::autoYaSTSettings["server_commonName"] = strip(retmap["stdout"]:"linux.site");
+            string default_fqdn = "linux." + Hostname::DEFAULT_DOMAIN;
+            CaMgm::autoYaSTSettings["server_commonName"] = strip(retmap["stdout"]:default_fqdn);
 	}
 	else
 	{
@@ -598,7 +599,8 @@ boolean Write() {
 				retmap["stdout"] = hostname_bak;
 			}
 	    }
-	    CaMgm::prop_server_commonName = strip(retmap["stdout"]:"linux.site");
+            string default_fqdn = "linux." + Hostname::DEFAULT_DOMAIN;
+	    CaMgm::prop_server_commonName = strip(retmap["stdout"]:default_fqdn);
 	}
 	else
 	{
