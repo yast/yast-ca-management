@@ -2,8 +2,10 @@
 
 @HEADER@
 BuildRequires:	dosfstools limal-ca-mgm-perl limal-perl perl-Date-Calc perl-URI perl-X500-DN docbook-xsl-stylesheets doxygen libxslt perl-XML-Writer yast2-devtools pkg-config yast2-core yast2 update-desktop-files
-Requires:	yast2 perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc limal-perl perl-Config-IniFiles perl-URI
-Requires:   limal-ca-mgm-perl >= 1.5.24
+# for default TLD definition
+Requires:	yast2 >= 2.17.140
+Requires:       perl perl-gettext yast2-perl-bindings perl-X500-DN perl-Date-Calc limal-perl perl-Config-IniFiles perl-URI
+Requires:       limal-ca-mgm-perl >= 1.5.24
 
 BuildArchitectures:	noarch
 
