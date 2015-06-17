@@ -27,10 +27,10 @@
     import "Timezone";
     import "Users";
     import "String";
-	import "Hostname";
+    import "Hostname";
 
     include "ca-management/new_cert_read_write.ycp";
-	include "ca-management/util.ycp";
+    include "ca-management/util.ycp";
 
     string func  = (string)WFM::Args(0);
     map    param = (map)WFM::Args(1);
@@ -81,13 +81,15 @@
 		{
 			if(hostname_bak == "")
 			{
-				retmap["stdout"] = Hostname::CurrentFQ();
+                            string default_fqdn = "linux." + Hostname::DEFAULT_DOMAIN;
 
-				if(retmap["stdout"]:"linux.site" == "linux.site")
-				{
-					ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Change the values of Server Name and E-Mail."));
-					ret = add( ret, "warning_level", `blocker );
-				}
+                            retmap["stdout"] = Hostname::CurrentFQ();
+
+                            if(retmap["stdout"]:default_fqdn == default_fqdn)
+                            {
+                                    ret = add( ret, "warning", _("Cannot evaluate the name of the local machine. Change the values of Server Name and E-Mail."));
+                                    ret = add( ret, "warning_level", `blocker );
+                            }
 			}
 			else
 			{
