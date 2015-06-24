@@ -674,10 +674,8 @@ boolean Read() {
 	boolean found = servercert != nil?true:false;
 
 	string hostname = "linux";
-	string domain = "site";
-    map retmap = (map) SCR::Execute (.target.bash_output,
-                                     "/bin/hostname -s",
-                                     $[] );
+	string domain = Hostname::DEFAULT_DOMAIN;
+        map retmap = (map) SCR::Execute (.target.bash_output, "/bin/hostname -s", $[] );
 
 	if (retmap["exit"]:1 == 0)
 	{
@@ -690,7 +688,7 @@ boolean Read() {
 
 	if (retmap["exit"]:1 == 0)
 	{
-		domain = strip(retmap["stdout"]:"site");
+		domain = strip(retmap["stdout"]:Hostname::DEFAULT_DOMAIN);
 	}
 		
 	if(found)
