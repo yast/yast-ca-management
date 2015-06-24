@@ -734,7 +734,7 @@ module Yast
           Ops.set(
             CaMgm.autoYaSTSettings,
             "server_commonName",
-            strip(Ops.get_string(retmap, "stdout", "linux.site"))
+            strip(Ops.get_string(retmap, "stdout", "linux.#{Hostname.DefaultDomain}"))
           )
         else
           if Builtins.haskey(settings, "server_commonName")
@@ -984,7 +984,7 @@ module Yast
             end
           end
           CaMgm.prop_server_commonName = strip(
-            Ops.get_string(retmap, "stdout", "linux.site")
+            Ops.get_string(retmap, "stdout", "linux.#{Hostname.DefaultDomain}")
           )
         else
           CaMgm.prop_server_commonName = Ops.get_string(
@@ -1091,7 +1091,7 @@ module Yast
       found = servercert != nil ? true : false
 
       hostname = "linux"
-      domain = "site"
+      domain = Hostname.DefaultDomain
       retmap = Convert.to_map(
         SCR.Execute(path(".target.bash_output"), "/bin/hostname -s", {})
       )
@@ -1105,7 +1105,7 @@ module Yast
       )
 
       if Ops.get_integer(retmap, "exit", 1) == 0
-        domain = strip(Ops.get_string(retmap, "stdout", "site"))
+        domain = strip(Ops.get_string(retmap, "stdout", Hostname.DefaultDomain))
       end
 
       if found

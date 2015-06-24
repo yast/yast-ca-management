@@ -98,9 +98,9 @@ module Yast
             CaMgm.prop_selection == :def &&
             (!CaMgm.prop_server_commonNameChanged || !CaMgm.prop_emailChanged || @force_reset)
           if @hostname_bak == ""
-            Ops.set(@retmap, "stdout", Hostname.CurrentFQ)
+            @retmap["stdout"] = Hostname.CurrentFQ
 
-            if Ops.get_string(@retmap, "stdout", "linux.site") == "linux.site"
+            if @retmap["stdout"] == "linux.#{Hostname.DefaultDomain}"
               @ret = Builtins.add(
                 @ret,
                 "warning",

@@ -17,7 +17,7 @@
 
 
 Name:           yast2-ca-management
-Version:        3.1.6
+Version:        3.1.7
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -46,7 +46,8 @@ Requires:       perl-URI
 Requires:       perl-X500-DN
 Requires:       perl-camgm
 Requires:       perl-gettext
-Requires:       yast2 >= 2.21.22
+# for default TLD definition:
+Requires:       yast2 >= 3.1.134
 Requires:       yast2-perl-bindings
 BuildArch:      noarch
 Requires:       yast2-ruby-bindings >= 1.0.0
