@@ -2,7 +2,7 @@
 Thu Jan 21 13:06:17 CET 2016 - schubi@suse.de
 
 - AutoYaST: Reporting timeout errors only. (bnc#962328)
-- version 3.1.7.1
+- version 3.1.8
 
 -------------------------------------------------------------------
 Tue Jun 23 09:05:12 UTC 2015 - cwh@suse.com
