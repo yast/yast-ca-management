@@ -83,7 +83,7 @@ module Yast
         Builtins.y2error("Showing error: %1", messageMap)
         if CommandLine.StartGUI
           if Ops.greater_than(Builtins.size(description), 0) &&
-            !Mode.autoinst # Just show a report if we are using AutoYaST (bnc#962328)
+            !Mode.autoinst # Show description while normal installation only.(bnc#962328)
             if !Popup.AnyQuestion(
                 Label.ErrorMsg,
                 message,
