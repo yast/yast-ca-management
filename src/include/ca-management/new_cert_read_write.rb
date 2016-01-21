@@ -48,6 +48,7 @@ module Yast
 
       Yast.import "CaMgm"
       Yast.import "Popup"
+      Yast.import "Mode"
       Yast.import "Timezone"
       Yast.import "YaPI::CaManagement"
 
@@ -1932,7 +1933,7 @@ module Yast
             _(
               "The default certificate can also be created in\nthe CA Management module.\n"
             )
-          )
+          ) unless Mode.autoinst
           return false
         else
           certList = Convert.convert(
@@ -2013,7 +2014,7 @@ module Yast
           _(
             "The default certificate can also be created in\nthe CA Management module.\n"
           )
-        )
+        ) unless Mode.autoinst
         return false
       end
 
