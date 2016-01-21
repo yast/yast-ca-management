@@ -37,6 +37,8 @@ module Yast
       Yast.import "Wizard"
       Yast.import "Label"
       Yast.import "Popup"
+      Yast.import "Mode"
+      Yast.import "Report"
       Yast.import "YaPI"
       Yast.import "YaPI::CaManagement"
       Yast.import "CommandLine"
@@ -80,7 +82,8 @@ module Yast
       if Ops.greater_than(Builtins.size(message), 0)
         Builtins.y2error("Showing error: %1", messageMap)
         if CommandLine.StartGUI
-          if Ops.greater_than(Builtins.size(description), 0)
+          if Ops.greater_than(Builtins.size(description), 0) &&
+            !Mode.auto # Show description while normal installation only.(bnc#962328)
             if !Popup.AnyQuestion(
                 Label.ErrorMsg,
                 message,
@@ -110,7 +113,7 @@ module Yast
               UI.CloseDialog
             end
           else
-            Popup.Error(message)
+            Report.Error(message)
           end
         else
           # output to tty
