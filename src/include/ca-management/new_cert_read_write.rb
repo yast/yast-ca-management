@@ -1933,7 +1933,7 @@ module Yast
             _(
               "The default certificate can also be created in\nthe CA Management module.\n"
             )
-          ) unless Mode.autoinst
+          ) unless Mode.auto
           return false
         else
           certList = Convert.convert(
@@ -2014,7 +2014,7 @@ module Yast
           _(
             "The default certificate can also be created in\nthe CA Management module.\n"
           )
-        ) unless Mode.autoinst
+        ) unless Mode.auto
         return false
       end
 
