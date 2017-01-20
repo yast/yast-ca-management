@@ -25,10 +25,6 @@ Source0:        %{name}-%{version}.tar.bz2
 
 Group:          System/YaST
 License:        GPL-2.0
-BuildRequires:  docbook-xsl-stylesheets
-BuildRequires:  dosfstools
-BuildRequires:  doxygen
-BuildRequires:  libxslt
 BuildRequires:  perl-Date-Calc
 BuildRequires:  perl-URI
 BuildRequires:  perl-X500-DN
