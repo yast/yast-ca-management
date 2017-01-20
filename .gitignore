@@ -7,6 +7,7 @@ Makefile
 autodocs*
 aclocal.m4
 autom4te.cache/
+ca-management.pot
 config.guess
 config.log
 config.status
@@ -20,3 +21,6 @@ src/.dep
 src/YaPI/.dep
 src/ca-management
 package/yast2-ca-management-*.tar.bz2
+testsuite/*.log
+testsuite/*.sum
+testsuite/site.exp
