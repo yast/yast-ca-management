@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Jan 20 15:00:03 UTC 2017 - lslezak@suse.cz
+
+- Removed some obsolete BuildRequires (doxygen, etc... are not
+  needed after disabling the autodocs generation) (fate#320356)
+- 3.2.0
+
+-------------------------------------------------------------------
 Tue Jun  7 09:18:07 UTC 2016 - igonzalezsosa@suse.com
 
 - Stop generating autodocs (fate#320356)

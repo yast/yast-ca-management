@@ -17,7 +17,7 @@
 
 
 Name:           yast2-ca-management
-Version:        3.1.9
+Version:        3.2.0
 Release:        0
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
@@ -25,10 +25,6 @@ Source0:        %{name}-%{version}.tar.bz2
 
 Group:          System/YaST
 License:        GPL-2.0
-BuildRequires:  docbook-xsl-stylesheets
-BuildRequires:  dosfstools
-BuildRequires:  doxygen
-BuildRequires:  libxslt
 BuildRequires:  perl-Date-Calc
 BuildRequires:  perl-URI
 BuildRequires:  perl-X500-DN
