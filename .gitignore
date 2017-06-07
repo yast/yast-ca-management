@@ -19,4 +19,11 @@ pluglib-bindings.ami
 src/.dep
 src/YaPI/.dep
 src/ca-management
-package/yast2-ca-management-*.tar.bz2
+/package/yast2-ca-management-*.tar.bz2
+/.yardoc
+/ca-management.pot
+/doc
+/testsuite/*.log
+/testsuite/*.sum
+/testsuite/site.exp
+/testsuite/testout
