@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Aug 21 16:03:16 CEST 2017 - mc@suse.de
+
+- fix ca_mgm module to not cut off authorityInfoAccess url value
+  (bsc#1051538)
+- version 3.1.10
+
+-------------------------------------------------------------------
 Tue Jun  7 09:18:07 UTC 2016 - igonzalezsosa@suse.com
 
 - Stop generating autodocs (fate#320356)
