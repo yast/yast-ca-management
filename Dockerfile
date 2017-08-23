@@ -4,6 +4,7 @@ RUN zypper --gpg-auto-import-keys --non-interactive in --no-recommends \
   perl-URI \
   perl-X500-DN \
   perl-XML-Writer \
-  perl-camgm
+  perl-camgm \
+  system-user-nobody
 COPY . /usr/src/app
 
