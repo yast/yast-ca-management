@@ -38,7 +38,7 @@ if [ -e Makefile.cvs ]; then
   make -f Makefile.cvs
   make -s
   make -s install
-  su nobody -c "make -s check VERBOSE=1 Y2DIR=`pwd`"
+  su nobody -s /bin/bash -c "make -s check VERBOSE=1 Y2DIR=`pwd`"
 fi
 
 # enable coverage reports
@@ -55,7 +55,7 @@ chown -R nobody:nobody $PKG_DIR
 
 # Build the binary package, skip the %check section,
 # the tests have been already executed outside RPM build.
-su nobody -c "rpmbuild -bb --nocheck package/*.spec"
+su nobody -s /bin/bash -c "rpmbuild -bb --nocheck package/*.spec"
 
 # test the %pre/%post scripts by installing/updating/removing the built packages
 # ignore the dependencies to make the test easier, as a smoke test it's good enough
