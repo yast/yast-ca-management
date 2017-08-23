@@ -527,7 +527,7 @@ module Yast
       counter = 0
       Builtins.foreach(dummy) do |entry|
         entry = strip(entry)
-        valuelist = Builtins.splitstring(entry, ":")
+        valuelist = entry.split(":", 2)
         ident = strip(Ops.get_string(valuelist, 0, ""))
         value = strip(Ops.get_string(valuelist, 1, ""))
         if ident == "critical"
