@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Oct  6 10:03:34 UTC 2017 - locilka@suse.cz
+
+- Fix directory navigation when trying to go one level up ".."
+  (bsc#1024214)
+- 4.0.0
+
+-------------------------------------------------------------------
 Mon Aug 21 16:22:17 CEST 2017 - mc@suse.de
 
 - fix ca_mgm module to not cut off authorityInfoAccess url value

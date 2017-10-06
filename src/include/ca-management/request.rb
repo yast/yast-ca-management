@@ -452,7 +452,7 @@ module Yast
       end
       if ui == :exportFile
         #Popup::Error(_("Currently not supported."));
-        newreqfile = UI.AskForSaveFileName(".", "*", _("Save as"))
+        newreqfile = UI.AskForSaveFileName("/root", "*", _("Save as"))
         if newreqfile != nil && newreqfile != ""
           ret = Convert.to_string(
             YaPI::CaManagement.ExportRequest(
