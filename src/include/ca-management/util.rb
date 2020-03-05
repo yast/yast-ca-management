@@ -114,7 +114,7 @@ module Yast
         ret = strip(Ops.get_string(retmap, "stdout", ""))
       else
         if newFile
-          ret = UI.AskForSaveFileName(newFile, filterString, headline)
+          ret = UI.AskForSaveFileName("/root", filterString, headline)
         else
           ret = UI.AskForExistingFile("/root", filterString, headline)
         end
