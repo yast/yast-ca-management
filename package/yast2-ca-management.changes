@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Mar  5 14:07:09 UTC 2020 - Michael Calmer <mc@suse.com>
+
+- fix export CA to file (bsc#1163058)
+- 3.2.3
+
+-------------------------------------------------------------------
 Fri Oct  6 10:03:34 UTC 2017 - locilka@suse.cz
 
 - Fix directory navigation when trying to go one level up ".."
